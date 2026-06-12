@@ -310,15 +310,12 @@ class ApiClient {
       return response;
     } catch (error) {
       if (timeoutId !== undefined) clearTimeout(timeoutId);
-      
+
       const isAbortError = error instanceof Error && error.name === "AbortError";
-      const isTimeout = isAbortError || (error === "timeout");
-      
+      const isTimeout = isAbortError || error === "timeout";
+
       if (isTimeout) {
-        throw new ApiError(
-          getSafeApiErrorMessage(504, "Request timeout", true),
-          504
-        );
+        throw new ApiError(getSafeApiErrorMessage(504, "Request timeout", true), 504);
       }
 
       throw new ApiError(

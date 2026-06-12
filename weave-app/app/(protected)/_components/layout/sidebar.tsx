@@ -14,6 +14,12 @@ import {
   SUPPORT_URL,
   type NavigationItem,
 } from "@/app/_utils/navigation";
+import { Fredoka } from "next/font/google";
+
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  weight: ["700"],
+});
 import {
   Home,
   Workflow,
@@ -145,10 +151,7 @@ function NavItem({
           onClick={onLinkClick}
           title={item.label}
           aria-label={item.label}
-          className={cn(
-            "group flex min-w-0 items-center flex-1",
-            isRoot ? "gap-2" : "gap-3"
-          )}
+          className={cn("group flex min-w-0 flex-1 items-center", isRoot ? "gap-2" : "gap-3")}
         >
           {isRoot ? (
             /* Raiz: usa o icon-rail fixo para manter alinhamento no collapse */
@@ -285,7 +288,7 @@ function RecentItems({
   if (recentItems.length === 0) return null;
 
   return (
-    <div className="border-t border-gray-200/80 pt-1.5 mt-1.5 dark:border-white/10">
+    <div className="mt-1.5 border-t border-gray-200/80 pt-1.5 dark:border-white/10">
       <ul className="space-y-0.5 px-1">
         {recentItems.map((item) => {
           const basePath = item.type === "project" ? "/projects" : "/notes";
@@ -308,7 +311,7 @@ function RecentItems({
                   href={path}
                   onClick={onLinkClick}
                   title={item.title}
-                  className="group flex min-w-0 items-center flex-1 gap-2"
+                  className="group flex min-w-0 flex-1 items-center gap-2"
                 >
                   <span className={NAV_ICON_RAIL_CLASS}>
                     {item.projectIcon !== undefined ? (
@@ -360,7 +363,7 @@ function SidebarFooter({ isCollapsed, helpLabel }: SidebarFooterProps) {
         aria-label={helpLabel}
         className={cn(
           NAV_ROW_CLASS,
-          "px-2 gap-2",
+          "gap-2 px-2",
           "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
         )}
       >
@@ -455,7 +458,16 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       {/* Header mobile */}
       <div className="flex items-center justify-between p-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <FileText className="text-brand-yellow h-3.5 w-3.5" />
+          <Link href="/home" onClick={handleLinkClick} className="flex min-w-0 items-center px-1">
+            <span
+              className={cn(
+                "text-brand-yellow truncate text-base leading-none font-bold",
+                fredoka.className
+              )}
+            >
+              Weave
+            </span>
+          </Link>
         </div>
         <button
           type="button"
@@ -469,7 +481,20 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="hidden shrink-0 items-center py-1 lg:flex w-full px-1">
+        <div className="mt-3.5 mb-2 hidden w-full shrink-0 flex-col items-start lg:flex">
+          <Link href="/home" className="flex min-w-0 items-center pl-2" onClick={handleLinkClick}>
+            <span
+              className={cn(
+                "truncate text-base leading-none font-bold text-[#1D1D1B] dark:text-gray-300",
+                fredoka.className
+              )}
+            >
+              Weave
+            </span>
+          </Link>
+        </div>
+
+        <div className="hidden w-full shrink-0 items-center px-1 py-1 lg:flex">
           {toggleCollapse ? (
             <button
               type="button"

@@ -228,7 +228,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
             type="button"
             onClick={() => void refresh()}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 transition-all duration-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium text-neutral-600 transition-all duration-200 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
           >
             <RefreshCw className={cn("h-3 w-3 text-neutral-400", refreshing && "animate-spin")} />
             {refreshing ? copy.refreshing : copy.refresh}
@@ -236,7 +236,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
           {variant === "home" && (
             <Link
               href="/weave-engine"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 transition-all duration-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+              className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium text-neutral-600 transition-all duration-200 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
             >
               <Eye className="h-3 w-3 text-neutral-400" />
               {copy.viewAll}
@@ -244,7 +244,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
           )}
           <Link
             href="/weave-ai/chat"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 transition-all duration-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium text-neutral-600 transition-all duration-200 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
           >
             <AiFredokaIcon className="text-[10px] text-neutral-500 dark:text-neutral-400" />
             {copy.openAi}
@@ -321,7 +321,13 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
               </p>
             )}
 
-            <div className={cn(variant === "home" ? "flex flex-col gap-1" : "dark:divide-surface-dark-border divide-y divide-neutral-100")}>
+            <div
+              className={cn(
+                variant === "home"
+                  ? "flex flex-col gap-1"
+                  : "dark:divide-surface-dark-border divide-y divide-neutral-100"
+              )}
+            >
               {pinned.length > 0 && (
                 <p className="py-2 text-[10px] font-normal tracking-wide text-neutral-400 uppercase dark:text-neutral-500">
                   {copy.pinnedSection}

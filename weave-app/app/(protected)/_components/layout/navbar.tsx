@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import { Fredoka } from "next/font/google";
 import { Menu, X, Sun, Moon, Search, CircleUserRound, Bell } from "lucide-react";
 
 import { useAuth, type User } from "@/app/_contexts/auth-context";
@@ -14,11 +13,6 @@ import { useNotification } from "@/app/_contexts/notification-context";
 
 import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 import { cn } from "@/lib/utils";
-
-const fredoka = Fredoka({
-  subsets: ["latin"],
-  weight: ["700"],
-});
 
 /** Mobile navbar icons — same language as collapsed sidebar rows (rounded-md, soft hover). */
 const navIconMobileShellClass =
@@ -274,35 +268,10 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                 </button>
               )}
 
-              <Link
-                href={authenticated ? "/home" : "/"}
-                className="flex min-w-0 items-center self-center"
-                aria-label={t.nav.backToHome}
-              >
-                <span
-                  className={cn(
-                    "text-brand-yellow truncate text-sm leading-none font-bold sm:text-base",
-                    fredoka.className
-                  )}
-                >
-                  Weave
-                </span>
-                {/* <Image
-                  src="/weave-notes-nobg.png"
-                  alt="Weave"
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
-                */}
-              </Link>
+              {/* Weave title moved to Sidebar */}
 
               {user?.org_id && (
                 <div className="hidden items-center gap-2 self-center sm:flex">
-                  <div
-                    className="h-4 w-px self-center bg-neutral-200 dark:bg-neutral-800"
-                    aria-hidden="true"
-                  />
                   <Link
                     href="/organization/editor"
                     className="flex min-w-0 items-center gap-1.5 self-center rounded-md transition-opacity hover:opacity-80"

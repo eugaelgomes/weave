@@ -55,72 +55,67 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-[#F3F3F3] dark:bg-[#1d1d1b]">
-      {/* Desktop: full-width navbar above sidebar + main so sidebar height respects the bar. */}
-      {isLg ? (
-        <div className="shrink-0">
-          <Navbar onToggleSidebar={toggleSidebar} />
-        </div>
-      ) : null}
+    <div className="flex h-screen min-h-0 flex-row overflow-hidden bg-[#F3F3F3] dark:bg-[#1d1d1b]">
+      {/* Desktop Sidebar - Full Height */}
+      <div
+        className={`hidden min-h-0 shrink-0 flex-col ${
+          isCollapsed ? "lg:w-16" : "lg:w-[170px]"
+        } transition-[width] duration-300 ease-out lg:flex`}
+      >
+        <Sidebar
+          onLinkClick={closeSidebar}
+          isCollapsed={isCollapsed}
+          toggleCollapse={toggleCollapse}
+        />
+      </div>
 
+      {/* Main Content Area */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="relative flex min-h-0 flex-1 overflow-hidden">
-          <div
-            className={`hidden min-h-0 flex-col ${
-              isCollapsed ? "lg:w-16" : "lg:w-[170px]"
-            } transition-[width] duration-300 ease-out lg:flex`}
-          >
-            <Sidebar
-              onLinkClick={closeSidebar}
-              isCollapsed={isCollapsed}
-              toggleCollapse={toggleCollapse}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:hidden">
+            <button
+              type="button"
+              aria-label="Fechar menu lateral"
+              className="absolute inset-0 bg-gray-950/20 backdrop-blur-sm"
+              onClick={closeSidebar}
             />
-          </div>
 
-          {sidebarOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:hidden">
-              <button
-                type="button"
-                aria-label="Fechar menu lateral"
-                className="absolute inset-0 bg-gray-950/20 backdrop-blur-sm"
-                onClick={closeSidebar}
+            <div className="dark:border-surface-dark-border dark:shadow-surface-dark-xl relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 dark:bg-[#1d1d1b] dark:ring-white/10">
+              <Sidebar
+                onLinkClick={closeSidebar}
+                isCollapsed={false}
+                toggleCollapse={toggleCollapse}
               />
-
-              <div className="dark:border-surface-dark-border dark:shadow-surface-dark-xl relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 dark:bg-[#1d1d1b] dark:ring-white/10">
-                <Sidebar
-                  onLinkClick={closeSidebar}
-                  isCollapsed={false}
-                  toggleCollapse={toggleCollapse}
-                />
-              </div>
             </div>
-          )}
+          </div>
+        )}
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden md:mr-1.5 md:mb-1">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
-              {/* Mobile: navbar scrolls with main; desktop: already rendered above. */}
-              {!isLg ? <Navbar onToggleSidebar={toggleSidebar} /> : null}
+        {/* Mobile Sidebar modal stays outside the regular flow but inside relative/fixed positioning */}
 
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:mt-1.5 md:mr-1.5 md:mb-1.5">
+          <div
+            className={cn(
+              "dark:border-surface-dark-border dark:shadow-surface-dark-md flex w-full min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] dark:bg-zinc-900 dark:ring-white/[0.08]"
+            )}
+          >
+            <div className="shrink-0 border-b border-neutral-100 dark:border-neutral-800">
+              <Navbar onToggleSidebar={toggleSidebar} />
+            </div>
+
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-1.5">
               <div
                 className={cn(
-                  "dark:border-surface-dark-border dark:shadow-surface-dark-md flex w-full min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white p-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] dark:bg-zinc-900 dark:ring-white/[0.08]",
-                  isLg ? "min-h-0 flex-1" : "shrink-0"
+                  "flex min-h-0 w-full min-w-0 flex-col overflow-hidden",
+                  isLg ? "flex-1" : "max-lg:flex-none"
                 )}
               >
                 <div
                   className={cn(
-                    "flex min-h-0 w-full min-w-0 flex-col overflow-hidden",
-                    isLg ? "flex-1" : "max-lg:flex-none"
+                    "animate-in fade-in slide-in-from-bottom-2 flex min-h-0 w-full min-w-0 flex-col gap-2 duration-500",
+                    isLg ? "flex-1" : "max-lg:min-h-[calc(100dvh-9rem)] max-lg:flex-none"
                   )}
                 >
-                  <div
-                    className={cn(
-                      "animate-in fade-in slide-in-from-bottom-2 flex min-h-0 w-full min-w-0 flex-col gap-2 duration-500",
-                      isLg ? "flex-1" : "max-lg:min-h-[calc(100dvh-9rem)] max-lg:flex-none"
-                    )}
-                  >
-                    {children}
-                  </div>
+                  {children}
                 </div>
               </div>
             </div>

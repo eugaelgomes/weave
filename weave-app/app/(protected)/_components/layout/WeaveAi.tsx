@@ -51,14 +51,14 @@ export default function WeaveAi() {
             // Formato irregular "nuvem" (blob orgânico com morph no hover)
             "rounded-[43%_57%_36%_64%_/_47%_60%_40%_53%] hover:rounded-[57%_43%_64%_36%_/_60%_47%_53%_40%]",
             // Sem bordas, fundo translúcido (efeito glassmorphism)
-            "bg-white/60 backdrop-blur-md text-neutral-800",
+            "bg-white/60 text-neutral-800 backdrop-blur-md",
             "dark:bg-[#1d1d1b]/60 dark:text-neutral-200",
             // Sombras suaves
             "shadow-xl shadow-black/10 dark:shadow-black/40",
             // Animações e transição para cor sólida no hover
             "transition-all duration-300 ease-out",
             "hover:bg-white dark:hover:bg-[#1d1d1b]",
-            "hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-black/15 dark:hover:shadow-black/50 active:translate-y-0 active:scale-95",
+            "hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-black/15 active:translate-y-0 active:scale-95 dark:hover:shadow-black/50",
             // Acessibilidade
             "focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-neutral-900"
           )}
@@ -87,7 +87,7 @@ export default function WeaveAi() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="weave-ai-modal-title"
-              className="dark:border-surface-dark-border dark:shadow-surface-dark-2xl relative z-[111] flex h-[85vh] w-[92vw] max-w-5xl flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-200 dark:bg-[#1d1d1b] dark:ring-white/10"
+              className="dark:border-surface-dark-border dark:shadow-surface-dark-2xl animate-in fade-in zoom-in-95 relative z-[111] flex h-[85vh] w-[92vw] max-w-5xl flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 duration-200 dark:bg-[#1d1d1b] dark:ring-white/10"
             >
               <ChatInterface variant="widget" onClose={() => setOpen(false)} />
             </div>

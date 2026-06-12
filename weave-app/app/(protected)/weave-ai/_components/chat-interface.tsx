@@ -504,7 +504,6 @@ export default function ChatInterface({
         className="relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2 pb-48 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent"
       >
         <div className="mx-auto w-full max-w-4xl space-y-4">
-
           {messages?.map((msg: any) => {
             const isUser = msg.role === "user";
             const messageStatus = msg?.metadata?.status;
@@ -858,11 +857,14 @@ export default function ChatInterface({
             <div className="animate-in fade-in flex flex-col items-center gap-4 pb-3 text-center duration-500">
               <h2 className="text-lg font-medium tracking-tight text-neutral-400 dark:text-neutral-500">
                 {t.weaveAi.welcomeGreetingPrefix}{" "}
-                <span className="font-semibold text-brand-yellow dark:text-brand-yellow">
+                <span className="text-brand-yellow dark:text-brand-yellow font-semibold">
                   {user?.user_name?.split(" ")[0] || user?.username || ""}
                 </span>
-                {", "}{t.weaveAi.welcomeGreetingSuffix}{" "}
-                <span className="font-fredoka font-semibold text-brand-yellow dark:text-brand-yellow tracking-tight">Weave AI</span>{" "}
+                {", "}
+                {t.weaveAi.welcomeGreetingSuffix}{" "}
+                <span className="font-fredoka text-brand-yellow dark:text-brand-yellow font-semibold tracking-tight">
+                  Weave AI
+                </span>{" "}
                 {t.weaveAi.welcomeGreetingAction}
               </h2>
               <div className="flex flex-wrap justify-center gap-2">
@@ -1004,12 +1006,18 @@ export default function ChatInterface({
                           className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs transition-colors"
                         >
                           <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
-                            {allowEdit ? <Unlock className="h-3.5 w-3.5 text-brand-yellow" /> : <Lock className="h-3.5 w-3.5" />}
+                            {allowEdit ? (
+                              <Unlock className="text-brand-yellow h-3.5 w-3.5" />
+                            ) : (
+                              <Lock className="h-3.5 w-3.5" />
+                            )}
                             <span>{t.weaveAi.allowEdit}</span>
                           </div>
-                          {allowEdit && <div className="h-1.5 w-1.5 rounded-full bg-brand-yellow"></div>}
+                          {allowEdit && (
+                            <div className="bg-brand-yellow h-1.5 w-1.5 rounded-full"></div>
+                          )}
                         </button>
-                        
+
                         <button
                           onClick={() => {
                             setAllowWebSearch(!allowWebSearch);
@@ -1018,10 +1026,14 @@ export default function ChatInterface({
                           className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs transition-colors"
                         >
                           <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
-                            <Globe className={`h-3.5 w-3.5 ${allowWebSearch ? "text-brand-yellow" : ""}`} />
+                            <Globe
+                              className={`h-3.5 w-3.5 ${allowWebSearch ? "text-brand-yellow" : ""}`}
+                            />
                             <span>{t.weaveAi.webSearch}</span>
                           </div>
-                          {allowWebSearch && <div className="h-1.5 w-1.5 rounded-full bg-brand-yellow"></div>}
+                          {allowWebSearch && (
+                            <div className="bg-brand-yellow h-1.5 w-1.5 rounded-full"></div>
+                          )}
                         </button>
                       </div>
                     </>

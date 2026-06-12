@@ -26,7 +26,7 @@ export function ModuleLayout({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Mobile Header for Sidebar Toggle */}
         {sidebarContent && (
-          <div className="dark:border-surface-dark-border mb-2 flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-1.5 shadow-sm md:hidden dark:bg-[#1d1d1b]">
+          <div className="mb-2 flex items-center justify-between px-1 py-1.5 md:hidden">
             <span className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
               Navegação
             </span>
@@ -53,7 +53,7 @@ export function ModuleLayout({
           {sidebarContent && (
             <div
               className={cn(
-                "dark:border-surface-dark-border hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-sm md:sticky md:h-[calc(100vh-auto)] dark:bg-[#1d1d1b]/50",
+                "hidden w-full flex-shrink-0 overflow-y-auto border-r border-neutral-100 pr-2 md:sticky md:h-[calc(100vh-auto)] dark:border-neutral-800",
                 hideSidebarOnDesktop ? "md:hidden" : "md:block md:w-[180px]"
               )}
             >
@@ -103,9 +103,7 @@ export function ModuleLayout({
           )}
 
           {/* CONTEÚDO PRINCIPAL (Detail) */}
-          <div className="dark:shadow-surface-dark-sm md:dark:border-surface-dark-border flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-white md:rounded-md md:border md:border-neutral-200 md:shadow-sm dark:bg-[#1d1d1b]">
-            {children}
-          </div>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">{children}</div>
         </div>
       </div>
     </div>

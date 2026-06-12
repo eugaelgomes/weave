@@ -53,10 +53,15 @@ const STATUS_PALETTES: Record<WeaveEngineStatusTone, IconPalette> = {
 };
 
 /** Isometric cuboid for Weave Engine nav. */
-export function WeaveEngineIcon({ className, tone, monochrome = true, ...props }: WeaveEngineIconProps) {
+export function WeaveEngineIcon({
+  className,
+  tone,
+  monochrome = true,
+  ...props
+}: WeaveEngineIconProps) {
   const uid = useId().replace(/:/g, "");
   const isMonoc = tone ? false : monochrome;
-  const palette = tone ? STATUS_PALETTES[tone] : (isMonoc ? MONOCHROME_PALETTE : DEFAULT_PALETTE);
+  const palette = tone ? STATUS_PALETTES[tone] : isMonoc ? MONOCHROME_PALETTE : DEFAULT_PALETTE;
 
   return (
     <svg
@@ -102,10 +107,26 @@ export function WeaveEngineIcon({ className, tone, monochrome = true, ...props }
         </linearGradient>
       </defs>
       <g className="origin-[12px_12px] transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:scale-[1.06] group-active:translate-y-0 group-active:scale-95 motion-reduce:transform-none">
-        <path d="M12 2L4 6V16L12 20L20 16V6L12 2Z" fill={palette.base} opacity={isMonoc ? 0.03 : undefined} />
-        <path d="M12 2.22L4.66 6.13L12 10.84L19.34 6.13L12 2.22Z" fill={`url(#${uid}-top)`} opacity={isMonoc ? 0.15 : undefined} />
-        <path d="M4 6.44V15.56L11.56 19.34V10.22L4 6.44Z" fill={`url(#${uid}-left)`} opacity={isMonoc ? 0.35 : undefined} />
-        <path d="M20 6.44V15.56L12.44 19.34V10.22L20 6.44Z" fill={`url(#${uid}-right)`} opacity={isMonoc ? 0.22 : undefined} />
+        <path
+          d="M12 2L4 6V16L12 20L20 16V6L12 2Z"
+          fill={palette.base}
+          opacity={isMonoc ? 0.03 : undefined}
+        />
+        <path
+          d="M12 2.22L4.66 6.13L12 10.84L19.34 6.13L12 2.22Z"
+          fill={`url(#${uid}-top)`}
+          opacity={isMonoc ? 0.15 : undefined}
+        />
+        <path
+          d="M4 6.44V15.56L11.56 19.34V10.22L4 6.44Z"
+          fill={`url(#${uid}-left)`}
+          opacity={isMonoc ? 0.35 : undefined}
+        />
+        <path
+          d="M20 6.44V15.56L12.44 19.34V10.22L20 6.44Z"
+          fill={`url(#${uid}-right)`}
+          opacity={isMonoc ? 0.22 : undefined}
+        />
         <path
           d="M12 2C11.69 2 11.39 2.08 11.12 2.23L3.12 6.23C2.43 6.57 2 7.26 2 8V16C2 16.74 2.43 17.43 3.12 17.77L11.12 21.77C11.39 21.92 11.69 22 12 22C12.31 22 12.61 21.92 12.88 21.77L20.88 17.77C21.57 17.43 22 16.74 22 16V8C22 7.26 21.57 6.57 20.88 6.23L12.88 2.23C12.61 2.08 12.31 2 12 2ZM4 7.56L11 11.06V19.06L4 15.56V7.56ZM12 10.16L5 6.66L12 3.16L19 6.66L12 10.16ZM20 15.56L13 19.06V11.06L20 7.56V15.56Z"
           fill={palette.base}

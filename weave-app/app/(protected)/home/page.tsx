@@ -35,10 +35,10 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex-1 space-y-2 overflow-y-auto">
-        <div className="flex w-full items-center justify-start px-1 animate-in fade-in duration-500">
+        <div className="animate-in fade-in flex w-full items-center justify-start px-1 duration-500">
           <h2 className="font-fredoka text-lg font-medium tracking-tight text-neutral-500 dark:text-neutral-500">
             {t.home.greetingPrefix}{" "}
-            <span className="font-semibold text-brand-yellow dark:text-brand-yellow">
+            <span className="text-brand-yellow dark:text-brand-yellow font-semibold">
               {user?.user_name?.split(" ")[0] || user?.username || ""}
             </span>
             ,

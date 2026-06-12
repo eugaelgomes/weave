@@ -113,7 +113,10 @@ export default function AuthPage() {
     <div className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-white p-4 text-slate-950 sm:p-8">
       {/* Background Art com o Engine */}
       <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
-        <WeaveEngineIcon className="absolute -top-20 -right-50 h-[900px] w-[900px] rotate-12 opacity-15" monochrome={false} />
+        <WeaveEngineIcon
+          className="absolute -top-20 -right-50 h-[900px] w-[900px] rotate-12 opacity-15"
+          monochrome={false}
+        />
       </div>
 
       <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
