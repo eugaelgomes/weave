@@ -342,7 +342,7 @@ async function callGeminiApi(
         name: call.name,
         arguments: call.args,
       })),
-      rawParts: finalResult.response.candidates?.[0]?.content?.parts || null,
+      rawParts: response.candidates?.[0]?.content?.parts || null,
       text: null,
       type: "function_call",
       usage,
@@ -494,7 +494,6 @@ async function callOpenAiApi(
 
   if (options.onChunk) {
     payload.stream = true;
-    payload.stream_options = { include_usage: true };
     const response = await axios.post(
       `${config.baseURL}/chat/completions`,
       payload,
@@ -510,6 +509,7 @@ async function callOpenAiApi(
 
     let fullContent = "";
     let finalUsage = null;
+    let finalToolCalls = null;
 
     for await (const chunk of response.data) {
       const lines = chunk.toString().split("\n");
@@ -522,12 +522,48 @@ async function callOpenAiApi(
               fullContent += deltaContent;
               options.onChunk(deltaContent);
             }
+            const deltaToolCalls = parsed.choices?.[0]?.delta?.tool_calls;
+            if (deltaToolCalls) {
+              if (!finalToolCalls) finalToolCalls = [];
+              for (const tc of deltaToolCalls) {
+                if (tc.index !== undefined) {
+                  if (!finalToolCalls[tc.index]) finalToolCalls[tc.index] = { id: tc.id, type: "function", function: { name: "", arguments: "" } };
+                  if (tc.function?.name) finalToolCalls[tc.index].function.name += tc.function.name;
+                  if (tc.function?.arguments) finalToolCalls[tc.index].function.arguments += tc.function.arguments;
+                }
+              }
+            }
             if (parsed.usage) {
               finalUsage = parsed.usage;
             }
           } catch {}
         }
       }
+    }
+
+    if (finalToolCalls && finalToolCalls.length > 0) {
+      const toolCall = finalToolCalls[0];
+      return {
+        functionCall: {
+          arguments: toolCall.function.arguments || "{}",
+          name: toolCall.function.name,
+        },
+        toolCalls: finalToolCalls.map((tc) => ({
+          id: tc.id,
+          name: tc.function.name,
+          arguments: tc.function.arguments || "{}",
+        })),
+        text: null,
+        toolCallId: toolCall.id,
+        type: "function_call",
+        usage: finalUsage
+          ? {
+              inputTokens: finalUsage.prompt_tokens || 0,
+              outputTokens: finalUsage.completion_tokens || 0,
+              totalTokens: finalUsage.total_tokens || 0,
+            }
+          : null,
+      };
     }
 
     return {
