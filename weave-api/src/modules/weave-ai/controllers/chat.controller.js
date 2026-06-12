@@ -31,10 +31,6 @@ class ChatController {
       });
       res.flushHeaders();
 
-      keepAliveInterval = setInterval(() => {
-        res.write(":\\n\\n");
-      }, 15000);
-
       const result = await chatOrchestratorService.orchestrateChat({
         userId,
         payload,
@@ -42,9 +38,10 @@ class ChatController {
         requestId,
         files: req.files,
         userLanguage,
+        onChunk: (chunk) => {
+          res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+        },
       });
-
-      clearInterval(keepAliveInterval);
 
       res.write(`data: ${JSON.stringify({ success: true, ...result })}\\n\\n`);
       return res.end();

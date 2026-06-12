@@ -192,6 +192,29 @@ export function useComposeSession(
         content: trimmed,
       });
 
+      const optimisticAssistantMessageId = `assistant-${Date.now()}`;
+      const onChunk = (chunk: string) => {
+        setMessages((prev) => {
+          const existingIndex = prev.findIndex((m) => m.id === optimisticAssistantMessageId);
+          if (existingIndex >= 0) {
+            const next = [...prev];
+            next[existingIndex] = {
+              ...next[existingIndex],
+              content: next[existingIndex].content + chunk,
+            };
+            return next;
+          }
+          return [
+            ...prev,
+            {
+              id: optimisticAssistantMessageId,
+              role: "assistant",
+              content: chunk,
+            },
+          ];
+        });
+      };
+
       setChatLoading(true);
       try {
         const response = await sendChatMessage({
@@ -212,18 +235,24 @@ export function useComposeSession(
             userDisplayName: displayName,
             userLanguage: locale,
           },
-        });
+        }, onChunk);
 
         if (response.sessionId) {
           setSessionId(response.sessionId);
         }
 
         if (response.message?.content) {
-          appendMessage({
-            id: response.message.id || `assistant-${Date.now()}`,
-            role: "assistant",
-            content: response.message.content,
-            chips: intent ? undefined : INITIAL_CHIPS,
+          setMessages((prev) => {
+            const filtered = prev.filter((m) => m.id !== optimisticAssistantMessageId);
+            return [
+              ...filtered,
+              {
+                id: response.message.id || optimisticAssistantMessageId,
+                role: "assistant",
+                content: response.message.content,
+                chips: intent ? undefined : INITIAL_CHIPS,
+              },
+            ];
           });
         }
       } catch (err: unknown) {

@@ -28,6 +28,7 @@ class ChatOrchestratorService {
     requestId,
     files,
     userLanguage,
+    onChunk,
   }) {
     const t = getI18n(userLanguage);
     const chatI18n = getLocalChatI18n(userLanguage);
@@ -280,7 +281,8 @@ class ChatOrchestratorService {
           ...(organizationId ? { org_id: organizationId } : {}),
           userLanguage,
         },
-        requestId
+        requestId,
+        onChunk
       );
 
       totalLatencyMs += engineResponse?.latencyMs || 0;

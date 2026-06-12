@@ -79,7 +79,6 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
               className="absolute inset-0 bg-gray-950/20 backdrop-blur-sm"
               onClick={closeSidebar}
             />
-
             <div className="dark:border-surface-dark-border dark:shadow-surface-dark-xl relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 dark:bg-[#1d1d1b] dark:ring-white/10">
               <Sidebar
                 onLinkClick={closeSidebar}

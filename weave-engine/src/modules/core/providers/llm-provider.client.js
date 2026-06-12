@@ -291,12 +291,31 @@ async function callGeminiApi(
     }
   }
 
-  const result = await withTimeout(
-    model.generateContent({ contents }),
-    config.timeout,
-    "ENGINE_PROVIDER_TIMEOUT"
-  );
-  const response = await result.response;
+  let finalResult;
+  let response;
+  if (options.onChunk) {
+    finalResult = await withTimeout(
+      model.generateContentStream({ contents }),
+      config.timeout,
+      "ENGINE_PROVIDER_TIMEOUT"
+    );
+    for await (const chunk of finalResult.stream) {
+      if (options.onChunk) {
+        try {
+          const chunkText = chunk.text();
+          if (chunkText) options.onChunk(chunkText);
+        } catch {}
+      }
+    }
+    response = await finalResult.response;
+  } else {
+    finalResult = await withTimeout(
+      model.generateContent({ contents }),
+      config.timeout,
+      "ENGINE_PROVIDER_TIMEOUT"
+    );
+    response = await finalResult.response;
+  }
 
   if (response.promptFeedback && response.promptFeedback.blockReason) {
     throw new Error(
@@ -323,7 +342,7 @@ async function callGeminiApi(
         name: call.name,
         arguments: call.args,
       })),
-      rawParts: result.response.candidates?.[0]?.content?.parts || null,
+      rawParts: finalResult.response.candidates?.[0]?.content?.parts || null,
       text: null,
       type: "function_call",
       usage,
@@ -471,6 +490,58 @@ async function callOpenAiApi(
       type: "function",
     }));
     payload.tool_choice = options.forceToolUse ? "required" : "auto";
+  }
+
+  if (options.onChunk) {
+    payload.stream = true;
+    payload.stream_options = { include_usage: true };
+    const response = await axios.post(
+      `${config.baseURL}/chat/completions`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        responseType: "stream",
+        timeout: config.timeout,
+      }
+    );
+
+    let fullContent = "";
+    let finalUsage = null;
+
+    for await (const chunk of response.data) {
+      const lines = chunk.toString().split("\n");
+      for (const line of lines) {
+        if (line.startsWith("data: ") && line !== "data: [DONE]") {
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            const deltaContent = parsed.choices?.[0]?.delta?.content;
+            if (deltaContent) {
+              fullContent += deltaContent;
+              options.onChunk(deltaContent);
+            }
+            if (parsed.usage) {
+              finalUsage = parsed.usage;
+            }
+          } catch {}
+        }
+      }
+    }
+
+    return {
+      functionCall: null,
+      text: fullContent,
+      type: "text",
+      usage: finalUsage
+        ? {
+            inputTokens: finalUsage.prompt_tokens || 0,
+            outputTokens: finalUsage.completion_tokens || 0,
+            totalTokens: finalUsage.total_tokens || 0,
+          }
+        : null,
+    };
   }
 
   const response = await axios.post(

@@ -178,6 +178,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           },
         };
 
+        const optimisticAssistantMessageId = `assistant-${requestId}`;
+
         setMessages((prev: ChatMessage[]) => {
           const existingIndex = prev.findIndex(
             (message: ChatMessage) => message.id === optimisticMessageId
@@ -190,10 +192,34 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           return [...prev, userMessage];
         });
 
+        const onChunk = (chunk: string) => {
+          setMessages((prev: ChatMessage[]) => {
+            const existingIndex = prev.findIndex((m) => m.id === optimisticAssistantMessageId);
+            if (existingIndex >= 0) {
+              const next = [...prev];
+              next[existingIndex] = {
+                ...next[existingIndex],
+                content: next[existingIndex].content + chunk,
+              };
+              return next;
+            }
+            return [
+              ...prev,
+              {
+                id: optimisticAssistantMessageId,
+                role: "assistant",
+                content: chunk,
+                timestamp: new Date(),
+                model: data.model.version ? `${data.model.name}:${data.model.version}` : data.model.name,
+              },
+            ];
+          });
+        };
+
         const response = await sendChatMessage({
           ...data,
           requestId,
-        });
+        }, onChunk);
 
         if (epochAtSendStart !== chatStateEpochRef.current) {
           return null;
@@ -215,7 +241,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         );
 
         if (response?.message) {
-          setMessages((prev: ChatMessage[]) => [...prev, response.message]);
+          setMessages((prev: ChatMessage[]) => {
+            const filtered = prev.filter(m => m.id !== optimisticAssistantMessageId);
+            return [...filtered, response.message];
+          });
 
           if (response.sessionId) {
             setCurrentSessionState((prev: ChatSession | null) => {

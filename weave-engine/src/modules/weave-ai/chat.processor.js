@@ -379,6 +379,11 @@ class LlmQueueProcessor {
                 payload.userLanguage ||
                 payload.context?.userLanguage ||
                 "en-US",
+              onChunk: (chunk) => {
+                if (requestId && redis) {
+                  redis.publish(`stream:${requestId}`, JSON.stringify({ chunk })).catch(() => {});
+                }
+              },
             },
           }),
           new Promise((_, reject) => {

@@ -8,6 +8,23 @@ const {
 const chatFormatterUtil = require("../utils/chat-formatter.util");
 const { getI18n } = require("../utils/weave-ai-i18n.util");
 
+const Redis = require("ioredis");
+const { getBlockingRedisOptions } = require("@/services/queue/blocking-redis-options");
+const subscriberClient = new Redis(getBlockingRedisOptions());
+const streamCallbacks = new Map();
+
+subscriberClient.on("message", (channel, message) => {
+  try {
+    const callback = streamCallbacks.get(channel);
+    if (callback) {
+      const parsed = JSON.parse(message);
+      if (parsed.chunk) {
+        callback(parsed.chunk);
+      }
+    }
+  } catch (e) {}
+});
+
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
   process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "75",
   10
@@ -98,12 +115,18 @@ class ChatEngineService {
    * @param {string} [requestId=randomUUID()] - Stable request UUID.
    * @returns {Promise<object>} Parsed engine response data structure.
    */
-  async requestEngineChat(payload, requestId = randomUUID()) {
+  async requestEngineChat(payload, requestId = randomUUID(), onChunk) {
     const startedAt = Date.now();
     const requestQueueKey = getEngineLlmRequestQueueRedisKey();
     const responseQueueKey = `${getEngineLlmResponsePrefixRedisKey()}:${requestId}`;
     const lang = payload.userLanguage || "pt";
     const t = getI18n(lang);
+    const streamChannel = `stream:${requestId}`;
+
+    if (onChunk) {
+      streamCallbacks.set(streamChannel, onChunk);
+      await subscriberClient.subscribe(streamChannel);
+    }
 
     const job = {
       attempts: 0,
@@ -116,48 +139,55 @@ class ChatEngineService {
 
     await engineRpcRedis.lpush(requestQueueKey, JSON.stringify(job));
 
-    const queueResult = await engineRpcRedis.blpop(
-      responseQueueKey,
-      ENGINE_CHAT_TIMEOUT_SECONDS
-    );
-    if (!queueResult) {
-      await engineRpcRedis.del(responseQueueKey);
-      const timeoutError = new Error(t.engineTimeout);
-      timeoutError.code = "ENGINE_TIMEOUT";
-      timeoutError.requestId = requestId;
-      timeoutError.statusCode = 504;
-      throw timeoutError;
-    }
-
-    const [, rawResponsePayload] = queueResult;
-    await engineRpcRedis.del(responseQueueKey);
-
-    let parsedResponse;
     try {
-      parsedResponse = JSON.parse(rawResponsePayload);
-    } catch {
-      const parseError = new Error(t.engineInvalidResponse);
-      parseError.code = "ENGINE_INVALID_RESPONSE";
-      parseError.statusCode = 502;
-      throw parseError;
-    }
-
-    if (!parsedResponse?.success) {
-      const engineErrorPayload = chatFormatterUtil.extractEngineErrorPayload(
-        parsedResponse?.error,
-        lang
+      const queueResult = await engineRpcRedis.blpop(
+        responseQueueKey,
+        ENGINE_CHAT_TIMEOUT_SECONDS
       );
-      const engineError = new Error(engineErrorPayload.message);
-      engineError.code = engineErrorPayload.code;
-      engineError.statusCode = 502;
-      throw engineError;
-    }
+      if (!queueResult) {
+        await engineRpcRedis.del(responseQueueKey);
+        const timeoutError = new Error(t.engineTimeout);
+        timeoutError.code = "ENGINE_TIMEOUT";
+        timeoutError.requestId = requestId;
+        timeoutError.statusCode = 504;
+        throw timeoutError;
+      }
 
-    return {
-      data: parsedResponse.data || {},
-      latencyMs: Date.now() - startedAt,
-      requestId,
-    };
+      const [, rawResponsePayload] = queueResult;
+      await engineRpcRedis.del(responseQueueKey);
+
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(rawResponsePayload);
+      } catch {
+        const parseError = new Error(t.engineInvalidResponse);
+        parseError.code = "ENGINE_INVALID_RESPONSE";
+        parseError.statusCode = 502;
+        throw parseError;
+      }
+
+      if (!parsedResponse?.success) {
+        const engineErrorPayload = chatFormatterUtil.extractEngineErrorPayload(
+          parsedResponse?.error,
+          lang
+        );
+        const engineError = new Error(engineErrorPayload.message);
+        engineError.code = engineErrorPayload.code;
+        engineError.statusCode = 502;
+        throw engineError;
+      }
+
+      return {
+        data: parsedResponse.data || {},
+        latencyMs: Date.now() - startedAt,
+        requestId,
+      };
+    } finally {
+      if (onChunk) {
+        streamCallbacks.delete(streamChannel);
+        subscriberClient.unsubscribe(streamChannel).catch(() => {});
+      }
+    }
   }
 }
 

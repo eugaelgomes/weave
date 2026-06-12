@@ -202,7 +202,7 @@ function normalizeChatSession(session: RawChatSession): ChatSession {
  * @returns {Promise<SendMessageResult>} A promise resolving to the final structured chat message result.
  * @throws {Error} Throws an error if the stream cannot be read or if the server sends an error event.
  */
-async function processChatResponse(response: Response): Promise<SendMessageResult> {
+async function processChatResponse(response: Response, onChunk?: (chunk: string) => void): Promise<SendMessageResult> {
   const contentType = response.headers.get("content-type") || "";
 
   if (!response.ok) {
@@ -247,7 +247,11 @@ async function processChatResponse(response: Response): Promise<SendMessageResul
               if (currentEvent === "error") {
                 errorData = parsed;
               } else {
-                resultData = parsed;
+                if (parsed.chunk !== undefined) {
+                  if (onChunk) onChunk(parsed.chunk);
+                } else {
+                  resultData = parsed;
+                }
               }
             } catch (e) {
               console.error("[weave-ai/chat] Failed to parse SSE data block", {
@@ -288,7 +292,7 @@ async function processChatResponse(response: Response): Promise<SendMessageResul
     citations: result.response?.citations || [],
     functions: result.response?.functions || [],
     functionExecution: result.response?.functionExecution || [],
-    provider: result.response?.provider,
+    provider: result.response?.provider || undefined,
     metadata: {
       citations: result.response?.citations || [],
       functions: result.response?.functions || [],
@@ -300,8 +304,8 @@ async function processChatResponse(response: Response): Promise<SendMessageResul
   return {
     sessionId: result.sessionId,
     message: assistantMessage,
-    model: result.response?.model,
-    provider: result.response?.provider,
+    model: result.response?.model ? { name: result.response.model.name, version: result.response.model.version || undefined } : undefined,
+    provider: result.response?.provider || undefined,
     citations: result.response?.citations || [],
     functions: result.response?.functions || [],
     functionExecution: result.response?.functionExecution || [],
@@ -347,7 +351,7 @@ export async function fetchAvailableModels(): Promise<AIModel[]> {
  * @param {SendMessageData} data - The payload containing the message, model details, files, and context.
  * @returns {Promise<SendMessageResult>} A promise resolving to the final structured assistant response.
  */
-export async function sendChatMessage(data: SendMessageData): Promise<SendMessageResult> {
+export async function sendChatMessage(data: SendMessageData, onChunk?: (chunk: string) => void): Promise<SendMessageResult> {
   const payload = {
     message: data.message,
     model: data.model,
@@ -381,11 +385,11 @@ export async function sendChatMessage(data: SendMessageData): Promise<SendMessag
     data.files.forEach((file) => formData.append("files", file));
 
     const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, formData);
-    return processChatResponse(response);
+    return processChatResponse(response, onChunk);
   }
 
   const response = await apiClient.post(API_ENDPOINTS.AI_CHAT, payload);
-  return processChatResponse(response);
+  return processChatResponse(response, onChunk);
 }
 
 export async function fetchChatHistory(

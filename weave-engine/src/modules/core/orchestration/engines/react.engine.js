@@ -44,6 +44,7 @@ async function executeAgenticTask({
     files,
     functions: availableFunctions.length > 0 ? availableFunctions : undefined,
     messages: [...conversationHistory],
+    onChunk: executionContext.onChunk,
   };
 
   // Add the initial user message to history immediately so it persists across ReAct loops

@@ -54,10 +54,11 @@ const assistantPayloadSchema = z
     model: z
       .object({
         name: z.string(),
-        version: z.string().optional(),
+        version: z.string().nullable().optional(),
       })
+      .nullable()
       .optional(),
-    provider: z.string().optional(),
+    provider: z.string().nullable().optional(),
   })
   .passthrough();
 
