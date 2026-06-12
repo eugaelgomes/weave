@@ -99,7 +99,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
             )}
           >
             <div className="shrink-0 border-b border-neutral-100 dark:border-neutral-800">
-              <Navbar onToggleSidebar={toggleSidebar} />
+              <Navbar onToggleSidebar={toggleSidebar} isCollapsed={isCollapsed} />
             </div>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-1.5">

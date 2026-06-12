@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useNotification } from "@/app/_contexts/notification-context";
@@ -450,7 +451,28 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     },
     // { path: "/documents", icon: FileText, label: t.nav.documents },
     { path: "/settings", icon: Settings, label: t.nav.settingsLabel },
-    ...(hasOrg ? [{ path: "/organization/general", icon: Building2, label: t.nav.workspace }] : []),
+    ...(hasOrg
+      ? [
+          {
+            path: "/organization/general",
+            icon: user.org_logo_url
+              ? function OrgLogoIcon({ size, className, ...props }: any) {
+                  return (
+                    <Image
+                      src={user.org_logo_url!}
+                      alt={user.org_name || "Organization"}
+                      width={size || 16}
+                      height={size || 16}
+                      className={cn("rounded object-contain", className)}
+                      {...props}
+                    />
+                  );
+                }
+              : Building2,
+            label: t.nav.workspace,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -499,7 +521,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
             <button
               type="button"
               onClick={toggleCollapse}
-              className="focus-visible:ring-brand-yellow/50 flex h-8 w-full items-center rounded-md px-2 text-gray-700 transition-colors hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
+              className="focus-visible:ring-brand-yellow/50 flex h-8 w-full items-center rounded-md bg-black/5 px-2 text-gray-700 transition-colors hover:bg-black/10 focus-visible:ring-2 focus-visible:outline-none dark:bg-white/6 dark:text-gray-300 dark:hover:bg-white/10"
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
               aria-label={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >

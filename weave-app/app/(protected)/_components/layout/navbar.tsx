@@ -20,7 +20,7 @@ const navIconMobileShellClass =
 
 /** Desktop search + user chip: bordered surface (no shadow). */
 const navbarElevatedSurfaceClass =
-  "border border-neutral-200 bg-white hover:bg-neutral-50 dark:border-surface-dark-border-strong dark:bg-[#1D1D1B] dark:hover:bg-neutral-900";
+  "bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10";
 
 // --- Custom Hooks
 
@@ -203,9 +203,10 @@ const UserMenuContent = ({ user, t, onClose, onLogout }: UserMenuProps) => (
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
+  isCollapsed?: boolean;
 }
 
-const Navbar = ({ onToggleSidebar }: NavbarProps) => {
+const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
   const { user, logout, authenticated, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
@@ -249,9 +250,9 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
         >
           <div
             className={cn(
-              "grid min-h-10 grid-cols-[auto_1fr_auto] items-center gap-x-2 px-2 py-1",
-              "md:min-h-10 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-4",
-              "lg:min-h-10 lg:px-0 lg:py-0"
+              "grid min-h-8 grid-cols-[auto_1fr_auto] items-center gap-x-2 px-2 py-1",
+              "md:min-h-8 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-4",
+              "lg:min-h-8 lg:px-0 lg:py-0"
             )}
           >
             {/* Bloco Esquerdo: Logo e Organização */}
@@ -270,21 +271,12 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
 
               {/* Weave title moved to Sidebar */}
 
-              {user?.org_id && (
+              {user?.org_id && isCollapsed && (
                 <div className="hidden items-center gap-2 self-center sm:flex">
                   <Link
                     href="/organization/editor"
                     className="flex min-w-0 items-center gap-1.5 self-center rounded-md transition-opacity hover:opacity-80"
                   >
-                    <figure className="flex h-4 w-4 shrink-0 items-center justify-center self-center overflow-hidden rounded">
-                      <Image
-                        src={user.org_logo_url || "/default-org-icon.png"}
-                        alt={t.navbar.logoOf.replace("{name}", user.org_name || "")}
-                        width={16}
-                        height={16}
-                        className="self-center object-contain"
-                      />
-                    </figure>
                     <span className="max-w-[180px] self-center truncate text-xs leading-none font-medium text-gray-900 dark:text-gray-100">
                       {user.org_name}
                     </span>
@@ -366,23 +358,8 @@ const Navbar = ({ onToggleSidebar }: NavbarProps) => {
                       aria-haspopup="menu"
                       aria-label={t.navbar.openUserMenu}
                       title={t.navbar.openUserMenu}
-                      className={cn(
-                        navbarElevatedSurfaceClass,
-                        "focus-visible:ring-brand-yellow/50 flex shrink-0 items-center justify-center gap-1 transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                        "h-7 max-h-8 w-7 rounded-full p-px text-gray-700 dark:text-white",
-                        "max-lg:active:bg-neutral-100 dark:max-lg:active:bg-neutral-900",
-                        "md:h-fit md:max-h-8 md:w-auto md:rounded-full md:py-0.5 md:pr-0.5 md:pl-2",
-                        isMenuOpen ? "bg-neutral-100 dark:bg-neutral-900" : ""
-                      )}
+                      className="focus-visible:ring-brand-yellow/50 flex shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:outline-none active:opacity-75"
                     >
-                      <div className="hidden max-h-8 min-h-0 shrink md:flex md:flex-col md:items-end md:justify-center md:gap-0.5 md:pr-1 md:leading-none">
-                        <span className="max-w-[140px] truncate text-[10px] leading-none font-bold text-gray-900 dark:text-gray-100">
-                          {formatters.getDisplayName(user, t.common.user)}
-                        </span>
-                        <span className="max-w-[140px] truncate text-[8px] leading-none font-medium text-gray-600 dark:text-gray-400">
-                          @{formatters.getUsername(user, t.common.username)}
-                        </span>
-                      </div>
                       <UserAvatar user={user} size="xs" />
                     </button>
 
