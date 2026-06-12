@@ -284,7 +284,7 @@ function TaskNoteModalInner() {
 
     await loadTaskPriorities({
       projectId: projectId || undefined,
-      orgId: user?.org_id,
+      orgId: user?.org_id || undefined,
     });
   }, [
     projectId,
