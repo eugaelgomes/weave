@@ -122,7 +122,7 @@ const ProjectsPage = () => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProjects.map((project) => (
                 <Link
-                  href={routes.projects.board(orgId, project.public_id)}
+                  href={routes.projects.board(orgId, (project.public_id || project.id) as string)}
                   key={project.id}
                   className="group dark:border-surface-dark-border flex flex-col justify-between rounded-md border border-neutral-100 bg-white p-5 transition-all hover:border-amber-500 hover:shadow-sm dark:bg-[#1d1d1b] dark:hover:border-amber-500"
                 >
