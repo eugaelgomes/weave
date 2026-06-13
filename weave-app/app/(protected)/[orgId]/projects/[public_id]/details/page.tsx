@@ -67,6 +67,7 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params?.public_id as string;
+  const orgId = params?.orgId as string;
   const { user } = useAuth();
 
   const {
@@ -372,7 +373,7 @@ export default function ProjectDetailsPage() {
     if (!window.confirm("Confirmar eliminação do projeto? Ação irreversível.")) return;
     try {
       await deleteProject(project.id);
-      router.push("/projects");
+      router.push(`/${orgId}/projects`);
     } catch (error) {
       console.error("Erro ao eliminar projeto:", error);
     }
@@ -635,7 +636,7 @@ export default function ProjectDetailsPage() {
       <div className="dark:border-surface-dark-border flex h-10 flex-none items-center justify-between border-b border-neutral-200 bg-white px-2 dark:bg-[#1d1d1b]">
         <button
           type="button"
-          onClick={() => router.push(`/projects/${projectId}`)}
+          onClick={() => router.push(`/${orgId}/projects/${projectId}`)}
           className="inline-flex items-center gap-1.5 text-[11px] font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
         >
           <FaArrowLeft className="size-2.5" />

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { CreditCard } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { type Organization, type OrganizationProperties } from "@/app/_services/organization";
@@ -21,6 +22,8 @@ export function PlansUsageSection({
   userIsOwner,
 }: PlansUsageSectionProps) {
   const { t } = useLanguage();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const currentPlan = organization?.plan_name || "Free";
   const planValue = organization?.plan_value || 0;
   const currency = organization?.currency || "BRL";
@@ -61,7 +64,7 @@ export function PlansUsageSection({
           </div>
           {userIsOwner ? (
             <Link
-              href="/settings/plans"
+              href={`/${orgId}/settings/plans`}
               className="bg-brand-yellow text-brand-navy hover:bg-brand-orange rounded-md px-3 py-1.5 text-xs font-semibold transition-colors"
             >
               {t.organizationPlans.manageSubscription}

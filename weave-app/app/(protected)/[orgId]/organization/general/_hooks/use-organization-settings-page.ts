@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useOrganization } from "@/app/_contexts/organization-context";
 import { type OrganizationProperties } from "@/app/_services/organization";
@@ -29,6 +29,8 @@ export const useOrganizationSettingsPage = () => {
     restoreOrganization,
   } = useOrganization();
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
 
   const [isCreating, setIsCreating] = useState(false);
   const [isEditingInfo, setIsEditingInfo] = useState(false);
@@ -57,7 +59,7 @@ export const useOrganizationSettingsPage = () => {
 
   const handleCreateOrganization = async () => {
     setIsCreating(true);
-    router.push("/organization/create");
+    router.push(`/${orgId}/organization/create`);
   };
 
   const handleUpdateInfo = async (event: React.FormEvent<HTMLFormElement>) => {

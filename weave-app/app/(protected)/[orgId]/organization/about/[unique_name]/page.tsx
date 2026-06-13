@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
 type AboutRedirectPageProps = {
-  params: Promise<{ unique_name: string }>;
+  params: Promise<{ unique_name: string, orgId: string }>;
 };
 
 export default async function OrganizationAboutRedirectPage({ params }: AboutRedirectPageProps) {
-  await params;
-  redirect("/organization/editor");
+  const { orgId } = await params;
+  redirect(`/${orgId}/organization/editor`);
 }

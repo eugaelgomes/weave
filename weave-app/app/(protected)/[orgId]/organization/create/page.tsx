@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Building2, Camera, CheckCircle2, Circle, Loader2, Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -101,6 +101,8 @@ const inputFieldClass =
 
 export default function OrganizationCreatePage() {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { refreshOrganization, uploadLogo, organization } = useOrganization();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
@@ -240,7 +242,7 @@ export default function OrganizationCreatePage() {
       await refreshOrganization();
       toast.success("Etapa 1 concluida");
       setStepOneCompleted(true);
-      router.push("/organization/general");
+      router.push(`/${orgId}/organization/general`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao concluir etapa 1");
     } finally {

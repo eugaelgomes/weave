@@ -18,6 +18,7 @@ export default function ProjectViewPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params?.public_id as string;
+  const orgId = params?.orgId as string;
   const { user } = useAuth();
 
   const {
@@ -190,8 +191,8 @@ export default function ProjectViewPage() {
           setActiveView(v);
           void setMyProjectView(projectId, v);
         }}
-        onViewDetails={() => router.push(`/projects/${projectId}/details`)}
-        onBack={() => router.push("/projects")}
+        onViewDetails={() => router.push(`/${orgId}/projects/${projectId}/details`)}
+        onBack={() => router.push(`/${orgId}/projects`)}
         canEdit={canEdit}
         onIconFile={canEdit ? handleProjectIconChange : undefined}
       />

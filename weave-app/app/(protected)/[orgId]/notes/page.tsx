@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, Filter, Plus, X, SortAsc, RefreshCw, Loader2, Trash2 } from "lucide-react";
@@ -135,6 +135,8 @@ function formatShortDate(date: string | null | undefined): string {
 
 const NotesWithPagination = () => {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -477,7 +479,7 @@ const NotesWithPagination = () => {
         duration: 6000,
         action: {
           label: "Ver Planos",
-          onClick: () => router.push("/settings/plans"),
+          onClick: () => router.push(`/${orgId}/settings/plans`),
         },
       });
       return;
@@ -510,7 +512,7 @@ const NotesWithPagination = () => {
           duration: 6000,
           action: {
             label: "Ver Planos",
-            onClick: () => router.push("/settings/plans"),
+            onClick: () => router.push(`/${orgId}/settings/plans`),
           },
         });
       } else {

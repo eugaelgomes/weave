@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAgent, type Agent } from "@/app/_contexts/agent-context";
 import {
@@ -135,6 +135,8 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
 
 export default function AgentsOverviewPage() {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { agents } = useAgent();
   const [query, setQuery] = useState("");
   const [providerFilter, setProviderFilter] = useState<"all" | "gemini" | "perplexity">("all");
@@ -224,7 +226,7 @@ export default function AgentsOverviewPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/weave-ai/agents/new")}
+            onClick={() => router.push(`/${orgId}/weave-ai/agents/new`)}
             className="bg-brand-primary-500 hover:bg-brand-primary-400 flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-neutral-900 shadow-sm transition"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -253,7 +255,7 @@ export default function AgentsOverviewPage() {
             <AgentCard
               key={agent.id}
               agent={agent}
-              onOpen={() => router.push(`/weave-ai/agents/${agent.id}`)}
+              onOpen={() => router.push(`/${orgId}/weave-ai/agents/${agent.id}`)}
             />
           ))}
         </div>

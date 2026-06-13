@@ -5,7 +5,7 @@ import { Plus, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ORG_PERMISSIONS, orgRoleHasPermission } from "@/app/_utils/org-permissions";
 import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
@@ -29,6 +29,8 @@ export type WeaveEngineDashboardProps = {
 
 export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDashboardProps) {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { t, locale } = useLanguage();
   const copy = t.home.engine;
   const dateLocale = locale === "en-US" ? "en-US" : locale === "es-ES" ? "es-ES" : "pt-BR";
@@ -77,7 +79,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
       if (projectId) params.set("projectId", projectId);
       params.set("from", variant === "page" ? "engine" : "home");
       const qs = params.toString();
-      router.push(`/weave-engine/compose${qs ? `?${qs}` : ""}`);
+      router.push(`/${orgId}/weave-engine/compose${qs ? `?${qs}` : ""}`);
     },
     [router, variant]
   );
@@ -235,7 +237,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
           </button>
           {variant === "home" && (
             <Link
-              href="/weave-engine"
+              href={`/${orgId}/weave-engine`}
               className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium text-neutral-600 transition-all duration-200 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
             >
               <Eye className="h-3 w-3 text-neutral-400" />
@@ -243,7 +245,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
             </Link>
           )}
           <Link
-            href="/weave-ai/chat"
+            href={`/${orgId}/weave-ai/chat`}
             className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium text-neutral-600 transition-all duration-200 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
           >
             <AiFredokaIcon className="text-[10px] text-neutral-500 dark:text-neutral-400" />
@@ -292,7 +294,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
         {!loading && !error && projects.length === 0 && (
           <div className={engineInsetNoticeClass}>
             {copy.emptyProjects}{" "}
-            <Link href="/projects/new" className={engineTextLinkClass}>
+            <Link href={`/${orgId}/projects/new`} className={engineTextLinkClass}>
               {copy.createProject}
             </Link>
           </div>

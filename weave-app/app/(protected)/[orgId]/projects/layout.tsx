@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
@@ -40,6 +40,8 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
   const { getRecentProjects } = useProjects();
   const { feed } = useWeaveEngine();
   const pathname = usePathname();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const [expandedProjects, setExpandedProjects] = useState<string[]>([]);
 
   const toggleProject = (e: React.MouseEvent, projectId: string) => {
@@ -80,10 +82,10 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
   }, [feed, recentProjects]);
 
   const base = pathname.replace(/\/+$/, "");
-  const isDashboard = base === "/projects";
+  const isDashboard = base === `/${orgId}/projects`;
   const currentProjectId =
-    base.startsWith("/projects/") && base !== "/projects"
-      ? (base.split("/projects/")[1]?.split("/")[0] ?? null)
+    base.startsWith(`/${orgId}/projects/`) && base !== `/${orgId}/projects`
+      ? (base.split(`/${orgId}/projects/`)[1]?.split("/")[0] ?? null)
       : null;
 
   const sidebarContent = (
@@ -95,7 +97,7 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
       <ul className="mb-4 space-y-0.5">
         <li>
           <Link
-            href="/projects"
+            href={`/${orgId}/projects`}
             className={`group flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
               isDashboard
                 ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
@@ -146,7 +148,7 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
                 )}
 
                 <Link
-                  href={`/projects/${project.public_id}`}
+                  href={`/${orgId}/projects/${project.public_id}`}
                   className={`group flex min-w-0 flex-1 items-center rounded-md py-1.5 text-xs transition-all ${
                     isActive
                       ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
@@ -201,7 +203,7 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
                         <div className="absolute top-0 -left-4 h-[15px] w-4 rounded-bl-md border-b border-l border-yellow-500/50 dark:border-yellow-500/50" />
 
                         <Link
-                          href={`/projects/${sub.public_id}`}
+                          href={`/${orgId}/projects/${sub.public_id}`}
                           className={`group mb-0.5 ml-1 flex items-center gap-1.5 rounded-md px-4 py-1 text-[11px] transition-all ${
                             isSubActive
                               ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"

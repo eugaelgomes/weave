@@ -223,6 +223,7 @@ const NoteDetail = () => {
   const params = useParams();
   const router = useRouter();
   const routeNoteId = params?.public_id as string;
+  const orgId = params?.orgId as string;
 
   // Hook para gerenciar tarefas
   const {
@@ -1398,7 +1399,7 @@ const NoteDetail = () => {
       try {
         const success = await deleteNote(note.id);
         if (success) {
-          router.push("/notes");
+          router.push(`/${orgId}/notes`);
         }
       } catch (error) {
         console.error("Erro ao deletar tarefa:", error);
@@ -1408,7 +1409,7 @@ const NoteDetail = () => {
   };
 
   const handleBack = () => {
-    router.push("/notes");
+    router.push(`/${orgId}/notes`);
   };
 
   const formatDate = (dateString: string) => {

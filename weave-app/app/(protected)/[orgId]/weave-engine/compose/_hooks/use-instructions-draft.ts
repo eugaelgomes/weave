@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { track } from "@vercel/analytics";
 import { toast } from "sonner";
 import { useProjects } from "@/app/_contexts/projects-context";
@@ -40,6 +40,8 @@ export function useInstructionsDraft(
   onProjectIdChange: (id: string) => void
 ) {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { t } = useLanguage();
   const copy = t.reasoningComposer.instructions;
   const engineTypes = t.home.engine.reasoningTypes;
@@ -178,7 +180,7 @@ export function useInstructionsDraft(
       track("weave_engine_compose_instructions_save", { projectId, scope, instructionType });
       toast.success(copy.successSave);
       setInstructions(nextInstructions);
-      router.push("/weave-engine");
+      router.push(`/${orgId}/weave-engine`);
     } catch (err: unknown) {
       toast.error(copy.errorSave, {
         description: err instanceof Error ? err.message : t.home.engine.unexpectedError,
@@ -213,6 +215,6 @@ export function useInstructionsDraft(
     copy,
     engineTypes,
     noProjectsCopy: t.reasoningComposer.insight.noProjects,
-    projectSettingsLink: projectId ? `/projects/${projectId}/details` : null,
+    projectSettingsLink: projectId ? `/${orgId}/projects/${projectId}/details` : null,
   };
 }

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import { FileText, ChevronRight, LayoutDashboard } from "lucide-react";
@@ -22,6 +22,8 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const { loading: notesLoading, getRecentNotes } = useNotes();
   const pathname = usePathname();
   const { commentsPanelOpen, setCommentsPanelOpen } = useNoteCommentsPanel();
+  const params = useParams();
+  const orgId = params?.orgId as string;
 
   React.useEffect(() => {
     setCommentsPanelOpen(false);
@@ -30,10 +32,10 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const recentNotes = getRecentNotes ? getRecentNotes().slice(0, 10) : [];
 
   const base = pathname.replace(/\/+$/, "");
-  const isDashboard = base === "/notes";
+  const isDashboard = base === `/${orgId}/notes`;
   const currentNoteId =
-    base.startsWith("/notes/") && base !== "/notes"
-      ? (base.split("/notes/")[1]?.split("/")[0] ?? null)
+    base.startsWith(`/${orgId}/notes/`) && base !== `/${orgId}/notes`
+      ? (base.split(`/${orgId}/notes/`)[1]?.split("/")[0] ?? null)
       : null;
 
   const sidebarContent = (
@@ -45,7 +47,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
       <ul className="mb-4 space-y-0.5">
         <li>
           <Link
-            href="/notes"
+            href={`/${orgId}/notes`}
             className={`group flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
               isDashboard
                 ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
@@ -37,6 +37,8 @@ function formatRelativeDate(value: string | null): string {
 
 const ProjectsPage = () => {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { canCreateProject } = usePlanUsage();
   const { loading, getRecentProjects } = useProjects();
   const { triggerReasoningNow } = useWeaveEngine();
@@ -54,12 +56,12 @@ const ProjectsPage = () => {
         duration: 6000,
         action: {
           label: "Ver Planos",
-          onClick: () => router.push("/settings/plans"),
+          onClick: () => router.push(`/${orgId}/settings/plans`),
         },
       });
       return;
     }
-    router.push("/projects/new");
+    router.push(`/${orgId}/projects/new`);
   };
 
   const fetchSignals = React.useCallback(async () => {
@@ -183,7 +185,7 @@ const ProjectsPage = () => {
               </p>
             </div>
             <Link
-              href="/weave-engine"
+              href={`/${orgId}/weave-engine`}
               className="bg-brand-primary-500 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-neutral-900 hover:brightness-95"
             >
               <BrainCircuit className="h-3.5 w-3.5" />
@@ -306,7 +308,7 @@ const ProjectsPage = () => {
                         Abrir briefing
                       </button>
                       <Link
-                        href={`/weave-engine?projectId=${project.id}&view=risks`}
+                        href={`/${orgId}/weave-engine?projectId=${project.id}&view=risks`}
                         className="bg-brand-primary-500 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-neutral-900 hover:brightness-95"
                       >
                         <AlertTriangle className="h-3.5 w-3.5" />

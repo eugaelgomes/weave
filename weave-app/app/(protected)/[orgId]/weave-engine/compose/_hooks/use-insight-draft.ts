@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { track } from "@vercel/analytics";
 import { toast } from "sonner";
 
@@ -23,6 +23,8 @@ import {
 
 export function useInsightDraft(projectId: string | null, onProjectIdChange: (id: string) => void) {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { t } = useLanguage();
   const copy = t.reasoningComposer.insight;
   const engineTypes = t.home.engine.reasoningTypes;
@@ -122,7 +124,7 @@ export function useInsightDraft(projectId: string | null, onProjectIdChange: (id
       });
       track("weave_engine_compose_insight_publish", { projectId, reasoningType });
       toast.success(copy.successPublish);
-      router.push("/weave-engine");
+      router.push(`/${orgId}/weave-engine`);
     } catch (err: unknown) {
       const isForbidden = err instanceof ApiError && err.status === 403;
       toast.error(isForbidden ? t.home.engine.forbidden : copy.errorPublish, {

@@ -15,6 +15,8 @@ import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout
 
 function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const pathname = usePathname();
   const { t } = useLanguage();
 
@@ -39,7 +41,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
     if (!deleted) return;
 
     if (currentSession?.id === sessionId) {
-      router.push("/weave-ai/chat");
+      router.push(`/${orgId}/weave-ai/chat`);
       onLinkClick?.();
     }
   };
@@ -57,7 +59,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
         <button
           type="button"
           onClick={() => {
-            router.push("/weave-ai/agents/new");
+            router.push(`/${orgId}/weave-ai/agents/new`);
             onLinkClick?.();
           }}
           className="dark:border-surface-dark-border mb-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-900 px-2 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200"
@@ -74,7 +76,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                 <button
                   type="button"
                   onClick={() => {
-                    router.push(`/weave-ai/agents/${agent.id}`);
+                    router.push(`/${orgId}/weave-ai/agents/${agent.id}`);
                     onLinkClick?.();
                   }}
                   className={cn(
@@ -122,7 +124,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             flushSync(() => {
               createNewSession();
             });
-            router.push("/weave-ai/chat");
+            router.push(`/${orgId}/weave-ai/chat`);
             onLinkClick?.();
           }}
           className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs font-medium text-neutral-600 shadow-sm transition hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:bg-neutral-800"
@@ -144,7 +146,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                 >
                   <button
                     onClick={() => {
-                      router.push(`/weave-ai/chat/${chat.id}`);
+                      router.push(`/${orgId}/weave-ai/chat/${chat.id}`);
                       onLinkClick?.();
                     }}
                     className={cn(

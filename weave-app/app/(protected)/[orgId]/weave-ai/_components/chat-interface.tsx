@@ -38,7 +38,7 @@ import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { isChatSessionId } from "@/app/_utils/chat-session-id";
 import { resolveProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
 
@@ -169,6 +169,8 @@ export default function ChatInterface({
   onClose?: () => void;
 } = {}) {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const pathname = usePathname();
   const { t } = useLanguage();
   const {
@@ -479,7 +481,7 @@ export default function ChatInterface({
           {variant === "widget" && (
             <>
               <Link
-                href="/weave-ai/chat"
+                href={`/${orgId}/weave-ai/chat`}
                 onClick={onClose}
                 className="text-[10px] font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:text-neutral-400 dark:hover:text-neutral-100"
               >
@@ -1250,7 +1252,7 @@ export default function ChatInterface({
             <p className="text-brand-red text-[11px]">
               {t.weaveAi.limitReached ?? "Monthly AI message limit reached."}{" "}
               <button
-                onClick={() => router.push("/settings/plans")}
+                onClick={() => router.push(`/${orgId}/settings/plans`)}
                 className="hover:text-brand-orange underline"
               >
                 {t.weaveAi.viewPlans ?? "View plans"}

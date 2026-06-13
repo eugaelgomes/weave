@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { ApplicationPageNav } from "@/app/(protected)/_components/ui/ApplicationPageNav";
 import { useAuth } from "@/app/_contexts/auth-context";
@@ -72,6 +72,8 @@ function storageKey(userId: string): string {
 
 export function CreateProjectWizard() {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { user } = useAuth();
 
   const [state, setState] = useState<CreateProjectWizardState>(() => ({
@@ -285,7 +287,7 @@ export function CreateProjectWizard() {
           leftContent={
             <button
               type="button"
-              onClick={() => router.push("/projects")}
+              onClick={() => router.push(`/${orgId}/projects`)}
               className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-700/80 dark:hover:text-neutral-100"
             >
               <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
@@ -298,7 +300,7 @@ export function CreateProjectWizard() {
                 type="button"
                 onClick={() =>
                   router.push(
-                    `/projects/${state.created.project?.public_id || state.created.projectId}`
+                    `/${orgId}/projects/${state.created.project?.public_id || state.created.projectId}`
                   )
                 }
                 className="bg-brand-primary-500 inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-bold text-neutral-950 transition hover:brightness-95"
