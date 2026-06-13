@@ -725,7 +725,7 @@ const NoteDetail = () => {
             editingTitleRef.current = loadedNote.title;
             editingDescriptionRef.current = loadedNote.description || "";
             if (loadedNote.public_id && routeNoteId !== loadedNote.public_id) {
-              router.replace(getNotePath(loadedNote));
+              router.replace(getNotePath(orgId, loadedNote));
             }
             // Carregar blocos da tarefa
             if (loadedNote.blocks) {
@@ -2280,7 +2280,7 @@ const NoteDetail = () => {
                                 className="group dark:border-surface-dark-border-strong flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-600"
                               >
                                 <button
-                                  onClick={() => router.push(getNotePath(relNote!))}
+                                  onClick={() => router.push(getNotePath(orgId, relNote!))}
                                   className="inline-flex items-center gap-1.5 truncate"
                                 >
                                   <ProjectIcon

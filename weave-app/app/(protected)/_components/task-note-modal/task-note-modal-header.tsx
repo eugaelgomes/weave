@@ -11,7 +11,7 @@ import {
   Plus,
   Maximize2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import type { Note } from "@/app/_contexts/notes-context";
 import { getNotePath } from "@/app/_utils/note-path";
@@ -70,11 +70,13 @@ export function TaskNoteModalHeader({
   onDraftColorChange,
 }: TaskNoteModalHeaderProps) {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params?.orgId as string;
 
   const handleOpenFullPage = () => {
     if (note) {
       onClose();
-      router.push(getNotePath(note));
+      router.push(getNotePath(orgId, note));
     }
   };
 

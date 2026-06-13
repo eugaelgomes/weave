@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import {
   DndContext,
@@ -910,12 +911,14 @@ export default function ProjectBoardV2({
   const { openModal: openTaskModal } = useTaskNoteModal();
   const { updateProjectNoteStage } = useProjects();
   const [activeNote, setActiveNote] = useState<any>(null);
+  const params = useParams();
+  const orgId = params?.orgId as string;
 
   const handleOpenNote = useCallback(
     (noteId: string) => {
       const note = projectNotes.find((item) => item.id === noteId);
       if (projectPublicId && note) {
-        syncProjectTaskUrl(projectPublicId, note, false);
+        syncProjectTaskUrl(orgId, projectPublicId, note, false);
       }
       openTaskModal("edit", { noteId, projectPublicId });
     },

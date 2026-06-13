@@ -79,7 +79,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
             <li key={note.id} className="flex flex-col">
               <div className="flex w-full min-w-0 items-center">
                 <Link
-                  href={getNotePath(note)}
+                  href={getNotePath(orgId, note)}
                   className={`group flex min-w-0 flex-1 items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
                     isActive
                       ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"

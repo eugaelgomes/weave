@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 
+import { useParams } from "next/navigation";
+
 import type { Note } from "@/app/_contexts/notes-context";
 import { syncProjectTaskUrl } from "@/app/_utils/note-path";
 
@@ -67,6 +69,8 @@ const initialState: TaskNoteModalState = {
 export function TaskNoteModalProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<TaskNoteModalState>(initialState);
   const [callbacks, setCallbacks] = useState<TaskNoteModalCallbacks>({});
+  const params = useParams();
+  const orgId = params?.orgId as string;
 
   const openModal = useCallback<TaskNoteModalContextType["openModal"]>((mode, options = {}) => {
     setState({
@@ -88,12 +92,12 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
   const closeModal = useCallback(() => {
     setState((prev) => {
       if (prev.projectPublicId) {
-        syncProjectTaskUrl(prev.projectPublicId, null, true);
+        syncProjectTaskUrl(orgId, prev.projectPublicId, null, true);
       }
       return initialState;
     });
     setCallbacks({});
-  }, []);
+  }, [orgId]);
 
   const viewNote = useCallback(
     (noteId: string) => {
