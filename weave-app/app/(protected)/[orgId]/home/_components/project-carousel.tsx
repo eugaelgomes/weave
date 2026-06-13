@@ -3,6 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useParams } from "next/navigation";
+import { routes } from "@/app/_utils/routes";
 import {
   Folder,
   ChevronLeft,
@@ -69,8 +71,9 @@ export default function ProjectsCarousel({
   title,
   emptyMessage,
   emptyActionText,
-  emptyActionHref = "/projects",
 }: ProjectsCarouselProps) {
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { t, locale } = useLanguage();
   const { feed } = useWeaveEngine();
   const [currentSlide, setCurrentSlide] = React.useState(0);
@@ -173,7 +176,7 @@ export default function ProjectsCarousel({
             {resolvedEmptyMessage}
           </p>
           <Link
-            href={emptyActionHref}
+            href={routes.projects.list(orgId)}
             className="bg-brand-primary-500 inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-[10px] font-medium text-neutral-950 transition-colors hover:bg-yellow-600"
           >
             <Folder className="h-3 w-3" /> {resolvedEmptyAction}
@@ -270,7 +273,7 @@ export default function ProjectsCarousel({
               return (
                 <Link
                   key={project.id}
-                  href={`/projects/${project.public_id || project.id}`}
+                  href={routes.projects.board(orgId, project.public_id || project.id)}
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
                   <div

@@ -41,6 +41,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useParams } from "next/navigation";
 import { isChatSessionId } from "@/app/_utils/chat-session-id";
 import { resolveProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
+import { routes } from "@/app/_utils/routes";
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -256,7 +257,7 @@ export default function ChatInterface({
 
   useEffect(() => {
     if (chatId && !isChatSessionId(chatId)) {
-      router.replace("/weave-ai/chat");
+      router.replace(`/${orgId}/weave-ai/chat`);
       return;
     }
     if (chatId) {
@@ -272,9 +273,9 @@ export default function ChatInterface({
   useEffect(() => {
     if (chatId) return;
     if (!currentSession?.id || !isChatSessionId(currentSession.id)) return;
-    if (pathname !== "/weave-ai/chat") return;
+    if (pathname !== `/${orgId}/weave-ai/chat`) return;
     if (messages.length === 0) return;
-    router.replace(`/weave-ai/chat/${currentSession.id}`);
+    router.replace(`/${orgId}/weave-ai/chat/${currentSession.id}`);
   }, [chatId, currentSession?.id, messages.length, pathname, router]);
 
   const handleSendText = async (messageText: string) => {
@@ -728,7 +729,7 @@ export default function ChatInterface({
                         const note = Array.isArray(notesOverview)
                           ? notesOverview.find((n: any) => n.id === noteId)
                           : null;
-                        const href = `/notes/${(note as any)?.public_id || noteId}`;
+                        const href = routes.notes.details(orgId, (note as any)?.public_id || noteId);
                         const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
                         return (
                           <Link
@@ -751,7 +752,7 @@ export default function ChatInterface({
                         const project = Array.isArray(projectsOverview)
                           ? projectsOverview.find((p: any) => p.id === projectId)
                           : null;
-                        const href = `/projects/${(project as any)?.public_id || projectId}`;
+                        const href = routes.projects.board(orgId, (project as any)?.public_id || projectId);
                         const projectIcon =
                           (project as any)?.icon || (project as any)?.properties?.icon;
                         return (

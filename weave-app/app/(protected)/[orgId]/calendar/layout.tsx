@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock3, Info } from "lucide-react";
 import { CalendarHeader } from "@/app/(protected)/_components/ui/headers/calendar-header";
 import { MicroCalendar } from "@/app/(protected)/[orgId]/calendar/_components/micro-calendar";
@@ -12,7 +12,9 @@ import { NotesProvider } from "@/app/_contexts/notes-context";
 export default function CalendarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const base = pathname.replace(/\/+$/, "");
-  const isCalendarHome = base === "/calendar";
+  const params = useParams();
+  const orgId = params?.orgId as string;
+  const isCalendarHome = base === `/${orgId}/calendar`;
 
   return (
     <CalendarPageViewProvider>
@@ -30,7 +32,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
                 <ul className="space-y-0.5">
                   <li>
                     <Link
-                      href="/calendar"
+                      href={`/${orgId}/calendar`}
                       className={`group flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all ${
                         isCalendarHome
                           ? "bg-neutral-200/60 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"

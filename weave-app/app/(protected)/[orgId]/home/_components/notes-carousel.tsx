@@ -3,6 +3,8 @@
 import React, { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useParams } from "next/navigation";
+import { routes } from "@/app/_utils/routes";
 import {
   FileText,
   ChevronLeft,
@@ -41,8 +43,9 @@ export default function NotesCarousel({
   title,
   emptyMessage,
   emptyActionText,
-  emptyActionHref = "/notes",
 }: NotesCarouselProps) {
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const { t, locale } = useLanguage();
   const { openModal } = useTaskNoteModal();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -108,7 +111,7 @@ export default function NotesCarousel({
             {resolvedEmptyMessage}
           </p>
           <Link
-            href={emptyActionHref}
+            href={routes.notes.list(orgId)}
             className="bg-brand-primary-500 inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-yellow-600"
           >
             <FileText className="h-3 w-3" /> {resolvedEmptyAction}

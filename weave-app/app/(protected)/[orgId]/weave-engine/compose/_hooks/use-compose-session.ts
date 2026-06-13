@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { useAuth } from "@/app/_contexts/auth-context";
@@ -50,6 +50,8 @@ export function useComposeSession(
   const conv = t.reasoningComposer.conversation;
   const { user } = useAuth();
   const { projects } = useWeaveEngine();
+  const params = useParams();
+  const orgId = params?.orgId as string;
 
   const [projectId, setProjectId] = useState<string | null>(initialProjectId);
   const [intent, setIntent] = useState<ComposeIntent>(null);
@@ -81,7 +83,7 @@ export function useComposeSession(
   useEffect(() => {
     if (!canManage) {
       toast.error(t.home.engine.forbidden);
-      router.replace("/weave-engine");
+      router.replace(`/${orgId}/weave-engine`);
     }
   }, [canManage, router, t.home.engine.forbidden]);
 

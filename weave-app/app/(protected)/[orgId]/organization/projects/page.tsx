@@ -2,7 +2,9 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { WorkspacePageShell } from "@/app/(protected)/[orgId]/organization/_components/workspace-page-shell";
+import { routes } from "@/app/_utils/routes";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { Project } from "@/app/_services/projects-service/projects-service";
@@ -44,6 +46,8 @@ const statusColors: Record<string, string> = {
 const ProjectsManagementPage = () => {
   const { t } = useLanguage();
   const { projects = [], loading: isLoading } = useProjects();
+  const params = useParams();
+  const orgId = params?.orgId as string;
 
   // Estados de Filtro
   const [searchTerm, setSearchTerm] = useState("");
@@ -273,7 +277,7 @@ const ProjectsManagementPage = () => {
                         </td>
                         <td className="px-3 py-1.5 text-center">
                           <Link
-                            href={`/projects/${project.public_id}`}
+                            href={routes.projects.board(orgId, project.public_id)}
                             className="inline-flex h-6 w-6 items-center justify-center rounded text-neutral-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-neutral-200 hover:text-neutral-900 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
                             title="Acessar projeto"
                           >

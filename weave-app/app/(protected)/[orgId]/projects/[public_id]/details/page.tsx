@@ -1589,13 +1589,13 @@ export default function ProjectDetailsPage() {
             {canEdit && (
               <div className="flex flex-wrap gap-1.5">
                 <Link
-                  href={`/weave-engine/compose?projectId=${projectId}&from=project&intent=insight`}
+                  href={`/${orgId}/weave-engine/compose?projectId=${projectId}&from=project&intent=insight`}
                   className={btnPrimaryCls}
                 >
                   <FaPlus className="size-2" /> Publicar insight
                 </Link>
                 <Link
-                  href={`/weave-engine/compose?projectId=${projectId}&from=project&intent=instructions`}
+                  href={`/${orgId}/weave-engine/compose?projectId=${projectId}&from=project&intent=instructions`}
                   className={btnSecondaryCls}
                 >
                   Instruções do engine

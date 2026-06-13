@@ -2,8 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import { useProjects } from "@/app/_contexts/projects-context";
+import { routes } from "@/app/_utils/routes";
 import { Project } from "@/app/_services/projects-service/projects-service";
 import { Layers, Search, Plus, Folder, Clock, Flag, Activity, ArrowRight } from "lucide-react";
 import { PROJECT_STATUS } from "@/app/_utils/db-enums";
@@ -37,6 +39,8 @@ const priorityLabels: Record<string, string> = {
 const ProjectsPage = () => {
   // Assumindo que o seu useProjects expõe a lista de projetos e o estado de loading
   const { projects = [], loading: isLoading } = useProjects();
+  const params = useParams();
+  const orgId = params?.orgId as string;
   const [searchTerm, setSearchTerm] = useState("");
 
   // Lógica de filtragem no client-side (ideal para dezenas/centenas de projetos)
@@ -118,7 +122,7 @@ const ProjectsPage = () => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProjects.map((project) => (
                 <Link
-                  href={`/projects/${project.public_id}`}
+                  href={routes.projects.board(orgId, project.public_id)}
                   key={project.id}
                   className="group dark:border-surface-dark-border flex flex-col justify-between rounded-md border border-neutral-100 bg-white p-5 transition-all hover:border-amber-500 hover:shadow-sm dark:bg-[#1d1d1b] dark:hover:border-amber-500"
                 >
