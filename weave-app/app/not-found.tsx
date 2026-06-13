@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/_contexts/auth-context";
+import { routes } from "@/app/_utils/routes";
 import { ArrowLeft, FileQuestionMark, Home } from "lucide-react";
 
 export default function NotFound() {
   const router = useRouter();
+  const { user, authenticated } = useAuth();
+
+  const homeHref = authenticated && user 
+    ? routes.home((user.org_public_id || user.public_id) as string) 
+    : routes.auth.signIn();
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-neutral-50 dark:bg-[#1d1d1b]">
@@ -42,7 +49,7 @@ export default function NotFound() {
               Voltar
             </button>
             <Link
-              href="/home"
+              href={homeHref}
               className="dark:border-surface-dark-border-strong inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 dark:bg-[#1d1d1b] dark:text-neutral-200 dark:hover:bg-neutral-900"
             >
               <Home className="h-4 w-4 shrink-0" aria-hidden />
@@ -52,19 +59,19 @@ export default function NotFound() {
 
           <nav className="dark:border-surface-dark-border mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-neutral-200 pt-6 text-sm">
             <Link
-              href="/notes"
+              href={authenticated && user ? routes.notes.list((user.org_public_id || user.public_id) as string) : routes.auth.signIn()}
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Tarefas
             </Link>
             <Link
-              href="/projects"
+              href={authenticated && user ? routes.projects.list((user.org_public_id || user.public_id) as string) : routes.auth.signIn()}
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Projetos
             </Link>
             <Link
-              href="/settings"
+              href={authenticated && user ? routes.settings.base((user.org_public_id || user.public_id) as string) : routes.auth.signIn()}
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Configurações

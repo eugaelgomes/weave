@@ -3,7 +3,7 @@
 import React from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { Bot, Plus, Trash2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WeaveAIHeader } from "@/app/(protected)/_components/ui/headers/weave-ai-header";
@@ -12,6 +12,7 @@ import { useAgent, AgentProvider } from "@/app/_contexts/agent-context";
 import { NotesProvider } from "@/app/_contexts/notes-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
+import { routes } from "@/app/_utils/routes";
 
 function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const router = useRouter();
@@ -41,7 +42,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
     if (!deleted) return;
 
     if (currentSession?.id === sessionId) {
-      router.push(`/${orgId}/weave-ai/chat`);
+      router.push(routes.weaveAi.chat(orgId));
       onLinkClick?.();
     }
   };
@@ -59,7 +60,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
         <button
           type="button"
           onClick={() => {
-            router.push(`/${orgId}/weave-ai/agents/new`);
+            router.push(routes.weaveAi.newAgent(orgId));
             onLinkClick?.();
           }}
           className="dark:border-surface-dark-border mb-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-900 px-2 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200"
@@ -76,7 +77,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                 <button
                   type="button"
                   onClick={() => {
-                    router.push(`/${orgId}/weave-ai/agents/${agent.id}`);
+                    router.push(routes.weaveAi.agentDetails(orgId, agent.id));
                     onLinkClick?.();
                   }}
                   className={cn(
@@ -124,7 +125,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             flushSync(() => {
               createNewSession();
             });
-            router.push(`/${orgId}/weave-ai/chat`);
+            router.push(routes.weaveAi.chat(orgId));
             onLinkClick?.();
           }}
           className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs font-medium text-neutral-600 shadow-sm transition hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:bg-neutral-800"
@@ -146,7 +147,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                 >
                   <button
                     onClick={() => {
-                      router.push(`/${orgId}/weave-ai/chat/${chat.id}`);
+                      router.push(routes.weaveAi.chatSession(orgId, chat.id));
                       onLinkClick?.();
                     }}
                     className={cn(
