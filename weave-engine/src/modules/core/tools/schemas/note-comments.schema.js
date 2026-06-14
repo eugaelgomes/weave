@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/note-comments.schema
+ * @description JSON Schema definition for the note-comments.schema AI tool.
+ */
 const schemas = [
   {
     name: "list_note_comments",

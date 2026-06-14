@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/org-members.schema
+ * @description JSON Schema definition for the org-members.schema AI tool.
+ */
 const schemas = [
   {
     name: "list_org_members",

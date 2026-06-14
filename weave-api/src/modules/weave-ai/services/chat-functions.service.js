@@ -1,3 +1,14 @@
+/**
+ * @module weave-ai/services/chat-functions.service
+ * @description Service responsible for executing tools/functions requested by the LLM.
+ *
+ * Dependencies:
+ * - `../handlers/tool-registry`: To dynamically resolve tool names to their handler implementations.
+ * - `../utils/weave-ai-i18n.util`: For localized error messages if a function is not supported.
+ *
+ * Used by:
+ * - `weave-ai/services/chat-orchestrator.service.js`: During the ReAct loop to execute functions returned by the engine.
+ */
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
@@ -53,7 +64,14 @@ class ChatFunctionsService {
       throw error;
     }
 
-    return await handler.execute({ userId, args, organizationId, lang, t, name });
+    return await handler.execute({
+      userId,
+      args,
+      organizationId,
+      lang,
+      t,
+      name,
+    });
   }
 
   /**

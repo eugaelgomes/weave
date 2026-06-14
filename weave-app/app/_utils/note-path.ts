@@ -10,7 +10,10 @@ export function getNoteApiId(note: { id: string }): string {
 /**
  * Public note URL segment (12-char) or legacy UUID fallback.
  */
-export function getNotePath(orgId: string, note: { public_id?: string | null; id: string }): string {
+export function getNotePath(
+  orgId: string,
+  note: { public_id?: string | null; id: string }
+): string {
   return routes.notes.details(orgId, note.public_id || note.id);
 }
 

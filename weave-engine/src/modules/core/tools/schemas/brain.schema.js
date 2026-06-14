@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/brain.schema
+ * @description JSON Schema definition for the brain.schema AI tool.
+ */
 const schemas = [
   {
     name: "consult_brain",

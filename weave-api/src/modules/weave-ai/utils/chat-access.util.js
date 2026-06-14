@@ -1,3 +1,17 @@
+/**
+ * @module weave-ai/utils/chat-access.util
+ * @description Access control utility for Weave AI resources.
+ * Ensures that users have the correct permissions to mutate notes or projects.
+ *
+ * Dependencies:
+ * - `@/modules/notes/notes.repository`: For fetching note access summaries and collaborator data.
+ * - `@/modules/projects/repositories/projects-read.repository`: For project scope and role checks.
+ * - `@/utils/note-id-lookup`: To resolve public UUIDs to internal DB UUIDs.
+ * - `./weave-ai-i18n.util`: For localized error messages.
+ *
+ * Used by:
+ * - `weave-ai/handlers/*`: Specifically handlers that mutate resources (e.g. `update-note-content.handler.js`).
+ */
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
 const {

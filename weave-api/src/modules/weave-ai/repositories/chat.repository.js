@@ -1,10 +1,23 @@
+/**
+ * @module weave-ai/repositories/chat.repository
+ * @description Data access layer for Weave AI chat sessions and messages.
+ * Manages persisting conversation history, handling idempotency for retries, and updating session metadata.
+ *
+ * Dependencies:
+ * - `@/database/connection`: PostgreSQL connection pool.
+ *
+ * Used by:
+ * - `weave-ai/services/chat-orchestrator.service.js`: To persist user and assistant messages, and fetch history.
+ * - `weave-ai/controllers/chat.controller.js`: For fetching history and managing session lifecycles.
+ */
 const { pool } = require("@/database/connection");
 
 class WeaveAIRepository {
   /**
-   * Cria uma nova sessão de chat.
-   * @param {string} userId - UUID do usuário dono da sessão
-   * @returns {Promise<object>} A sessão criada
+   * Creates a new chat session for a user.
+   *
+   * @param {string} userId - UUID of the user owning the session.
+   * @returns {Promise<object>} The created session record.
    */
   async createSession(userId) {
     const query = `
@@ -18,11 +31,12 @@ class WeaveAIRepository {
   }
 
   /**
-   * Atualiza título da sessão
-   * @param {string} sessionId - UUID da sessão
-   * @param {string} userId - UUID do usuário
-   * @param {string} title - Novo título
-   * @returns {Promise<object>} A sessão atualizada
+   * Updates the title of an existing chat session.
+   *
+   * @param {string} sessionId - UUID of the session.
+   * @param {string} userId - UUID of the user owning the session.
+   * @param {string} title - The new title for the session.
+   * @returns {Promise<object>} The updated session record.
    */
   async updateSessionTitle(sessionId, userId, title) {
     const query = `
@@ -40,32 +54,33 @@ class WeaveAIRepository {
 
   /**
    * @typedef {Object} ChatMessageData
-   * @property {string} sessionId - UUID da sessão
-   * @property {string} userId - UUID do usuário
-   * @property {string|null} [organizationId=null] - UUID da organização
-   * @property {string} role - Papel da mensagem (user, assistant, tool)
-   * @property {string|null} [content] - Conteúdo da mensagem
-   * @property {string} [model] - Nome/versão do modelo usado
-   * @property {Object} [metadata={}] - Metadados extras
-   * @property {string|null} [requestId=null] - ID do request
-   * @property {string|null} [provider=null] - Provedor da IA
-   * @property {string} [status="ok"] - Status da mensagem (ok, error, etc)
-   * @property {string|null} [errorCode=null] - Código do erro
-   * @property {string|null} [errorMessage=null] - Mensagem do erro
-   * @property {number|null} [latencyMs=null] - Latência em ms
-   * @property {number|null} [inputTokens=null] - Tokens de input
-   * @property {number|null} [outputTokens=null] - Tokens de output
-   * @property {number|null} [totalTokens=null] - Total de tokens
-   * @property {string|null} [agentId=null] - UUID do agente
-   * @property {boolean} [allowEdit=false] - Se permite edição
-   * @property {Array<Object>|null} [toolCalls=null] - Ferramentas chamadas
-   * @property {string|null} [toolCallId=null] - ID da ferramenta
+   * @property {string} sessionId - UUID of the chat session.
+   * @property {string} userId - UUID of the user.
+   * @property {string|null} [organizationId=null] - UUID of the organization.
+   * @property {string} role - The role of the message sender (user, assistant, tool).
+   * @property {string|null} [content] - The text content of the message.
+   * @property {string} [model] - The name and version of the LLM model used.
+   * @property {Object} [metadata={}] - Additional metadata payload.
+   * @property {string|null} [requestId=null] - Request idempotency key.
+   * @property {string|null} [provider=null] - The AI provider name.
+   * @property {string} [status="ok"] - Execution status of the message (ok, error, function_call, etc.).
+   * @property {string|null} [errorCode=null] - Error code if the status is error.
+   * @property {string|null} [errorMessage=null] - Error message description.
+   * @property {number|null} [latencyMs=null] - Network latency in milliseconds.
+   * @property {number|null} [inputTokens=null] - Count of input tokens consumed.
+   * @property {number|null} [outputTokens=null] - Count of output tokens consumed.
+   * @property {number|null} [totalTokens=null] - Total token consumption.
+   * @property {string|null} [agentId=null] - Associated AI Agent UUID.
+   * @property {boolean} [allowEdit=false] - Whether the context allows destructive edits.
+   * @property {Array<Object>|null} [toolCalls=null] - Tool execution payloads requested by the LLM.
+   * @property {string|null} [toolCallId=null] - Identifier of the specific tool call.
    */
 
   /**
-   * Salva uma mensagem no banco de dados.
-   * @param {ChatMessageData} data - Os dados da mensagem
-   * @returns {Promise<object>} A mensagem salva
+   * Persists a chat message into the database and updates the session summary.
+   *
+   * @param {ChatMessageData} data - The message payload to persist.
+   * @returns {Promise<object>} The persisted message record.
    */
   async saveMessage(data) {
     const {
@@ -145,7 +160,7 @@ class WeaveAIRepository {
       toolCallId,
     ]);
 
-    // Atualiza resumo da sessão
+    // Update the session summary with recent statistics
     await pool.query(
       `
         UPDATE ai_chat_sessions
@@ -224,7 +239,11 @@ class WeaveAIRepository {
   }
 
   /**
-   * Busca mensagens de uma sessão
+   * Retrieves all messages belonging to a specific session, verifying session ownership.
+   *
+   * @param {string} sessionId - UUID of the session.
+   * @param {string} userId - UUID of the user requesting the messages.
+   * @returns {Promise<Array<object>>} An array of message records.
    */
   async getSessionMessages(sessionId, userId) {
     const query = `
@@ -287,7 +306,12 @@ class WeaveAIRepository {
   }
 
   /**
-   * Busca todas as sessões de um usuário
+   * Retrieves a paginated list of all active chat sessions for a user.
+   *
+   * @param {string} userId - UUID of the user.
+   * @param {number} [limit=50] - Maximum number of sessions to return.
+   * @param {number} [offset=0] - Offset for pagination.
+   * @returns {Promise<Array<object>>} An array of session summary records.
    */
   async getUserSessions(userId, limit = 50, offset = 0) {
     const query = `
@@ -315,7 +339,10 @@ class WeaveAIRepository {
   }
 
   /**
-   * Conta mensagens de uma sessão
+   * Counts the total number of messages within a session.
+   *
+   * @param {string} sessionId - UUID of the session.
+   * @returns {Promise<number>} The total message count.
    */
   async getSessionMessageCount(sessionId) {
     const query = `
@@ -329,10 +356,11 @@ class WeaveAIRepository {
   }
 
   /**
-   * Deleta uma sessão e suas mensagens
-   * @param {string} sessionId
-   * @param {string} userId
-   * @returns {Promise<boolean>} Retorna true se a sessão foi deletada com sucesso
+   * Soft-deletes a chat session, preventing it from appearing in queries.
+   *
+   * @param {string} sessionId - UUID of the session to delete.
+   * @param {string} userId - UUID of the user attempting to delete the session.
+   * @returns {Promise<boolean>} True if the session was successfully deleted.
    */
   async deleteSession(sessionId, userId) {
     const query = `

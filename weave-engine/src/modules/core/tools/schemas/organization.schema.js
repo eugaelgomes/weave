@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/organization.schema
+ * @description JSON Schema definition for the organization.schema AI tool.
+ */
 const schemas = [
   {
     name: "get_organization_details",

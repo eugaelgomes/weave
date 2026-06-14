@@ -1,3 +1,12 @@
+/**
+ * @module weave-engine/modules/core/orchestration/engines/thinking.engine
+ * @description Evaluates user prompts to optionally generate long-form content
+ * ahead of the main ReAct loop execution.
+ *
+ * Dependencies:
+ * - `../../prompts/agent-prompts`: For system prompt construction.
+ * - `../../providers/llm-provider.client`: To execute the thinking generation.
+ */
 const { buildSystemMessage } = require("../../prompts/agent-prompts");
 const { callAIProvider } = require("../../providers/llm-provider.client");
 
@@ -5,12 +14,16 @@ const CONTENT_GENERATION_KEYWORDS =
   /\b(research|edit|rewrite|rebuild|write|create content|detail|explain|summarize|elaborate|rich|history|about)\b/i;
 
 /**
- * @param {object} params
- * @param {string} params.message
- * @param {object} params.enrichedContext
- * @param {string} params.model
- * @param {boolean} params.allowEdit
- * @returns {Promise<string|null>}
+ * Evaluates the user's message against generation keywords. If matched, triggers a
+ * pure content-generation LLM pass before allowing tools to run, useful for
+ * researching or drafting large texts.
+ *
+ * @param {object} params - Execution parameters.
+ * @param {boolean} params.allowEdit - Must be true to trigger generation.
+ * @param {object} params.enrichedContext - Workspace contextual data.
+ * @param {string} params.message - The user's request.
+ * @param {string} params.model - The requested LLM model.
+ * @returns {Promise<string|null>} The generated text, or null if thinking phase is skipped.
  */
 async function processThinkingPhase({
   allowEdit,

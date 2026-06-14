@@ -19,13 +19,14 @@ const sessionTrackerMiddleware = (req, res, next) => {
       req.session.ip_address = ip;
       modified = true;
     }
-    
+
     if (userAgent && req.session.user_agent !== userAgent) {
       req.session.user_agent = userAgent;
       modified = true;
     }
 
-    const isPublic = req.originalUrl && req.originalUrl.includes("/api/public/");
+    const isPublic =
+      req.originalUrl && req.originalUrl.includes("/api/public/");
     const apiType = isPublic ? "public" : "internal";
     if (req.session.api_type !== apiType) {
       req.session.api_type = apiType;
@@ -37,8 +38,8 @@ const sessionTrackerMiddleware = (req, res, next) => {
     // even if saveUninitialized is false and the session hasn't had
     // other data like user_id added yet.
     if (modified && req.session.save) {
-       // Just flag as modified.
-       // Express-session automatically saves if contents change.
+      // Just flag as modified.
+      // Express-session automatically saves if contents change.
     }
   }
 

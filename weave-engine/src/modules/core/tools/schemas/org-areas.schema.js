@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/org-areas.schema
+ * @description JSON Schema definition for the org-areas.schema AI tool.
+ */
 const schemas = [
   {
     name: "list_org_areas",

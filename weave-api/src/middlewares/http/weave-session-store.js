@@ -34,7 +34,7 @@ async function hasMetadataColumns() {
   if (!_hasMetadataColumns) {
     console.warn(
       "[WeaveSessionStore] Metadata columns not found in 'sessions' table. " +
-      "Run the add_session_metadata migration to enable session tracking."
+        "Run the add_session_metadata migration to enable session tracking."
     );
   }
 
@@ -91,7 +91,10 @@ class WeaveSessionStore extends PgSessionStore {
         }
       } catch (updateErr) {
         // Log for observability but do NOT propagate — the session is already saved.
-        console.error("[WeaveSessionStore] Non-fatal error updating session metadata:", updateErr.message);
+        console.error(
+          "[WeaveSessionStore] Non-fatal error updating session metadata:",
+          updateErr.message
+        );
       }
 
       if (cb) cb();
@@ -115,7 +118,10 @@ class WeaveSessionStore extends PgSessionStore {
         `;
         await pool.query(query, [sid]);
       } catch (updateErr) {
-        console.error("[WeaveSessionStore] Non-fatal error touching session metadata:", updateErr.message);
+        console.error(
+          "[WeaveSessionStore] Non-fatal error touching session metadata:",
+          updateErr.message
+        );
       }
 
       if (cb) cb();

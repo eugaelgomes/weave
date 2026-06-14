@@ -1,3 +1,13 @@
+/**
+ * @module weave-engine/modules/core/orchestration/engines/react.engine
+ * @description Implements the core ReAct (Reasoning and Acting) autonomous loop.
+ * This engine iteratively calls the LLM, executes local internal tools, and feeds the results back
+ * until a final text answer is reached or an external API tool is requested.
+ *
+ * Dependencies:
+ * - `../../providers/llm-provider.client`: To call the LLM model.
+ * - `../../tools/tool-dispatcher`: To evaluate and execute internal functions.
+ */
 const { callAIProvider } = require("../../providers/llm-provider.client");
 const {
   isInternalTool,
@@ -15,8 +25,21 @@ const MAX_AGENTIC_DURATION_MS = Number.parseInt(
 );
 
 /**
- * Autonomous ReAct Loop
- * @param {object} params
+ * Autonomous ReAct Loop logic.
+ * Iteratively prompts the LLM to either generate text or request a tool call.
+ * Internal tools are executed immediately and their output is appended to the conversation history.
+ *
+ * @param {object} params - Execution parameters.
+ * @param {boolean} params.allowEdit - Whether the agent has permission to edit data.
+ * @param {boolean} params.allowWebSearch - Whether web search tools should be injected.
+ * @param {Array} params.files - Contextual files attached to the request.
+ * @param {Array} params.functions - External tool schemas passed from the API.
+ * @param {string} params.message - The initial user prompt.
+ * @param {string} params.model - The requested LLM model to use.
+ * @param {string} params.systemMessage - The base system instructions.
+ * @param {Array} [params.conversationHistory=[]] - Previous turn history.
+ * @param {object} [params.executionContext={}] - Workspace context (userId, organizationId, language).
+ * @returns {Promise<{data: object, providerUsed: string, executedActions: Array, functions?: Array}>} Result payload.
  */
 async function executeAgenticTask({
   allowEdit,
@@ -56,6 +79,8 @@ async function executeAgenticTask({
   let currentPrompt = ""; // The message is now in messages history, no need for prompt
   let providerUsed = null;
 
+  // Primary ReAct While Loop
+  // Continues until MAX_REACT_ITERATIONS is hit, time limit expires, or a final answer is returned.
   while (iterations < MAX_REACT_ITERATIONS) {
     if (Date.now() - startedAt >= MAX_AGENTIC_DURATION_MS) {
       const isPt =
@@ -116,7 +141,7 @@ async function executeAgenticTask({
       );
 
       if (internalCalls.length > 0 && externalCalls.length === 0) {
-        // Execute all internal tools in parallel
+        // Execute all internal tools in parallel to minimize latency overhead
         const results = await Promise.all(
           internalCalls.map(async (tc) => {
             const fnName = tc.function.name;

@@ -1,3 +1,13 @@
+/**
+ * @module weave-ai/controllers/agents.controller
+ * @description HTTP Controller for User Agent management in Weave AI.
+ * Handles CRUD operations, sharing permissions, and project assignments for custom AI personas.
+ *
+ * Dependencies:
+ * - `../repositories/agents.repository`: For database operations.
+ * - `../utils/normalize`: To parse and normalize agent personalities.
+ * - `@/services/storage`: To process knowledge base file uploads.
+ */
 /* eslint-disable sort-keys */
 const agentRepository = require("@/modules/weave-ai/repositories/agents.repository");
 const {

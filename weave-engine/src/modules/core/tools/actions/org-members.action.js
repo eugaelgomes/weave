@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/actions/org-members.action
+ * @description Implementation logic for the org-members.action AI tool.
+ */
 const { pool } = require("../../../../services/postgres.client");
 
 /**

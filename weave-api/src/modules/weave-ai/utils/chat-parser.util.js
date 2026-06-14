@@ -1,3 +1,14 @@
+/**
+ * @module weave-ai/utils/chat-parser.util
+ * @description Utility for parsing, validating, and sanitizing incoming request payloads (body, query, params)
+ * for Weave AI endpoints.
+ *
+ * Dependencies:
+ * - `./weave-ai-i18n.util`: For localized validation error messages.
+ *
+ * Used by:
+ * - `weave-ai/controllers/chat.controller.js`: Validates chat payloads, authentication, and HTTP queries.
+ */
 const REQUEST_ID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const { getI18n, getLangFromReq } = require("./weave-ai-i18n.util");

@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/search.schema
+ * @description JSON Schema definition for the search.schema AI tool.
+ */
 const schemas = [
   {
     name: "search_my_notes",

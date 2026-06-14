@@ -1,3 +1,16 @@
+/**
+ * @module weave-engine/modules/weave-ai/chat.processor
+ * @description Redis background queue processor for handling user chat interactions.
+ * Processes requests from weave-api, manages conversational context, and coordinates with reasoning engines.
+ *
+ * Dependencies:
+ * - `../../services/redis.client`: For queue interactions (blpop, lpush, rpush).
+ * - `../core/orchestration/reasoning.engine`: Core agentic loop logic.
+ * - `../core/providers/llm-provider.client`: Fallback basic LLM calls.
+ *
+ * Used by:
+ * - `weave-engine/src/index.js`: Instantiated at startup to begin background processing.
+ */
 /* eslint-disable sort-keys */
 const redis = require("../../services/redis.client");
 const {
@@ -56,12 +69,22 @@ function resolveOrganizationId(payload = {}, context = {}) {
   );
 }
 
+/**
+ * Background worker class that continuously polls the Redis queue for new LLM requests.
+ * Parses jobs, validates envelopes, and executes the requested AI task type.
+ */
 class LlmQueueProcessor {
   constructor() {
     this.isRunning = false;
     this.queueName = getEngineLlmRequestQueueRedisKey();
   }
 
+  /**
+   * Starts the continuous Redis blocking pop loop to fetch and process jobs.
+   * Runs indefinitely until stopped.
+   *
+   * @returns {Promise<void>}
+   */
   async start() {
     if (this.isRunning) {
       return;
@@ -72,6 +95,8 @@ class LlmQueueProcessor {
 
     while (this.isRunning) {
       try {
+        // Block for 5 seconds waiting for a new job.
+        // This prevents CPU spin-waiting while keeping response latency low.
         const result = await redis.blpop(this.queueName, 5);
 
         if (!result) {
@@ -94,8 +119,11 @@ class LlmQueueProcessor {
   }
 
   /**
-   * @param {string} rawPayload
-   * @returns {object|null}
+   * Parses the raw JSON job payload and normalizes required fields like attempts and taskType.
+   * Pushes to dead-letter queue if parsing fails.
+   *
+   * @param {string} rawPayload - Stringified JSON from the Redis queue.
+   * @returns {object|null} The parsed job object or null if invalid.
    */
   parseRawJob(rawPayload) {
     let parsedJob;
@@ -147,8 +175,10 @@ class LlmQueueProcessor {
   }
 
   /**
-   * @param {object} job
-   * @returns {boolean}
+   * Validates the structural integrity of the parsed job object to prevent downstream crashes.
+   *
+   * @param {object} job - The parsed job object.
+   * @returns {boolean} True if the envelope contains all required fields (payload, responseQueueKey).
    */
   isValidJobEnvelope(job) {
     if (!job || typeof job !== "object") {
@@ -174,10 +204,13 @@ class LlmQueueProcessor {
   }
 
   /**
-   * @param {object} job
-   * @param {object} [job.payload]
-   * @param {string} job.responseQueueKey
-   * @param {string} [job.taskType]
+   * Executes the core logic for a single job. Routes the task type, tracks latency,
+   * handles retries, and pushes the final success/failure result back to the response queue.
+   *
+   * @param {object} job - The validated job envelope.
+   * @param {object} [job.payload] - The task-specific arguments.
+   * @param {string} job.responseQueueKey - Redis key to publish the result to.
+   * @param {string} [job.taskType] - The specific AI task (e.g. 'chat_v2_process').
    * @returns {Promise<void>}
    */
   async processJob(job) {
@@ -259,9 +292,11 @@ class LlmQueueProcessor {
   }
 
   /**
-   * @param {unknown} error
-   * @param {string} taskType
-   * @returns {{ code: string, message: string, taskType: string }}
+   * Normalizes generic error objects into a standard shape for API consumption.
+   *
+   * @param {unknown} error - The caught exception.
+   * @param {string} taskType - The task that threw the error.
+   * @returns {{ code: string, message: string, taskType: string }} Normalized error payload.
    */
   normalizeTaskError(error, taskType) {
     return {
@@ -278,7 +313,9 @@ class LlmQueueProcessor {
   }
 
   /**
-   * @param {object} deadLetterPayload
+   * Persists permanently failed or malformed jobs to a dead-letter queue for later inspection.
+   *
+   * @param {object} deadLetterPayload - The failure details and original job data.
    * @returns {Promise<void>}
    */
   async pushDeadLetter(deadLetterPayload) {
@@ -292,9 +329,11 @@ class LlmQueueProcessor {
   }
 
   /**
-   * @param {string} taskType
-   * @param {object} payload
-   * @returns {Promise<object>}
+   * Routes the job to the appropriate domain logic based on its `taskType`.
+   *
+   * @param {string} taskType - The action to perform (e.g., 'build_system_message', 'chat_v2_process').
+   * @param {object} payload - The domain-specific parameters for the task.
+   * @returns {Promise<object>} The resulting data from the execution.
    */
   async executeTask(taskType, payload) {
     switch (taskType) {
@@ -389,6 +428,7 @@ class LlmQueueProcessor {
             },
           }),
           new Promise((_, reject) => {
+            // Safety timeout to prevent permanently stalled agent loops from hanging the queue worker
             setTimeout(() => {
               const timeoutError = new Error("Engine chat task timeout");
               timeoutError.code = "ENGINE_CHAT_TASK_TIMEOUT";
@@ -489,10 +529,10 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
   }
 
   /**
-   * Extracts agent personality instructions for prompt composition.
+   * Extracts agent personality instructions and metadata to append to system prompts.
    *
-   * @param {object|null|undefined} agent
-   * @returns {string}
+   * @param {object|null|undefined} agent - The custom AI agent database record.
+   * @returns {string} Formatted instructions string.
    */
   extractAgentInstructions(agent) {
     if (!agent || typeof agent !== "object") {
@@ -523,10 +563,11 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
   }
 
   /**
-   * Normalizes raw conversation history sent by server.
+   * Normalizes raw conversation history sent by the server into a standard OpenAI-like format.
+   * Implements strict character truncation to prevent context window overflows.
    *
-   * @param {unknown} rawHistory
-   * @returns {Array<{role: "user"|"assistant", content: string}>}
+   * @param {unknown} rawHistory - Array of previous chat messages.
+   * @returns {Array<{role: "user"|"assistant", content: string}>} The sanitized context window.
    */
   normalizeConversationHistory(rawHistory) {
     if (!Array.isArray(rawHistory) || rawHistory.length === 0) {
@@ -558,10 +599,11 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
   }
 
   /**
-   * Converts normalized history to a bounded prompt block.
+   * Converts a normalized array of history messages into a single bounded prompt block string.
+   * Used for models that do not natively support message arrays.
    *
-   * @param {Array<{role: "user"|"assistant", content: string}>} history
-   * @returns {string}
+   * @param {Array<{role: "user"|"assistant", content: string}>} history - Normalized history.
+   * @returns {string} The serialized prompt string.
    */
   serializeConversationHistory(history = []) {
     if (!Array.isArray(history) || history.length === 0) {

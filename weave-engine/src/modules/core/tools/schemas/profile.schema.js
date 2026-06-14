@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/profile.schema
+ * @description JSON Schema definition for the profile.schema AI tool.
+ */
 const schemas = [
   {
     name: "get_user_profile",

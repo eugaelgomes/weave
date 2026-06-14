@@ -1,3 +1,15 @@
+/**
+ * @module weave-ai/repositories/agents.repository
+ * @description Data access layer for Weave AI Agents (ai_user_agent table).
+ * Handles CRUD operations, sharing permissions, and project associations for custom agents.
+ *
+ * Dependencies:
+ * - `@/database/connection`: PostgreSQL connection pool.
+ *
+ * Used by:
+ * - `weave-ai/controllers/agents.controller.js`: For all agent management API endpoints.
+ * - `weave-ai/services/chat-orchestrator.service.js`: To fetch agent personality and tool constraints before chat generation.
+ */
 const { pool } = require("@/database/connection");
 
 class AgentsRepository {

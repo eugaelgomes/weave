@@ -1,3 +1,14 @@
+/**
+ * @module weave-ai/schemas/function-schemas
+ * @description Defines the JSON schemas for the tools/functions that the LLM is allowed to execute.
+ * Adheres to the OpenAI function calling schema spec.
+ *
+ * Dependencies:
+ * - None
+ *
+ * Used by:
+ * - `weave-ai/policies/authorized-functions.js`: To resolve which of these schemas the current user/context can access.
+ */
 const FunctionCategory = Object.freeze({
   BLOCKS: "blocks",
   NOTES: "notes",
@@ -43,8 +54,7 @@ const BLOCKS_SCHEMA = Object.freeze({
             properties: {
               level: {
                 type: "integer",
-                description:
-                  "Heading level (1-6). Only for type=heading.",
+                description: "Heading level (1-6). Only for type=heading.",
               },
               language: {
                 type: "string",
@@ -53,8 +63,7 @@ const BLOCKS_SCHEMA = Object.freeze({
               },
               ordered: {
                 type: "boolean",
-                description:
-                  "Whether the list is ordered. Only for type=list.",
+                description: "Whether the list is ordered. Only for type=list.",
               },
               checked: {
                 type: "boolean",
@@ -90,6 +99,10 @@ const BLOCKS_SCHEMA = Object.freeze({
   },
 });
 
+/**
+ * Dictionary of all available tool schemas.
+ * Each schema defines the parameters required by the LLM to call the respective tool.
+ */
 const FUNCTION_SCHEMAS = Object.freeze({
   create_note: {
     category: FunctionCategory.NOTES,

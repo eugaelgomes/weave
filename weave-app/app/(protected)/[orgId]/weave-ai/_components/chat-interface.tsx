@@ -168,63 +168,72 @@ function RenderContextIcon({
 export type ChatInterfaceVariant = "fullPage" | "widget";
 const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: string }) => {
   const [expanded, setExpanded] = useState(false);
-  const { language } = useLanguage();
-  const t = language === "en-US" ? { success: "Success", failed: "Failed", details: "Details", open: "Open" } : { success: "Sucesso", failed: "Falhou", details: "Detalhes", open: "Abrir" };
+  const { locale } = useLanguage();
+  const t =
+    locale === "en-US"
+      ? { success: "Success", failed: "Failed", details: "Details", open: "Open" }
+      : { success: "Sucesso", failed: "Falhou", details: "Detalhes", open: "Abrir" };
 
   const isEngine = execution.source === "engine";
-  let icon = <Bot className="w-3 h-3" />;
+  let icon = <Bot className="h-3 w-3" />;
   let title = execution.name;
   let link = null;
 
   if (execution.name === "create_note") {
-    icon = <FilePlus2 className="w-3 h-3" />;
-    title = language === "en-US" ? "Created a note" : "Criou uma nota";
+    icon = <FilePlus2 className="h-3 w-3" />;
+    title = locale === "en-US" ? "Created a note" : "Criou uma nota";
     if (execution.result?.noteId) {
       link = routes.notes.details(orgId, execution.result.noteId);
     }
   } else if (execution.name.startsWith("search_")) {
-    icon = <Search className="w-3 h-3" />;
-    title = language === "en-US" ? "Searched records" : "Realizou busca";
+    icon = <Search className="h-3 w-3" />;
+    title = locale === "en-US" ? "Searched records" : "Realizou busca";
   } else if (execution.name.includes("update_note")) {
-    icon = <FileEdit className="w-3 h-3" />;
-    title = language === "en-US" ? "Updated a note" : "Atualizou uma nota";
+    icon = <FileEdit className="h-3 w-3" />;
+    title = locale === "en-US" ? "Updated a note" : "Atualizou uma nota";
   } else if (execution.name === "consult_brain" || execution.name === "get_brain_structure") {
-    icon = <Brain className="w-3 h-3" />;
-    title = language === "en-US" ? "Consulted the Brain" : "Consultou o Cérebro";
+    icon = <Brain className="h-3 w-3" />;
+    title = locale === "en-US" ? "Consulted the Brain" : "Consultou o Cérebro";
   }
 
   return (
-    <div className="border border-neutral-200 dark:border-neutral-800 rounded-md p-2 mt-2 bg-white/50 dark:bg-neutral-900/50 text-[10px]">
+    <div className="mt-2 rounded-md border border-neutral-200 bg-white/50 p-2 text-[10px] dark:border-neutral-800 dark:bg-neutral-900/50">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 font-medium text-neutral-700 dark:text-neutral-300">
           {icon}
           <span>{title}</span>
-          <span className="text-neutral-400 font-mono text-[9px]">({execution.name})</span>
+          <span className="font-mono text-[9px] text-neutral-400">({execution.name})</span>
         </div>
         <div className="flex items-center gap-2">
           {link && (
-            <Link href={link} className="text-brand-yellow hover:underline flex items-center gap-0.5 font-medium">
-              {t.open} <ChevronRight className="w-2.5 h-2.5" />
+            <Link
+              href={link}
+              className="text-brand-yellow flex items-center gap-0.5 font-medium hover:underline"
+            >
+              {t.open} <ChevronRight className="h-2.5 w-2.5" />
             </Link>
           )}
           {execution.success ? (
-            <span className="flex items-center gap-1 text-green-600 dark:text-green-500 bg-green-50 dark:bg-green-500/10 px-1.5 py-0.5 rounded-sm">
-              <CheckCircle2 className="w-2.5 h-2.5" /> {t.success}
+            <span className="flex items-center gap-1 rounded-sm bg-green-50 px-1.5 py-0.5 text-green-600 dark:bg-green-500/10 dark:text-green-500">
+              <CheckCircle2 className="h-2.5 w-2.5" /> {t.success}
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-red-600 dark:text-red-500 bg-red-50 dark:bg-red-500/10 px-1.5 py-0.5 rounded-sm">
-              <XCircle className="w-2.5 h-2.5" /> {t.failed}
+            <span className="flex items-center gap-1 rounded-sm bg-red-50 px-1.5 py-0.5 text-red-600 dark:bg-red-500/10 dark:text-red-500">
+              <XCircle className="h-2.5 w-2.5" /> {t.failed}
             </span>
           )}
         </div>
       </div>
       <div className="mt-1">
-        <button onClick={() => setExpanded(!expanded)} className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 flex items-center gap-1">
-          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-1 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+        >
+          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           {t.details}
         </button>
         {expanded && (
-          <pre className="mt-1.5 p-1.5 bg-neutral-100 dark:bg-neutral-950 rounded text-[9px] overflow-x-auto max-h-40 overflow-y-auto">
+          <pre className="mt-1.5 max-h-40 overflow-x-auto overflow-y-auto rounded bg-neutral-100 p-1.5 text-[9px] dark:bg-neutral-950">
             {JSON.stringify(execution.result, null, 2)}
           </pre>
         )}
@@ -232,7 +241,6 @@ const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: stri
     </div>
   );
 };
-
 
 export default function ChatInterface({
   chatId,
@@ -687,7 +695,11 @@ export default function ChatInterface({
                     {!isUser && msg.functionExecution && msg.functionExecution.length > 0 && (
                       <div className="mt-2 space-y-2">
                         {msg.functionExecution.map((execution: any, idx: number) => (
-                          <ActionExecutionCard key={`exec-${msg.id}-${idx}`} execution={execution} orgId={orgId as string} />
+                          <ActionExecutionCard
+                            key={`exec-${msg.id}-${idx}`}
+                            execution={execution}
+                            orgId={orgId as string}
+                          />
                         ))}
                       </div>
                     )}
@@ -811,7 +823,10 @@ export default function ChatInterface({
                         const note = Array.isArray(notesOverview)
                           ? notesOverview.find((n: any) => n.id === noteId)
                           : null;
-                        const href = routes.notes.details(orgId, (note as any)?.public_id || noteId);
+                        const href = routes.notes.details(
+                          orgId,
+                          (note as any)?.public_id || noteId
+                        );
                         const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
                         return (
                           <Link
@@ -834,7 +849,10 @@ export default function ChatInterface({
                         const project = Array.isArray(projectsOverview)
                           ? projectsOverview.find((p: any) => p.id === projectId)
                           : null;
-                        const href = routes.projects.board(orgId, (project as any)?.public_id || projectId);
+                        const href = routes.projects.board(
+                          orgId,
+                          (project as any)?.public_id || projectId
+                        );
                         const projectIcon =
                           (project as any)?.icon || (project as any)?.properties?.icon;
                         return (

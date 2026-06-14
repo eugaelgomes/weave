@@ -1,3 +1,16 @@
+/**
+ * @module weave-engine/modules/weave-engine/proactive.processor
+ * @description Redis background queue processor for handling proactive AI jobs.
+ * Executes background tasks asynchronously, such as generating summaries or insights,
+ * with a mandatory secondary safety evaluation pass.
+ *
+ * Dependencies:
+ * - `../../services/redis.client`: For queue interactions.
+ * - `../core/providers/llm-provider.client`: To call external LLM models.
+ *
+ * Used by:
+ * - `weave-engine/src/index.js`: Instantiated at startup to begin background processing.
+ */
 const redis = require("../../services/redis.client");
 const { logger } = require("../../logger");
 const { callAIProvider } = require("../core/providers/llm-provider.client");
@@ -14,6 +27,12 @@ class ProactiveQueueProcessor {
     this.queueName = getEngineProactiveTaskQueueRedisKey();
   }
 
+  /**
+   * Starts the continuous Redis blocking pop loop to fetch and process proactive jobs.
+   * Runs indefinitely until stopped.
+   *
+   * @returns {Promise<void>}
+   */
   async start() {
     if (this.isRunning) {
       return;
@@ -174,8 +193,10 @@ class ProactiveQueueProcessor {
   }
 
   /**
-   * @param {object} job
-   * @returns {Promise<{ content: string, providerUsed: string|null, raw: unknown }>}
+   * Executes the first pass of the proactive logic by calling the main LLM.
+   *
+   * @param {object} job - The job parameters containing the prompt.
+   * @returns {Promise<{ content: string, providerUsed: string|null, raw: unknown }>} The generated text and metadata.
    */
   async runPrimaryPass(job = {}) {
     if (typeof job.payload === "string" && job.payload.trim()) {
@@ -215,9 +236,12 @@ class ProactiveQueueProcessor {
   }
 
   /**
-   * @param {object} job
-   * @param {{ content: string }} primaryResult
-   * @returns {Promise<{ label: "safe"|"review"|"unsafe", reason: string, sanitizedText: string }>}
+   * Executes a mandatory secondary pass using a specialized safety model to evaluate
+   * if the generated content contains any prompt injections, harmful instructions, or policy violations.
+   *
+   * @param {object} job - Original job metadata.
+   * @param {{ content: string }} primaryResult - The output generated in the primary pass.
+   * @returns {Promise<{ label: "safe"|"review"|"unsafe", reason: string, sanitizedText: string }>} The safety evaluation result.
    */
   async runSafetyRecheck(job, primaryResult) {
     const safetyPrompt = [
@@ -282,9 +306,11 @@ class ProactiveQueueProcessor {
   }
 
   /**
-   * @param {{ content: string, providerUsed: string|null, raw: unknown }} primaryResult
-   * @param {{ label: "safe"|"review"|"unsafe", reason: string, sanitizedText: string }} safetyCheck
-   * @returns {{ success: boolean, data: { content: string, providerUsed: string|null }, safety: { checked: true, label: string, blocked: boolean, reason: string } }}
+   * Applies the result of the safety check to the primary content, overriding or redacting it if necessary.
+   *
+   * @param {{ content: string, providerUsed: string|null, raw: unknown }} primaryResult - The original output.
+   * @param {{ label: "safe"|"review"|"unsafe", reason: string, sanitizedText: string }} safetyCheck - The evaluation result.
+   * @returns {{ success: boolean, data: { content: string, providerUsed: string|null }, safety: { checked: true, label: string, blocked: boolean, reason: string } }} The final safe payload.
    */
   applySafetyPolicy(primaryResult, safetyCheck) {
     const isUnsafe = safetyCheck.label === "unsafe";

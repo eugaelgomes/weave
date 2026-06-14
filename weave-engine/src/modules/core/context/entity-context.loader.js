@@ -1,11 +1,24 @@
+/**
+ * @module weave-engine/modules/core/context/entity-context.loader
+ * @description Centralized loader for building AI prompt context from the database.
+ * Fetches notes, projects, and organization members based on user permissions.
+ *
+ * Dependencies:
+ * - `../../../services/postgres.client`: To query the Postgres database.
+ *
+ * Used by:
+ * - `weave-engine/modules/weave-ai/chat.processor.js`: To build the system message.
+ */
 const { pool } = require("../../../services/postgres.client");
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
- * @param {unknown} value
- * @returns {string[]}
+ * Normalizes an array of arbitrary UUID values, filtering out invalid strings and deduplicating.
+ *
+ * @param {unknown} value - The input array.
+ * @returns {string[]} An array of valid UUID strings.
  */
 function normalizeUuidList(value) {
   if (!Array.isArray(value)) {
@@ -28,8 +41,10 @@ function normalizeUuidList(value) {
 }
 
 /**
- * @param {unknown} value
- * @returns {string|null}
+ * Normalizes a single optional UUID string.
+ *
+ * @param {unknown} value - The input string.
+ * @returns {string|null} The valid UUID or null.
  */
 function normalizeOptionalUuid(value) {
   if (typeof value !== "string") {
@@ -45,8 +60,10 @@ function normalizeOptionalUuid(value) {
 }
 
 /**
- * @param {unknown} value
- * @returns {boolean}
+ * Checks if a string matches the Weave 12-character public ID format.
+ *
+ * @param {unknown} value - The input string.
+ * @returns {boolean} True if it is a valid public ID.
  */
 function isPublicId12(value) {
   return (
@@ -55,10 +72,11 @@ function isPublicId12(value) {
 }
 
 /**
- * Resolves note identifiers (UUID or public_note_id) to internal UUIDs.
+ * Resolves an array of note identifiers (UUID or public_note_id) to their internal UUIDs.
+ * Hits the database to resolve public IDs.
  *
- * @param {unknown} value
- * @returns {Promise<string[]>}
+ * @param {unknown} value - The input array of mixed IDs.
+ * @returns {Promise<string[]>} Array of validated internal UUIDs.
  */
 async function resolveNoteIdsFromPayload(value) {
   if (!Array.isArray(value)) {
@@ -100,10 +118,11 @@ async function resolveNoteIdsFromPayload(value) {
 }
 
 /**
- * Resolves project identifiers (UUID or public_project_id) to internal UUIDs.
+ * Resolves an array of project identifiers (UUID or public_project_id) to their internal UUIDs.
+ * Hits the database to resolve public IDs.
  *
- * @param {unknown} value
- * @returns {Promise<string[]>}
+ * @param {unknown} value - The input array of mixed IDs.
+ * @returns {Promise<string[]>} Array of validated internal UUIDs.
  */
 async function resolveProjectIdsFromPayload(value) {
   if (!Array.isArray(value)) {
@@ -145,12 +164,13 @@ async function resolveProjectIdsFromPayload(value) {
 }
 
 /**
- * Loads accessible notes for the given IDs.
+ * Loads detailed properties for a list of notes, strictly filtered by user access permissions
+ * (ownership, collaboration, or organization-level visibility).
  *
- * @param {string[]} noteIds
- * @param {string} userId
- * @param {string|null} organizationId
- * @returns {Promise<object[]>}
+ * @param {string[]} noteIds - Array of validated note UUIDs.
+ * @param {string} userId - The authenticated user requesting context.
+ * @param {string|null} organizationId - The active organization context.
+ * @returns {Promise<object[]>} Array of accessible note records.
  */
 async function loadAccessibleNotes(noteIds, userId, organizationId = null) {
   if (noteIds.length === 0 || !UUID_REGEX.test(String(userId || ""))) {
@@ -209,12 +229,13 @@ async function loadAccessibleNotes(noteIds, userId, organizationId = null) {
 }
 
 /**
- * Loads accessible projects for the given IDs.
+ * Loads detailed properties for a list of projects, strictly filtered by user access permissions.
+ * Aggregates stages, members, and associated notes into a nested JSON structure.
  *
- * @param {string[]} projectIds
- * @param {string} userId
- * @param {string|null} organizationId
- * @returns {Promise<object[]>}
+ * @param {string[]} projectIds - Array of validated project UUIDs.
+ * @param {string} userId - The authenticated user requesting context.
+ * @param {string|null} organizationId - The active organization context.
+ * @returns {Promise<object[]>} Array of accessible project records.
  */
 async function loadAccessibleProjects(
   projectIds,
@@ -333,11 +354,11 @@ async function loadAccessibleProjects(
 }
 
 /**
- * Loads organization members for context injection.
- * Limited to 10 members.
+ * Loads organization members for context injection to give the AI awareness of teammates.
+ * Limited to 10 members to prevent token overflow.
  *
- * @param {string|null} organizationId
- * @returns {Promise<object[]>}
+ * @param {string|null} organizationId - The active organization context.
+ * @returns {Promise<object[]>} Array of member details.
  */
 async function loadOrganizationMembers(organizationId) {
   if (!organizationId || !UUID_REGEX.test(String(organizationId || ""))) {
@@ -363,14 +384,15 @@ async function loadOrganizationMembers(organizationId) {
 }
 
 /**
- * Builds contextual entities for prompt composition.
+ * Orchestrates the fetching of all contextual entities for a given AI task payload.
+ * Runs queries in parallel to minimize latency.
  *
- * @param {object} payload
- * @param {string} payload.userId
- * @param {unknown[]} payload.noteIds
- * @param {unknown[]} payload.projectIds
- * @param {string} [payload.organizationId]
- * @returns {Promise<{ indexedNotes: object[], indexedProjects: object[] }>}
+ * @param {object} payload - The request context payload.
+ * @param {string} payload.userId - The authenticated user ID.
+ * @param {unknown[]} payload.noteIds - Array of note identifiers.
+ * @param {unknown[]} payload.projectIds - Array of project identifiers.
+ * @param {string} [payload.organizationId] - The organization ID.
+ * @returns {Promise<{ indexedNotes: object[], indexedProjects: object[], organizationMembers: object[] }>} The resolved context map.
  */
 async function buildEntityContext(payload = {}) {
   const userId = typeof payload.userId === "string" ? payload.userId : "";

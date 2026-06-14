@@ -32,8 +32,8 @@ export interface ChatModelSelection {
 
 export interface ChatMessage {
   id: string;
-  role: "user" | "assistant";
-  content: string;
+  role: "user" | "assistant" | "tool" | "system" | string;
+  content: string | null;
   timestamp: Date;
   created_at?: string;
   model?: string;
@@ -155,8 +155,8 @@ export interface CreateAgentData {
 
 type RawChatMessage = {
   id: string | number;
-  role: "user" | "assistant";
-  content: string;
+  role: "user" | "assistant" | "tool" | "system" | string;
+  content: string | null;
   created_at?: string;
   model?: string;
   session_id?: string;
@@ -175,7 +175,7 @@ function normalizeChatMessage(message: RawChatMessage): ChatMessage {
   return {
     id: String(message.id),
     role: message.role,
-    content: message.content,
+    content: message.content || "",
     timestamp: message.created_at ? new Date(message.created_at) : new Date(),
     created_at: message.created_at,
     model: message.model,
@@ -428,9 +428,11 @@ export async function fetchChatHistory(
   if (sessionId) {
     const raw = await handleResponse<unknown>(response);
     const data = ChatHistoryMessagesSchema.parse(raw);
-    return data.messages.map((m: z.infer<typeof RawChatMessageSchema>) =>
-      normalizeChatMessage(m as RawChatMessage)
-    );
+    return data.messages
+      .filter(
+        (m: z.infer<typeof RawChatMessageSchema>) => m.role === "user" || m.role === "assistant"
+      )
+      .map((m: z.infer<typeof RawChatMessageSchema>) => normalizeChatMessage(m as RawChatMessage));
   }
   const raw = await handleResponse<unknown>(response);
   const data = ChatHistorySessionsSchema.parse(raw);

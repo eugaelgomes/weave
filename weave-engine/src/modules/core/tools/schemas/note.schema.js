@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/note.schema
+ * @description JSON Schema definition for the note.schema AI tool.
+ */
 const schemas = [
   {
     name: "get_note_details",

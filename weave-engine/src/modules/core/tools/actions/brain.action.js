@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/actions/brain.action
+ * @description Implementation logic for the brain.action AI tool.
+ */
 const fs = require("fs").promises;
 const path = require("path");
 

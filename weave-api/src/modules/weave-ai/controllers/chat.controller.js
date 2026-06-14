@@ -1,3 +1,13 @@
+/**
+ * @module weave-ai/controllers/chat.controller
+ * @description HTTP Controller handling API routes for Weave AI chat features.
+ * Connects Express HTTP requests to the underlying AI orchestrator and handles error formatting/streaming.
+ *
+ * Dependencies:
+ * - `../services/chat-orchestrator.service.js`: For orchestrating the generation request.
+ * - `../utils/chat-parser.util`: For request body sanitation.
+ * - `../utils/chat-formatter.util`: For response/error formatting.
+ */
 /* eslint-disable no-console, sort-keys */
 const { randomUUID } = require("crypto");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
@@ -9,13 +19,20 @@ const chatOrchestratorService = require("../services/chat-orchestrator.service")
 const { getI18n, getLangFromReq } = require("../utils/weave-ai-i18n.util");
 
 class ChatController {
+  /**
+   * Handles POST /chat. Initiates the AI chat orchestration and returns a Server-Sent Events (SSE) stream.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<void>}
+   */
   async chat(req, res) {
     const userLanguage = getLangFromReq(req);
     const t = getI18n(userLanguage);
     let userId = null;
     let payload = null;
     let requestId = null;
-    let keepAliveInterval = null;
+    const keepAliveInterval = null;
     let organizationId = null;
 
     try {
@@ -64,6 +81,7 @@ class ChatController {
         });
       }
 
+      // Normalize internal application errors to clean HTTP API errors
       const normalizedError = chatFormatterUtil.normalizeApiError(error, {
         code: "CHAT_PROCESSING_FAILED",
         message: t.processChatFailed,
@@ -135,6 +153,13 @@ class ChatController {
     }
   }
 
+  /**
+   * Handles GET /chat/history. Returns the chat history for a session or paginated list of sessions.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<Object>} JSON response containing history or sessions.
+   */
   async getChatHistory(req, res) {
     const userLanguage = getLangFromReq(req);
     const t = getI18n(userLanguage);
@@ -186,6 +211,13 @@ class ChatController {
     }
   }
 
+  /**
+   * Handles DELETE /chat/session/:sessionId. Deletes a chat session for the active user.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<Object>} JSON response confirming deletion.
+   */
   async deleteChatSession(req, res) {
     const userLanguage = getLangFromReq(req);
     const t = getI18n(userLanguage);
@@ -246,6 +278,13 @@ class ChatController {
     }
   }
 
+  /**
+   * Handles GET /chat/models. Returns the available LLM models per provider from the catalog.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<Object>} JSON response containing providers and models.
+   */
   async getAvailableModels(req, res) {
     const userLanguage = getLangFromReq(req);
     const t = getI18n(userLanguage);

@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/actions/note.action
+ * @description Implementation logic for the note.action AI tool.
+ */
 const { pool } = require("../../../../services/postgres.client");
 
 /**

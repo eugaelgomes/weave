@@ -1,5 +1,11 @@
 /**
- * Internal Tool Dispatcher for Weave Engine
+ * @module weave-engine/modules/core/tools/tool-dispatcher
+ * @description Centralized registry and dispatcher for internal AI agent actions.
+ * Maps function names to their concrete action implementations and schemas.
+ *
+ * Dependencies:
+ * - `./actions/*`: The actual tool logic implementations.
+ * - `./schemas/*`: The JSON schemas defining the tool parameters.
  */
 
 const { logger } = require("../../../logger");
@@ -87,20 +93,23 @@ const internalToolSchemas = [
 ];
 
 /**
- * Checks if a function name is an internal tool.
- * @param {string} functionName
- * @returns {boolean}
+ * Evaluates whether a given tool name is registered as an internal execution target.
+ *
+ * @param {string} functionName - The name of the tool call requested by the LLM.
+ * @returns {boolean} True if the tool is handled by the internal engine.
  */
 function isInternalTool(functionName) {
   return functionName in INTERNAL_TOOLS;
 }
 
 /**
- * Executes an internal tool.
- * @param {string} functionName
- * @param {object} args
- * @param {object} [executionContext] - Server-side context (userId, organizationId) injected securely
- * @returns {Promise<any>}
+ * Dispatches an internal tool execution by routing the arguments to the correct action file.
+ * Injects critical security context (userId, organizationId) dynamically.
+ *
+ * @param {string} functionName - The registered internal tool name.
+ * @param {object} args - The parsed arguments provided by the LLM.
+ * @param {object} [executionContext={}] - Request-scoped authentication context.
+ * @returns {Promise<any>} The result of the action execution, or an error payload.
  */
 async function executeInternalTool(functionName, args, executionContext = {}) {
   if (!isInternalTool(functionName)) {
@@ -149,8 +158,11 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
 }
 
 /**
- * Gets definitions for all internal tools.
- * @returns {Array<object>}
+ * Retrieves the complete array of internal tool schemas to pass to the LLM.
+ * Allows toggling specific capabilities like web search dynamically.
+ *
+ * @param {boolean} [allowWebSearch=true] - Whether to include web search capabilities.
+ * @returns {Array<object>} An array of OpenAI-compatible function schemas.
  */
 function getInternalToolDefinitions(allowWebSearch = true) {
   if (allowWebSearch) {

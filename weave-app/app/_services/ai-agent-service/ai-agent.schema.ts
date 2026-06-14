@@ -32,7 +32,7 @@ export const RawModelsResponseSchema = z
 const assistantPayloadSchema = z
   .object({
     role: z.literal("assistant"),
-    content: z.string(),
+    content: z.string().nullable().optional(),
     citations: z.array(z.unknown()).optional(),
     functions: z
       .array(
@@ -69,8 +69,8 @@ export const ChatPostResultSchema = z.object({
 
 export const RawChatMessageSchema = z.object({
   id: z.union([z.string(), z.number()]),
-  role: z.enum(["user", "assistant"]),
-  content: z.string(),
+  role: z.enum(["user", "assistant", "tool", "system"]),
+  content: z.string().nullable().optional(),
   created_at: z.string().optional(),
   model: z.string().optional(),
   session_id: z.string().optional(),

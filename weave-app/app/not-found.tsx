@@ -10,9 +10,10 @@ export default function NotFound() {
   const router = useRouter();
   const { user, authenticated } = useAuth();
 
-  const homeHref = authenticated && user 
-    ? routes.home((user.org_public_id || user.public_id) as string) 
-    : routes.auth.signIn();
+  const homeHref =
+    authenticated && user
+      ? routes.home((user.org_public_id || user.public_id) as string)
+      : routes.auth.signIn();
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-neutral-50 dark:bg-[#1d1d1b]">
@@ -59,19 +60,31 @@ export default function NotFound() {
 
           <nav className="dark:border-surface-dark-border mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-neutral-200 pt-6 text-sm">
             <Link
-              href={authenticated && user ? routes.notes.list((user.org_public_id || user.public_id) as string) : routes.auth.signIn()}
+              href={
+                authenticated && user
+                  ? routes.notes.list((user.org_public_id || user.public_id) as string)
+                  : routes.auth.signIn()
+              }
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Tarefas
             </Link>
             <Link
-              href={authenticated && user ? routes.projects.list((user.org_public_id || user.public_id) as string) : routes.auth.signIn()}
+              href={
+                authenticated && user
+                  ? routes.projects.list((user.org_public_id || user.public_id) as string)
+                  : routes.auth.signIn()
+              }
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Projetos
             </Link>
             <Link
-              href={authenticated && user ? routes.settings.base((user.org_public_id || user.public_id) as string) : routes.auth.signIn()}
+              href={
+                authenticated && user
+                  ? routes.settings.base((user.org_public_id || user.public_id) as string)
+                  : routes.auth.signIn()
+              }
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
             >
               Configurações

@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/actions/search.action
+ * @description Implementation logic for the search.action AI tool.
+ */
 const { pool } = require("../../../../services/postgres.client");
 
 /**

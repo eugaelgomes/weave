@@ -1,3 +1,17 @@
+/**
+ * @module weave-ai/services/chat-orchestrator.service
+ * @description Core service orchestrating the Weave AI ReAct (Reasoning and Acting) chat loop.
+ * Handles state persistence, authorization, tool invocation, and LLM retry logic.
+ *
+ * Dependencies:
+ * - `../repositories/chat.repository`: To save messages and history.
+ * - `./chat-engine.service`: To request prompt generation.
+ * - `./chat-functions.service`: To execute tool calls requested by the LLM.
+ * - `../policies/authorized-functions`: To resolve tool access per user context.
+ *
+ * Used by:
+ * - `weave-ai/controllers/chat.controller.js`: Primary entrypoint for HTTP requests.
+ */
 const { randomUUID } = require("crypto");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
@@ -21,6 +35,20 @@ const CHAT_CONTEXT_MAX_MESSAGES = Number.parseInt(
 );
 
 class ChatOrchestratorService {
+  /**
+   * Orchestrates the chat flow: fetches history, checks permissions, resolves authorized tools,
+   * and runs a ReAct loop to interact with the LLM and execute requested functions until a final answer is produced.
+   *
+   * @param {Object} params - The orchestration parameters.
+   * @param {string} params.userId - Authenticated user UUID.
+   * @param {Object} params.payload - The parsed chat request payload.
+   * @param {string|null} params.organizationId - User's organization UUID.
+   * @param {string} params.requestId - Idempotency key for this request.
+   * @param {Array<Object>} params.files - Uploaded files metadata.
+   * @param {string} params.userLanguage - Resolved user language.
+   * @param {Function} params.onChunk - Callback for streaming response chunks.
+   * @returns {Promise<{sessionId: string, response: Object}>} The final assistant response.
+   */
   async orchestrateChat({
     userId,
     payload,
@@ -249,6 +277,9 @@ class ChatOrchestratorService {
     const currentConversationHistory = [...conversationHistory];
     let totalLatencyMs = 0;
 
+    // Begin the ReAct (Reasoning and Acting) loop.
+    // The engine might respond with tool calls instead of text. If so, we execute the tools,
+    // append the results to the context, and ask the engine again, up to MAX_LOOPS times.
     while (currentLoop < MAX_LOOPS) {
       const engineResponse = await chatEngineService.requestEngineChat(
         {
@@ -289,7 +320,9 @@ class ChatOrchestratorService {
       totalLatencyMs += engineResponse?.latencyMs || 0;
       const enginePayload = engineResponse?.data || {};
 
-      const engineExecutedActions = Array.isArray(enginePayload?.executedActions)
+      const engineExecutedActions = Array.isArray(
+        enginePayload?.executedActions
+      )
         ? enginePayload.executedActions
         : [];
       if (engineExecutedActions.length > 0) {
@@ -306,6 +339,7 @@ class ChatOrchestratorService {
         : [];
 
       providerUsed = enginePayload?.providerUsed || providerUsed;
+      // Accumulate token usage across all iterations of the ReAct loop
       const currentTokenUsage =
         chatFormatterUtil.extractTokenUsage(enginePayload);
       tokenUsage.inputTokens =
@@ -374,6 +408,8 @@ class ChatOrchestratorService {
           },
         });
 
+        // Execute each tool and persist the result into the database
+        // to maintain conversational context and debuggability.
         for (let i = 0; i < currentExecutions.length; i++) {
           const exec = currentExecutions[i];
           const fn = currentFunctions[i];

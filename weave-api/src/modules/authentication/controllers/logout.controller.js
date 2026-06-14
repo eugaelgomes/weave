@@ -1,4 +1,7 @@
-const { getCookieDomain, detectSameSitePolicy } = require("@/config/allowed-origins");
+const {
+  getCookieDomain,
+  detectSameSitePolicy,
+} = require("@/config/allowed-origins");
 
 /**
  * Session termination (Stateful Session).
@@ -20,10 +23,15 @@ class LogoutController {
       const forwardedProto = req?.headers?.["x-forwarded-proto"];
       const isHttps = req?.secure || forwardedProto === "https";
       const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-      
-      const domain = getCookieDomain(req.hostname) || process.env.COOKIE_DOMAIN || (process.env.APP_DOMAIN ? `.${process.env.APP_DOMAIN}` : undefined);
-      const sameSite = isProduction && !isLocalhost ? detectSameSitePolicy() : "lax";
-      const secure = isProduction && !isLocalhost ? isHttps || sameSite === "none" : false;
+
+      const domain =
+        getCookieDomain(req.hostname) ||
+        process.env.COOKIE_DOMAIN ||
+        (process.env.APP_DOMAIN ? `.${process.env.APP_DOMAIN}` : undefined);
+      const sameSite =
+        isProduction && !isLocalhost ? detectSameSitePolicy() : "lax";
+      const secure =
+        isProduction && !isLocalhost ? isHttps || sameSite === "none" : false;
 
       const clearOptions = {
         httpOnly: true,
@@ -31,7 +39,7 @@ class LogoutController {
         sameSite,
         path: "/",
       };
-      
+
       if (domain) {
         clearOptions.domain = domain;
       }
@@ -43,12 +51,18 @@ class LogoutController {
         req.session.destroy((err) => {
           if (err) {
             console.error("Error destroying session:", err);
-            return res.status(500).json({ message: "Internal error when closing session" });
+            return res
+              .status(500)
+              .json({ message: "Internal error when closing session" });
           }
-          return res.status(200).json({ message: "Logout performed successfully" });
+          return res
+            .status(200)
+            .json({ message: "Logout performed successfully" });
         });
       } else {
-        return res.status(200).json({ message: "Logout performed successfully" });
+        return res
+          .status(200)
+          .json({ message: "Logout performed successfully" });
       }
     } catch (error) {
       console.error("Error on logout:", error);

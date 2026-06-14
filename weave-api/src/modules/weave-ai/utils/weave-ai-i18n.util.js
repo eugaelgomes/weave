@@ -1,4 +1,17 @@
 /**
+ * @module weave-ai/utils/weave-ai-i18n.util
+ * @description Internationalization dictionary and utilities specific to Weave AI.
+ * Handles translation of error messages and internal AI fallbacks based on user locale.
+ *
+ * Dependencies:
+ * - None
+ *
+ * Used by:
+ * - `weave-ai/controllers/*.js`: For localized HTTP error messages.
+ * - `weave-ai/services/chat-orchestrator.service.js`: For fallback texts like "Calling functions...".
+ * - `weave-ai/utils/*.js`: For throwing localized exceptions during validation or access checks.
+ */
+/**
  * Dictionary of localized error messages and UI text for Weave AI in pt, en, and es.
  * Keeps standard API responses and validation exceptions localized across all user languages.
  */

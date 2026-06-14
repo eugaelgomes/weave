@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/web-browser.schema
+ * @description JSON Schema definition for the web-browser.schema AI tool.
+ */
 const schemas = [
   {
     name: "web_search",

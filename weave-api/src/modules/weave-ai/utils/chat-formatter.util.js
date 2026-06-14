@@ -1,3 +1,18 @@
+/**
+ * @module weave-ai/utils/chat-formatter.util
+ * @description Utility for formatting and normalizing inputs/outputs of Weave AI endpoints,
+ * as well as preparing payload shapes compatible with the Weave Engine LLM.
+ *
+ * Dependencies:
+ * - `@/modules/notes/block-normalizer`: To provide valid block schema contracts.
+ * - `@/errors`: For normalizing unhandled errors into standard API shapes.
+ * - `./weave-ai-i18n.util`: For localized internal fallback messages.
+ *
+ * Used by:
+ * - `weave-ai/controllers/chat.controller.js`: For normalizing API errors and parsing history.
+ * - `weave-ai/services/chat-orchestrator.service.js`: For truncating history, extracting engine tokens, and payload mapping.
+ * - `weave-ai/services/chat-engine.service.js`: To format payloads for the LLM engine request.
+ */
 const { ALLOWED_BLOCK_TYPES } = require("@/modules/notes/block-normalizer");
 const { fromUnknown } = require("@/errors");
 const { getI18n } = require("./weave-ai-i18n.util");

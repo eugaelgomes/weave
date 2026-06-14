@@ -1,13 +1,23 @@
+/**
+ * @module weave-engine/modules/core/orchestration/engines/smart-response.engine
+ * @description Generates natural language summaries of technical tool execution results.
+ *
+ * Dependencies:
+ * - `../../providers/llm-provider.client`: To generate the summary.
+ */
 const { callAIProvider } = require("../../providers/llm-provider.client");
 
 /**
- * @param {object} params
- * @param {string} params.originalMessage
- * @param {string|object} params.functionName
- * @param {object} params.executionResult
- * @param {string} params.model
- * @param {string} params.systemMessage
- * @returns {Promise<string>}
+ * Takes the raw JSON result of a tool execution and translates it into a concise,
+ * user-friendly confirmation message using a fast LLM pass.
+ *
+ * @param {object} params - Execution parameters.
+ * @param {string} params.originalMessage - The user's original request.
+ * @param {string|object} params.functionName - The name of the tool that was executed.
+ * @param {object} params.executionResult - The raw JSON output of the tool.
+ * @param {string} params.model - The requested LLM model.
+ * @param {string} params.systemMessage - The base system context.
+ * @returns {Promise<string>} The generated natural language summary.
  */
 async function generateSmartResponse({
   executionResult,

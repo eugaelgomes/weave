@@ -254,7 +254,7 @@ export function useComposeSession(
               {
                 id: response.message.id || optimisticAssistantMessageId,
                 role: "assistant",
-                content: response.message.content,
+                content: response.message.content || "",
                 chips: intent ? undefined : INITIAL_CHIPS,
               },
             ];

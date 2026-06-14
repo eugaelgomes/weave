@@ -109,9 +109,9 @@ const verifyToken = async (req, res, next) => {
         userAgent: req.headers["user-agent"]?.substring(0, 50),
         path: req.path,
       };
-      
+
       console.error("[Auth Error] Session not found", debugInfo);
-      
+
       Sentry.captureMessage("[Auth Error] Session not found", {
         level: "warning",
         extra: debugInfo,

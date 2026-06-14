@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/actions/profile.action
+ * @description Implementation logic for the profile.action AI tool.
+ */
 const { pool } = require("../../../../services/postgres.client");
 
 /**

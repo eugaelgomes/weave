@@ -1,3 +1,12 @@
+/**
+ * @module weave-engine/modules/core/providers/llm-provider.client
+ * @description Centralized HTTP client for interacting with external AI providers (OpenAI, Gemini).
+ * Handles prompt formatting, message normalization, tool schema translation, and streaming execution.
+ *
+ * Dependencies:
+ * - `axios`: For HTTP requests.
+ * - `../../../services/llm.client`: For credential management and provider routing.
+ */
 const axios = require("axios");
 const {
   AI_PROVIDERS,
@@ -518,6 +527,18 @@ function resolveModelName(modelName) {
   return normalizedModelName;
 }
 
+/**
+ * High-level unified interface to call an AI provider. Normalizes provider differences,
+ * handles retries, and formats the response output.
+ *
+ * @param {object} params - Execution parameters.
+ * @param {object} [params.options={}] - Optional settings (files, tool schemas, streaming callbacks).
+ * @param {string} params.prompt - The user's input prompt.
+ * @param {string} params.model - The requested model name.
+ * @param {string} params.systemMessage - The system instructions.
+ * @returns {Promise<{data: object, model: string, provider: string}>} The execution result.
+ * @throws {Error} If the provider call fails after max retries.
+ */
 async function callAIProvider({ options = {}, prompt, model, systemMessage }) {
   try {
     const resolvedModel = resolveModelName(model);

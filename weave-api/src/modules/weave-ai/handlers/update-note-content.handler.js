@@ -1,3 +1,13 @@
+/**
+ * @module weave-ai/handlers/update-note-content.handler
+ * @description Tool handler to update the rich text content (blocks) of a note.
+ *
+ * Dependencies:
+ * - `@/modules/notes/notes.repository`: For replacing note blocks.
+ * - `../utils/chat-access.util`: To verify user permissions.
+ * - `../utils/markdown-to-blocks.util`: To format content if blocks are not provided.
+ * - `@/services/queue/queue-controller`: To enqueue the note for embedding (RAG updates).
+ */
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
@@ -17,6 +27,16 @@ const {
 
 class UpdateNoteContentHandler {
   /**
+   * Executes the tool logic to update note content blocks.
+   *
+   * @param {Object} context - The execution context.
+   * @param {string} context.userId - UUID of the user.
+   * @param {Record<string, unknown>} context.args - Arguments passed by the LLM.
+   * @param {string|null} context.organizationId - UUID of the organization.
+   * @param {string} context.lang - Language code for errors.
+   * @param {object} context.t - Translation dictionary.
+   * @param {string} context.name - Name of the tool.
+   * @returns {Promise<{name: string, result: object, success: boolean}>} The execution result.
    * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
    */
   async execute({ userId, args, organizationId, lang, t, name }) {
@@ -63,17 +83,19 @@ class UpdateNoteContentHandler {
       throw error;
     }
 
-    const oldBlocks = await notesRepository.findNoteBlocksTreeByNoteId(noteId).catch(() => []);
+    const oldBlocks = await notesRepository
+      .findNoteBlocksTreeByNoteId(noteId)
+      .catch(() => []);
     await notesRepository.deleteAllNoteBlocks(noteId);
     await notesRepository.bulkInsertNoteBlocks(noteId, userId, tree);
     await enqueueNoteEmbeddingJob(noteId).catch(() => {});
 
     return {
       name,
-      result: { 
-        noteId, 
+      result: {
+        noteId,
         updated: true,
-        snapshot: { type: "content", blocks: oldBlocks }
+        snapshot: { type: "content", blocks: oldBlocks },
       },
       success: true,
     };

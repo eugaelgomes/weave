@@ -1,4 +1,4 @@
-const { pool } = require('./src/database/connection');
+const { pool } = require("./src/database/connection");
 async function test() {
   try {
     const res = await pool.query(`

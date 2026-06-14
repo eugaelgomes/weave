@@ -27,7 +27,11 @@ export default tseslint.config(
     rules: {
       "eol-last": ["error", "always"],
       "no-trailing-spaces": "error",
-      quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
+      quotes: [
+        "error",
+        "double",
+        { avoidEscape: true, allowTemplateLiterals: true },
+      ],
       semi: ["error", "always"],
 
       eqeqeq: ["error", "always"],
@@ -80,7 +84,11 @@ export default tseslint.config(
       ],
       "no-console": "warn",
       "no-unused-vars": "off",
-      quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
+      quotes: [
+        "error",
+        "double",
+        { avoidEscape: true, allowTemplateLiterals: true },
+      ],
       semi: ["error", "always"],
       "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
     },

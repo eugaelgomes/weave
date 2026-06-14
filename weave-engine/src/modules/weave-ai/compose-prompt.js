@@ -1,4 +1,15 @@
 /**
+ * @module weave-engine/modules/weave-ai/compose-prompt
+ * @description System prompt overlay and context resolution for the Weave Engine composer chat surface.
+ *
+ * Dependencies:
+ * - None (utility module)
+ *
+ * Used by:
+ * - `weave-engine/modules/weave-ai/chat.processor.js`: To apply context-specific system prompts.
+ */
+
+/**
  * System prompt overlay for Weave Engine composer chat surface.
  */
 
@@ -20,10 +31,10 @@ Do not mention internal APIs, queues, or engine workers.
 `.trim();
 
 /**
- * Merges server wrapper context with client-provided compose context.
+ * Merges server wrapper context with client-provided compose context to form a unified state.
  *
- * @param {object} [context]
- * @returns {object}
+ * @param {object} [context={}] - Base server context.
+ * @returns {object} Merged context combining server and client parameters.
  */
 function resolveComposeContext(context = {}) {
   const client =
@@ -34,8 +45,10 @@ function resolveComposeContext(context = {}) {
 }
 
 /**
- * @param {object} [context]
- * @returns {boolean}
+ * Determines if the current chat session is operating within the 'engine_compose' surface.
+ *
+ * @param {object} [context={}] - The unified execution context.
+ * @returns {boolean} True if the surface is 'engine_compose', false otherwise.
  */
 function isEngineComposeSurface(context = {}) {
   const merged = resolveComposeContext(context);
@@ -46,8 +59,10 @@ function isEngineComposeSurface(context = {}) {
 }
 
 /**
- * @param {object} [context]
- * @returns {string}
+ * Builds a supplementary system prompt string containing composer-specific metadata.
+ *
+ * @param {object} [context={}] - The unified execution context.
+ * @returns {string} The formatted prompt overlay text.
  */
 function buildEngineComposePromptOverlay(context = {}) {
   const merged = resolveComposeContext(context);

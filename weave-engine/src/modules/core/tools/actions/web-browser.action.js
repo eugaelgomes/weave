@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/actions/web-browser.action
+ * @description Implementation logic for the web-browser.action AI tool.
+ */
 const axios = require("axios");
 
 /**

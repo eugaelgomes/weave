@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/actions/org-areas.action
+ * @description Implementation logic for the org-areas.action AI tool.
+ */
 const { pool } = require("../../../../services/postgres.client");
 
 /**

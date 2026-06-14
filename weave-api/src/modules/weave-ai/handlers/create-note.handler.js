@@ -1,3 +1,13 @@
+/**
+ * @module weave-ai/handlers/create-note.handler
+ * @description Tool handler to create a new note/task from AI chat.
+ *
+ * Dependencies:
+ * - `@/modules/notes/notes.repository`: For saving the new note and its blocks.
+ * - `@/modules/projects/repositories/projects-read.repository`: To verify project scopes.
+ * - `../utils/chat-access.util`: To verify user permissions.
+ * - `../utils/markdown-to-blocks.util`: To convert markdown fallback text into TipTap blocks.
+ */
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
@@ -17,6 +27,16 @@ const {
 
 class CreateNoteHandler {
   /**
+   * Executes the tool logic to create a new note.
+   *
+   * @param {Object} context - The execution context provided by the chat orchestrator.
+   * @param {string} context.userId - UUID of the user.
+   * @param {Record<string, unknown>} context.args - Arguments passed by the LLM.
+   * @param {string|null} context.organizationId - UUID of the organization.
+   * @param {string} context.lang - Language code for errors.
+   * @param {object} context.t - Translation dictionary.
+   * @param {string} context.name - Name of the tool being executed.
+   * @returns {Promise<{name: string, result: object, success: boolean}>} The execution result payload.
    * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
    */
   async execute({ userId, args, organizationId, lang, t, name }) {
@@ -31,7 +51,7 @@ class CreateNoteHandler {
 
     const createdNote = await notesRepository.createNotesQuery(
       userId,
-      args.title || "Nova Tarefa",
+      args.title || "New task",
       args.content || "",
       Array.isArray(args.tags) ? args.tags : [],
       NOTE_STATUS.VISIBLE,

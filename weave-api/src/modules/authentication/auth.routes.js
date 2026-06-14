@@ -59,9 +59,6 @@ router.get(
   MicrosoftOauthController.microsoftCallback.bind(MicrosoftOauthController)
 );
 
-router.post(
-  "/logout",
-  LogoutController.logout.bind(LogoutController)
-);
+router.post("/logout", LogoutController.logout.bind(LogoutController));
 
 module.exports = router;

@@ -1,3 +1,15 @@
+/**
+ * @module weave-ai/services/chat-engine.service
+ * @description Service responsible for communicating with the Weave Engine (Python microservice) via Redis RPC.
+ * Manages the LLM prompt payload, streams responses, and tracks token usage.
+ *
+ * Dependencies:
+ * - `@/services/queue/engine-rpc-connection`: Redis connection for sending RPC jobs.
+ * - `../utils/chat-formatter.util`: To build context payloads.
+ *
+ * Used by:
+ * - `weave-ai/services/chat-orchestrator.service.js`: To dispatch generation requests during the chat loop.
+ */
 const { randomUUID } = require("crypto");
 const PlansRepository = require("@/modules/plans/plans.repository");
 const engineRpcRedis = require("@/services/queue/engine-rpc-connection");
@@ -9,8 +21,13 @@ const chatFormatterUtil = require("../utils/chat-formatter.util");
 const { getI18n } = require("../utils/weave-ai-i18n.util");
 
 const Redis = require("ioredis");
-const { getBlockingRedisOptions } = require("@/services/queue/blocking-redis-options");
-const subscriberClient = new Redis(process.env.REDIS_URL, getBlockingRedisOptions());
+const {
+  getBlockingRedisOptions,
+} = require("@/services/queue/blocking-redis-options");
+const subscriberClient = new Redis(
+  process.env.REDIS_URL,
+  getBlockingRedisOptions()
+);
 const streamCallbacks = new Map();
 
 subscriberClient.on("message", (channel, message) => {
@@ -109,11 +126,13 @@ class ChatEngineService {
   }
 
   /**
-   * Sends chat payload to engine queue and awaits response.
+   * Sends chat payload to engine queue and awaits response via Redis RPC.
+   * Supports streaming chunks via a secondary Redis pub/sub channel.
    *
    * @param {object} payload - Job payload to send to engine queue.
-   * @param {string} [requestId=randomUUID()] - Stable request UUID.
-   * @returns {Promise<object>} Parsed engine response data structure.
+   * @param {string} [requestId=randomUUID()] - Stable request UUID for idempotency.
+   * @param {Function} [onChunk] - Optional callback to handle streaming text chunks.
+   * @returns {Promise<{data: object, latencyMs: number, requestId: string}>} Parsed engine response data structure.
    */
   async requestEngineChat(payload, requestId = randomUUID(), onChunk) {
     const startedAt = Date.now();

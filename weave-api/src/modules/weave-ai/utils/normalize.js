@@ -1,4 +1,15 @@
 /**
+ * @module weave-ai/utils/normalize
+ * @description Provides normalization functions specifically for Agent personalities and responses.
+ *
+ * Dependencies:
+ * - None
+ *
+ * Used by:
+ * - `weave-ai/controllers/agents.controller.js`: To sanitize input and format DB agent models to API shapes.
+ * - `weave-ai/repositories/agents.repository.js`: (Indirectly) ensures data consistency.
+ */
+/**
  * Safely parses array-like payload fields from multipart/body values.
  *
  * @param {unknown} value

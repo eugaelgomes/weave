@@ -88,13 +88,15 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
     const result = await login(username, password);
 
     if (!result.success) {
-      const errCode = result.data && typeof result.data === "object"
-        ? (result.data as { error_code?: string; code?: string }).error_code
-          ?? (result.data as { error_code?: string; code?: string }).code
-        : undefined;
-      const errEmail = result.data && typeof result.data === "object"
-        ? (result.data as { email?: string }).email
-        : undefined;
+      const errCode =
+        result.data && typeof result.data === "object"
+          ? ((result.data as { error_code?: string; code?: string }).error_code ??
+            (result.data as { error_code?: string; code?: string }).code)
+          : undefined;
+      const errEmail =
+        result.data && typeof result.data === "object"
+          ? (result.data as { email?: string }).email
+          : undefined;
 
       if (errCode === "EMAIL_NOT_VERIFIED") {
         onNavigate("confirm", { email: errEmail, password });

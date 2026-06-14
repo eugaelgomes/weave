@@ -1,3 +1,7 @@
+/**
+ * @module weave-engine/modules/core/tools/schemas/project.schema
+ * @description JSON Schema definition for the project.schema AI tool.
+ */
 const schemas = [
   {
     name: "list_my_projects",

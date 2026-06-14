@@ -1,3 +1,14 @@
+/**
+ * @module weave-ai/utils/markdown-to-blocks.util
+ * @description Utility to parse and convert raw markdown strings into structured TipTap blocks.
+ *
+ * Dependencies:
+ * - `@/modules/notes/block-normalizer`: For generating valid `newBlockId`s.
+ *
+ * Used by:
+ * - `weave-ai/handlers/create-note.handler.js`: To format LLM markdown output into structured note blocks.
+ * - `weave-ai/handlers/update-note-content.handler.js`: To parse markdown fallbacks into blocks.
+ */
 const { newBlockId } = require("@/modules/notes/block-normalizer");
 
 /**
@@ -61,7 +72,11 @@ function markdownToBlocks(markdown) {
     }
 
     // ── Divider ─────────────────────────────────────────────────────
-    if (/^-{3,}\s*$/.test(line) || /^\*{3,}\s*$/.test(line) || /^_{3,}\s*$/.test(line)) {
+    if (
+      /^-{3,}\s*$/.test(line) ||
+      /^\*{3,}\s*$/.test(line) ||
+      /^_{3,}\s*$/.test(line)
+    ) {
       blocks.push({
         id: newBlockId(),
         type: "divider",
