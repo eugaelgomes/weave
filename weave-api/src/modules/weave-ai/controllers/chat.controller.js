@@ -138,7 +138,7 @@ class ChatController {
 
       if (res.headersSent) {
         res.write(
-          `event: error\\ndata: ${JSON.stringify({ success: false, error: { code: normalizedError.code, message: normalizedError.message } })}\\n\\n`
+          `event: error\ndata: ${JSON.stringify({ success: false, error: { code: normalizedError.code, message: normalizedError.message } })}\n\n`
         );
         return res.end();
       }

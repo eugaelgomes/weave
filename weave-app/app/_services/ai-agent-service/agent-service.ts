@@ -235,11 +235,11 @@ async function processChatResponse(
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-      const parts = buffer.split("\\n\\n");
+      const parts = buffer.split("\n\n");
       buffer = parts.pop() || "";
 
       for (const part of parts) {
-        const lines = part.split("\\n");
+        const lines = part.split("\n");
         let currentEvent = "message";
 
         for (const line of lines) {
