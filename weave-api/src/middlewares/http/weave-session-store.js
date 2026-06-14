@@ -28,18 +28,20 @@ class WeaveSessionStore extends PgSessionStore {
         const userId = sess?.user?.id || sess?.userId || null;
         const ipAddress = sess?.ip_address || null;
         const userAgent = sess?.user_agent || null;
+        const apiType = sess?.api_type || null;
 
-        if (userId || ipAddress || userAgent) {
+        if (userId || ipAddress || userAgent || apiType) {
           const query = `
             UPDATE sessions 
             SET 
               user_id = COALESCE($1, user_id),
               ip_address = COALESCE($2, ip_address),
               user_agent = COALESCE($3, user_agent),
+              api_type = COALESCE($4, api_type),
               last_active = NOW()
-            WHERE sid = $4
+            WHERE sid = $5
           `;
-          await pool.query(query, [userId, ipAddress, userAgent, sid]);
+          await pool.query(query, [userId, ipAddress, userAgent, apiType, sid]);
         }
         
         if (cb) cb();

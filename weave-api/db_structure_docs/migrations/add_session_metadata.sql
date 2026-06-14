@@ -14,6 +14,7 @@ ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "ip_address" varchar(45);
 ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "user_agent" text;
 ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "created_at" timestamp DEFAULT NOW();
 ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "last_active" timestamp DEFAULT NOW();
+ALTER TABLE "sessions" ADD COLUMN IF NOT EXISTS "api_type" varchar(20);
 
 -- Create indices for quick lookups and cleanup
 CREATE INDEX IF NOT EXISTS "idx_sessions_user_id" ON "sessions" ("user_id");

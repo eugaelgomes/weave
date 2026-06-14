@@ -25,6 +25,13 @@ const sessionTrackerMiddleware = (req, res, next) => {
       modified = true;
     }
 
+    const isPublic = req.originalUrl && req.originalUrl.includes("/api/public/");
+    const apiType = isPublic ? "public" : "internal";
+    if (req.session.api_type !== apiType) {
+      req.session.api_type = apiType;
+      modified = true;
+    }
+
     // Force express-session to save the updated metadata if it changed
     // This allows the initial request to store the IP and User-Agent
     // even if saveUninitialized is false and the session hasn't had
