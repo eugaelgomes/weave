@@ -234,7 +234,8 @@ async function executeAgenticTask({
     return {
       data: {
         ...data,
-        resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined,
+        resolvedInternalTools:
+          executedActions.length > 0 ? executedActions : undefined,
       },
       providerUsed,
       executedActions,
@@ -254,7 +255,8 @@ async function executeAgenticTask({
       type: "text",
       text: fallbackMsg,
       content: fallbackMsg,
-      resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined,
+      resolvedInternalTools:
+        executedActions.length > 0 ? executedActions : undefined,
     },
     providerUsed,
     executedActions,

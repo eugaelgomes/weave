@@ -131,8 +131,6 @@ async function withTimeout(promise, timeoutMs, code) {
   }
 }
 
-
-
 async function callGenericApi(
   prompt,
   systemMessage,
@@ -240,7 +238,7 @@ async function callGenericApi(
         cleanMsg.tool_call_id =
           msg.tool_call_id ||
           `call_${Math.random().toString(36).substring(2, 11)}`;
-        
+
         if (typeof msg.content === "string") {
           cleanMsg.content = msg.content;
         } else if (msg.content === undefined || msg.content === null) {
@@ -290,15 +288,11 @@ async function callGenericApi(
 
   if (options.onChunk) {
     payload.stream = true;
-    const response = await axios.post(
-      endpointUrl,
-      payload,
-      {
-        headers: requestHeaders,
-        responseType: "stream",
-        timeout: config.timeout,
-      }
-    );
+    const response = await axios.post(endpointUrl, payload, {
+      headers: requestHeaders,
+      responseType: "stream",
+      timeout: config.timeout,
+    });
 
     let fullContent = "";
     let finalUsage = null;
@@ -320,9 +314,17 @@ async function callGenericApi(
               if (!finalToolCalls) finalToolCalls = [];
               for (const tc of deltaToolCalls) {
                 if (tc.index !== undefined) {
-                  if (!finalToolCalls[tc.index]) finalToolCalls[tc.index] = { id: tc.id, type: "function", function: { name: "", arguments: "" } };
-                  if (tc.function?.name) finalToolCalls[tc.index].function.name += tc.function.name;
-                  if (tc.function?.arguments) finalToolCalls[tc.index].function.arguments += tc.function.arguments;
+                  if (!finalToolCalls[tc.index])
+                    finalToolCalls[tc.index] = {
+                      id: tc.id,
+                      type: "function",
+                      function: { name: "", arguments: "" },
+                    };
+                  if (tc.function?.name)
+                    finalToolCalls[tc.index].function.name += tc.function.name;
+                  if (tc.function?.arguments)
+                    finalToolCalls[tc.index].function.arguments +=
+                      tc.function.arguments;
                 }
               }
             }
@@ -379,14 +381,10 @@ async function callGenericApi(
     };
   }
 
-  const response = await axios.post(
-    endpointUrl,
-    payload,
-    {
-      headers: requestHeaders,
-      timeout: config.timeout,
-    }
-  );
+  const response = await axios.post(endpointUrl, payload, {
+    headers: requestHeaders,
+    timeout: config.timeout,
+  });
 
   const message = response.data.choices[0]?.message;
   const usageData = response.data.usage;
@@ -400,7 +398,7 @@ async function callGenericApi(
 
   if (message?.tool_calls?.length) {
     const toolCall = message.tool_calls[0];
-    
+
     const safeParse = (str) => {
       if (!str) return {};
       try {
@@ -451,7 +449,13 @@ async function callProviderWithRetry(
 
   try {
     if (provider === AI_PROVIDERS.GEMINI || provider === AI_PROVIDERS.OPENAI) {
-      return await callGenericApi(prompt, systemMessage, config, options, model);
+      return await callGenericApi(
+        prompt,
+        systemMessage,
+        config,
+        options,
+        model
+      );
     }
 
     throw new Error(`Unsupported LLM provider: ${provider}`);
@@ -463,10 +467,16 @@ async function callProviderWithRetry(
           errorBody += chunk.toString();
         });
         error.response.data.on("end", () => {
-          console.error("[LLM ERROR] Provider API returned (stream):", errorBody);
+          console.error(
+            "[LLM ERROR] Provider API returned (stream):",
+            errorBody
+          );
         });
       } else {
-        console.error("[LLM ERROR] Provider API returned:", JSON.stringify(error.response.data, null, 2));
+        console.error(
+          "[LLM ERROR] Provider API returned:",
+          JSON.stringify(error.response.data, null, 2)
+        );
       }
     }
     if (retryCount >= config.retry.maxRetries) {

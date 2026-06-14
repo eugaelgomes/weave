@@ -212,18 +212,12 @@ async function updateNoteComment(args) {
          user_id::text,
          content,
          updated_at`,
-      [
-        JSON.stringify(contentDoc),
-        args.commentId,
-        access.noteId,
-        args.userId,
-      ]
+      [JSON.stringify(contentDoc), args.commentId, access.noteId, args.userId]
     );
 
     if (rows.length === 0) {
       return {
-        error:
-          "Comment not found, already deleted, or you are not the author.",
+        error: "Comment not found, already deleted, or you are not the author.",
       };
     }
 
@@ -274,12 +268,14 @@ async function deleteNoteComment(args) {
 
     if (rowCount === 0) {
       return {
-        error:
-          "Comment not found, already deleted, or you are not the author.",
+        error: "Comment not found, already deleted, or you are not the author.",
       };
     }
 
-    return { message: "Comment deleted successfully.", commentId: args.commentId };
+    return {
+      message: "Comment deleted successfully.",
+      commentId: args.commentId,
+    };
   } catch (error) {
     return {
       error: "Database error deleting comment: " + error.message,

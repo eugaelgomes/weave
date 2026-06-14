@@ -13,16 +13,24 @@ const { schemas: searchSchemas } = require("./schemas/search.schema");
 const { getUserProfile } = require("./actions/profile.action");
 const { schemas: profileSchemas } = require("./schemas/profile.schema");
 
-const { listMyProjects, getProjectDetails } = require("./actions/project.action");
+const {
+  listMyProjects,
+  getProjectDetails,
+} = require("./actions/project.action");
 const { schemas: projectSchemas } = require("./schemas/project.schema");
 
 const { getOrganizationDetails } = require("./actions/organization.action");
-const { schemas: organizationSchemas } = require("./schemas/organization.schema");
+const {
+  schemas: organizationSchemas,
+} = require("./schemas/organization.schema");
 
 const { consultBrain } = require("./actions/brain.action");
 const { schemas: brainSchemas } = require("./schemas/brain.schema");
 
-const { listOrgMembers, getOrgMember } = require("./actions/org-members.action");
+const {
+  listOrgMembers,
+  getOrgMember,
+} = require("./actions/org-members.action");
 const { schemas: orgMembersSchemas } = require("./schemas/org-members.schema");
 
 const { schemas: orgAreasSchemas } = require("./schemas/org-areas.schema");
@@ -37,7 +45,9 @@ const {
   updateNoteComment,
   deleteNoteComment,
 } = require("./actions/note-comments.action");
-const { schemas: noteCommentsSchemas } = require("./schemas/note-comments.schema");
+const {
+  schemas: noteCommentsSchemas,
+} = require("./schemas/note-comments.schema");
 
 const INTERNAL_TOOLS = {
   web_search: searchWeb,

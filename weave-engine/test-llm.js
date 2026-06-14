@@ -1,4 +1,6 @@
-const { callAIProvider } = require("./src/modules/core/providers/llm-provider.client.js");
+const {
+  callAIProvider,
+} = require("./src/modules/core/providers/llm-provider.client.js");
 
 async function run() {
   try {
@@ -6,8 +8,8 @@ async function run() {
       model: "gemini-3.1-pro-preview",
       prompt: "Hello, testing function calls",
       options: {
-        messages: [{ role: "user", content: "Hello" }]
-      }
+        messages: [{ role: "user", content: "Hello" }],
+      },
     });
     console.log("Success:", result);
   } catch (err) {

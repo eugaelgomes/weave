@@ -24,9 +24,7 @@ async function getNoteDetails(args) {
         idParam
       );
 
-    const whereClause = isUuid
-      ? "n.id = $1::uuid"
-      : "n.public_note_id = $1";
+    const whereClause = isUuid ? "n.id = $1::uuid" : "n.public_note_id = $1";
 
     const { rows } = await pool.query(
       `SELECT
@@ -95,8 +93,7 @@ async function getNoteDetails(args) {
 
     if (rows.length === 0) {
       return {
-        error:
-          "Note not found or you don't have permission to view it.",
+        error: "Note not found or you don't have permission to view it.",
       };
     }
 

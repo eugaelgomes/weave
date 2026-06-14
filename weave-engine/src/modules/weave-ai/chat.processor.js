@@ -381,7 +381,9 @@ class LlmQueueProcessor {
                 "en-US",
               onChunk: (chunk) => {
                 if (requestId && redis) {
-                  redis.publish(`stream:${requestId}`, JSON.stringify({ chunk })).catch(() => {});
+                  redis
+                    .publish(`stream:${requestId}`, JSON.stringify({ chunk }))
+                    .catch(() => {});
                 }
               },
             },
