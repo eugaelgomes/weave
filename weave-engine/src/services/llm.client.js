@@ -22,7 +22,8 @@ const LLM_PROVIDER_MAX_RETRIES = Number.parseInt(
 
 const geminiConfig = {
   apiKey: process.env.GEMINI_API_KEY,
-  maxOutputTokens: 8192,
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai",
+  maxTokens: 8192,
   model: AI_MODELS.GEMINI_3_1_PRO_PREVIEW,
   provider: AI_PROVIDERS.GEMINI,
   retry: {
@@ -30,27 +31,8 @@ const geminiConfig = {
     initialDelay: 1000,
     maxRetries: LLM_PROVIDER_MAX_RETRIES,
   },
-  safetySettings: [
-    {
-      category: "HARM_CATEGORY_HARASSMENT",
-      threshold: "BLOCK_MEDIUM_AND_ABOVE",
-    },
-    {
-      category: "HARM_CATEGORY_HATE_SPEECH",
-      threshold: "BLOCK_MEDIUM_AND_ABOVE",
-    },
-    {
-      category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-      threshold: "BLOCK_MEDIUM_AND_ABOVE",
-    },
-    {
-      category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-      threshold: "BLOCK_MEDIUM_AND_ABOVE",
-    },
-  ],
   temperature: 0.7,
   timeout: LLM_PROVIDER_TIMEOUT_MS,
-  topK: 40,
   topP: 0.95,
 };
 

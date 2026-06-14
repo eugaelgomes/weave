@@ -1,5 +1,4 @@
 const axios = require("axios");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const {
   AI_PROVIDERS,
   getProviderByModelName,
@@ -7,8 +6,6 @@ const {
   normalizeModelName,
   resolveDefaultModelName,
 } = require("../../../services/llm.client");
-
-let geminiClient = null;
 
 const MAX_INLINE_FILES_PER_REQUEST = Number.parseInt(
   process.env.WEAVE_MAX_INLINE_FILES_PER_REQUEST || "3",
@@ -134,237 +131,9 @@ async function withTimeout(promise, timeoutMs, code) {
   }
 }
 
-/**
- * Gemini function declarations do not accept some JSON Schema fields
- * like "additionalProperties". This sanitizer removes unsupported keys.
- *
- * @param {unknown} schema
- * @returns {unknown}
- */
-function sanitizeGeminiSchema(schema) {
-  if (Array.isArray(schema)) {
-    return schema.map((item) => sanitizeGeminiSchema(item));
-  }
 
-  if (!schema || typeof schema !== "object") {
-    return schema;
-  }
 
-  const next = {};
-  for (const [key, value] of Object.entries(schema)) {
-    if (key === "additionalProperties") {
-      continue;
-    }
-
-    if (key === "type" && Array.isArray(value)) {
-      const nonNullTypes = value.filter(
-        (item) => typeof item === "string" && item !== "null"
-      );
-      next[key] = nonNullTypes[0] || "string";
-      continue;
-    }
-
-    next[key] = sanitizeGeminiSchema(value);
-  }
-
-  return next;
-}
-
-function getGeminiClient() {
-  if (geminiClient) {
-    return geminiClient;
-  }
-
-  if (!process.env.GEMINI_API_KEY) {
-    throw createProviderError(
-      "ENGINE_GEMINI_API_KEY_MISSING",
-      "GEMINI_API_KEY is required to call Gemini provider"
-    );
-  }
-
-  geminiClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  return geminiClient;
-}
-
-async function callGeminiApi(
-  prompt,
-  systemMessage,
-  config,
-  options = {},
-  modelName
-) {
-  const modelConfig = {
-    generationConfig: {
-      maxOutputTokens: config.maxOutputTokens,
-      temperature: config.temperature,
-      topK: config.topK,
-      topP: config.topP,
-    },
-    model: modelName || config.model,
-    safetySettings: config.safetySettings,
-  };
-
-  if (systemMessage) {
-    modelConfig.systemInstruction = systemMessage;
-  }
-
-  if (options.allowEdit && options.functions) {
-    modelConfig.tools = [
-      {
-        functionDeclarations: options.functions.map((fn) => ({
-          ...fn,
-          parameters: sanitizeGeminiSchema(fn.parameters),
-        })),
-      },
-    ];
-
-    if (options.forceToolUse) {
-      modelConfig.toolConfig = {
-        functionCallingConfig: {
-          mode: "ANY",
-        },
-      };
-    }
-  }
-
-  const model = getGeminiClient().getGenerativeModel(modelConfig);
-  const contents = [];
-
-  if (Array.isArray(options.messages)) {
-    for (const msg of options.messages) {
-      if (msg.role === "user") {
-        contents.push({ role: "user", parts: [{ text: msg.content }] });
-      } else if (msg.role === "assistant") {
-        if (msg.rawParts) {
-          contents.push({ role: "model", parts: msg.rawParts });
-        } else if (msg.tool_calls && msg.tool_calls.length > 0) {
-          const fn = msg.tool_calls[0].function;
-          contents.push({
-            role: "model",
-            parts: [
-              {
-                functionCall: { name: fn.name, args: JSON.parse(fn.arguments) },
-              },
-            ],
-          });
-        } else {
-          contents.push({
-            role: "model",
-            parts: [{ text: msg.content || "" }],
-          });
-        }
-      } else if (msg.role === "tool") {
-        contents.push({
-          role: "user",
-          parts: [
-            {
-              functionResponse: {
-                name: msg.name,
-                response:
-                  typeof msg.content === "string"
-                    ? { result: msg.content }
-                    : msg.content,
-              },
-            },
-          ],
-        });
-      }
-    }
-  }
-
-  if (prompt || options.files) {
-    const normalizedFiles = normalizeFiles(options.files);
-    const userParts = [];
-    if (prompt) {
-      userParts.push({ text: prompt });
-    }
-    normalizedFiles.forEach((file) => {
-      userParts.push({
-        inlineData: {
-          data: file.base64Data,
-          mimeType: file.mimeType,
-        },
-      });
-    });
-    if (userParts.length > 0) {
-      contents.push({ role: "user", parts: userParts });
-    }
-  }
-
-  let finalResult;
-  let response;
-  if (options.onChunk) {
-    finalResult = await withTimeout(
-      model.generateContentStream({ contents }),
-      config.timeout,
-      "ENGINE_PROVIDER_TIMEOUT"
-    );
-    for await (const chunk of finalResult.stream) {
-      if (options.onChunk) {
-        try {
-          const chunkText = chunk.text();
-          if (chunkText) options.onChunk(chunkText);
-        } catch {}
-      }
-    }
-    response = await finalResult.response;
-  } else {
-    finalResult = await withTimeout(
-      model.generateContent({ contents }),
-      config.timeout,
-      "ENGINE_PROVIDER_TIMEOUT"
-    );
-    response = await finalResult.response;
-  }
-
-  if (response.promptFeedback && response.promptFeedback.blockReason) {
-    throw new Error(
-      `Gemini blocked content: ${response.promptFeedback.blockReason}`
-    );
-  }
-
-  const usage = response.usageMetadata
-    ? {
-        inputTokens: response.usageMetadata.promptTokenCount || 0,
-        outputTokens: response.usageMetadata.candidatesTokenCount || 0,
-        totalTokens: response.usageMetadata.totalTokenCount || 0,
-      }
-    : null;
-
-  const functionCalls = response.functionCalls();
-  if (functionCalls && functionCalls.length > 0) {
-    return {
-      functionCall: {
-        arguments: functionCalls[0].args,
-        name: functionCalls[0].name,
-      },
-      toolCalls: functionCalls.map((call) => ({
-        name: call.name,
-        arguments: call.args,
-      })),
-      rawParts: response.candidates?.[0]?.content?.parts || null,
-      text: null,
-      type: "function_call",
-      usage,
-    };
-  }
-
-  let text = "";
-  try {
-    text = response.text();
-  } catch {
-    text = "";
-  }
-
-  return {
-    functionCall: null,
-    text,
-    type: "text",
-    usage,
-  };
-}
-
-async function callOpenAiApi(
+async function callGenericApi(
   prompt,
   systemMessage,
   config,
@@ -653,12 +422,8 @@ async function callProviderWithRetry(
   const config = getProviderConfig(provider);
 
   try {
-    if (provider === AI_PROVIDERS.GEMINI) {
-      return await callGeminiApi(prompt, systemMessage, config, options, model);
-    }
-
-    if (provider === AI_PROVIDERS.OPENAI) {
-      return await callOpenAiApi(prompt, systemMessage, config, options, model);
+    if (provider === AI_PROVIDERS.GEMINI || provider === AI_PROVIDERS.OPENAI) {
+      return await callGenericApi(prompt, systemMessage, config, options, model);
     }
 
     throw new Error(`Unsupported LLM provider: ${provider}`);
