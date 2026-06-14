@@ -379,7 +379,7 @@ async function callOpenAiApi(
   }
 
   const isAzure = config.baseURL.includes("azure.com");
-  const endpointUrl = isAzure 
+  const endpointUrl = isAzure
     ? `${config.baseURL}/chat/completions?api-version=2024-05-01-preview`
     : `${config.baseURL}/chat/completions`;
 

@@ -6,10 +6,10 @@ const AI_PROVIDERS = {
 };
 
 const AI_MODELS = {
-  GEMINI_3_5_FLASH: "gemini-3.5-flash",
   GEMINI_3_1_PRO_PREVIEW: "gemini-3.1-pro-preview",
-  OPENAI_GPT_5_4_MINI: "gpt-5.4-mini",
+  GEMINI_3_5_FLASH: "gemini-3.5-flash",
   OPENAI_GPT_5_4: "gpt-5.4",
+  OPENAI_GPT_5_4_MINI: "gpt-5.4-mini",
 };
 const LLM_PROVIDER_TIMEOUT_MS = Number.parseInt(
   process.env.WEAVE_LLM_PROVIDER_TIMEOUT_MS || "18000",

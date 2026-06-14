@@ -56,10 +56,10 @@ function getEngineProactiveResponseQueueRedisKey() {
 module.exports = {
   DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY,
   DEFAULT_ENGINE_LLM_RESPONSE_PREFIX,
-  DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY,
   DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY,
+  DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY,
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
-  getEngineProactiveTaskQueueRedisKey,
   getEngineProactiveResponseQueueRedisKey,
+  getEngineProactiveTaskQueueRedisKey,
 };
