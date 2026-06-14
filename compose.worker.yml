@@ -1,8 +1,6 @@
 services:
   worker:
-    build:
-      context: ./weave-worker
-      dockerfile: Dockerfile
+    image: ghcr.io/eugaelgomes/weave-worker:latest
     restart: always
     env_file:
       - path: ./.env

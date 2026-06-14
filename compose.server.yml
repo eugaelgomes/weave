@@ -13,9 +13,7 @@ services:
       - app-network
 
   server:
-    build:
-      context: ./weave-api
-      dockerfile: Dockerfile
+    image: ghcr.io/eugaelgomes/weave-api:latest
     restart: always
     env_file:
       - path: ./.env

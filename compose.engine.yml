@@ -1,8 +1,6 @@
 services:
   engine:
-    build:
-      context: ./weave-engine
-      dockerfile: Dockerfile
+    image: ghcr.io/eugaelgomes/weave-engine:latest
     restart: always
     env_file:
       - path: ./.env

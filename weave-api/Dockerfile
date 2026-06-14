@@ -19,6 +19,9 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY . .
 RUN npm run build
 
+# Prune devDependencies to keep the production node_modules minimal
+RUN npm prune --omit=dev --no-audit
+
 # ============================
 # STAGE 2: Production
 # ============================
