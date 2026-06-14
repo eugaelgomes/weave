@@ -1,5 +1,7 @@
+const { getCookieDomain, detectSameSitePolicy } = require("@/config/allowed-origins");
+
 /**
- * Encerramento de sessão (Stateful Session).
+ * Session termination (Stateful Session).
  */
 class LogoutController {
   /**
@@ -13,26 +15,44 @@ class LogoutController {
         `[Logout] Destroying session for user (Request hostname: ${req.hostname})`
       );
 
-      res.clearCookie("auth.sid", {
+      const isProduction = process.env.NODE_ENV === "production";
+      const hostname = req?.hostname || "";
+      const forwardedProto = req?.headers?.["x-forwarded-proto"];
+      const isHttps = req?.secure || forwardedProto === "https";
+      const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+      
+      const domain = getCookieDomain(req.hostname) || process.env.COOKIE_DOMAIN || (process.env.APP_DOMAIN ? `.${process.env.APP_DOMAIN}` : undefined);
+      const sameSite = isProduction && !isLocalhost ? detectSameSitePolicy() : "lax";
+      const secure = isProduction && !isLocalhost ? isHttps || sameSite === "none" : false;
+
+      const clearOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax",
-      });
+        secure,
+        sameSite,
+        path: "/",
+      };
+      
+      if (domain) {
+        clearOptions.domain = domain;
+      }
+
+      res.clearCookie("auth.sid", clearOptions);
+      res.clearCookie("token", clearOptions);
 
       if (req.session) {
         req.session.destroy((err) => {
           if (err) {
-            console.error("Erro ao destruir sessão:", err);
-            return res.status(500).json({ message: "Erro interno ao encerrar sessão" });
+            console.error("Error destroying session:", err);
+            return res.status(500).json({ message: "Internal error when closing session" });
           }
-          return res.status(200).json({ message: "Logout realizado com sucesso" });
+          return res.status(200).json({ message: "Logout performed successfully" });
         });
       } else {
-        return res.status(200).json({ message: "Logout realizado com sucesso" });
+        return res.status(200).json({ message: "Logout performed successfully" });
       }
     } catch (error) {
-      console.error("Erro no logout:", error);
-      return res.status(500).json({ message: "Erro interno do servidor" });
+      console.error("Error on logout:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 }

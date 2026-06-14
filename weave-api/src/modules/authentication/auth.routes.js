@@ -61,7 +61,6 @@ router.get(
 
 router.post(
   "/logout",
-  verifyToken,
   LogoutController.logout.bind(LogoutController)
 );
 

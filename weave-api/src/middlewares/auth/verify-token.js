@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const Sentry = require("@sentry/node");
 const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
 const secretsService = require("@/services/secrets");
 const {
@@ -9,9 +10,9 @@ const {
 const secretsManager = secretsService.secretsManager;
 
 /**
- * Middlare that verifies the authentication of the request.
+ * Middleware that verifies the authentication of the request.
  * Supports two flows:
- * 1. Web User Session: JWT tokens coming from cookies.
+ * 1. Web User Session: Stateful Sessions via express-session.
  * 2. Public API Authentication: Tokens via header 'Authorization: Bearer wn_prefix.secret'.
  *
  * In production, includes detailed logs for authentication problems.
@@ -33,14 +34,14 @@ const verifyToken = async (req, res, next) => {
       if (tokenParts.length !== 2) {
         return res
           .status(401)
-          .json({ error: "Token de API inválido ou mal formatado." });
+          .json({ error: "Invalid or malformed API token." });
       }
 
       const prefixPart = tokenParts[0]; // wn_abc123
       const secretPart = tokenParts[1]; // def456...
       const keyPrefix = prefixPart.replace("wn_", "");
 
-      // Busca e valida as regras de negócio do API Token
+      // Fetch and validate business rules of the API Token
       const tokenRecord =
         await LookupApiTokensRepository.getTokenByKeyPrefix(keyPrefix);
 
@@ -88,6 +89,7 @@ const verifyToken = async (req, res, next) => {
         "[Auth Error] Error validating public API token:",
         error.message
       );
+      Sentry.captureException(error);
       return res
         .status(500)
         .json({ error: "Internal error validating the API token." });
@@ -98,7 +100,7 @@ const verifyToken = async (req, res, next) => {
   if (!req.session || !req.session.user) {
     // Debug in production to identify the problem of lost requests
     if (isProduction) {
-      console.error("[Auth Error] Sessão não encontrada", {
+      const debugInfo = {
         hasCookies: !!req.cookies,
         cookieKeys: req.cookies ? Object.keys(req.cookies) : [],
         sessionExists: !!req.session,
@@ -106,6 +108,13 @@ const verifyToken = async (req, res, next) => {
         referer: req.headers.referer,
         userAgent: req.headers["user-agent"]?.substring(0, 50),
         path: req.path,
+      };
+      
+      console.error("[Auth Error] Session not found", debugInfo);
+      
+      Sentry.captureMessage("[Auth Error] Session not found", {
+        level: "warning",
+        extra: debugInfo,
       });
     }
     return res.status(401).json({
