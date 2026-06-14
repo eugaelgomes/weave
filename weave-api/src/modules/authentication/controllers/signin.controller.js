@@ -1,21 +1,15 @@
-/* eslint-disable sort-keys */
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
 const { AppError } = require("@/errors/app-error");
 const AuthBaseController = require("./base.controller");
 const SigninRepository = require("@/modules/authentication/repositories/signin.repository");
-const cookieHelper = require("@/utils/cookie-helper");
 const authLogs = require("@/utils/system_logs/auth-logs");
 const storageFileUtils = require("@/utils/data/presign-storage-files");
-const secretsService = require("@/services/secrets");
 const {
   buildJwtPayload,
 } = require("@/modules/authentication/jwt-payload.schema");
 
-const setAuthCookie = cookieHelper.setAuthCookie;
 const presignObjectFields = storageFileUtils.presignObjectFields;
-const secretsManager = secretsService.secretsManager;
 
 /**
  * Login com usuário/e-mail e senha.
@@ -68,10 +62,8 @@ class SigninController extends AuthBaseController {
 
       const payload = buildJwtPayload(user, organization, defaultArea);
 
-      const token = jwt.sign(payload, secretsManager(), {
-        algorithm: "HS256",
-        expiresIn: "12h",
-      });
+      req.session.user = payload;
+      req.session.userId = user.user_id;
 
       authLogs.createLog(user.user_id, "auth_login", req, "success");
 
@@ -86,14 +78,13 @@ class SigninController extends AuthBaseController {
           })
         : null;
 
-      setAuthCookie(res, req, token, {
-        maxAge: 12 * 60 * 60 * 1000,
-      });
+      req.session.save((err) => {
+        if (err) return next(err);
 
-      return res.status(200).json({
-        status: "OK",
-        message: "Successfully performed user signin.",
-        user: {
+        return res.status(200).json({
+          status: "OK",
+          message: "Successfully performed user signin.",
+          user: {
           user_profile: {
             id: protectedUser.user_id,
             public_id: protectedUser.public_user_id,
@@ -123,11 +114,11 @@ class SigninController extends AuthBaseController {
           },
         },
         auth: {
-          token: token,
           expires_in: 12 * 60 * 60,
           login_time: new Date(),
         },
       });
+    });
     } catch (error) {
       next(error);
     }

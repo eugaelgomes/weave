@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const { getClientIp } = require("./ip-address");
 const { sessionMiddleware } = require("./session");
+const { sessionTrackerMiddleware } = require("./session-tracker");
 const { makeCorsOptions } = require("./cors");
 const { requestIdMiddleware } = require("@/middlewares/request-id");
 
@@ -21,6 +22,7 @@ function configureGlobalMiddlewares(app) {
   app.use(requestIdMiddleware);
   app.use(cookieParser());
   app.use(sessionMiddleware);
+  app.use(sessionTrackerMiddleware);
 
   app.use(express.urlencoded({ extended: true, verify: captureRawBody }));
   app.use(express.json({ verify: captureRawBody }));

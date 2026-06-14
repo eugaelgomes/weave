@@ -10,7 +10,7 @@ const { getI18n } = require("../utils/weave-ai-i18n.util");
 
 const Redis = require("ioredis");
 const { getBlockingRedisOptions } = require("@/services/queue/blocking-redis-options");
-const subscriberClient = new Redis(getBlockingRedisOptions());
+const subscriberClient = new Redis(process.env.REDIS_URL, getBlockingRedisOptions());
 const streamCallbacks = new Map();
 
 subscriberClient.on("message", (channel, message) => {

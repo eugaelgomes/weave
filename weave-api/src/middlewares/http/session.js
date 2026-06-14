@@ -1,7 +1,7 @@
 const session = require("express-session");
-const pgSession = require("connect-pg-simple")(session);
 const { pool } = require("@/database/connection");
 const { detectSameSitePolicy } = require("@/config/allowed-origins");
+const { WeaveSessionStore } = require("./weave-session-store");
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -25,11 +25,7 @@ if (sessionCookieDomain) {
 }
 
 const sessionConfig = {
-  store: new pgSession({
-    pool,
-    tableName: "sessions",
-    createTableIfMissing: true,
-  }),
+  store: new WeaveSessionStore(),
   name: "auth.sid",
   secret: process.env.SESSION_SECRET,
   resave: false,

@@ -94,42 +94,30 @@ const verifyToken = async (req, res, next) => {
     }
   }
 
-  // 2. Web User Session: JWT tokens coming from cookies.
-  let token = req.cookies?.token;
-
-  // As a fallback alternative, checks in the Header if it is a common JWT without the "wn_" prefix
-  if (!token && authHeader && !authHeader.startsWith("Bearer wn_")) {
-    token = authHeader.split(" ")[1];
-  }
-
-  // Debug in production to identify the problem of lost requests
-  if (isProduction && !token) {
-    console.error("[Auth Error] Token de sessão não encontrado", {
-      hasCookies: !!req.cookies,
-      cookieKeys: req.cookies ? Object.keys(req.cookies) : [],
-      hasAuthHeader: !!req.headers.authorization,
-      origin: req.headers.origin,
-      referer: req.headers.referer,
-      userAgent: req.headers["user-agent"]?.substring(0, 50),
-      path: req.path,
-    });
-  }
-
-  if (!token) {
+  // 2. Web User Session: Stateful Sessions via express-session
+  if (!req.session || !req.session.user) {
+    // Debug in production to identify the problem of lost requests
+    if (isProduction) {
+      console.error("[Auth Error] Sessão não encontrada", {
+        hasCookies: !!req.cookies,
+        cookieKeys: req.cookies ? Object.keys(req.cookies) : [],
+        sessionExists: !!req.session,
+        origin: req.headers.origin,
+        referer: req.headers.referer,
+        userAgent: req.headers["user-agent"]?.substring(0, 50),
+        path: req.path,
+      });
+    }
     return res.status(401).json({
-      message: "Access denied. Session token or API token not provided.",
+      message: "Access denied. Session or API token not provided.",
     });
   }
 
   try {
-    const decoded = jwt.verify(token, secretsManager(), {
-      algorithms: ["HS256"],
-    });
-
-    const parsed = jwtPayloadSchema.safeParse(decoded);
+    const parsed = jwtPayloadSchema.safeParse(req.session.user);
     if (!parsed.success) {
       return res.status(401).json({
-        message: "Invalid or expired session.",
+        message: "Invalid or corrupted session data.",
       });
     }
 

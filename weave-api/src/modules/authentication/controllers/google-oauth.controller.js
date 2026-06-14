@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { z } = require("zod");
 
@@ -7,17 +6,13 @@ const GoogleOauthRepository = require("@/modules/authentication/repositories/goo
 const FindUserRepository = require("@/modules/authentication/repositories/find-user.repository");
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const cookieHelper = require("@/utils/cookie-helper");
 const oauthState = require("@/modules/authentication/oauth-state");
-const secretsService = require("@/services/secrets");
 const {
   buildJwtPayload,
 } = require("@/modules/authentication/jwt-payload.schema");
 
-const setAuthCookie = cookieHelper.setAuthCookie;
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
-const secretsManager = secretsService.secretsManager;
 
 /** Callback fixo; cadastrar a mesma URL no Google Cloud Console. */
 const GOOGLE_OAUTH_REDIRECT_URI =
@@ -166,16 +161,16 @@ class GoogleOauthController extends AuthBaseController {
 
       const payload = buildJwtPayload(user, organization, defaultArea);
 
-      const token = jwt.sign(payload, secretsManager(), {
-        algorithm: "HS256",
-        expiresIn: "12h",
-      });
+      req.session.user = payload;
+      req.session.userId = user.user_id;
 
-      setAuthCookie(res, req, token, {
-        maxAge: 12 * 60 * 60 * 1000,
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error during Google OAuth:", err);
+          return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
+        }
+        return res.redirect(`${frontendURL}/home/?auth=success`);
       });
-
-      res.redirect(`${frontendURL}/home/?auth=success`);
     } catch (error) {
       console.error("Google OAuth callback error:", error.message);
       const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
