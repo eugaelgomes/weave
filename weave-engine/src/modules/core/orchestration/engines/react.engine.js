@@ -166,6 +166,7 @@ async function executeAgenticTask({
         // If there is ANY external tool, we return to API to execute them.
         return {
           data,
+          functions: data.toolCalls,
           providerUsed,
           executedActions,
         };
@@ -224,6 +225,13 @@ async function executeAgenticTask({
         // External tool: Return to API to be executed
         return {
           data,
+          functions: [
+            {
+              id: toolCallId,
+              name: fnName,
+              arguments: fnArgs,
+            },
+          ],
           providerUsed,
           executedActions,
         };

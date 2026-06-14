@@ -43,7 +43,7 @@ class ChatController {
         },
       });
 
-      res.write(`data: ${JSON.stringify({ success: true, ...result })}\\n\\n`);
+      res.write(`data: ${JSON.stringify({ success: true, ...result })}\n\n`);
       return res.end();
     } catch (error) {
       if (keepAliveInterval) {
@@ -52,7 +52,7 @@ class ChatController {
       if (error.code === "PLAN_LIMIT_EXCEEDED") {
         if (res.headersSent) {
           res.write(
-            `event: error\\ndata: ${JSON.stringify({ success: false, error: { code: "PLAN_LIMIT_EXCEEDED", message: error.message } })}\\n\\n`
+            `event: error\ndata: ${JSON.stringify({ success: false, error: { code: "PLAN_LIMIT_EXCEEDED", message: error.message } })}\n\n`
           );
           return res.end();
         }

@@ -297,10 +297,15 @@ async function callGenericApi(
     let fullContent = "";
     let finalUsage = null;
     let finalToolCalls = null;
+    let streamBuffer = "";
 
     for await (const chunk of response.data) {
-      const lines = chunk.toString().split("\n");
-      for (const line of lines) {
+      streamBuffer += chunk.toString();
+      let newlineIndex;
+      while ((newlineIndex = streamBuffer.indexOf("\n")) >= 0) {
+        const line = streamBuffer.slice(0, newlineIndex).trim();
+        streamBuffer = streamBuffer.slice(newlineIndex + 1);
+
         if (line.startsWith("data: ") && line !== "data: [DONE]") {
           try {
             const parsed = JSON.parse(line.slice(6));

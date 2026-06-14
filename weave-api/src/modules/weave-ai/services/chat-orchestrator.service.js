@@ -327,7 +327,7 @@ class ChatOrchestratorService {
       );
 
       if (askUserInputCall) {
-        messageStatus = "requires_input";
+        messageStatus = "ok"; // Changed from requires_input to comply with DB constraints
         responseFunctions = [...responseFunctions, ...currentFunctions];
         finalAssistantText =
           assistantText ||
