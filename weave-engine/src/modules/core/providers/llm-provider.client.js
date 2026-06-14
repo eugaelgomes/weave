@@ -240,7 +240,14 @@ async function callGenericApi(
         cleanMsg.tool_call_id =
           msg.tool_call_id ||
           `call_${Math.random().toString(36).substring(2, 11)}`;
-        cleanMsg.content = msg.content;
+        
+        if (typeof msg.content === "string") {
+          cleanMsg.content = msg.content;
+        } else if (msg.content === undefined || msg.content === null) {
+          cleanMsg.content = "{}";
+        } else {
+          cleanMsg.content = JSON.stringify(msg.content);
+        }
       }
 
       return cleanMsg;
@@ -393,15 +400,25 @@ async function callGenericApi(
 
   if (message?.tool_calls?.length) {
     const toolCall = message.tool_calls[0];
+    
+    const safeParse = (str) => {
+      if (!str) return {};
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return {};
+      }
+    };
+
     return {
       functionCall: {
-        arguments: JSON.parse(toolCall.function.arguments || "{}"),
+        arguments: safeParse(toolCall.function.arguments),
         name: toolCall.function.name,
       },
       toolCalls: message.tool_calls.map((tc) => ({
         id: tc.id,
         name: tc.function.name,
-        arguments: JSON.parse(tc.function.arguments || "{}"),
+        arguments: safeParse(tc.function.arguments),
       })),
       text: null,
       toolCallId: toolCall.id, // For backwards compatibility
