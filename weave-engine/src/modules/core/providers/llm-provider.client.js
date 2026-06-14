@@ -326,14 +326,20 @@ async function callGenericApi(
       const toolCall = finalToolCalls[0];
       return {
         functionCall: {
-          arguments: toolCall.function.arguments || "{}",
+          arguments: JSON.parse(toolCall.function.arguments || "{}"),
           name: toolCall.function.name,
         },
-        toolCalls: finalToolCalls.map((tc) => ({
-          id: tc.id,
-          name: tc.function.name,
-          arguments: tc.function.arguments || "{}",
-        })),
+        toolCalls: finalToolCalls.map((tc) => {
+          let parsedArgs = {};
+          try {
+            parsedArgs = JSON.parse(tc.function.arguments || "{}");
+          } catch (e) {}
+          return {
+            id: tc.id,
+            name: tc.function.name,
+            arguments: parsedArgs,
+          };
+        }),
         text: null,
         toolCallId: toolCall.id,
         type: "function_call",
@@ -428,6 +434,9 @@ async function callProviderWithRetry(
 
     throw new Error(`Unsupported LLM provider: ${provider}`);
   } catch (error) {
+    if (error.response && error.response.data) {
+      console.error("[LLM ERROR] Provider API returned:", JSON.stringify(error.response.data, null, 2));
+    }
     if (retryCount >= config.retry.maxRetries) {
       throw error;
     }

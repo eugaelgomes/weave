@@ -1,4 +1,6 @@
 const express = require("express");
+
+// Import utils and middlewares
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
@@ -14,6 +16,7 @@ const {
   notesBlockWriteLimiter,
 } = require("@/middlewares/security/request-limiters");
 
+// Import controllers
 const NotesReadController = require("@/modules/notes/controllers/notes-read.controller");
 const NotesWriteController = require("@/modules/notes/controllers/notes-write.controller");
 const NotesCollaboratorsController = require("@/modules/notes/controllers/notes-collaborators.controller");
@@ -26,6 +29,7 @@ const router = express.Router();
 router.param("id", resolveNotePublicIdParam);
 router.param("noteId", resolveNotePublicIdParam);
 
+// Feature toggle for block autosave v2
 const blockAutosaveV2Enabled =
   String(
     process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true"
