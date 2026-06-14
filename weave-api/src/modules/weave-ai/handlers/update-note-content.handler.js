@@ -63,13 +63,18 @@ class UpdateNoteContentHandler {
       throw error;
     }
 
+    const oldBlocks = await notesRepository.findNoteBlocksTreeByNoteId(noteId).catch(() => []);
     await notesRepository.deleteAllNoteBlocks(noteId);
     await notesRepository.bulkInsertNoteBlocks(noteId, userId, tree);
     await enqueueNoteEmbeddingJob(noteId).catch(() => {});
 
     return {
       name,
-      result: { noteId, updated: true },
+      result: { 
+        noteId, 
+        updated: true,
+        snapshot: { type: "content", blocks: oldBlocks }
+      },
       success: true,
     };
   }

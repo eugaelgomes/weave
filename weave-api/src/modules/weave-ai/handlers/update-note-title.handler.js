@@ -26,12 +26,17 @@ class UpdateNoteTitleHandler {
       organizationId,
       lang
     );
+    const oldNote = await notesRepository.getNoteById(noteId).catch(() => null);
     const result = await notesRepository.updateNoteById(noteId, {
       title: args.title,
     });
     return {
       name,
-      result: { noteId, updated: Boolean(result) },
+      result: { 
+        noteId, 
+        updated: Boolean(result),
+        snapshot: oldNote ? { type: "title", title: oldNote.title } : undefined
+      },
       success: true,
     };
   }

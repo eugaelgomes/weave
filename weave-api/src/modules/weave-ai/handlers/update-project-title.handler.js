@@ -26,6 +26,7 @@ class UpdateProjectTitleHandler {
       organizationId,
       lang
     );
+    const oldProject = await projectsReadRepository.getProjectById(args.projectId, userId).catch(() => null);
     const result = await projectsUpdateRepository.updateProject(
       args.projectId,
       userId,
@@ -38,6 +39,7 @@ class UpdateProjectTitleHandler {
       result: {
         projectId: args.projectId,
         updated: Array.isArray(result) && result.length > 0,
+        snapshot: oldProject ? { type: "project_title", title: oldProject.title } : undefined
       },
       success: true,
     };

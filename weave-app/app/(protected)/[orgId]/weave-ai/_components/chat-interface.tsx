@@ -22,6 +22,13 @@ import {
   ThumbsUp,
   ThumbsDown,
   Settings2,
+  CheckCircle2,
+  XCircle,
+  Search,
+  Brain,
+  FileEdit,
+  FilePlus2,
+  ChevronRight,
 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import ReactMarkdown from "react-markdown";
@@ -159,6 +166,73 @@ function RenderContextIcon({
 }
 
 export type ChatInterfaceVariant = "fullPage" | "widget";
+const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const { language } = useLanguage();
+  const t = language === "en-US" ? { success: "Success", failed: "Failed", details: "Details", open: "Open" } : { success: "Sucesso", failed: "Falhou", details: "Detalhes", open: "Abrir" };
+
+  const isEngine = execution.source === "engine";
+  let icon = <Bot className="w-3 h-3" />;
+  let title = execution.name;
+  let link = null;
+
+  if (execution.name === "create_note") {
+    icon = <FilePlus2 className="w-3 h-3" />;
+    title = language === "en-US" ? "Created a note" : "Criou uma nota";
+    if (execution.result?.noteId) {
+      link = routes.notes.details(orgId, execution.result.noteId);
+    }
+  } else if (execution.name.startsWith("search_")) {
+    icon = <Search className="w-3 h-3" />;
+    title = language === "en-US" ? "Searched records" : "Realizou busca";
+  } else if (execution.name.includes("update_note")) {
+    icon = <FileEdit className="w-3 h-3" />;
+    title = language === "en-US" ? "Updated a note" : "Atualizou uma nota";
+  } else if (execution.name === "consult_brain" || execution.name === "get_brain_structure") {
+    icon = <Brain className="w-3 h-3" />;
+    title = language === "en-US" ? "Consulted the Brain" : "Consultou o Cérebro";
+  }
+
+  return (
+    <div className="border border-neutral-200 dark:border-neutral-800 rounded-md p-2 mt-2 bg-white/50 dark:bg-neutral-900/50 text-[10px]">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 font-medium text-neutral-700 dark:text-neutral-300">
+          {icon}
+          <span>{title}</span>
+          <span className="text-neutral-400 font-mono text-[9px]">({execution.name})</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {link && (
+            <Link href={link} className="text-brand-yellow hover:underline flex items-center gap-0.5 font-medium">
+              {t.open} <ChevronRight className="w-2.5 h-2.5" />
+            </Link>
+          )}
+          {execution.success ? (
+            <span className="flex items-center gap-1 text-green-600 dark:text-green-500 bg-green-50 dark:bg-green-500/10 px-1.5 py-0.5 rounded-sm">
+              <CheckCircle2 className="w-2.5 h-2.5" /> {t.success}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-red-600 dark:text-red-500 bg-red-50 dark:bg-red-500/10 px-1.5 py-0.5 rounded-sm">
+              <XCircle className="w-2.5 h-2.5" /> {t.failed}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="mt-1">
+        <button onClick={() => setExpanded(!expanded)} className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 flex items-center gap-1">
+          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          {t.details}
+        </button>
+        {expanded && (
+          <pre className="mt-1.5 p-1.5 bg-neutral-100 dark:bg-neutral-950 rounded text-[9px] overflow-x-auto max-h-40 overflow-y-auto">
+            {JSON.stringify(execution.result, null, 2)}
+          </pre>
+        )}
+      </div>
+    </div>
+  );
+};
+
 
 export default function ChatInterface({
   chatId,
@@ -607,6 +681,14 @@ export default function ChatInterface({
                             );
                           })}
                         </ul>
+                      </div>
+                    )}
+
+                    {!isUser && msg.functionExecution && msg.functionExecution.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {msg.functionExecution.map((execution: any, idx: number) => (
+                          <ActionExecutionCard key={`exec-${msg.id}-${idx}`} execution={execution} orgId={orgId as string} />
+                        ))}
                       </div>
                     )}
 

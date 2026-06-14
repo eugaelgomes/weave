@@ -176,10 +176,8 @@ class ChatFormatterUtil {
    */
   normalizeApiError(error, fallback) {
     const mapped = fromUnknown(error, fallback.code);
-    const isProduction = process.env.NODE_ENV === "production";
-
-    // Enforce safety: do not leak raw programming exception messages in production.
-    if (isProduction || !mapped.isOperational || mapped.statusCode >= 500) {
+    // Enforce safety: do not leak raw programming exception messages.
+    if (!mapped.isOperational || mapped.statusCode >= 500) {
       return {
         code: fallback.code,
         message: fallback.message,

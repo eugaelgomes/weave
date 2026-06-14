@@ -7,9 +7,9 @@ const AI_PROVIDERS = {
 
 const AI_MODELS = {
   GEMINI_3_5_FLASH: "gemini-3.5-flash",
-  GEMINI_3_5_FLASH_LITE: "gemini-3.5-flash-lite",
   GEMINI_3_1_PRO_PREVIEW: "gemini-3.1-pro-preview",
-  OPENAI_GPT_4O_MINI: "gpt-4o-mini",
+  OPENAI_GPT_5_4_MINI: "gpt-5.4-mini",
+  OPENAI_GPT_5_4: "gpt-5.4",
 };
 const LLM_PROVIDER_TIMEOUT_MS = Number.parseInt(
   process.env.WEAVE_LLM_PROVIDER_TIMEOUT_MS || "18000",
@@ -56,9 +56,9 @@ const geminiConfig = {
 
 const openaiConfig = {
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: "https://api.openai.com/v1",
+  baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
   maxTokens: 4096,
-  model: AI_MODELS.OPENAI_GPT_4O_MINI,
+  model: AI_MODELS.OPENAI_GPT_5_4_MINI,
   provider: AI_PROVIDERS.OPENAI,
   retry: {
     backoffFactor: 2,

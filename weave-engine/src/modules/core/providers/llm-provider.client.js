@@ -378,6 +378,21 @@ async function callOpenAiApi(
     );
   }
 
+  const isAzure = config.baseURL.includes("azure.com");
+  const endpointUrl = isAzure 
+    ? `${config.baseURL}/chat/completions?api-version=2024-05-01-preview`
+    : `${config.baseURL}/chat/completions`;
+
+  const requestHeaders = {
+    "Content-Type": "application/json",
+  };
+
+  if (isAzure) {
+    requestHeaders["api-key"] = config.apiKey;
+  } else {
+    requestHeaders["Authorization"] = `Bearer ${config.apiKey}`;
+  }
+
   const normalizedFiles = normalizeFiles(options.files);
   const userContent = [];
   if (prompt) {
@@ -495,13 +510,10 @@ async function callOpenAiApi(
   if (options.onChunk) {
     payload.stream = true;
     const response = await axios.post(
-      `${config.baseURL}/chat/completions`,
+      endpointUrl,
       payload,
       {
-        headers: {
-          Authorization: `Bearer ${config.apiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: requestHeaders,
         responseType: "stream",
         timeout: config.timeout,
       }
@@ -581,13 +593,10 @@ async function callOpenAiApi(
   }
 
   const response = await axios.post(
-    `${config.baseURL}/chat/completions`,
+    endpointUrl,
     payload,
     {
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: requestHeaders,
       timeout: config.timeout,
     }
   );
@@ -679,10 +688,10 @@ function resolveModelName(modelName) {
     return resolveDefaultModelName();
   }
   if (normalizedModelName === "openai") {
-    return "gpt-4o-mini";
+    return "gpt-5.4-mini";
   }
   if (normalizedModelName === "gemini") {
-    return "gemini-2.0-flash";
+    return "gemini-3.5-flash";
   }
 
   return normalizedModelName;

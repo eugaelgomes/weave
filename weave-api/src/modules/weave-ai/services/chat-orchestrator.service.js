@@ -232,6 +232,7 @@ class ChatOrchestratorService {
     let finalAssistantText = "";
     let responseFunctions = [];
     let functionExecution = [];
+    let engineActions = [];
     let messageStatus = "ok";
     let providerUsed = null;
     const tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
@@ -287,6 +288,13 @@ class ChatOrchestratorService {
 
       totalLatencyMs += engineResponse?.latencyMs || 0;
       const enginePayload = engineResponse?.data || {};
+
+      const engineExecutedActions = Array.isArray(enginePayload?.executedActions)
+        ? enginePayload.executedActions
+        : [];
+      if (engineExecutedActions.length > 0) {
+        engineActions = [...engineActions, ...engineExecutedActions];
+      }
 
       const assistantText =
         enginePayload?.data?.response ||
@@ -421,6 +429,18 @@ class ChatOrchestratorService {
           }
         }
         break;
+      }
+    }
+
+    if (engineActions.length > 0) {
+      messageMetadata.engineActions = engineActions;
+      for (const action of engineActions) {
+        functionExecution.push({
+          name: action.name,
+          success: !action.result?.error,
+          result: action.result,
+          source: "engine",
+        });
       }
     }
 

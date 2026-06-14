@@ -180,6 +180,10 @@ function normalizeChatMessage(message: RawChatMessage): ChatMessage {
     created_at: message.created_at,
     model: message.model,
     sessionId: message.session_id,
+    citations: message.metadata?.citations || [],
+    functions: message.metadata?.functions || [],
+    functionExecution: message.metadata?.functionExecution || [],
+    provider: message.metadata?.providerUsed || undefined,
     metadata: message.metadata,
   };
 }

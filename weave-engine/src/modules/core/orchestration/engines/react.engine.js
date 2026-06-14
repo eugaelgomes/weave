@@ -232,7 +232,10 @@ async function executeAgenticTask({
 
     // Return text response
     return {
-      data,
+      data: {
+        ...data,
+        resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined,
+      },
       providerUsed,
       executedActions,
     };
@@ -251,6 +254,7 @@ async function executeAgenticTask({
       type: "text",
       text: fallbackMsg,
       content: fallbackMsg,
+      resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined,
     },
     providerUsed,
     executedActions,

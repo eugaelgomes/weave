@@ -406,9 +406,10 @@ class LlmQueueProcessor {
             content: data?.content || null,
             response: data?.text || data?.content || null,
             text: data?.text || null,
-            executedActions,
+            executedActions: executedActions || [],
             usage: data?.usage || null,
           },
+          executedActions: executedActions || [],
           functions,
           providerUsed,
         };
