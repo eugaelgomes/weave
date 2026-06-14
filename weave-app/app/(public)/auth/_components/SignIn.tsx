@@ -88,12 +88,37 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
     const result = await login(username, password);
 
     if (!result.success) {
-      const errBody = result.data as { error_code?: string; email?: string } | undefined;
-      if (errBody?.error_code === "EMAIL_NOT_VERIFIED") {
-        onNavigate("confirm", { email: errBody.email, password });
-      } else {
-        // Mascara o erro real por segurança e UX
+      const errCode = result.data && typeof result.data === "object"
+        ? (result.data as { error_code?: string; code?: string }).error_code
+          ?? (result.data as { error_code?: string; code?: string }).code
+        : undefined;
+      const errEmail = result.data && typeof result.data === "object"
+        ? (result.data as { email?: string }).email
+        : undefined;
+
+      if (errCode === "EMAIL_NOT_VERIFIED") {
+        onNavigate("confirm", { email: errEmail, password });
+      } else if (
+        errCode === "AUTH_REQUIRED" ||
+        result.message === "Invalid credentials." ||
+        result.message?.toLowerCase().includes("invalid credentials")
+      ) {
         setError(t.signIn.invalidCredentials);
+      } else if (
+        result.message?.toLowerCase().includes("sso") ||
+        result.message?.toLowerCase().includes("google") ||
+        result.message?.toLowerCase().includes("social")
+      ) {
+        setError("Esta conta usa autenticação SSO. Faça login com Google, GitHub ou Microsoft.");
+      } else if (
+        result.message?.toLowerCase().includes("network") ||
+        result.message?.toLowerCase().includes("connection") ||
+        result.message?.toLowerCase().includes("timeout")
+      ) {
+        setError("Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.");
+      } else {
+        // Any other server-side or parsing error — surface a specific but safe message
+        setError("Ocorreu um erro ao tentar entrar. Por favor, tente novamente em instantes.");
       }
       setIsLoading(false);
       return;

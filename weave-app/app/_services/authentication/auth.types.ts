@@ -42,7 +42,8 @@ export interface BackendUserData {
 
 export interface LoginResponse {
   user: User;
-  token: string;
+  /** Optional: present in JWT-based auth; absent in session-based (cookie) auth. */
+  token?: string;
 }
 
 export type UserUniqueField = "email" | "username" | "phone_number";

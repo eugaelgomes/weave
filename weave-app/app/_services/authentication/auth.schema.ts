@@ -260,7 +260,7 @@ export const BackendAuthResponseSchema = z.object({
     }),
   }),
   auth: z.object({
-    token: z.string(),
+    token: z.string().optional(),
     expires_in: z.number(),
     login_time: z.union([z.string(), z.number()]).optional(),
   }),

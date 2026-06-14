@@ -13,13 +13,21 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
     skipSessionInvalidationOn401: true,
   });
 
-  // Validate API output
-  const data = BackendAuthResponseSchema.parse(rawData);
+  // Validate API output — use safeParse so Zod errors surface clearly in dev
+  const result = BackendAuthResponseSchema.safeParse(rawData);
+  if (!result.success) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[login] Response failed schema validation:", result.error.flatten());
+    }
+    throw new Error("Login response format is invalid. Please try again.");
+  }
 
-  if (data.status === "OK" && data.user && data.auth) {
+  const data = result.data;
+
+  if (data.status === "OK" && data.user) {
     return {
       user: mapLoginResponseToUser(data),
-      token: data.auth.token,
+      token: data.auth?.token, // Optional: absent in session-based auth
     };
   }
 
