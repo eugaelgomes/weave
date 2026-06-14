@@ -257,12 +257,17 @@ async function callGenericApi(
   }
 
   const payload = {
-    max_tokens: config.maxTokens,
     messages,
     model: modelName || config.model,
     temperature: config.temperature,
     top_p: config.topP,
   };
+
+  if (config.baseURL.includes("generativelanguage.googleapis.com")) {
+    payload.max_tokens = config.maxTokens;
+  } else {
+    payload.max_completion_tokens = config.maxTokens;
+  }
 
   if (options.allowEdit && options.functions) {
     payload.tools = options.functions.map((fn) => ({
@@ -435,7 +440,17 @@ async function callProviderWithRetry(
     throw new Error(`Unsupported LLM provider: ${provider}`);
   } catch (error) {
     if (error.response && error.response.data) {
-      console.error("[LLM ERROR] Provider API returned:", JSON.stringify(error.response.data, null, 2));
+      if (typeof error.response.data.on === "function") {
+        let errorBody = "";
+        error.response.data.on("data", (chunk) => {
+          errorBody += chunk.toString();
+        });
+        error.response.data.on("end", () => {
+          console.error("[LLM ERROR] Provider API returned (stream):", errorBody);
+        });
+      } else {
+        console.error("[LLM ERROR] Provider API returned:", JSON.stringify(error.response.data, null, 2));
+      }
     }
     if (retryCount >= config.retry.maxRetries) {
       throw error;

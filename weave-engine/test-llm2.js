@@ -3,7 +3,7 @@ const { callAIProvider } = require("./src/modules/core/providers/llm-provider.cl
 async function run() {
   try {
     const result = await callAIProvider({
-      model: "gemini-3.1-pro-preview",
+      model: "openai",
       prompt: "Hello, testing function calls",
       options: {
         messages: [{ role: "user", content: "Hello" }]
