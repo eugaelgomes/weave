@@ -59,6 +59,7 @@ const assistantPayloadSchema = z
       .nullable()
       .optional(),
     provider: z.string().nullable().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   })
   .passthrough();
 

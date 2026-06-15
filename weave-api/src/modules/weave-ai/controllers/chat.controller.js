@@ -346,6 +346,82 @@ class ChatController {
         },
       });
     }
+  /**
+   * Handles POST /chat/messages/:messageId/feedback. Saves user feedback (rating and comment) for an AI message.
+   *
+   * @param {import("express").Request} req - The Express request object.
+   * @param {import("express").Response} res - The Express response object.
+   * @returns {Promise<Object>} JSON response confirming feedback submission.
+   */
+  async submitFeedback(req, res) {
+    const userLanguage = getLangFromReq(req);
+    const t = getI18n(userLanguage);
+    try {
+      const userId = chatParserUtil.validateAuthentication(req);
+      const messageId = req.params.messageId;
+      const { rating, comment } = req.body;
+
+      if (!messageId) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "MESSAGE_ID_REQUIRED",
+            message: "A message ID is required to submit feedback.",
+          },
+        });
+      }
+
+      if (rating !== "like" && rating !== "dislike" && rating !== null) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_RATING",
+            message: "Rating must be 'like', 'dislike', or null.",
+          },
+        });
+      }
+
+      const updated = await chatRepository.updateMessageFeedback(
+        messageId,
+        userId,
+        rating,
+        comment || null
+      );
+
+      if (!updated) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: "CHAT_MESSAGE_NOT_FOUND",
+            message: "Message not found or you don't have access to it.",
+          },
+        });
+      }
+
+      return res.json({
+        success: true,
+        messageId,
+        rating,
+      });
+    } catch (error) {
+      const normalizedError = chatFormatterUtil.normalizeApiError(error, {
+        code: "FEEDBACK_SUBMIT_FAILED",
+        message: "Failed to submit feedback.",
+        statusCode: 500,
+      });
+
+      console.error("[weave-ai/chat] feedback submit failed", {
+        error: normalizedError,
+      });
+
+      return res.status(normalizedError.statusCode).json({
+        success: false,
+        error: {
+          code: normalizedError.code,
+          message: normalizedError.message,
+        },
+      });
+    }
   }
 }
 

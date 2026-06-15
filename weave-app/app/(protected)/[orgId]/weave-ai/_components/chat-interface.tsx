@@ -49,6 +49,8 @@ import { usePathname, useRouter, useParams } from "next/navigation";
 import { isChatSessionId } from "@/app/_utils/chat-session-id";
 import { resolveProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
 import { routes } from "@/app/_utils/routes";
+import { submitMessageFeedback } from "@/app/_services/ai-agent-service/agent-service";
+import toast from "react-hot-toast";
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -516,6 +518,19 @@ export default function ChatInterface({
     }
   };
 
+  const handleFeedbackSubmit = async (messageId: string, rating: "like" | "dislike" | null, comment?: string) => {
+    try {
+      await submitMessageFeedback(messageId, rating, comment);
+      setFeedbackState((prev) => ({
+        ...prev,
+        [messageId]: { rating, comment: comment || "", showComment: false },
+      }));
+      toast.success(t.weaveAi?.feedbackSubmitted || "Obrigado pelo feedback!");
+    } catch (error) {
+      toast.error(t.weaveAi?.feedbackError || "Erro ao enviar feedback.");
+    }
+  };
+
   useEffect(() => {
     updateScrollButtons();
   }, [messages, isTyping]);
@@ -789,18 +804,33 @@ export default function ChatInterface({
                         <div
                           className={`animate-in fade-in slide-in-from-top-1 w-full max-w-[200px] text-left duration-200`}
                         >
-                          <input
-                            type="text"
-                            placeholder={t.weaveAi.feedbackPlaceholder}
-                            value={feedbackState[msg.id]?.comment || ""}
-                            onChange={(e) =>
-                              setFeedbackState({
-                                ...feedbackState,
-                                [msg.id]: { ...feedbackState[msg.id], comment: e.target.value },
-                              })
-                            }
-                            className="focus:border-brand-yellow w-full border-b border-neutral-200 bg-transparent py-0.5 text-[9px] outline-none placeholder:text-neutral-400 dark:border-neutral-800"
-                          />
+                          <form 
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              handleFeedbackSubmit(msg.id, feedbackState[msg.id]?.rating || null, feedbackState[msg.id]?.comment);
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <input
+                              type="text"
+                              placeholder={t.weaveAi.feedbackPlaceholder || "Adicionar um comentário..."}
+                              value={feedbackState[msg.id]?.comment || ""}
+                              onChange={(e) =>
+                                setFeedbackState({
+                                  ...feedbackState,
+                                  [msg.id]: { ...feedbackState[msg.id], comment: e.target.value },
+                                })
+                              }
+                              className="focus:border-brand-yellow w-full border-b border-neutral-200 bg-transparent py-0.5 text-[9px] outline-none placeholder:text-neutral-400 dark:border-neutral-800"
+                            />
+                            <button
+                              type="submit"
+                              className="text-brand-yellow hover:bg-brand-yellow/10 flex h-5 w-5 items-center justify-center rounded-full transition-colors"
+                              title="Enviar"
+                            >
+                              <Send className="h-2.5 w-2.5" />
+                            </button>
+                          </form>
                         </div>
                       )}
                     </div>

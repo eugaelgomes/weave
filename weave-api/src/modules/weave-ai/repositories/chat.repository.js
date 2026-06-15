@@ -378,6 +378,28 @@ class WeaveAIRepository {
     const result = await pool.query(query, [sessionId, userId]);
     return result.rowCount > 0;
   }
+  /**
+   * Updates a chat message with user feedback (rating and comment).
+   *
+   * @param {string} messageId - UUID of the message.
+   * @param {string} userId - UUID of the user who owns the message.
+   * @param {string|null} rating - 'like', 'dislike', or null.
+   * @param {string|null} comment - Optional feedback comment.
+   * @returns {Promise<boolean>} True if successful.
+   */
+  async updateMessageFeedback(messageId, userId, rating, comment) {
+    const query = `
+      UPDATE ai_chat_messages
+      SET
+        user_feedback_rating = $1,
+        user_feedback_comment = $2
+      WHERE id = $3
+        AND user_id = $4
+      RETURNING id
+    `;
+    const result = await pool.query(query, [rating, comment, messageId, userId]);
+    return result.rowCount > 0;
+  }
 }
 
 module.exports = new WeaveAIRepository();

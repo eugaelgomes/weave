@@ -13,6 +13,7 @@
  * - `weave-ai/controllers/chat.controller.js`: Primary entrypoint for HTTP requests.
  */
 const { randomUUID } = require("crypto");
+const { v5: uuidv5 } = require("uuid");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
 const PlansRepository = require("@/modules/plans/plans.repository");
@@ -226,7 +227,7 @@ class ChatOrchestratorService {
       authorizedFunctions.push({
         name: "ask_user_input",
         description:
-          "Ask the user for confirmation or clarification before proceeding with an action.",
+          "CRITICAL: Ask the user for confirmation ONLY before proceeding with DESTRUCTIVE or CRITICAL actions (e.g., delete, rollback, overwrite). DO NOT use this for normal creations or updates unless specifically requested by the user.",
         parameters: {
           type: "object",
           properties: {
@@ -392,7 +393,7 @@ class ChatOrchestratorService {
           role: "assistant",
           content: assistantText || null,
           model: `${payload.model.name}:${payload.model.version}`,
-          requestId: `${requestId}_call_${currentLoop}`,
+          requestId: uuidv5(`call_${currentLoop}`, requestId),
           provider: providerUsed,
           status: "function_call",
           latencyMs: engineResponse?.latencyMs || null,
@@ -426,7 +427,7 @@ class ChatOrchestratorService {
             role: "tool",
             content: execContent,
             model: `${payload.model.name}:${payload.model.version}`,
-            requestId: `${requestId}_tool_${currentLoop}_${i}`,
+            requestId: uuidv5(`tool_${currentLoop}_${i}`, requestId),
             provider: providerUsed,
             status: exec.success ? "ok" : "error",
             errorCode: exec.success ? null : "TOOL_EXECUTION_FAILED",
@@ -533,6 +534,7 @@ class ChatOrchestratorService {
         functions: responseFunctions,
         model: payload.model,
         provider: providerUsed,
+        metadata: messageMetadata,
       },
     };
   }

@@ -305,6 +305,7 @@ async function processChatResponse(
       functions: result.response?.functions || [],
       functionExecution: result.response?.functionExecution || [],
       provider: result.response?.provider || null,
+      ...(result.response?.metadata || {}),
     },
   };
 
