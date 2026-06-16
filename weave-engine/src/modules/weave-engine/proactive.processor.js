@@ -247,7 +247,7 @@ class ProactiveQueueProcessor {
     const safetyPrompt = [
       "You are a safety reviewer for proactive AI output.",
       "Return ONLY valid JSON with keys:",
-      '- label: one of "safe", "review", "unsafe"',
+      "- label: one of \"safe\", \"review\", \"unsafe\"",
       "- reason: short reason in one sentence",
       "- sanitizedText: concise safe rewrite in plain text",
       "",

@@ -346,6 +346,8 @@ class ChatController {
         },
       });
     }
+  }
+
   /**
    * Handles POST /chat/messages/:messageId/feedback. Saves user feedback (rating and comment) for an AI message.
    *
