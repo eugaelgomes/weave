@@ -208,7 +208,7 @@ function normalizeChatSession(session: RawChatSession): ChatSession {
  */
 async function processChatResponse(
   response: Response,
-  onChunk?: (chunk: string) => void
+  onChunk?: (chunk: any) => void
 ): Promise<SendMessageResult> {
   const contentType = response.headers.get("content-type") || "";
 
@@ -363,7 +363,7 @@ export async function fetchAvailableModels(): Promise<AIModel[]> {
  */
 export async function sendChatMessage(
   data: SendMessageData,
-  onChunk?: (chunk: string) => void
+  onChunk?: (chunk: any) => void
 ): Promise<SendMessageResult> {
   const payload = {
     message: data.message,

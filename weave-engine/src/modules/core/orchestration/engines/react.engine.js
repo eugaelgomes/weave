@@ -25,6 +25,51 @@ const MAX_AGENTIC_DURATION_MS = Number.parseInt(
 );
 
 /**
+ * Intelligently truncates a tool output to prevent breaking JSON structures when sending it back to the LLM.
+ *
+ * @param {any} output - The output to truncate.
+ * @param {number} maxLength - The maximum string length allowed.
+ * @returns {string} The safely truncated string.
+ */
+function truncateToolOutput(output, maxLength) {
+  if (typeof output === "string") {
+    if (output.length <= maxLength) return output;
+    return (
+      output.slice(0, maxLength) +
+      "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]"
+    );
+  }
+
+  const jsonStr = JSON.stringify(output);
+  if (jsonStr.length <= maxLength) return jsonStr;
+
+  if (Array.isArray(output)) {
+    let sliced = [...output];
+    // Iteratively slice half until it fits
+    while (sliced.length > 0 && JSON.stringify(sliced).length > maxLength) {
+      sliced = sliced.slice(0, Math.max(1, Math.floor(sliced.length / 2)));
+      if (sliced.length === 1 && JSON.stringify(sliced).length > maxLength) {
+        break; // If a single element is too big, give up and let the fallback handle it
+      }
+    }
+    sliced.push({
+      _warning: "Results truncated by engine due to size limits.",
+    });
+    const finalStr = JSON.stringify(sliced);
+    if (finalStr.length <= maxLength + 500) {
+      // allow a bit of buffer for the warning
+      return finalStr;
+    }
+  }
+
+  // Fallback for objects or extremely large single array elements
+  return (
+    jsonStr.slice(0, maxLength) +
+    "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS - WARNING: INVALID JSON SYNTAX]"
+  );
+}
+
+/**
  * Autonomous ReAct Loop logic.
  * Iteratively prompts the LLM to either generate text or request a tool call.
  * Internal tools are executed immediately and their output is appended to the conversation history.
@@ -78,6 +123,7 @@ async function executeAgenticTask({
 
   let currentPrompt = ""; // The message is now in messages history, no need for prompt
   let providerUsed = null;
+  const failureCounts = {};
 
   // Primary ReAct While Loop
   // Continues until MAX_REACT_ITERATIONS is hit, time limit expires, or a final answer is returned.
@@ -146,14 +192,37 @@ async function executeAgenticTask({
           internalCalls.map(async (tc) => {
             const fnName = tc.function.name;
             const fnArgs = tc.rawArgs;
+            if (executionContext.onChunk) {
+              executionContext.onChunk({
+                type: "action_state",
+                name: fnName,
+                status: "running",
+              });
+            }
             try {
               const result = await executeInternalTool(
                 fnName,
                 fnArgs,
                 executionContext
               );
+              if (executionContext.onChunk) {
+                executionContext.onChunk({
+                  type: "action_state",
+                  name: fnName,
+                  status: "completed",
+                  success: true,
+                });
+              }
               return { tc, result, error: null };
             } catch (err) {
+              if (executionContext.onChunk) {
+                executionContext.onChunk({
+                  type: "action_state",
+                  name: fnName,
+                  status: "completed",
+                  success: false,
+                });
+              }
               return {
                 tc,
                 result: null,
@@ -163,20 +232,27 @@ async function executeAgenticTask({
           })
         );
 
+        let circuitBreakerTripped = false;
+        let failingToolName = null;
+
         for (const { tc, result, error } of results) {
           const fnName = tc.function.name;
           const fnArgs = tc.rawArgs;
+
+          if (error) {
+            const signature = `${fnName}:${JSON.stringify(fnArgs)}`;
+            failureCounts[signature] = (failureCounts[signature] || 0) + 1;
+            if (failureCounts[signature] >= 2) {
+              circuitBreakerTripped = true;
+              failingToolName = fnName;
+            }
+          }
+
           const output = error ? { error } : result;
 
           executedActions.push({ name: fnName, args: fnArgs, result: output });
 
-          let contentStr =
-            typeof output === "string" ? output : JSON.stringify(output);
-          if (contentStr.length > 12000) {
-            contentStr =
-              contentStr.slice(0, 12000) +
-              "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]";
-          }
+          const contentStr = truncateToolOutput(output, 12000);
 
           currentOptions.messages.push({
             role: "tool",
@@ -184,6 +260,18 @@ async function executeAgenticTask({
             tool_call_id: tc.id,
             content: contentStr,
           });
+        }
+
+        if (circuitBreakerTripped) {
+          const msg =
+            "Estou tendo problemas técnicos contínuos com a ferramenta " +
+            (failingToolName || "") +
+            " e não consegui concluir a tarefa. Por favor, reformule o pedido ou tente novamente mais tarde.";
+          return {
+            data: { type: "text", text: msg, content: msg },
+            providerUsed,
+            executedActions,
+          };
         }
 
         continue;
@@ -221,22 +309,58 @@ async function executeAgenticTask({
       });
 
       if (isInternalTool(fnName)) {
-        // Execute internally and loop
-        const result = await executeInternalTool(
-          fnName,
-          fnArgs,
-          executionContext
-        );
-
-        executedActions.push({ name: fnName, args: fnArgs, result });
-
-        let contentStr =
-          typeof result === "string" ? result : JSON.stringify(result);
-        if (contentStr.length > 12000) {
-          contentStr =
-            contentStr.slice(0, 12000) +
-            "\n\n...[TRUNCATED BY ENGINE DUE TO SIZE LIMITS]";
+        if (executionContext.onChunk) {
+          executionContext.onChunk({
+            type: "action_state",
+            name: fnName,
+            status: "running",
+          });
         }
+        // Execute internally and loop
+        let result = null;
+        let error = null;
+        try {
+          result = await executeInternalTool(fnName, fnArgs, executionContext);
+          if (executionContext.onChunk) {
+            executionContext.onChunk({
+              type: "action_state",
+              name: fnName,
+              status: "completed",
+              success: true,
+            });
+          }
+        } catch (err) {
+          error = err.message || "Tool execution failed";
+          if (executionContext.onChunk) {
+            executionContext.onChunk({
+              type: "action_state",
+              name: fnName,
+              status: "completed",
+              success: false,
+            });
+          }
+        }
+
+        if (error) {
+          const signature = `${fnName}:${JSON.stringify(fnArgs)}`;
+          failureCounts[signature] = (failureCounts[signature] || 0) + 1;
+          if (failureCounts[signature] >= 2) {
+            const msg =
+              "Estou tendo problemas técnicos contínuos com a ferramenta " +
+              fnName +
+              " e não consegui concluir a tarefa. Por favor, tente de novo mais tarde.";
+            return {
+              data: { type: "text", text: msg, content: msg },
+              providerUsed,
+              executedActions,
+            };
+          }
+        }
+
+        const output = error ? { error } : result;
+        executedActions.push({ name: fnName, args: fnArgs, result: output });
+
+        const contentStr = truncateToolOutput(output, 12000);
 
         currentOptions.messages.push({
           role: "tool",

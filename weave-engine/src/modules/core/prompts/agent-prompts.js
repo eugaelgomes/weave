@@ -190,6 +190,16 @@ function buildSystemMessage(additionalContext = {}) {
     systemMessage += `\n[INTERNAL ORG ID]: ${organizationIdentifier} (NEVER SHOW USER)`;
   }
 
+  if (additionalContext.organizationInfo) {
+    systemMessage += `\n\n[ORGANIZATION DETAILS]:`;
+    systemMessage += `\nName: ${additionalContext.organizationInfo.org_name || "Unknown"}`;
+    if (additionalContext.organizationInfo.description) {
+      systemMessage += `\nDescription: ${additionalContext.organizationInfo.description}`;
+    }
+    systemMessage += `\nTimezone: ${additionalContext.organizationInfo.default_timezone || "UTC"}`;
+    systemMessage += `\nLocale: ${additionalContext.organizationInfo.default_locale || "en-US"}`;
+  }
+
   if (additionalContext.organizationMembers?.length) {
     systemMessage += `\n\n[ORG MEMBERS]:`;
     additionalContext.organizationMembers.forEach((member) => {

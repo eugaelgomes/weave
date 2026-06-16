@@ -29,6 +29,7 @@ import {
   FileEdit,
   FilePlus2,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import ReactMarkdown from "react-markdown";
@@ -215,7 +216,11 @@ const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: stri
               {t.open} <ChevronRight className="h-2.5 w-2.5" />
             </Link>
           )}
-          {execution.success ? (
+          {execution.isRunning ? (
+            <span className="flex items-center gap-1 rounded-sm bg-blue-50 px-1.5 py-0.5 text-blue-600 dark:bg-blue-500/10 dark:text-blue-500">
+              <Loader2 className="h-2.5 w-2.5 animate-spin" /> Executando...
+            </span>
+          ) : execution.success ? (
             <span className="flex items-center gap-1 rounded-sm bg-green-50 px-1.5 py-0.5 text-green-600 dark:bg-green-500/10 dark:text-green-500">
               <CheckCircle2 className="h-2.5 w-2.5" /> {t.success}
             </span>
@@ -608,316 +613,318 @@ export default function ChatInterface({
         className="relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2 pb-48 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent"
       >
         <div className="mx-auto w-full max-w-4xl space-y-4">
-          {messages?.map((msg: any) => {
-            const isUser = msg.role === "user";
-            const messageStatus = msg?.metadata?.status;
-            const isFailedUserMessage = isUser && messageStatus === "failed";
-            const citations = Array.isArray(msg?.citations)
-              ? msg.citations
-              : Array.isArray(msg?.metadata?.citations)
-                ? msg.metadata.citations
+          {messages
+            ?.filter((msg: any) => msg.role !== "tool" && msg.role !== "system")
+            .map((msg: any) => {
+              const isUser = msg.role === "user";
+              const messageStatus = msg?.metadata?.status;
+              const isFailedUserMessage = isUser && messageStatus === "failed";
+              const citations = Array.isArray(msg?.citations)
+                ? msg.citations
+                : Array.isArray(msg?.metadata?.citations)
+                  ? msg.metadata.citations
+                  : [];
+
+              const attachedFiles = Array.isArray(msg?.metadata?.files) ? msg.metadata.files : [];
+              const attachedNoteIds = Array.isArray(msg?.metadata?.noteIds)
+                ? msg.metadata.noteIds
                 : [];
+              const attachedProjectIds = Array.isArray(msg?.metadata?.projectIds)
+                ? msg.metadata.projectIds
+                : [];
+              const hasAttachments =
+                attachedFiles.length > 0 ||
+                attachedNoteIds.length > 0 ||
+                attachedProjectIds.length > 0;
 
-            const attachedFiles = Array.isArray(msg?.metadata?.files) ? msg.metadata.files : [];
-            const attachedNoteIds = Array.isArray(msg?.metadata?.noteIds)
-              ? msg.metadata.noteIds
-              : [];
-            const attachedProjectIds = Array.isArray(msg?.metadata?.projectIds)
-              ? msg.metadata.projectIds
-              : [];
-            const hasAttachments =
-              attachedFiles.length > 0 ||
-              attachedNoteIds.length > 0 ||
-              attachedProjectIds.length > 0;
-
-            return (
-              <div
-                key={msg.id}
-                className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
-              >
+              return (
                 <div
-                  className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}
+                  key={msg.id}
+                  className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
                 >
                   <div
-                    className={`relative rounded-2xl p-2 text-xs leading-relaxed ${
-                      isUser
-                        ? "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200"
-                        : "bg-transparent text-neutral-800 dark:text-neutral-200"
-                    }`}
+                    className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}
                   >
-                    {isUser ? (
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                    ) : (
-                      <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-2 prose-pre:rounded max-w-none text-xs">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeHighlight]}
-                        >
-                          {msg.content}
-                        </ReactMarkdown>
-                      </div>
-                    )}
-
-                    {!isUser &&
-                      msg?.metadata?.status === "requires_input" &&
-                      msg?.metadata?.requires_input?.options && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {(msg.metadata.requires_input.options || []).map(
-                            (option: string, idx: number) => (
-                              <button
-                                key={`option-${idx}`}
-                                onClick={() => {
-                                  handleSendText(option);
-                                }}
-                                className="bg-brand-yellow hover:bg-brand-yellow/80 text-brand-navy inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors dark:border-yellow-600/30"
-                              >
-                                {option}
-                              </button>
-                            )
-                          )}
+                    <div
+                      className={`relative rounded-2xl p-2 text-xs leading-relaxed ${
+                        isUser
+                          ? "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200"
+                          : "bg-transparent text-neutral-800 dark:text-neutral-200"
+                      }`}
+                    >
+                      {isUser ? (
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      ) : (
+                        <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-2 prose-pre:rounded max-w-none text-xs">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeHighlight]}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
                         </div>
                       )}
 
-                    {!isUser && citations.length > 0 && (
-                      <div className="border-brand-navy/30 bg-brand-beige text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige mt-2 rounded border p-1.5 text-[10px]">
-                        <p className="mb-1 font-semibold tracking-wide">{t.weaveAi.citations}</p>
-                        <ul className="space-y-1">
-                          {citations.map((citation: any, index: number) => {
-                            const title = String(
-                              citation?.title ||
-                                citation?.name ||
-                                citation?.label ||
-                                `${t.weaveAi.source} ${index + 1}`
-                            );
-                            const href = citation?.url ? String(citation.url) : "";
-                            return (
-                              <li key={`citation-${msg.id}-${index}`}>
-                                {href ? (
-                                  <a
-                                    href={href}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="underline-offset-2 hover:underline"
-                                  >
-                                    {title}
-                                  </a>
-                                ) : (
-                                  <span>{title}</span>
-                                )}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    )}
+                      {!isUser &&
+                        msg?.metadata?.status === "requires_input" &&
+                        msg?.metadata?.requires_input?.options && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {(msg.metadata.requires_input.options || []).map(
+                              (option: string, idx: number) => (
+                                <button
+                                  key={`option-${idx}`}
+                                  onClick={() => {
+                                    handleSendText(option);
+                                  }}
+                                  className="bg-brand-yellow hover:bg-brand-yellow/80 text-brand-navy inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors dark:border-yellow-600/30"
+                                >
+                                  {option}
+                                </button>
+                              )
+                            )}
+                          </div>
+                        )}
 
-                    {!isUser && msg.functionExecution && msg.functionExecution.length > 0 && (
-                      <div className="mt-2 space-y-2">
-                        {msg.functionExecution.map((execution: any, idx: number) => (
-                          <ActionExecutionCard
-                            key={`exec-${msg.id}-${idx}`}
-                            execution={execution}
-                            orgId={orgId as string}
-                          />
-                        ))}
-                      </div>
-                    )}
+                      {!isUser && citations.length > 0 && (
+                        <div className="border-brand-navy/30 bg-brand-beige text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige mt-2 rounded border p-1.5 text-[10px]">
+                          <p className="mb-1 font-semibold tracking-wide">{t.weaveAi.citations}</p>
+                          <ul className="space-y-1">
+                            {citations.map((citation: any, index: number) => {
+                              const title = String(
+                                citation?.title ||
+                                  citation?.name ||
+                                  citation?.label ||
+                                  `${t.weaveAi.source} ${index + 1}`
+                              );
+                              const href = citation?.url ? String(citation.url) : "";
+                              return (
+                                <li key={`citation-${msg.id}-${index}`}>
+                                  {href ? (
+                                    <a
+                                      href={href}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="underline-offset-2 hover:underline"
+                                    >
+                                      {title}
+                                    </a>
+                                  ) : (
+                                    <span>{title}</span>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
 
-                    {isFailedUserMessage && (
-                      <div className="border-brand-red/40 text-brand-red mt-2 rounded border bg-red-50 p-1.5 text-[10px] dark:bg-red-950/30">
-                        <p>{String(msg?.metadata?.errorMessage || t.weaveAi.errorSend)}</p>
-                        <button
-                          type="button"
-                          onClick={() => retryMessage(String(msg.id))}
-                          className="border-brand-red/40 hover:bg-brand-red/10 mt-1 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold"
-                        >
-                          <RefreshCw className="h-2.5 w-2.5" />
-                          {t.common.retry}
-                        </button>
-                      </div>
-                    )}
+                      {!isUser && msg.functionExecution && msg.functionExecution.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {msg.functionExecution.map((execution: any, idx: number) => (
+                            <ActionExecutionCard
+                              key={`exec-${msg.id}-${idx}`}
+                              execution={execution}
+                              orgId={orgId as string}
+                            />
+                          ))}
+                        </div>
+                      )}
 
-                    <div
-                      className={`mt-1.5 flex flex-col gap-1.5 pt-1 ${isUser ? "items-end" : "items-start"}`}
-                    >
-                      <div
-                        className={`flex items-center gap-3 opacity-40 transition-opacity hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}
-                      >
-                        <span className="text-[9px]">
-                          {formatMessageDateTime(msg.created_at || msg.timestamp)}
-                        </span>
-
-                        <div className="flex items-center gap-1.5">
+                      {isFailedUserMessage && (
+                        <div className="border-brand-red/40 text-brand-red mt-2 rounded border bg-red-50 p-1.5 text-[10px] dark:bg-red-950/30">
+                          <p>{String(msg?.metadata?.errorMessage || t.weaveAi.errorSend)}</p>
                           <button
                             type="button"
-                            onClick={() => handleCopyMessage(msg.id, msg.content)}
-                            title={t.weaveAi.copyMessage}
-                            className="flex items-center hover:text-neutral-900 dark:hover:text-neutral-100"
+                            onClick={() => retryMessage(String(msg.id))}
+                            className="border-brand-red/40 hover:bg-brand-red/10 mt-1 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold"
                           >
-                            <Copy className="h-2.5 w-2.5" />
-                            {copiedMessageId === msg.id && (
-                              <span className="ml-1 text-[8px]">{t.weaveAi.copied}</span>
-                            )}
+                            <RefreshCw className="h-2.5 w-2.5" />
+                            {t.common.retry}
                           </button>
-
-                          {!isUser && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const current = feedbackState[msg.id];
-                                  setFeedbackState({
-                                    ...feedbackState,
-                                    [msg.id]: {
-                                      rating: current?.rating === "like" ? null : "like",
-                                      comment: current?.comment || "",
-                                      showComment: current?.rating !== "like",
-                                    },
-                                  });
-                                }}
-                                className={`flex items-center transition-colors ${feedbackState[msg.id]?.rating === "like" ? "text-green-600 opacity-100" : "hover:text-green-600"}`}
-                                title={t.weaveAi.like}
-                              >
-                                <ThumbsUp className="h-2.5 w-2.5" />
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const current = feedbackState[msg.id];
-                                  setFeedbackState({
-                                    ...feedbackState,
-                                    [msg.id]: {
-                                      rating: current?.rating === "dislike" ? null : "dislike",
-                                      comment: current?.comment || "",
-                                      showComment: current?.rating !== "dislike",
-                                    },
-                                  });
-                                }}
-                                className={`flex items-center transition-colors ${feedbackState[msg.id]?.rating === "dislike" ? "text-red-600 opacity-100" : "hover:text-red-600"}`}
-                                title={t.weaveAi.dislike}
-                              >
-                                <ThumbsDown className="h-2.5 w-2.5" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {!isUser && feedbackState[msg.id]?.showComment && (
-                        <div
-                          className={`animate-in fade-in slide-in-from-top-1 w-full max-w-[200px] text-left duration-200`}
-                        >
-                          <form
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              handleFeedbackSubmit(
-                                msg.id,
-                                feedbackState[msg.id]?.rating || null,
-                                feedbackState[msg.id]?.comment
-                              );
-                            }}
-                            className="flex items-center gap-1"
-                          >
-                            <input
-                              type="text"
-                              placeholder={
-                                t.weaveAi.feedbackPlaceholder || "Adicionar um comentário..."
-                              }
-                              value={feedbackState[msg.id]?.comment || ""}
-                              onChange={(e) =>
-                                setFeedbackState({
-                                  ...feedbackState,
-                                  [msg.id]: { ...feedbackState[msg.id], comment: e.target.value },
-                                })
-                              }
-                              className="focus:border-brand-yellow w-full border-b border-neutral-200 bg-transparent py-0.5 text-[9px] outline-none placeholder:text-neutral-400 dark:border-neutral-800"
-                            />
-                            <button
-                              type="submit"
-                              className="text-brand-yellow hover:bg-brand-yellow/10 flex h-5 w-5 items-center justify-center rounded-full transition-colors"
-                              title="Enviar"
-                            >
-                              <Send className="h-2.5 w-2.5" />
-                            </button>
-                          </form>
                         </div>
                       )}
-                    </div>
-                  </div>
 
-                  {isUser && hasAttachments && (
-                    <div className="mt-1 flex flex-wrap justify-end gap-1">
-                      {attachedFiles.map((f: any, idx: number) => (
+                      <div
+                        className={`mt-1.5 flex flex-col gap-1.5 pt-1 ${isUser ? "items-end" : "items-start"}`}
+                      >
                         <div
-                          key={`file-${idx}`}
-                          className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                          className={`flex items-center gap-3 opacity-40 transition-opacity hover:opacity-100 ${isUser ? "flex-row-reverse" : "flex-row"}`}
                         >
-                          <Paperclip className="h-2.5 w-2.5" />
-                          <span className="max-w-[150px] truncate">
-                            {f.originalName || f.name || "Arquivo"}
+                          <span className="text-[9px]">
+                            {formatMessageDateTime(msg.created_at || msg.timestamp)}
                           </span>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleCopyMessage(msg.id, msg.content)}
+                              title={t.weaveAi.copyMessage}
+                              className="flex items-center hover:text-neutral-900 dark:hover:text-neutral-100"
+                            >
+                              <Copy className="h-2.5 w-2.5" />
+                              {copiedMessageId === msg.id && (
+                                <span className="ml-1 text-[8px]">{t.weaveAi.copied}</span>
+                              )}
+                            </button>
+
+                            {!isUser && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const current = feedbackState[msg.id];
+                                    setFeedbackState({
+                                      ...feedbackState,
+                                      [msg.id]: {
+                                        rating: current?.rating === "like" ? null : "like",
+                                        comment: current?.comment || "",
+                                        showComment: current?.rating !== "like",
+                                      },
+                                    });
+                                  }}
+                                  className={`flex items-center transition-colors ${feedbackState[msg.id]?.rating === "like" ? "text-green-600 opacity-100" : "hover:text-green-600"}`}
+                                  title={t.weaveAi.like}
+                                >
+                                  <ThumbsUp className="h-2.5 w-2.5" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const current = feedbackState[msg.id];
+                                    setFeedbackState({
+                                      ...feedbackState,
+                                      [msg.id]: {
+                                        rating: current?.rating === "dislike" ? null : "dislike",
+                                        comment: current?.comment || "",
+                                        showComment: current?.rating !== "dislike",
+                                      },
+                                    });
+                                  }}
+                                  className={`flex items-center transition-colors ${feedbackState[msg.id]?.rating === "dislike" ? "text-red-600 opacity-100" : "hover:text-red-600"}`}
+                                  title={t.weaveAi.dislike}
+                                >
+                                  <ThumbsDown className="h-2.5 w-2.5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      ))}
-                      {attachedNoteIds.map((noteId: string, idx: number) => {
-                        const note = Array.isArray(notesOverview)
-                          ? notesOverview.find((n: any) => n.id === noteId)
-                          : null;
-                        const href = routes.notes.details(
-                          orgId,
-                          (note as any)?.public_id || noteId
-                        );
-                        const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
-                        return (
-                          <Link
-                            href={href}
-                            key={`note-${idx}`}
-                            className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+
+                        {!isUser && feedbackState[msg.id]?.showComment && (
+                          <div
+                            className={`animate-in fade-in slide-in-from-top-1 w-full max-w-[200px] text-left duration-200`}
                           >
-                            <RenderContextIcon
-                              icon={noteIcon}
-                              fallback={FileText}
-                              color={note?.priority_color}
-                            />
-                            <span className="max-w-[150px] truncate underline-offset-2 hover:underline">
-                              {note?.title || "Nota"}
-                            </span>
-                          </Link>
-                        );
-                      })}
-                      {attachedProjectIds.map((projectId: string, idx: number) => {
-                        const project = Array.isArray(projectsOverview)
-                          ? projectsOverview.find((p: any) => p.id === projectId)
-                          : null;
-                        const href = routes.projects.board(
-                          orgId,
-                          (project as any)?.public_id || projectId
-                        );
-                        const projectIcon =
-                          (project as any)?.icon || (project as any)?.properties?.icon;
-                        return (
-                          <Link
-                            href={href}
-                            key={`proj-${idx}`}
-                            className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
-                          >
-                            <RenderContextIcon
-                              icon={projectIcon}
-                              fallback={FolderKanban}
-                              color={project?.color}
-                            />
-                            <span className="max-w-[150px] truncate underline-offset-2 hover:underline">
-                              {project?.title || "Projeto"}
-                            </span>
-                          </Link>
-                        );
-                      })}
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleFeedbackSubmit(
+                                  msg.id,
+                                  feedbackState[msg.id]?.rating || null,
+                                  feedbackState[msg.id]?.comment
+                                );
+                              }}
+                              className="flex items-center gap-1"
+                            >
+                              <input
+                                type="text"
+                                placeholder={
+                                  t.weaveAi.feedbackPlaceholder || "Adicionar um comentário..."
+                                }
+                                value={feedbackState[msg.id]?.comment || ""}
+                                onChange={(e) =>
+                                  setFeedbackState({
+                                    ...feedbackState,
+                                    [msg.id]: { ...feedbackState[msg.id], comment: e.target.value },
+                                  })
+                                }
+                                className="focus:border-brand-yellow w-full border-b border-neutral-200 bg-transparent py-0.5 text-[9px] outline-none placeholder:text-neutral-400 dark:border-neutral-800"
+                              />
+                              <button
+                                type="submit"
+                                className="text-brand-yellow hover:bg-brand-yellow/10 flex h-5 w-5 items-center justify-center rounded-full transition-colors"
+                                title="Enviar"
+                              >
+                                <Send className="h-2.5 w-2.5" />
+                              </button>
+                            </form>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+
+                    {isUser && hasAttachments && (
+                      <div className="mt-1 flex flex-wrap justify-end gap-1">
+                        {attachedFiles.map((f: any, idx: number) => (
+                          <div
+                            key={`file-${idx}`}
+                            className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                          >
+                            <Paperclip className="h-2.5 w-2.5" />
+                            <span className="max-w-[150px] truncate">
+                              {f.originalName || f.name || "Arquivo"}
+                            </span>
+                          </div>
+                        ))}
+                        {attachedNoteIds.map((noteId: string, idx: number) => {
+                          const note = Array.isArray(notesOverview)
+                            ? notesOverview.find((n: any) => n.id === noteId)
+                            : null;
+                          const href = routes.notes.details(
+                            orgId,
+                            (note as any)?.public_id || noteId
+                          );
+                          const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
+                          return (
+                            <Link
+                              href={href}
+                              key={`note-${idx}`}
+                              className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                            >
+                              <RenderContextIcon
+                                icon={noteIcon}
+                                fallback={FileText}
+                                color={note?.priority_color}
+                              />
+                              <span className="max-w-[150px] truncate underline-offset-2 hover:underline">
+                                {note?.title || "Nota"}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                        {attachedProjectIds.map((projectId: string, idx: number) => {
+                          const project = Array.isArray(projectsOverview)
+                            ? projectsOverview.find((p: any) => p.id === projectId)
+                            : null;
+                          const href = routes.projects.board(
+                            orgId,
+                            (project as any)?.public_id || projectId
+                          );
+                          const projectIcon =
+                            (project as any)?.icon || (project as any)?.properties?.icon;
+                          return (
+                            <Link
+                              href={href}
+                              key={`proj-${idx}`}
+                              className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+                            >
+                              <RenderContextIcon
+                                icon={projectIcon}
+                                fallback={FolderKanban}
+                                color={project?.color}
+                              />
+                              <span className="max-w-[150px] truncate underline-offset-2 hover:underline">
+                                {project?.title || "Projeto"}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
           {isTyping && (
             <div className="flex gap-2">

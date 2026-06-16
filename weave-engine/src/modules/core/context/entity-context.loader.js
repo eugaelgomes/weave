@@ -384,6 +384,36 @@ async function loadOrganizationMembers(organizationId) {
 }
 
 /**
+ * Loads basic organization details for context injection.
+ *
+ * @param {string|null} organizationId - The active organization context.
+ * @returns {Promise<object|null>} Organization details.
+ */
+async function loadOrganizationInfo(organizationId) {
+  if (!organizationId || !UUID_REGEX.test(String(organizationId || ""))) {
+    return null;
+  }
+
+  const query = `
+    SELECT
+      id::text,
+      org_name,
+      unique_name,
+      description,
+      default_timezone,
+      default_locale,
+      country
+    FROM organizations
+    WHERE id = $1::uuid
+      AND deleted = false
+    LIMIT 1;
+  `;
+
+  const { rows } = await pool.query(query, [organizationId]);
+  return rows[0] || null;
+}
+
+/**
  * Orchestrates the fetching of all contextual entities for a given AI task payload.
  * Runs queries in parallel to minimize latency.
  *
@@ -400,23 +430,26 @@ async function buildEntityContext(payload = {}) {
   const projectIds = await resolveProjectIdsFromPayload(payload.projectIds);
   const organizationId = normalizeOptionalUuid(payload.organizationId);
 
-  const [indexedNotes, indexedProjects, organizationMembers] =
+  const [indexedNotes, indexedProjects, organizationMembers, organizationInfo] =
     await Promise.all([
       loadAccessibleNotes(noteIds, userId, organizationId),
       loadAccessibleProjects(projectIds, userId, organizationId),
       loadOrganizationMembers(organizationId),
+      loadOrganizationInfo(organizationId),
     ]);
 
   return {
     indexedNotes,
     indexedProjects,
     organizationMembers,
+    organizationInfo,
   };
 }
 
 module.exports = {
   buildEntityContext,
   loadOrganizationMembers,
+  loadOrganizationInfo,
   normalizeOptionalUuid,
   normalizeUuidList,
   resolveNoteIdsFromPayload,

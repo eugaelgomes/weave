@@ -355,6 +355,8 @@ class LlmQueueProcessor {
             ...additionalContext,
             indexedNotes: entityContext.indexedNotes,
             indexedProjects: entityContext.indexedProjects,
+            organizationMembers: entityContext.organizationMembers,
+            organizationInfo: entityContext.organizationInfo,
             userLanguage:
               payload.userLanguage || additionalContext.userLanguage,
           }),
@@ -482,6 +484,8 @@ class LlmQueueProcessor {
       noteIds,
       indexedNotes: entityContext.indexedNotes,
       indexedProjects: entityContext.indexedProjects,
+      organizationMembers: entityContext.organizationMembers,
+      organizationInfo: entityContext.organizationInfo,
       userLanguage: payload.userLanguage || payload.context?.userLanguage,
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
@@ -563,6 +567,41 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
   }
 
   /**
+   * Intelligently truncates content to avoid breaking markdown code blocks or cutting words in half.
+   *
+   * @param {string} content - The content to truncate.
+   * @param {number} maxLength - The maximum character length.
+   * @returns {string} The safely truncated content.
+   */
+  intelligentTruncate(content, maxLength) {
+    if (!content || content.length <= maxLength) {
+      return content;
+    }
+
+    let truncated = content.slice(0, maxLength);
+
+    // Try not to cut a word in half by backtracking to the last space,
+    // as long as we don't lose more than 20% of our budget.
+    const lastSpaceIndex = truncated.lastIndexOf(" ");
+    if (lastSpaceIndex > maxLength * 0.8) {
+      truncated = truncated.slice(0, lastSpaceIndex);
+    }
+
+    // Count markdown code blocks to ensure we don't leave one unclosed.
+    const codeBlockMatches = truncated.match(/```/g);
+    const codeBlockCount = codeBlockMatches ? codeBlockMatches.length : 0;
+
+    let result = truncated + "\n\n...[TRUNCATED DUE TO SIZE LIMITS]";
+
+    // If there is an odd number of ``` markers, the block is open, so close it.
+    if (codeBlockCount % 2 !== 0) {
+      result += "\n```";
+    }
+
+    return result;
+  }
+
+  /**
    * Normalizes raw conversation history sent by the server into a standard OpenAI-like format.
    * Implements strict character truncation to prevent context window overflows.
    *
@@ -584,10 +623,10 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
           return null;
         }
 
-        const content =
-          rawContent.length > CHAT_HISTORY_MAX_MESSAGE_CHARS
-            ? `${rawContent.slice(0, CHAT_HISTORY_MAX_MESSAGE_CHARS)}...`
-            : rawContent;
+        const content = this.intelligentTruncate(
+          rawContent,
+          CHAT_HISTORY_MAX_MESSAGE_CHARS
+        );
 
         return {
           content,

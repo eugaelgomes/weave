@@ -524,17 +524,42 @@ class ChatOrchestratorService {
       });
     }
 
+    // Sanitize functionExecution for the HTTP response to save bandwidth
+    const sanitizedFunctionExecution = functionExecution.map((exec) => {
+      let sanitizedResult = exec.result;
+      if (sanitizedResult) {
+        const jsonStr = JSON.stringify(sanitizedResult);
+        if (jsonStr.length > 3000) {
+          if (Array.isArray(sanitizedResult)) {
+            sanitizedResult = [
+              ...sanitizedResult.slice(0, 3),
+              { _warning: "Additional results truncated for UI performance." },
+            ];
+          } else {
+            sanitizedResult = { _warning: "Result payload too large, truncated for UI rendering." };
+          }
+        }
+      }
+      return {
+        ...exec,
+        result: sanitizedResult,
+      };
+    });
+
     return {
       sessionId,
       response: {
         role: "assistant",
         content: finalAssistantText,
         citations: messageMetadata.citations,
-        functionExecution,
+        functionExecution: sanitizedFunctionExecution,
         functions: responseFunctions,
         model: payload.model,
         provider: providerUsed,
-        metadata: messageMetadata,
+        metadata: {
+          ...messageMetadata,
+          functionExecution: sanitizedFunctionExecution,
+        },
       },
     };
   }

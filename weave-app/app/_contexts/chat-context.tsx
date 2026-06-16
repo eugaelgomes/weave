@@ -192,29 +192,75 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           return [...prev, userMessage];
         });
 
-        const onChunk = (chunk: string) => {
+        const onChunk = (chunk: any) => {
           setMessages((prev: ChatMessage[]) => {
             const existingIndex = prev.findIndex((m) => m.id === optimisticAssistantMessageId);
-            if (existingIndex >= 0) {
-              const next = [...prev];
-              next[existingIndex] = {
-                ...next[existingIndex],
-                content: next[existingIndex].content + chunk,
+
+            if (typeof chunk === "object" && chunk !== null && chunk.type === "action_state") {
+              const newFuncExec = {
+                name: chunk.name,
+                success: chunk.success || false,
+                isRunning: chunk.status === "running",
               };
-              return next;
+
+              if (existingIndex >= 0) {
+                const next = [...prev];
+                const msg = { ...next[existingIndex] };
+                const fExec = msg.functionExecution ? [...msg.functionExecution] : [];
+
+                if (chunk.status === "running") {
+                  fExec.push(newFuncExec);
+                } else {
+                  const fIdx = fExec.findIndex(
+                    (f) => f.name === chunk.name && (f as any).isRunning
+                  );
+                  if (fIdx >= 0) {
+                    fExec[fIdx] = newFuncExec;
+                  } else {
+                    fExec.push(newFuncExec);
+                  }
+                }
+                msg.functionExecution = fExec;
+                next[existingIndex] = msg;
+                return next;
+              } else {
+                return [
+                  ...prev,
+                  {
+                    id: optimisticAssistantMessageId,
+                    role: "assistant",
+                    content: "",
+                    timestamp: new Date(),
+                    model: data.model.version
+                      ? `${data.model.name}:${data.model.version}`
+                      : data.model.name,
+                    functionExecution: [newFuncExec],
+                  },
+                ];
+              }
+            } else if (typeof chunk === "string") {
+              if (existingIndex >= 0) {
+                const next = [...prev];
+                next[existingIndex] = {
+                  ...next[existingIndex],
+                  content: next[existingIndex].content + chunk,
+                };
+                return next;
+              }
+              return [
+                ...prev,
+                {
+                  id: optimisticAssistantMessageId,
+                  role: "assistant",
+                  content: chunk,
+                  timestamp: new Date(),
+                  model: data.model.version
+                    ? `${data.model.name}:${data.model.version}`
+                    : data.model.name,
+                },
+              ];
             }
-            return [
-              ...prev,
-              {
-                id: optimisticAssistantMessageId,
-                role: "assistant",
-                content: chunk,
-                timestamp: new Date(),
-                model: data.model.version
-                  ? `${data.model.name}:${data.model.version}`
-                  : data.model.name,
-              },
-            ];
+            return prev;
           });
         };
 
