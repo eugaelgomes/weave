@@ -641,6 +641,8 @@ const esES: TranslationKeys = {
     like: "Me gusta",
     dislike: "No me gusta",
     feedbackPlaceholder: "Opcional: ¿Por qué?",
+    feedbackSubmitted: "¡Feedback enviado con éxito!",
+    feedbackError: "Error al enviar el feedback.",
     loadingModels: "Cargando modelos...",
     errorModels: "Error al cargar modelos",
     newChat: "Nueva Conversación",

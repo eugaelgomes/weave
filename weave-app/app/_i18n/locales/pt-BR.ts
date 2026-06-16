@@ -637,6 +637,8 @@ const ptBR = {
     like: "Gostei",
     dislike: "Não gostei",
     feedbackPlaceholder: "Opcional: Por que?",
+    feedbackSubmitted: "Feedback enviado com sucesso!",
+    feedbackError: "Erro ao enviar feedback.",
     loadingModels: "Carregando modelos...",
     errorModels: "Erro ao carregar modelos",
     newChat: "Nova Conversa",

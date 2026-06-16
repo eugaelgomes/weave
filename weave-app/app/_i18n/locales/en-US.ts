@@ -639,6 +639,8 @@ const enUS: TranslationKeys = {
     like: "Like",
     dislike: "Dislike",
     feedbackPlaceholder: "Optional: Why?",
+    feedbackSubmitted: "Feedback submitted successfully!",
+    feedbackError: "Error submitting feedback.",
     loadingModels: "Loading models...",
     errorModels: "Error loading models",
     newChat: "New Chat",

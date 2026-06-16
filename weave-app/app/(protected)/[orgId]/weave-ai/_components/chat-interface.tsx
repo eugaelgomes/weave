@@ -50,7 +50,7 @@ import { isChatSessionId } from "@/app/_utils/chat-session-id";
 import { resolveProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
 import { routes } from "@/app/_utils/routes";
 import { submitMessageFeedback } from "@/app/_services/ai-agent-service/agent-service";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -518,7 +518,11 @@ export default function ChatInterface({
     }
   };
 
-  const handleFeedbackSubmit = async (messageId: string, rating: "like" | "dislike" | null, comment?: string) => {
+  const handleFeedbackSubmit = async (
+    messageId: string,
+    rating: "like" | "dislike" | null,
+    comment?: string
+  ) => {
     try {
       await submitMessageFeedback(messageId, rating, comment);
       setFeedbackState((prev) => ({
@@ -804,16 +808,22 @@ export default function ChatInterface({
                         <div
                           className={`animate-in fade-in slide-in-from-top-1 w-full max-w-[200px] text-left duration-200`}
                         >
-                          <form 
+                          <form
                             onSubmit={(e) => {
                               e.preventDefault();
-                              handleFeedbackSubmit(msg.id, feedbackState[msg.id]?.rating || null, feedbackState[msg.id]?.comment);
+                              handleFeedbackSubmit(
+                                msg.id,
+                                feedbackState[msg.id]?.rating || null,
+                                feedbackState[msg.id]?.comment
+                              );
                             }}
                             className="flex items-center gap-1"
                           >
                             <input
                               type="text"
-                              placeholder={t.weaveAi.feedbackPlaceholder || "Adicionar um comentário..."}
+                              placeholder={
+                                t.weaveAi.feedbackPlaceholder || "Adicionar um comentário..."
+                              }
                               value={feedbackState[msg.id]?.comment || ""}
                               onChange={(e) =>
                                 setFeedbackState({

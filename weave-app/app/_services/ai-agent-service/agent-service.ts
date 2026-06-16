@@ -582,3 +582,16 @@ export async function duplicateAgent(id: string): Promise<Agent> {
   const data = AgentEnvelopeSchema.parse(raw);
   return data.agent as Agent;
 }
+
+export async function submitMessageFeedback(
+  messageId: string,
+  rating: "like" | "dislike" | null,
+  comment?: string
+): Promise<void> {
+  const response = await apiClient.post(API_ENDPOINTS.AI_CHAT_MESSAGE_FEEDBACK(messageId), {
+    rating,
+    comment,
+  });
+  const raw = await handleResponse<unknown>(response);
+  z.record(z.string(), z.unknown()).parse(raw ?? {});
+}
