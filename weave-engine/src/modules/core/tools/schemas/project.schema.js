@@ -32,6 +32,29 @@ const schemas = [
       required: ["projectId"],
     },
   },
+  {
+    name: "create_project",
+    description:
+      "Creates a new project. Use this tool when the user explicitly asks to create a new project. You must collect at least the title before creating. You can also define a description and a status.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "The name/title of the project.",
+        },
+        description: {
+          type: "string",
+          description: "A short description of the project.",
+        },
+        status: {
+          type: "string",
+          description: "The initial status of the project (must be one of: 'OPEN', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'ARCHIVED'). Defaults to 'OPEN'.",
+        },
+      },
+      required: ["title"],
+    },
+  },
 ];
 
 module.exports = { schemas };

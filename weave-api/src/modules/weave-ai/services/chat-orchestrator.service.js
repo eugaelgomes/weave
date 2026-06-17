@@ -225,30 +225,7 @@ class ChatOrchestratorService {
         ? authorization.functions
         : [];
 
-      authorizedFunctions.push({
-        name: "ask_user_input",
-        description:
-          "CRITICAL: Ask the user for confirmation ONLY before proceeding with DESTRUCTIVE or CRITICAL actions (e.g., delete, rollback, overwrite). DO NOT use this for normal creations or updates unless specifically requested by the user.",
-        parameters: {
-          type: "object",
-          properties: {
-            question: {
-              type: "string",
-              description:
-                "The clear and friendly question or confirmation message to present to the user.",
-            },
-            options: {
-              type: "array",
-              items: {
-                type: "string",
-              },
-              description:
-                "An array of possible answers/choices the user can select (e.g. ['Yes, delete it', 'No, cancel']).",
-            },
-          },
-          required: ["question"],
-        },
-      });
+
 
       capabilityRules = authorization?.capabilityRules || {};
       resourceAccess = authorization?.access || {};
@@ -273,7 +250,7 @@ class ChatOrchestratorService {
       providerUsed: null,
       requestId,
     };
-    let askUserInputCall = null;
+
 
     let currentMessage = payload.message;
     const currentConversationHistory = [...conversationHistory];
@@ -358,19 +335,7 @@ class ChatOrchestratorService {
         ];
       }
 
-      askUserInputCall = currentFunctions.find(
-        (f) => f.name === "ask_user_input"
-      );
-
-      if (askUserInputCall) {
-        messageStatus = "ok"; // Changed from requires_input to comply with DB constraints
-        responseFunctions = [...responseFunctions, ...currentFunctions];
-        finalAssistantText =
-          assistantText ||
-          askUserInputCall.arguments?.question ||
-          chatI18n.awaitingInput;
-        break;
-      } else if (currentFunctions.length > 0) {
+      if (currentFunctions.length > 0) {
         messageStatus = "function_call";
         const currentExecutions =
           await chatFunctionsService.executeFunctionCalls(
@@ -486,10 +451,7 @@ class ChatOrchestratorService {
     messageMetadata.functions = responseFunctions;
     messageMetadata.providerUsed = providerUsed;
 
-    if (askUserInputCall) {
-      messageMetadata.requires_input = askUserInputCall.arguments || {};
-      messageMetadata.status = "requires_input";
-    }
+
 
     await chatRepository.saveMessageIdempotent({
       sessionId,

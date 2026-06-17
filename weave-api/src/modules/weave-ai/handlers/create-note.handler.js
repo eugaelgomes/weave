@@ -49,11 +49,19 @@ class CreateNoteHandler {
       );
     }
 
+    const validTags = Array.isArray(args.tags)
+      ? args.tags.filter((t) =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            t
+          )
+        )
+      : [];
+
     const createdNote = await notesRepository.createNotesQuery(
       userId,
       args.title || "New task",
       args.content || "",
-      Array.isArray(args.tags) ? args.tags : [],
+      validTags,
       NOTE_STATUS.VISIBLE,
       args.projectId || null,
       args.priorityId || null

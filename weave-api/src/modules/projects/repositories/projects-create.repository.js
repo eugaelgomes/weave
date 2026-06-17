@@ -112,7 +112,7 @@ class ProjectsCreateRepository {
 
     const query = `
       INSERT INTO project_members (project_id, user_id, role, added_by)
-      SELECT $1::uuid, u.user_id, u.role, u.added_by
+      SELECT $1::uuid, u.user_id, u.role::project_member_role_enum, u.added_by
       FROM unnest($2::uuid[], $3::text[], $4::uuid[]) AS u(user_id, role, added_by)
       WHERE NOT EXISTS (
         SELECT 1 FROM project_members pm

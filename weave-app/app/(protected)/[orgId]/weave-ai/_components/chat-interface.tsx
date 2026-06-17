@@ -177,74 +177,97 @@ const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: stri
       ? { success: "Success", failed: "Failed", details: "Details", open: "Open" }
       : { success: "Sucesso", failed: "Falhou", details: "Detalhes", open: "Abrir" };
 
-  const isEngine = execution.source === "engine";
-  let icon = <Bot className="h-3 w-3" />;
+  let icon = <Settings2 className="h-4 w-4" />;
   let title = execution.name;
   let link = null;
 
   if (execution.name === "create_note") {
-    icon = <FilePlus2 className="h-3 w-3" />;
-    title = locale === "en-US" ? "Created a note" : "Criou uma nota";
+    icon = <FilePlus2 className="h-4 w-4" />;
+    title = locale === "en-US" ? "Creating note" : "Criando nota";
     if (execution.result?.noteId) {
       link = routes.notes.details(orgId, execution.result.noteId);
     }
   } else if (execution.name.startsWith("search_")) {
-    icon = <Search className="h-3 w-3" />;
-    title = locale === "en-US" ? "Searched records" : "Realizou busca";
+    icon = <Search className="h-4 w-4" />;
+    title = locale === "en-US" ? "Searching records" : "Pesquisando registros";
   } else if (execution.name.includes("update_note")) {
-    icon = <FileEdit className="h-3 w-3" />;
-    title = locale === "en-US" ? "Updated a note" : "Atualizou uma nota";
+    icon = <FileEdit className="h-4 w-4" />;
+    title = locale === "en-US" ? "Updating note" : "Atualizando nota";
   } else if (execution.name === "consult_brain" || execution.name === "get_brain_structure") {
-    icon = <Brain className="h-3 w-3" />;
-    title = locale === "en-US" ? "Consulted the Brain" : "Consultou o Cérebro";
+    icon = <Brain className="h-4 w-4" />;
+    title = locale === "en-US" ? "Consulting Knowledge Base" : "Consultando Base de Conhecimento";
+  } else {
+    // Make snake_case into human readable Title Case
+    title = execution.name
+      .split("_")
+      .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
+
+  // Adjust title tense if completed
+  if (!execution.isRunning) {
+    title = title
+      .replace("Criando", "Criou")
+      .replace("Pesquisando", "Pesquisou")
+      .replace("Atualizando", "Atualizou")
+      .replace("Consultando", "Consultou");
+    title = title
+      .replace("Creating", "Created")
+      .replace("Searching", "Searched")
+      .replace("Updating", "Updated")
+      .replace("Consulting", "Consulted");
   }
 
   return (
-    <div className="mt-2 rounded-md border border-neutral-200 bg-white/50 p-2 text-[10px] dark:border-neutral-800 dark:bg-neutral-900/50">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 font-medium text-neutral-700 dark:text-neutral-300">
-          {icon}
+    <div className="mb-3 w-fit max-w-sm min-w-[280px] rounded-xl border border-neutral-200/60 bg-white/60 shadow-sm backdrop-blur-md transition-all dark:border-neutral-800/60 dark:bg-[#252525]/60">
+      <div
+        className="flex cursor-pointer items-center justify-between px-3 py-2.5"
+        onClick={() => execution.result && setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-2.5 text-[13px] font-medium text-neutral-600 dark:text-neutral-300">
+          {execution.isRunning ? (
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-neutral-500" />
+            </div>
+          ) : execution.success ? (
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-50 dark:bg-green-500/10">
+              <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-500" />
+            </div>
+          ) : (
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
+              <XCircle className="h-3.5 w-3.5 text-red-600 dark:text-red-500" />
+            </div>
+          )}
           <span>{title}</span>
-          <span className="font-mono text-[9px] text-neutral-400">({execution.name})</span>
         </div>
+
         <div className="flex items-center gap-2">
           {link && (
             <Link
               href={link}
-              className="text-brand-yellow flex items-center gap-0.5 font-medium hover:underline"
+              onClick={(e) => e.stopPropagation()}
+              className="text-brand-yellow flex items-center gap-0.5 text-xs font-medium hover:underline"
             >
-              {t.open} <ChevronRight className="h-2.5 w-2.5" />
+              {t.open} <ChevronRight className="h-3 w-3" />
             </Link>
           )}
-          {execution.isRunning ? (
-            <span className="flex items-center gap-1 rounded-sm bg-blue-50 px-1.5 py-0.5 text-blue-600 dark:bg-blue-500/10 dark:text-blue-500">
-              <Loader2 className="h-2.5 w-2.5 animate-spin" /> Executando...
-            </span>
-          ) : execution.success ? (
-            <span className="flex items-center gap-1 rounded-sm bg-green-50 px-1.5 py-0.5 text-green-600 dark:bg-green-500/10 dark:text-green-500">
-              <CheckCircle2 className="h-2.5 w-2.5" /> {t.success}
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 rounded-sm bg-red-50 px-1.5 py-0.5 text-red-600 dark:bg-red-500/10 dark:text-red-500">
-              <XCircle className="h-2.5 w-2.5" /> {t.failed}
-            </span>
+          {execution.result && (
+            <div className="text-neutral-400">
+              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
           )}
         </div>
       </div>
-      <div className="mt-1">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-1 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-        >
-          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          {t.details}
-        </button>
-        {expanded && (
-          <pre className="mt-1.5 max-h-40 overflow-x-auto overflow-y-auto rounded bg-neutral-100 p-1.5 text-[9px] dark:bg-neutral-950">
-            {JSON.stringify(execution.result, null, 2)}
+
+      {expanded && execution.result && (
+        <div className="border-t border-neutral-100 px-3 py-2 dark:border-neutral-800/50">
+          <pre className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-700 max-h-48 overflow-auto text-[11px] text-neutral-500 dark:text-neutral-400">
+            {typeof execution.result === "string"
+              ? execution.result
+              : JSON.stringify(execution.result, null, 2)}
           </pre>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -614,7 +637,11 @@ export default function ChatInterface({
       >
         <div className="mx-auto w-full max-w-4xl space-y-4">
           {messages
-            ?.filter((msg: any) => msg.role !== "tool" && msg.role !== "system")
+            ?.filter((msg: any) => {
+              if (msg.role === "system" || msg.role === "tool") return false;
+              if (msg.role === "assistant" && !msg.content?.trim()) return false;
+              return true;
+            })
             .map((msg: any) => {
               const isUser = msg.role === "user";
               const messageStatus = msg?.metadata?.status;
@@ -640,50 +667,90 @@ export default function ChatInterface({
               return (
                 <div
                   key={msg.id}
-                  className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
+                  className={`flex w-full ${isUser ? "justify-end" : "justify-start"} mb-6`}
                 >
                   <div
-                    className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}
+                    className={`flex flex-col ${
+                      isUser
+                        ? "max-w-[75%] items-end"
+                        : "w-full max-w-[calc(100%-3rem)] items-start"
+                    }`}
                   >
                     <div
-                      className={`relative rounded-2xl p-2 text-xs leading-relaxed ${
+                      className={`relative text-[13px] leading-relaxed ${
                         isUser
-                          ? "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200"
-                          : "bg-transparent text-neutral-800 dark:text-neutral-200"
+                          ? "rounded-2xl rounded-tr-sm bg-neutral-100 px-4 py-2.5 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
+                          : "w-full bg-transparent text-neutral-800 dark:text-neutral-200"
                       }`}
                     >
                       {isUser ? (
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       ) : (
-                        <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-2 prose-pre:rounded max-w-none text-xs">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[rehypeHighlight]}
-                          >
-                            {msg.content}
-                          </ReactMarkdown>
+                        <div className="flex flex-col gap-2">
+                          {msg.content && (
+                            <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-blockquote:border-l-brand-yellow prose-blockquote:bg-neutral-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-table:border-collapse prose-table:border prose-table:border-neutral-200 prose-th:bg-neutral-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-tr:border-b dark:prose-blockquote:bg-neutral-800/50 dark:prose-table:border-neutral-800 dark:prose-th:bg-neutral-900/50 max-w-none">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeHighlight]}
+                                components={{
+                                  pre: ({ node, ...props }) => (
+                                    <div className="group relative my-4 overflow-hidden rounded-xl border border-neutral-700/50 bg-[#1e1e1e] shadow-sm">
+                                      <div className="flex items-center justify-between border-b border-neutral-700/50 bg-[#2d2d2d] px-4 py-1.5">
+                                        <div className="flex gap-1.5">
+                                          <div className="h-3 w-3 rounded-full bg-neutral-600/50"></div>
+                                          <div className="h-3 w-3 rounded-full bg-neutral-600/50"></div>
+                                          <div className="h-3 w-3 rounded-full bg-neutral-600/50"></div>
+                                        </div>
+                                        <button
+                                          onClick={(e) => {
+                                            const text = (
+                                              e.currentTarget.parentElement
+                                                ?.nextElementSibling as HTMLElement
+                                            )?.innerText;
+                                            if (text) {
+                                              navigator.clipboard.writeText(text);
+                                              const icon = e.currentTarget.querySelector("svg");
+                                              if (icon) {
+                                                const original = icon.innerHTML;
+                                                icon.innerHTML =
+                                                  '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+                                                icon.classList.add("text-green-400");
+                                                setTimeout(() => {
+                                                  icon.innerHTML = original;
+                                                  icon.classList.remove("text-green-400");
+                                                }, 2000);
+                                              }
+                                            }
+                                          }}
+                                          className="text-neutral-400 transition-colors hover:text-white"
+                                          title="Copiar código"
+                                        >
+                                          <Copy className="h-3.5 w-3.5" />
+                                        </button>
+                                      </div>
+                                      <pre
+                                        className="overflow-x-auto p-4 text-[13px] leading-relaxed"
+                                        {...props}
+                                      />
+                                    </div>
+                                  ),
+                                  code: ({ node, inline, ...props }: any) =>
+                                    inline ? (
+                                      <code
+                                        className="rounded bg-neutral-200/50 px-1.5 py-0.5 font-mono text-[12px] text-neutral-800 dark:bg-neutral-800/50 dark:text-neutral-200"
+                                        {...props}
+                                      />
+                                    ) : (
+                                      <code {...props} />
+                                    ),
+                                }}
+                              >
+                                {msg.content}
+                              </ReactMarkdown>
+                            </div>
+                          )}
                         </div>
                       )}
-
-                      {!isUser &&
-                        msg?.metadata?.status === "requires_input" &&
-                        msg?.metadata?.requires_input?.options && (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {(msg.metadata.requires_input.options || []).map(
-                              (option: string, idx: number) => (
-                                <button
-                                  key={`option-${idx}`}
-                                  onClick={() => {
-                                    handleSendText(option);
-                                  }}
-                                  className="bg-brand-yellow hover:bg-brand-yellow/80 text-brand-navy inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors dark:border-yellow-600/30"
-                                >
-                                  {option}
-                                </button>
-                              )
-                            )}
-                          </div>
-                        )}
 
                       {!isUser && citations.length > 0 && (
                         <div className="border-brand-navy/30 bg-brand-beige text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige mt-2 rounded border p-1.5 text-[10px]">
@@ -717,8 +784,6 @@ export default function ChatInterface({
                           </ul>
                         </div>
                       )}
-
-
 
                       {isFailedUserMessage && (
                         <div className="border-brand-red/40 text-brand-red mt-2 rounded border bg-red-50 p-1.5 text-[10px] dark:bg-red-950/30">
@@ -995,9 +1060,9 @@ export default function ChatInterface({
         >
           {messages?.length === 0 && !loading && (
             <div className="animate-in fade-in flex flex-col items-center gap-4 pb-3 text-center duration-500">
-              <h2 className="text-lg font-medium tracking-tight text-neutral-400 dark:text-neutral-500">
+              <h2 className="text-lg font-medium tracking-tight text-neutral-500 dark:text-neutral-400">
                 {t.weaveAi.welcomeGreetingPrefix}{" "}
-                <span className="text-brand-yellow dark:text-brand-yellow font-semibold">
+                <span className="font-semibold text-neutral-700 dark:text-neutral-200">
                   {user?.user_name?.split(" ")[0] || user?.username || ""}
                 </span>
                 {", "}
@@ -1007,7 +1072,7 @@ export default function ChatInterface({
                 </span>{" "}
                 {t.weaveAi.welcomeGreetingAction}
               </h2>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="mt-2 flex flex-wrap justify-center gap-2">
                 {[
                   t.weaveAi.suggestionTask,
                   t.weaveAi.suggestionProject,
@@ -1018,7 +1083,7 @@ export default function ChatInterface({
                   <button
                     key={suggestion}
                     onClick={() => setInput(suggestion)}
-                    className="rounded-full border border-neutral-100 bg-white/90 px-3 py-1.5 text-[10px] font-medium text-neutral-600 transition-all hover:bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                    className="rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1.5 text-[10px] font-medium text-neutral-600 transition-all hover:bg-neutral-100 dark:border-neutral-800/60 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800"
                   >
                     {suggestion}
                   </button>
@@ -1071,10 +1136,10 @@ export default function ChatInterface({
           </div>
 
           <div
-            className={`focus-within:border-brand-yellow/50 focus-within:ring-brand-yellow/20 dark:border-surface-dark-border-strong dark:focus-within:border-brand-yellow dark:focus-within:ring-brand-yellow/30 relative flex flex-col gap-1 rounded-xl border border-neutral-300 bg-white p-2 transition-all duration-700 focus-within:ring-1 dark:bg-[#1d1d1b] ${
+            className={`focus-within:border-brand-yellow/50 focus-within:ring-brand-yellow/20 dark:border-surface-dark-border-strong dark:focus-within:border-brand-yellow dark:focus-within:ring-brand-yellow/30 relative flex flex-col gap-1 rounded-2xl border border-neutral-300/80 bg-white/70 p-2 backdrop-blur-lg transition-all duration-700 focus-within:ring-1 dark:border-neutral-700/80 dark:bg-[#252525]/70 ${
               messages?.length === 0 && !loading
                 ? "shadow-2xl shadow-black/5 dark:shadow-black/40"
-                : "shadow-sm"
+                : "shadow-lg shadow-black/5 dark:shadow-black/20"
             }`}
           >
             <input
