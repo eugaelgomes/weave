@@ -6,6 +6,10 @@ import { useLanguage } from "@/app/_contexts/language-context";
 import { Bot, MessageSquare, Loader2, GitFork, ArrowRight, XCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import {
+  getSharedChatPreview,
+  forkSharedChat,
+} from "@/app/_services/ai-agent-service/agent-service";
 
 export default function SharedChatPreviewPage() {
   const params = useParams();
@@ -22,38 +26,27 @@ export default function SharedChatPreviewPage() {
   useEffect(() => {
     async function fetchPreview() {
       try {
-        const res = await fetch(`/api/${orgId}/weave-ai/chat/share/${token}`);
-        const data = await res.json();
-        if (data.success && data.session) {
-          setSessionData(data.session);
-        } else {
-          setError(data.error || "Shared session not found.");
-        }
-      } catch (e) {
-        setError("Error loading shared session.");
+        const session = await getSharedChatPreview(token);
+        setSessionData(session);
+      } catch (e: any) {
+        setError(e.message || "Error loading shared session.");
       } finally {
         setLoading(false);
       }
     }
     if (token) fetchPreview();
-  }, [token, orgId]);
+  }, [token]);
 
   const handleFork = async () => {
     setForking(true);
     try {
-      const res = await fetch(`/api/${orgId}/weave-ai/chat/share/${token}/fork`, {
-        method: "POST"
-      });
-      const data = await res.json();
-      if (data.success && data.newSessionId) {
-        toast.success(locale === "en-US" ? "Chat successfully duplicated!" : "Conversa clonada com sucesso!");
-        router.push(`/${orgId}/weave-ai/chat/${data.newSessionId}`);
-      } else {
-        toast.error(data.error || "Failed to fork session.");
-        setForking(false);
-      }
-    } catch (e) {
-      toast.error("Error forking session.");
+      const newSessionId = await forkSharedChat(token);
+      toast.success(
+        locale === "en-US" ? "Chat successfully duplicated!" : "Conversa clonada com sucesso!"
+      );
+      router.push(`/${orgId}/weave-ai/chat/${newSessionId}`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to fork session.");
       setForking(false);
     }
   };
@@ -61,7 +54,7 @@ export default function SharedChatPreviewPage() {
   if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
+        <Loader2 className="text-brand-blue h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -94,8 +87,8 @@ export default function SharedChatPreviewPage() {
     <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-50/50 p-4 dark:bg-[#1d1d1b]">
       <div className="w-full max-w-md overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-[#252525]">
         <div className="flex flex-col items-center border-b border-neutral-100 bg-neutral-50/50 px-8 py-10 text-center dark:border-neutral-800/80 dark:bg-[#2d2d2d]">
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-brand-yellow/10">
-            <Bot className="h-8 w-8 text-brand-orange" />
+          <div className="bg-brand-yellow/10 mb-5 flex h-16 w-16 items-center justify-center rounded-full">
+            <Bot className="text-brand-orange h-8 w-8" />
           </div>
           <h1 className="mb-2 text-2xl font-bold text-neutral-900 dark:text-white">
             {locale === "en-US" ? "Shared Conversation" : "Conversa Compartilhada"}
@@ -129,7 +122,7 @@ export default function SharedChatPreviewPage() {
           <button
             onClick={handleFork}
             disabled={forking}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-3 text-sm font-semibold text-white shadow-md shadow-brand-blue/20 transition-all hover:bg-brand-blue/90 disabled:opacity-70 dark:bg-brand-yellow dark:text-neutral-900 dark:shadow-brand-yellow/10 dark:hover:bg-brand-yellow/90"
+            className="bg-brand-blue shadow-brand-blue/20 hover:bg-brand-blue/90 dark:bg-brand-yellow dark:shadow-brand-yellow/10 dark:hover:bg-brand-yellow/90 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-md transition-all disabled:opacity-70 dark:text-neutral-900"
           >
             {forking ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -139,7 +132,7 @@ export default function SharedChatPreviewPage() {
             {locale === "en-US" ? "Continue this conversation" : "Continuar esta conversa (Fork)"}
             {!forking && <ArrowRight className="h-4 w-4" />}
           </button>
-          
+
           <p className="mt-4 text-center text-[11px] text-neutral-400 dark:text-neutral-500">
             {locale === "en-US"
               ? "This will create a copy of the chat in your own account."

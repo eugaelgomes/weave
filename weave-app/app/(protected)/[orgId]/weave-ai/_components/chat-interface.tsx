@@ -54,7 +54,10 @@ import { isChatSessionId } from "@/app/_utils/chat-session-id";
 import { resolveProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
 import { routes } from "@/app/_utils/routes";
 import getStorageUrl from "@/app/_utils/get-storage-url";
-import { submitMessageFeedback } from "@/app/_services/ai-agent-service/agent-service";
+import {
+  submitMessageFeedback,
+  shareChatSession,
+} from "@/app/_services/ai-agent-service/agent-service";
 import { toast } from "sonner";
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
@@ -289,7 +292,7 @@ export default function ChatInterface({
   const params = useParams();
   const orgId = params?.orgId as string;
   const pathname = usePathname();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const {
     models,
     messages,
@@ -505,16 +508,14 @@ export default function ChatInterface({
     if (!chatId) return;
     setIsSharing(true);
     try {
-      const response = await fetch(`/api/${orgId}/weave-ai/chat/${chatId}/share`, {
-        method: "POST",
-      });
-      if (!response.ok) throw new Error("Failed to share");
-      const data = await response.json();
-      if (data.success && data.shareToken) {
-        const url = `${window.location.origin}/${orgId}/weave-ai/share/${data.shareToken}`;
-        await navigator.clipboard.writeText(url);
-        toast.success(locale === "en-US" ? "Link copied to clipboard!" : "Link copiado para área de transferência!");
-      }
+      const shareToken = await shareChatSession(chatId);
+      const url = `${window.location.origin}/${orgId}/weave-ai/share/${shareToken}`;
+      await navigator.clipboard.writeText(url);
+      toast.success(
+        locale === "en-US"
+          ? "Link copied to clipboard!"
+          : "Link copiado para área de transferência!"
+      );
     } catch (error) {
       toast.error(locale === "en-US" ? "Error sharing chat" : "Erro ao compartilhar conversa");
     } finally {
@@ -638,9 +639,13 @@ export default function ChatInterface({
             <button
               onClick={handleShareChat}
               disabled={isSharing}
-              className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-[10px] font-medium text-neutral-600 shadow-sm transition hover:bg-neutral-50 hover:text-neutral-900 dark:border-neutral-700/80 dark:bg-[#2d2d2d] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100 disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-[10px] font-medium text-neutral-600 shadow-sm transition hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-700/80 dark:bg-[#2d2d2d] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
             >
-              {isSharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
+              {isSharing ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Share2 className="h-3 w-3" />
+              )}
               {locale === "en-US" ? "Share" : "Compartilhar"}
             </button>
           )}
@@ -782,25 +787,34 @@ export default function ChatInterface({
                                   table: ({ node, ...props }: any) => (
                                     <div className="not-prose my-5 w-full overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-700/80 dark:bg-[#1d1d1b]">
                                       <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50/80 px-4 py-2.5 dark:border-neutral-700/80 dark:bg-[#2d2d2d]">
-                                        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                                        <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                                           <Table className="h-3.5 w-3.5" />
                                           <span>Tabela de Dados</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <button
                                             onClick={(e) => {
-                                              const tableEl = e.currentTarget.closest('.not-prose')?.querySelector('table');
+                                              const tableEl = e.currentTarget
+                                                .closest(".not-prose")
+                                                ?.querySelector("table");
                                               if (!tableEl) return;
-                                              const rows = Array.from(tableEl.querySelectorAll('tr'));
-                                              const text = rows.map(row => 
-                                                Array.from(row.querySelectorAll('th, td')).map(cell => cell.textContent?.trim() || "").join('\t')
-                                              ).join('\n');
+                                              const rows = Array.from(
+                                                tableEl.querySelectorAll("tr")
+                                              );
+                                              const text = rows
+                                                .map((row) =>
+                                                  Array.from(row.querySelectorAll("th, td"))
+                                                    .map((cell) => cell.textContent?.trim() || "")
+                                                    .join("\t")
+                                                )
+                                                .join("\n");
                                               navigator.clipboard.writeText(text);
-                                              
+
                                               const icon = e.currentTarget.querySelector("svg");
                                               if (icon) {
                                                 const original = icon.innerHTML;
-                                                icon.innerHTML = '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+                                                icon.innerHTML =
+                                                  '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
                                                 icon.classList.add("text-green-500");
                                                 setTimeout(() => {
                                                   icon.innerHTML = original;
@@ -816,27 +830,40 @@ export default function ChatInterface({
                                           <div className="h-3.5 w-px bg-neutral-300 dark:bg-neutral-700"></div>
                                           <button
                                             onClick={(e) => {
-                                              const tableEl = e.currentTarget.closest('.not-prose')?.querySelector('table');
+                                              const tableEl = e.currentTarget
+                                                .closest(".not-prose")
+                                                ?.querySelector("table");
                                               if (!tableEl) return;
-                                              const rows = Array.from(tableEl.querySelectorAll('tr'));
-                                              const csv = rows.map(row => 
-                                                Array.from(row.querySelectorAll('th, td')).map(cell => {
-                                                  let text = cell.textContent?.trim() || "";
-                                                  text = text.replace(/"/g, '""');
-                                                  return `"${text}"`;
-                                                }).join(',')
-                                              ).join('\n');
-                                              
-                                              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                                              const rows = Array.from(
+                                                tableEl.querySelectorAll("tr")
+                                              );
+                                              const csv = rows
+                                                .map((row) =>
+                                                  Array.from(row.querySelectorAll("th, td"))
+                                                    .map((cell) => {
+                                                      let text = cell.textContent?.trim() || "";
+                                                      text = text.replace(/"/g, '""');
+                                                      return `"${text}"`;
+                                                    })
+                                                    .join(",")
+                                                )
+                                                .join("\n");
+
+                                              const blob = new Blob([csv], {
+                                                type: "text/csv;charset=utf-8;",
+                                              });
                                               const url = URL.createObjectURL(blob);
-                                              const link = document.createElement('a');
+                                              const link = document.createElement("a");
                                               link.href = url;
-                                              link.setAttribute('download', `export_${Date.now()}.csv`);
+                                              link.setAttribute(
+                                                "download",
+                                                `export_${Date.now()}.csv`
+                                              );
                                               document.body.appendChild(link);
                                               link.click();
                                               document.body.removeChild(link);
                                             }}
-                                            className="text-neutral-400 transition-colors hover:text-brand-orange"
+                                            className="hover:text-brand-orange text-neutral-400 transition-colors"
                                             title="Exportar como CSV"
                                           >
                                             <Download className="h-3.5 w-3.5" />
@@ -844,37 +871,59 @@ export default function ChatInterface({
                                         </div>
                                       </div>
                                       <div className="w-full overflow-x-auto">
-                                        <table className="w-full whitespace-nowrap text-left text-[13px]" {...props} />
+                                        <table
+                                          className="w-full text-left text-[13px] whitespace-nowrap"
+                                          {...props}
+                                        />
                                       </div>
                                     </div>
                                   ),
                                   thead: ({ node, ...props }: any) => (
-                                    <thead className="bg-neutral-50/80 dark:bg-neutral-800/50" {...props} />
+                                    <thead
+                                      className="bg-neutral-50/80 dark:bg-neutral-800/50"
+                                      {...props}
+                                    />
                                   ),
                                   tr: ({ node, ...props }: any) => (
                                     <tr className="group" {...props} />
                                   ),
                                   th: ({ node, ...props }: any) => (
-                                    <th className="border-b border-neutral-200 px-4 py-3 font-semibold text-neutral-900 dark:border-neutral-700/80 dark:text-neutral-100" {...props} />
+                                    <th
+                                      className="border-b border-neutral-200 px-4 py-3 font-semibold text-neutral-900 dark:border-neutral-700/80 dark:text-neutral-100"
+                                      {...props}
+                                    />
                                   ),
                                   td: ({ node, ...props }: any) => (
-                                    <td className="border-b border-neutral-100 px-4 py-3 text-neutral-700 transition-colors group-hover:bg-neutral-50/50 dark:border-neutral-800/60 dark:text-neutral-300 dark:group-hover:bg-white/[0.02] group-last:border-b-0" {...props} />
+                                    <td
+                                      className="border-b border-neutral-100 px-4 py-3 text-neutral-700 transition-colors group-last:border-b-0 group-hover:bg-neutral-50/50 dark:border-neutral-800/60 dark:text-neutral-300 dark:group-hover:bg-white/[0.02]"
+                                      {...props}
+                                    />
                                   ),
                                   a: ({ node, ...props }: any) => {
                                     const href = props.href || "";
                                     const isProjectLink = href.includes("/projects/");
                                     const isNoteLink = href.includes("/notes/");
                                     const isUserLink = href.startsWith("user:");
-                                    
+
                                     if (isUserLink) {
                                       const rawAvatar = href.replace("user:", "");
-                                      const resolvedAvatar = rawAvatar && rawAvatar !== "none" ? getStorageUrl(decodeURIComponent(rawAvatar)) : null;
-                                      
+                                      const resolvedAvatar =
+                                        rawAvatar && rawAvatar !== "none"
+                                          ? getStorageUrl(decodeURIComponent(rawAvatar))
+                                          : null;
+
                                       return (
-                                        <span className="inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow" title="User">
-                                          <span className="flex items-center justify-center translate-y-[1px]">
+                                        <span
+                                          className="text-brand-navy dark:text-brand-yellow inline-flex items-center gap-1 font-medium"
+                                          title="User"
+                                        >
+                                          <span className="flex translate-y-[1px] items-center justify-center">
                                             {resolvedAvatar ? (
-                                              <img src={resolvedAvatar} alt="" className="h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-neutral-200/80 dark:border-neutral-700/80 object-cover" />
+                                              <img
+                                                src={resolvedAvatar}
+                                                alt=""
+                                                className="h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-neutral-200/80 object-cover dark:border-neutral-700/80"
+                                              />
                                             ) : (
                                               <User className="h-3.5 w-3.5 shrink-0" />
                                             )}
@@ -883,50 +932,82 @@ export default function ChatInterface({
                                         </span>
                                       );
                                     }
-                                    
+
                                     if (isProjectLink || isNoteLink) {
                                       // Extract the last path segment as the entity ID (public_id or UUID)
                                       const segments = href.split("/").filter(Boolean);
                                       const lastSegment = segments[segments.length - 1] || "";
                                       const entityId = lastSegment.split("?")[0] || "";
-                                      
+
                                       if (isProjectLink && entityId) {
                                         const project = Array.isArray(projectsOverview)
-                                          ? projectsOverview.find((p: any) => p.id === entityId || p.public_id === entityId)
+                                          ? projectsOverview.find(
+                                              (p: any) =>
+                                                p.id === entityId || p.public_id === entityId
+                                            )
                                           : null;
                                         const resolvedHref = project
-                                          ? routes.projects.board(orgId, (project as any).public_id || entityId)
+                                          ? routes.projects.board(
+                                              orgId,
+                                              (project as any).public_id || entityId
+                                            )
                                           : href;
                                         const projectIcon = (project as any)?.icon;
                                         return (
-                                          <Link href={resolvedHref} className="no-underline hover:no-underline inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow">
-                                            <span className="flex items-center justify-center translate-y-[1px]">
-                                              <RenderContextIcon icon={projectIcon} fallback={FolderKanban} color={(project as any)?.color} />
+                                          <Link
+                                            href={resolvedHref}
+                                            className="text-brand-navy dark:text-brand-yellow inline-flex items-center gap-1 font-medium no-underline hover:no-underline"
+                                          >
+                                            <span className="flex translate-y-[1px] items-center justify-center">
+                                              <RenderContextIcon
+                                                icon={projectIcon}
+                                                fallback={FolderKanban}
+                                                color={(project as any)?.color}
+                                              />
                                             </span>
                                             <span>{props.children}</span>
                                           </Link>
                                         );
                                       } else if (isNoteLink && entityId) {
                                         const note = Array.isArray(notesOverview)
-                                          ? notesOverview.find((n: any) => n.id === entityId || n.public_id === entityId)
+                                          ? notesOverview.find(
+                                              (n: any) =>
+                                                n.id === entityId || n.public_id === entityId
+                                            )
                                           : null;
                                         const resolvedHref = note
-                                          ? routes.notes.details(orgId, (note as any).public_id || entityId)
+                                          ? routes.notes.details(
+                                              orgId,
+                                              (note as any).public_id || entityId
+                                            )
                                           : href;
                                         const noteIcon = (note as any)?.properties?.icon;
                                         return (
-                                          <Link href={resolvedHref} className="no-underline hover:no-underline inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow">
-                                            <span className="flex items-center justify-center translate-y-[1px]">
-                                              <RenderContextIcon icon={noteIcon} fallback={FileText} color={note?.priority_color} />
+                                          <Link
+                                            href={resolvedHref}
+                                            className="text-brand-navy dark:text-brand-yellow inline-flex items-center gap-1 font-medium no-underline hover:no-underline"
+                                          >
+                                            <span className="flex translate-y-[1px] items-center justify-center">
+                                              <RenderContextIcon
+                                                icon={noteIcon}
+                                                fallback={FileText}
+                                                color={note?.priority_color}
+                                              />
                                             </span>
                                             <span>{props.children}</span>
                                           </Link>
                                         );
                                       }
                                     }
-                                    
+
                                     return (
-                                      <a href={href} className="text-brand-navy font-medium underline underline-offset-2 hover:text-brand-orange dark:text-brand-yellow dark:hover:text-brand-orange" target="_blank" rel="noopener noreferrer" {...props}>
+                                      <a
+                                        href={href}
+                                        className="text-brand-navy hover:text-brand-orange dark:text-brand-yellow dark:hover:text-brand-orange font-medium underline underline-offset-2"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        {...props}
+                                      >
                                         {props.children}
                                       </a>
                                     );

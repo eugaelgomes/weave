@@ -595,3 +595,24 @@ export async function submitMessageFeedback(
   const raw = await handleResponse<unknown>(response);
   z.record(z.string(), z.unknown()).parse(raw ?? {});
 }
+
+export async function shareChatSession(sessionId: string): Promise<string> {
+  const response = await apiClient.post(API_ENDPOINTS.AI_CHAT_SHARE(sessionId));
+  const raw = await handleResponse<any>(response);
+  if (!raw.success || !raw.shareToken) throw new Error("Failed to share chat");
+  return raw.shareToken;
+}
+
+export async function getSharedChatPreview(token: string): Promise<any> {
+  const response = await apiClient.get(API_ENDPOINTS.AI_CHAT_SHARE_PREVIEW(token));
+  const raw = await handleResponse<any>(response);
+  if (!raw.success || !raw.session) throw new Error(raw.error || "Shared session not found");
+  return raw.session;
+}
+
+export async function forkSharedChat(token: string): Promise<string> {
+  const response = await apiClient.post(API_ENDPOINTS.AI_CHAT_SHARE_FORK(token));
+  const raw = await handleResponse<any>(response);
+  if (!raw.success || !raw.newSessionId) throw new Error(raw.error || "Failed to fork session");
+  return raw.newSessionId;
+}
