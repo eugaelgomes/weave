@@ -745,18 +745,23 @@ export default function ChatInterface({
                                       <code {...props} />
                                     ),
                                   table: ({ node, ...props }: any) => (
-                                    <div className="my-4 w-full overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700/80 dark:bg-[#1d1d1b]">
-                                      <table className="w-full text-left text-sm" {...props} />
+                                    <div className="not-prose my-5 w-full overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-700/80 dark:bg-[#1d1d1b]">
+                                      <div className="w-full overflow-x-auto">
+                                        <table className="w-full whitespace-nowrap text-left text-[13px]" {...props} />
+                                      </div>
                                     </div>
                                   ),
                                   thead: ({ node, ...props }: any) => (
-                                    <thead className="bg-neutral-50 dark:bg-neutral-800/50" {...props} />
+                                    <thead className="bg-neutral-50/80 dark:bg-neutral-800/50" {...props} />
+                                  ),
+                                  tr: ({ node, ...props }: any) => (
+                                    <tr className="group" {...props} />
                                   ),
                                   th: ({ node, ...props }: any) => (
-                                    <th className="border-b border-neutral-200 px-4 py-2.5 font-semibold text-neutral-900 dark:border-neutral-700/80 dark:text-neutral-100" {...props} />
+                                    <th className="border-b border-neutral-200 px-4 py-3 font-semibold text-neutral-900 dark:border-neutral-700/80 dark:text-neutral-100" {...props} />
                                   ),
                                   td: ({ node, ...props }: any) => (
-                                    <td className="border-b border-neutral-100 px-4 py-2 text-neutral-700 dark:border-neutral-800/60 dark:text-neutral-300" {...props} />
+                                    <td className="border-b border-neutral-100 px-4 py-3 text-neutral-700 transition-colors group-hover:bg-neutral-50/50 dark:border-neutral-800/60 dark:text-neutral-300 dark:group-hover:bg-white/[0.02] group-last:border-b-0" {...props} />
                                   ),
                                   a: ({ node, ...props }: any) => {
                                     const href = props.href || "";
@@ -797,7 +802,7 @@ export default function ChatInterface({
                                           : href;
                                         const projectIcon = (project as any)?.icon;
                                         return (
-                                          <Link href={resolvedHref} className="inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow hover:underline">
+                                          <Link href={resolvedHref} className="no-underline hover:no-underline inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow">
                                             <span className="flex items-center justify-center translate-y-[1px]">
                                               <RenderContextIcon icon={projectIcon} fallback={FolderKanban} color={(project as any)?.color} />
                                             </span>
@@ -813,7 +818,7 @@ export default function ChatInterface({
                                           : href;
                                         const noteIcon = (note as any)?.properties?.icon;
                                         return (
-                                          <Link href={resolvedHref} className="inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow hover:underline">
+                                          <Link href={resolvedHref} className="no-underline hover:no-underline inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow">
                                             <span className="flex items-center justify-center translate-y-[1px]">
                                               <RenderContextIcon icon={noteIcon} fallback={FileText} color={note?.priority_color} />
                                             </span>
