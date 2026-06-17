@@ -88,10 +88,10 @@ async function loadResourceAccessContext({ userId, context = {} }) {
  * @param {object} params
  * @param {string} params.functionName
  * @param {object} params.schema
- * @param {object} params.access
+ * @param {object} params.context
  * @returns {boolean}
  */
-function isFunctionAuthorized({ access, functionName, schema }) {
+function isFunctionAuthorized({ access, functionName, schema, context }) {
   if (isFunctionForbidden(functionName)) {
     return false;
   }
@@ -101,6 +101,14 @@ function isFunctionAuthorized({ access, functionName, schema }) {
   const noteScoped =
     category === FunctionCategory.NOTES || category === FunctionCategory.BLOCKS;
   const projectScoped = category === FunctionCategory.PROJECTS;
+  const orgScoped =
+    category === FunctionCategory.ORGANIZATIONS ||
+    functionName.includes("org_") ||
+    functionName.includes("organization");
+
+  if (orgScoped && !context?.organizationId) {
+    return false;
+  }
 
   if (noteScoped && !access.note.accessible) {
     return false;
@@ -161,6 +169,7 @@ async function resolveAuthorizedFunctions({ allowEdit, context = {}, userId }) {
   const authorizedNames = functionNames.filter((functionName) =>
     isFunctionAuthorized({
       access,
+      context,
       functionName,
       schema: getFunctionSchema(functionName),
     })

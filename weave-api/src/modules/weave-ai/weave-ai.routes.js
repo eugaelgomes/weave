@@ -180,7 +180,10 @@ router.use((req, res, next) => {
 router.post("/chat", handleChatFilesUpload, bind(aiController, "chat"));
 router.get("/chat/history", bind(aiController, "getChatHistory"));
 router.delete("/chat/:sessionId", bind(aiController, "deleteChatSession"));
-router.post("/chat/messages/:messageId/feedback", bind(aiController, "submitFeedback"));
+router.post(
+  "/chat/messages/:messageId/feedback",
+  bind(aiController, "submitFeedback")
+);
 
 router.get("/models", bind(aiController, "getAvailableModels"));
 

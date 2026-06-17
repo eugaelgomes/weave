@@ -214,6 +214,7 @@ class ChatOrchestratorService {
         allowEdit: payload.allowEdit,
         context: {
           planUsageContext,
+          organizationId,
           noteId: resolvedNoteIds.length > 0 ? resolvedNoteIds[0] : null,
           projectId:
             resolvedProjectIds.length > 0 ? resolvedProjectIds[0] : null,
@@ -536,7 +537,9 @@ class ChatOrchestratorService {
               { _warning: "Additional results truncated for UI performance." },
             ];
           } else {
-            sanitizedResult = { _warning: "Result payload too large, truncated for UI rendering." };
+            sanitizedResult = {
+              _warning: "Result payload too large, truncated for UI rendering.",
+            };
           }
         }
       }

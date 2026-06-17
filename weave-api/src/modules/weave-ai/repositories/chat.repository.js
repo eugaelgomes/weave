@@ -397,7 +397,12 @@ class WeaveAIRepository {
         AND user_id = $4
       RETURNING id
     `;
-    const result = await pool.query(query, [rating, comment, messageId, userId]);
+    const result = await pool.query(query, [
+      rating,
+      comment,
+      messageId,
+      userId,
+    ]);
     return result.rowCount > 0;
   }
 }
