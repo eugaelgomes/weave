@@ -180,6 +180,7 @@ async function loadAccessibleNotes(noteIds, userId, organizationId = null) {
   const query = `
     SELECT
       n.id::text,
+      n.public_note_id AS public_id,
       n.project_id::text,
       n.title,
       n.description,
@@ -249,6 +250,7 @@ async function loadAccessibleProjects(
   const query = `
     SELECT
       p.id::text,
+      p.public_project_id AS public_id,
       p.parent_project_id::text,
       p.title,
       p.description,

@@ -145,7 +145,7 @@ function RenderContextIcon({
 
   if (resolved?.kind === "emoji") {
     return (
-      <span className="mr-0.5 shrink-0 text-[10px] leading-none" aria-hidden>
+      <span className="shrink-0 text-[11px] leading-none" aria-hidden>
         {resolved.value}
       </span>
     );
@@ -154,7 +154,7 @@ function RenderContextIcon({
   if (resolved?.kind === "image") {
     return (
       <span
-        className="relative mr-0.5 h-3 w-3 shrink-0 overflow-hidden rounded-sm border border-neutral-200/80"
+        className="relative h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-neutral-200/80 dark:border-neutral-700/80"
         aria-hidden
       >
         <img src={resolved.url} alt="" className="h-full w-full object-cover" />
@@ -164,7 +164,7 @@ function RenderContextIcon({
 
   const accent = color && /^#[0-9A-Fa-f]{3,8}$/i.test(color) ? color : undefined;
   return (
-    <Fallback className="h-2.5 w-2.5 shrink-0" style={accent ? { color: accent } : undefined} />
+    <Fallback className="h-3.5 w-3.5 shrink-0" style={accent ? { color: accent } : undefined} />
   );
 }
 
@@ -743,6 +743,57 @@ export default function ChatInterface({
                                     ) : (
                                       <code {...props} />
                                     ),
+                                  a: ({ node, ...props }: any) => {
+                                    const href = props.href || "";
+                                    const isProjectLink = href.includes("/projects/");
+                                    const isNoteLink = href.includes("/notes/");
+                                    
+                                    if (isProjectLink || isNoteLink) {
+                                      // Extract the last path segment as the entity ID (public_id or UUID)
+                                      const segments = href.split("/").filter(Boolean);
+                                      const entityId = segments[segments.length - 1] || "";
+                                      
+                                      if (isProjectLink && entityId) {
+                                        const project = Array.isArray(projectsOverview)
+                                          ? projectsOverview.find((p: any) => p.id === entityId || p.public_id === entityId)
+                                          : null;
+                                        const resolvedHref = project
+                                          ? routes.projects.board(orgId, (project as any).public_id || entityId)
+                                          : href;
+                                        const projectIcon = (project as any)?.icon;
+                                        return (
+                                          <Link href={resolvedHref} className="inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow hover:underline">
+                                            <span className="flex items-center justify-center translate-y-[1px]">
+                                              <RenderContextIcon icon={projectIcon} fallback={FolderKanban} color={(project as any)?.color} />
+                                            </span>
+                                            <span>{props.children}</span>
+                                          </Link>
+                                        );
+                                      } else if (isNoteLink && entityId) {
+                                        const note = Array.isArray(notesOverview)
+                                          ? notesOverview.find((n: any) => n.id === entityId || n.public_id === entityId)
+                                          : null;
+                                        const resolvedHref = note
+                                          ? routes.notes.details(orgId, (note as any).public_id || entityId)
+                                          : href;
+                                        const noteIcon = (note as any)?.properties?.icon;
+                                        return (
+                                          <Link href={resolvedHref} className="inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow hover:underline">
+                                            <span className="flex items-center justify-center translate-y-[1px]">
+                                              <RenderContextIcon icon={noteIcon} fallback={FileText} color={note?.priority_color} />
+                                            </span>
+                                            <span>{props.children}</span>
+                                          </Link>
+                                        );
+                                      }
+                                    }
+                                    
+                                    return (
+                                      <a href={href} className="text-brand-navy font-medium underline underline-offset-2 hover:text-brand-orange dark:text-brand-yellow dark:hover:text-brand-orange" target="_blank" rel="noopener noreferrer" {...props}>
+                                        {props.children}
+                                      </a>
+                                    );
+                                  },
                                 }}
                               >
                                 {msg.content}
