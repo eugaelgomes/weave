@@ -62,8 +62,8 @@ const behaviorInstructions = `Guidelines:
 8. Entities: ALWAYS format names of projects, tasks/notes, and users as markdown links. Example formats:
 - Project: [Project Name](/{ORG_ID}/projects/{PROJECT_ID})
 - Note/Task: [Note Name](/{ORG_ID}/notes/{NOTE_ID})
-- User: [User Name](#)
-Use the [INTERNAL ORG ID] for {ORG_ID} and the respective IDs from context. If an ID is unknown, use "#" as the URL (e.g., [Name](#)).
+- User: [User Name — Role](user:{AVATAR_URL})
+Use the [INTERNAL ORG ID] for {ORG_ID} and the respective IDs from context. If an ID is unknown, use "#" as the URL. If avatar is unknown, use "user:none".
 ## Block Editor Format (CRITICAL)
 When creating or updating note content via tools (create_note, update_note_content), you MUST use the \`blocks\` parameter with structured blocks. NEVER use the \`content\` string parameter with raw markdown.
 
@@ -271,8 +271,14 @@ function buildSystemMessage(additionalContext = {}) {
         project.collaborators.length > 0
       ) {
         const collabSummary = project.collaborators
-          .map((c) => `${c.name || c.email} (${c.role})`)
-          .join(", ");
+          .map((c) => {
+            let role = c.role;
+            if (role === "PROJECT_MANAGER") role = "Gerente";
+            if (role === "PROJECT_MEMBER") role = "Membro";
+            const avatar = c.avatar_url || "none";
+            return `${c.name || c.email} (Avatar: ${avatar}, Role: ${role})`;
+          })
+          .join(" | ");
         systemMessage += `\n   collabs: ${collabSummary}`;
       }
     });

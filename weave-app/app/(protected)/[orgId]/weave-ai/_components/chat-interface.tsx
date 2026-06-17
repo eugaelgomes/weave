@@ -50,6 +50,7 @@ import { usePathname, useRouter, useParams } from "next/navigation";
 import { isChatSessionId } from "@/app/_utils/chat-session-id";
 import { resolveProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
 import { routes } from "@/app/_utils/routes";
+import getStorageUrl from "@/app/_utils/get-storage-url";
 import { submitMessageFeedback } from "@/app/_services/ai-agent-service/agent-service";
 import { toast } from "sonner";
 
@@ -747,11 +748,31 @@ export default function ChatInterface({
                                     const href = props.href || "";
                                     const isProjectLink = href.includes("/projects/");
                                     const isNoteLink = href.includes("/notes/");
+                                    const isUserLink = href.startsWith("user:");
+                                    
+                                    if (isUserLink) {
+                                      const rawAvatar = href.replace("user:", "");
+                                      const resolvedAvatar = rawAvatar && rawAvatar !== "none" ? getStorageUrl(decodeURIComponent(rawAvatar)) : null;
+                                      
+                                      return (
+                                        <span className="inline-flex items-center gap-1 font-medium text-brand-navy dark:text-brand-yellow" title="User">
+                                          <span className="flex items-center justify-center translate-y-[1px]">
+                                            {resolvedAvatar ? (
+                                              <img src={resolvedAvatar} alt="" className="h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-neutral-200/80 dark:border-neutral-700/80 object-cover" />
+                                            ) : (
+                                              <User className="h-3.5 w-3.5 shrink-0" />
+                                            )}
+                                          </span>
+                                          <span>{props.children}</span>
+                                        </span>
+                                      );
+                                    }
                                     
                                     if (isProjectLink || isNoteLink) {
                                       // Extract the last path segment as the entity ID (public_id or UUID)
                                       const segments = href.split("/").filter(Boolean);
-                                      const entityId = segments[segments.length - 1] || "";
+                                      const lastSegment = segments[segments.length - 1] || "";
+                                      const entityId = lastSegment.split("?")[0] || "";
                                       
                                       if (isProjectLink && entityId) {
                                         const project = Array.isArray(projectsOverview)
