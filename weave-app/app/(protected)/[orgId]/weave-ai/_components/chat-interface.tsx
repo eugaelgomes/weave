@@ -744,6 +744,20 @@ export default function ChatInterface({
                                     ) : (
                                       <code {...props} />
                                     ),
+                                  table: ({ node, ...props }: any) => (
+                                    <div className="my-4 w-full overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700/80 dark:bg-[#1d1d1b]">
+                                      <table className="w-full text-left text-sm" {...props} />
+                                    </div>
+                                  ),
+                                  thead: ({ node, ...props }: any) => (
+                                    <thead className="bg-neutral-50 dark:bg-neutral-800/50" {...props} />
+                                  ),
+                                  th: ({ node, ...props }: any) => (
+                                    <th className="border-b border-neutral-200 px-4 py-2.5 font-semibold text-neutral-900 dark:border-neutral-700/80 dark:text-neutral-100" {...props} />
+                                  ),
+                                  td: ({ node, ...props }: any) => (
+                                    <td className="border-b border-neutral-100 px-4 py-2 text-neutral-700 dark:border-neutral-800/60 dark:text-neutral-300" {...props} />
+                                  ),
                                   a: ({ node, ...props }: any) => {
                                     const href = props.href || "";
                                     const isProjectLink = href.includes("/projects/");
