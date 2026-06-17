@@ -718,17 +718,7 @@ export default function ChatInterface({
                         </div>
                       )}
 
-                      {!isUser && msg.functionExecution && msg.functionExecution.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          {msg.functionExecution.map((execution: any, idx: number) => (
-                            <ActionExecutionCard
-                              key={`exec-${msg.id}-${idx}`}
-                              execution={execution}
-                              orgId={orgId as string}
-                            />
-                          ))}
-                        </div>
-                      )}
+
 
                       {isFailedUserMessage && (
                         <div className="border-brand-red/40 text-brand-red mt-2 rounded border bg-red-50 p-1.5 text-[10px] dark:bg-red-950/30">
