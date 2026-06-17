@@ -353,7 +353,7 @@ export default function ChatInterface({
 
   useEffect(() => {
     if (models.length > 0 && !selectedModel) {
-      setSelectedModel(models.find((m) => m.id === "gpt-4o") || models[0]);
+      setSelectedModel(models.find((m) => m.id === "gpt-5.4-mini") || models[0]);
     }
   }, [models, selectedModel]);
 
@@ -639,7 +639,7 @@ export default function ChatInterface({
             <button
               onClick={handleShareChat}
               disabled={isSharing}
-              className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-[10px] font-medium text-neutral-600 shadow-sm transition hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-50 dark:border-neutral-700/80 dark:bg-[#2d2d2d] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+              className="flex items-center gap-1.5 rounded-md text-[10px] font-medium text-neutral-500 transition hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
             >
               {isSharing ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -789,7 +789,6 @@ export default function ChatInterface({
                                       <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50/80 px-4 py-2.5 dark:border-neutral-700/80 dark:bg-[#2d2d2d]">
                                         <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
                                           <Table className="h-3.5 w-3.5" />
-                                          <span>Tabela de Dados</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <button
@@ -889,13 +888,13 @@ export default function ChatInterface({
                                   ),
                                   th: ({ node, ...props }: any) => (
                                     <th
-                                      className="border-b border-neutral-200 px-4 py-3 font-semibold text-neutral-900 dark:border-neutral-700/80 dark:text-neutral-100"
+                                      className="border-b border-neutral-200 px-4 py-1.5 font-semibold text-neutral-900 dark:border-neutral-700/80 dark:text-neutral-100"
                                       {...props}
                                     />
                                   ),
                                   td: ({ node, ...props }: any) => (
                                     <td
-                                      className="border-b border-neutral-100 px-4 py-3 text-neutral-700 transition-colors group-last:border-b-0 group-hover:bg-neutral-50/50 dark:border-neutral-800/60 dark:text-neutral-300 dark:group-hover:bg-white/[0.02]"
+                                      className="border-b border-neutral-100 px-4 py-1.5 text-neutral-700 transition-colors group-last:border-b-0 group-hover:bg-neutral-50/50 dark:border-neutral-800/60 dark:text-neutral-300 dark:group-hover:bg-white/[0.02]"
                                       {...props}
                                     />
                                   ),
@@ -946,12 +945,16 @@ export default function ChatInterface({
                                                 p.id === entityId || p.public_id === entityId
                                             )
                                           : null;
-                                        const resolvedHref = project
-                                          ? routes.projects.board(
-                                              orgId,
-                                              (project as any).public_id || entityId
-                                            )
-                                          : href;
+                                        let resolvedHref = href;
+                                        if (href.startsWith("/") && !href.startsWith(`/${orgId}/`)) {
+                                          resolvedHref = `/${orgId}${href}`;
+                                        }
+                                        if (project) {
+                                          resolvedHref = routes.projects.board(
+                                            orgId,
+                                            (project as any).public_id || entityId
+                                          );
+                                        }
                                         const projectIcon = (project as any)?.icon;
                                         return (
                                           <Link
@@ -975,12 +978,16 @@ export default function ChatInterface({
                                                 n.id === entityId || n.public_id === entityId
                                             )
                                           : null;
-                                        const resolvedHref = note
-                                          ? routes.notes.details(
-                                              orgId,
-                                              (note as any).public_id || entityId
-                                            )
-                                          : href;
+                                        let resolvedHref = href;
+                                        if (href.startsWith("/") && !href.startsWith(`/${orgId}/`)) {
+                                          resolvedHref = `/${orgId}${href}`;
+                                        }
+                                        if (note) {
+                                          resolvedHref = routes.notes.details(
+                                            orgId,
+                                            (note as any).public_id || entityId
+                                          );
+                                        }
                                         const noteIcon = (note as any)?.properties?.icon;
                                         return (
                                           <Link
