@@ -32,6 +32,7 @@ import {
   Loader2,
   Table,
   Download,
+  Share2,
 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import ReactMarkdown from "react-markdown";
@@ -320,6 +321,7 @@ export default function ChatInterface({
   const [noteContextLimit, setNoteContextLimit] = useState(10);
   const [projectContextLimit, setProjectContextLimit] = useState(10);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [contextItems, setContextItems] = useState<{ type: string; id: string; title: string }[]>(
     []
@@ -499,6 +501,27 @@ export default function ChatInterface({
     messagesContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleShareChat = async () => {
+    if (!chatId) return;
+    setIsSharing(true);
+    try {
+      const response = await fetch(`/api/${orgId}/weave-ai/chat/${chatId}/share`, {
+        method: "POST",
+      });
+      if (!response.ok) throw new Error("Failed to share");
+      const data = await response.json();
+      if (data.success && data.shareToken) {
+        const url = `${window.location.origin}/${orgId}/weave-ai/share/${data.shareToken}`;
+        await navigator.clipboard.writeText(url);
+        toast.success(locale === "en-US" ? "Link copied to clipboard!" : "Link copiado para área de transferência!");
+      }
+    } catch (error) {
+      toast.error(locale === "en-US" ? "Error sharing chat" : "Erro ao compartilhar conversa");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -611,6 +634,16 @@ export default function ChatInterface({
         </div>
 
         <div className="flex items-center gap-2">
+          {(!variant || variant === "fullPage") && chatId && messages?.length > 0 && (
+            <button
+              onClick={handleShareChat}
+              disabled={isSharing}
+              className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1 text-[10px] font-medium text-neutral-600 shadow-sm transition hover:bg-neutral-50 hover:text-neutral-900 dark:border-neutral-700/80 dark:bg-[#2d2d2d] dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100 disabled:opacity-50"
+            >
+              {isSharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
+              {locale === "en-US" ? "Share" : "Compartilhar"}
+            </button>
+          )}
           {variant === "widget" && (
             <>
               <Link

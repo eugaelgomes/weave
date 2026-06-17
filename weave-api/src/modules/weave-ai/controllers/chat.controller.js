@@ -425,6 +425,67 @@ class ChatController {
       });
     }
   }
+
+  async shareChatSession(req, res) {
+    try {
+      const userId = chatParserUtil.validateAuthentication(req);
+      const sessionId = req.params.sessionId;
+
+      if (!sessionId) {
+        return res.status(400).json({ success: false, error: "Session ID required" });
+      }
+
+      let shareToken = await chatRepository.generateShareToken(sessionId, userId);
+      if (!shareToken) {
+        return res.status(404).json({ success: false, error: "Session not found" });
+      }
+
+      return res.json({ success: true, shareToken });
+    } catch (error) {
+      console.error("[weave-ai/chat] share session failed", error);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  }
+
+  async getSharedChatPreview(req, res) {
+    try {
+      const token = req.params.token;
+      if (!token) {
+        return res.status(400).json({ success: false, error: "Token required" });
+      }
+
+      const session = await chatRepository.getSharedSessionByToken(token);
+      if (!session) {
+        return res.status(404).json({ success: false, error: "Shared session not found or link expired" });
+      }
+
+      return res.json({ success: true, session });
+    } catch (error) {
+      console.error("[weave-ai/chat] get shared session failed", error);
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  }
+
+  async forkSharedChat(req, res) {
+    try {
+      const userId = chatParserUtil.validateAuthentication(req);
+      const token = req.params.token;
+
+      if (!token) {
+        return res.status(400).json({ success: false, error: "Token required" });
+      }
+
+      const newSession = await chatRepository.forkSession(token, userId);
+      
+      return res.json({ success: true, newSessionId: newSession.id });
+    } catch (error) {
+      console.error("[weave-ai/chat] fork session failed", error);
+      if (error.message.includes("not found")) {
+        return res.status(404).json({ success: false, error: "Shared session not found" });
+      }
+      return res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  }
 }
 
 module.exports = new ChatController();

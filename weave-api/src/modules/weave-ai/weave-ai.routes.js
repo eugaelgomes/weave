@@ -184,6 +184,9 @@ router.post(
   "/chat/messages/:messageId/feedback",
   bind(aiController, "submitFeedback")
 );
+router.post("/chat/:sessionId/share", bind(aiController, "shareChatSession"));
+router.get("/chat/share/:token", bind(aiController, "getSharedChatPreview"));
+router.post("/chat/share/:token/fork", bind(aiController, "forkSharedChat"));
 
 router.get("/models", bind(aiController, "getAvailableModels"));
 
