@@ -12,7 +12,7 @@ const { pool } = require("../../../../services/postgres.client");
  */
 async function listOrgAreas(args) {
   if (!args.organizationId) {
-    return { error: "No organizationId provided in execution context." };
+    return { message: "User is not currently part of any organization. Cannot retrieve organization areas." };
   }
 
   try {
@@ -50,7 +50,7 @@ async function listOrgAreas(args) {
  */
 async function getOrgArea(args) {
   if (!args.organizationId) {
-    return { error: "No organizationId provided in execution context." };
+    return { message: "User is not currently part of any organization. Cannot retrieve organization area." };
   }
   if (!args.areaId) {
     return { error: "areaId is required." };

@@ -38,7 +38,7 @@ class ChatController {
     try {
       userId = chatParserUtil.validateAuthentication(req);
       payload = chatParserUtil.parseChatPayload(req);
-      organizationId = req.user?.organizationId || null;
+      organizationId = req.user?.organizationId || req.user?.org_id || null;
       requestId = payload.requestId || randomUUID();
 
       res.writeHead(200, {

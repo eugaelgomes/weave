@@ -40,7 +40,11 @@ async function getUserProfile(args) {
       }
     }
 
-    return { profile, organization };
+    const result = { profile };
+    if (organization) {
+      result.organization = organization;
+    }
+    return result;
   } catch (error) {
     return { error: "Database error fetching profile: " + error.message };
   }

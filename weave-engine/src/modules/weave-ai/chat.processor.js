@@ -235,7 +235,7 @@ class LlmQueueProcessor {
       : null;
 
     try {
-      const data = await this.executeTask(taskType, payload);
+      const data = await this.executeTask(taskType, payload, requestId);
       responsePayload = JSON.stringify({
         data,
         requestId,
@@ -333,9 +333,10 @@ class LlmQueueProcessor {
    *
    * @param {string} taskType - The action to perform (e.g., 'build_system_message', 'chat_v2_process').
    * @param {object} payload - The domain-specific parameters for the task.
+   * @param {string} requestId - The ID of the request for streaming.
    * @returns {Promise<object>} The resulting data from the execution.
    */
-  async executeTask(taskType, payload) {
+  async executeTask(taskType, payload, requestId) {
     switch (taskType) {
       case "build_system_message": {
         const additionalContext = payload.additionalContext || {};

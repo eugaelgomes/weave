@@ -240,6 +240,7 @@ async function callGenericApi(
             name: tc.function.name,
             arguments: tc.function.arguments,
           },
+          ...(tc.extra_content ? { extra_content: tc.extra_content } : {})
         }));
       }
 
@@ -326,19 +327,28 @@ async function callGenericApi(
             const deltaToolCalls = parsed.choices?.[0]?.delta?.tool_calls;
             if (deltaToolCalls) {
               if (!finalToolCalls) finalToolCalls = [];
-              for (const tc of deltaToolCalls) {
-                if (tc.index !== undefined) {
-                  if (!finalToolCalls[tc.index])
-                    finalToolCalls[tc.index] = {
-                      id: tc.id,
-                      type: "function",
-                      function: { name: "", arguments: "" },
-                    };
-                  if (tc.function?.name)
-                    finalToolCalls[tc.index].function.name += tc.function.name;
-                  if (tc.function?.arguments)
-                    finalToolCalls[tc.index].function.arguments +=
-                      tc.function.arguments;
+              for (let i = 0; i < deltaToolCalls.length; i++) {
+                const tc = deltaToolCalls[i];
+                const tcIndex = tc.index !== undefined ? tc.index : i;
+                if (!finalToolCalls[tcIndex]) {
+                  finalToolCalls[tcIndex] = {
+                    id: tc.id,
+                    type: "function",
+                    function: { name: "", arguments: "" },
+                  };
+                }
+                // Handle cases where ID comes in later chunks
+                if (tc.id && !finalToolCalls[tcIndex].id) {
+                  finalToolCalls[tcIndex].id = tc.id;
+                }
+                if (tc.extra_content) {
+                  finalToolCalls[tcIndex].extra_content = tc.extra_content;
+                }
+                if (tc.function?.name) {
+                  finalToolCalls[tcIndex].function.name += tc.function.name;
+                }
+                if (tc.function?.arguments) {
+                  finalToolCalls[tcIndex].function.arguments += tc.function.arguments;
                 }
               }
             }
@@ -351,21 +361,34 @@ async function callGenericApi(
     }
 
     if (finalToolCalls && finalToolCalls.length > 0) {
+      const safeParse = (str) => {
+        if (!str) return {};
+        try {
+          return JSON.parse(str);
+        } catch (e) {
+          // Attempt to fix duplicate strings from bad Gemini deltas e.g. "{}{}"
+          try {
+            if (str.includes("}{")) {
+              const fixed = str.split("}{")[0] + "}";
+              return JSON.parse(fixed);
+            }
+          } catch(err2) {}
+          return {};
+        }
+      };
+
       const toolCall = finalToolCalls[0];
       return {
         functionCall: {
-          arguments: JSON.parse(toolCall.function.arguments || "{}"),
+          arguments: safeParse(toolCall.function.arguments),
           name: toolCall.function.name,
         },
         toolCalls: finalToolCalls.map((tc) => {
-          let parsedArgs = {};
-          try {
-            parsedArgs = JSON.parse(tc.function.arguments || "{}");
-          } catch (e) {}
           return {
             id: tc.id,
             name: tc.function.name,
-            arguments: parsedArgs,
+            arguments: safeParse(tc.function.arguments),
+            extra_content: tc.extra_content,
           };
         }),
         text: null,

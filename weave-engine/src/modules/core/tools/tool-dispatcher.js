@@ -161,14 +161,11 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
  * Retrieves the complete array of internal tool schemas to pass to the LLM.
  * Allows toggling specific capabilities like web search dynamically.
  *
- * @param {boolean} [allowWebSearch=true] - Whether to include web search capabilities.
+ * @param {object} [executionContext={}] - Workspace context.
  * @returns {Array<object>} An array of OpenAI-compatible function schemas.
  */
-function getInternalToolDefinitions(allowWebSearch = true) {
-  if (allowWebSearch) {
-    return internalToolSchemas;
-  }
-  return [
+function getInternalToolDefinitions(allowWebSearch = true, executionContext = {}) {
+  let schemas = allowWebSearch ? internalToolSchemas : [
     ...searchSchemas,
     ...profileSchemas,
     ...projectSchemas,
@@ -179,6 +176,19 @@ function getInternalToolDefinitions(allowWebSearch = true) {
     ...noteSchemas,
     ...noteCommentsSchemas,
   ];
+
+  if (!executionContext.organizationId) {
+    const orgTools = [
+      "get_organization_details",
+      "list_org_members",
+      "get_org_member",
+      "list_org_areas",
+      "get_org_area"
+    ];
+    schemas = schemas.filter(s => !orgTools.includes(s.name));
+  }
+
+  return schemas;
 }
 
 module.exports = {
