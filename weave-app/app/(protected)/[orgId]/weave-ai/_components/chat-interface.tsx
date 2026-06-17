@@ -30,6 +30,8 @@ import {
   FilePlus2,
   ChevronRight,
   Loader2,
+  Table,
+  Download,
 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import ReactMarkdown from "react-markdown";
@@ -746,6 +748,68 @@ export default function ChatInterface({
                                     ),
                                   table: ({ node, ...props }: any) => (
                                     <div className="not-prose my-5 w-full overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-700/80 dark:bg-[#1d1d1b]">
+                                      <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50/80 px-4 py-2.5 dark:border-neutral-700/80 dark:bg-[#2d2d2d]">
+                                        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                                          <Table className="h-3.5 w-3.5" />
+                                          <span>Tabela de Dados</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={(e) => {
+                                              const tableEl = e.currentTarget.closest('.not-prose')?.querySelector('table');
+                                              if (!tableEl) return;
+                                              const rows = Array.from(tableEl.querySelectorAll('tr'));
+                                              const text = rows.map(row => 
+                                                Array.from(row.querySelectorAll('th, td')).map(cell => cell.textContent?.trim() || "").join('\t')
+                                              ).join('\n');
+                                              navigator.clipboard.writeText(text);
+                                              
+                                              const icon = e.currentTarget.querySelector("svg");
+                                              if (icon) {
+                                                const original = icon.innerHTML;
+                                                icon.innerHTML = '<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+                                                icon.classList.add("text-green-500");
+                                                setTimeout(() => {
+                                                  icon.innerHTML = original;
+                                                  icon.classList.remove("text-green-500");
+                                                }, 2000);
+                                              }
+                                            }}
+                                            className="text-neutral-400 transition-colors hover:text-neutral-700 dark:hover:text-neutral-200"
+                                            title="Copiar dados"
+                                          >
+                                            <Copy className="h-3.5 w-3.5" />
+                                          </button>
+                                          <div className="h-3.5 w-px bg-neutral-300 dark:bg-neutral-700"></div>
+                                          <button
+                                            onClick={(e) => {
+                                              const tableEl = e.currentTarget.closest('.not-prose')?.querySelector('table');
+                                              if (!tableEl) return;
+                                              const rows = Array.from(tableEl.querySelectorAll('tr'));
+                                              const csv = rows.map(row => 
+                                                Array.from(row.querySelectorAll('th, td')).map(cell => {
+                                                  let text = cell.textContent?.trim() || "";
+                                                  text = text.replace(/"/g, '""');
+                                                  return `"${text}"`;
+                                                }).join(',')
+                                              ).join('\n');
+                                              
+                                              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                                              const url = URL.createObjectURL(blob);
+                                              const link = document.createElement('a');
+                                              link.href = url;
+                                              link.setAttribute('download', `export_${Date.now()}.csv`);
+                                              document.body.appendChild(link);
+                                              link.click();
+                                              document.body.removeChild(link);
+                                            }}
+                                            className="text-neutral-400 transition-colors hover:text-brand-orange"
+                                            title="Exportar como CSV"
+                                          >
+                                            <Download className="h-3.5 w-3.5" />
+                                          </button>
+                                        </div>
+                                      </div>
                                       <div className="w-full overflow-x-auto">
                                         <table className="w-full whitespace-nowrap text-left text-[13px]" {...props} />
                                       </div>
