@@ -26,10 +26,16 @@ class CreateProjectHandler {
       throw new Error(t.invalidTitle || "Project title is required.");
     }
 
-    const validStatuses = ['OPEN', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'ARCHIVED'];
-    let status = args.status ? String(args.status).toUpperCase() : 'OPEN';
+    const validStatuses = [
+      "OPEN",
+      "IN_PROGRESS",
+      "PAUSED",
+      "COMPLETED",
+      "ARCHIVED",
+    ];
+    let status = args.status ? String(args.status).toUpperCase() : "OPEN";
     if (!validStatuses.includes(status)) {
-      status = 'OPEN';
+      status = "OPEN";
     }
 
     const projectData = {
@@ -37,7 +43,7 @@ class CreateProjectHandler {
       organization_id: organizationId || null,
       title: args.title.trim(),
       description: args.description || null,
-      methodology: 'KANBAN',
+      methodology: "KANBAN",
       status: status,
       properties: {},
       parent_project_id: null,
@@ -47,7 +53,12 @@ class CreateProjectHandler {
       { name: "Backlog", position: 0, color: "#E2E8F0", properties: {} },
       { name: "To Do", position: 1, color: "#E2E8F0", properties: {} },
       { name: "Doing", position: 2, color: "#E2E8F0", properties: {} },
-      { name: "Done", position: 3, color: "#E2E8F0", properties: { is_done: true } },
+      {
+        name: "Done",
+        position: 3,
+        color: "#E2E8F0",
+        properties: { is_done: true },
+      },
     ];
 
     try {

@@ -225,8 +225,6 @@ class ChatOrchestratorService {
         ? authorization.functions
         : [];
 
-
-
       capabilityRules = authorization?.capabilityRules || {};
       resourceAccess = authorization?.access || {};
     } catch {
@@ -250,7 +248,6 @@ class ChatOrchestratorService {
       providerUsed: null,
       requestId,
     };
-
 
     let currentMessage = payload.message;
     const currentConversationHistory = [...conversationHistory];
@@ -450,8 +447,6 @@ class ChatOrchestratorService {
     messageMetadata.functionExecution = functionExecution;
     messageMetadata.functions = responseFunctions;
     messageMetadata.providerUsed = providerUsed;
-
-
 
     await chatRepository.saveMessageIdempotent({
       sessionId,
