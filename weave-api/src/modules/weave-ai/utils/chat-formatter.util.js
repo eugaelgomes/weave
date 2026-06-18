@@ -18,7 +18,7 @@ const { fromUnknown } = require("@/errors");
 const { getI18n } = require("./weave-ai-i18n.util");
 
 const CHAT_CONTEXT_MAX_MESSAGE_CHARS = Number.parseInt(
-  process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGE_CHARS || "1500",
+  process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGE_CHARS || "35000",
   10
 );
 

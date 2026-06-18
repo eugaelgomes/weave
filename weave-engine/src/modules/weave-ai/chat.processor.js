@@ -36,11 +36,11 @@ const CHAT_HISTORY_MAX_MESSAGES = Number.parseInt(
   10
 );
 const CHAT_HISTORY_MAX_MESSAGE_CHARS = Number.parseInt(
-  process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGE_CHARS || "1500",
+  process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGE_CHARS || "35000",
   10
 );
 const CHAT_HISTORY_MAX_TOTAL_CHARS = Number.parseInt(
-  process.env.WEAVE_CHAT_CONTEXT_MAX_TOTAL_CHARS || "12000",
+  process.env.WEAVE_CHAT_CONTEXT_MAX_TOTAL_CHARS || "150000",
   10
 );
 const ENGINE_CHAT_TASK_TIMEOUT_MS = Number.parseInt(

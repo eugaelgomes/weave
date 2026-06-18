@@ -15,6 +15,7 @@ const {
   normalizeModelName,
   resolveDefaultModelName,
 } = require("../../../services/llm.client");
+const pdfParse = require("pdf-parse");
 
 const MAX_INLINE_FILES_PER_REQUEST = Number.parseInt(
   process.env.WEAVE_MAX_INLINE_FILES_PER_REQUEST || "3",
@@ -183,7 +184,7 @@ async function callGenericApi(
   }
   const ignoredFiles = [];
 
-  normalizedFiles.forEach((file) => {
+  for (const file of normalizedFiles) {
     if (isImageMimeType(file.mimeType)) {
       userContent.push({
         image_url: {
@@ -191,7 +192,23 @@ async function callGenericApi(
         },
         type: "image_url",
       });
-      return;
+      continue;
+    }
+
+    if (file.mimeType === "application/pdf") {
+      try {
+        const pdfBuffer = Buffer.from(file.base64Data, "base64");
+        const pdfData = await pdfParse(pdfBuffer);
+        const textContent = pdfData.text || "";
+        userContent.push({
+          text: `\n\n--- FILE ATTACHED: ${file.name} ---\n${textContent}\n--- END OF FILE ---`,
+          type: "text",
+        });
+        continue;
+      } catch (err) {
+        console.error("[LLM ERROR] Failed to parse PDF:", err);
+        // Fallback to ignore
+      }
     }
 
     if (
@@ -206,14 +223,14 @@ async function callGenericApi(
           text: `\n\n--- FILE ATTACHED: ${file.name} ---\n${textContent}\n--- END OF FILE ---`,
           type: "text",
         });
-        return;
+        continue;
       } catch (err) {
         // Fallback to ignore
       }
     }
 
     ignoredFiles.push(`${file.name} (${file.mimeType})`);
-  });
+  }
 
   if (ignoredFiles.length > 0) {
     userContent.push({
