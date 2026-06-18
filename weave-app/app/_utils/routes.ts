@@ -51,6 +51,14 @@ export const routes = {
   organization: {
     general: (orgId: string) => `/${orgId}/organization/general`,
     create: (orgId: string) => `/${orgId}/organization/create`,
+    plans: (orgId: string) => `/${orgId}/organization/plans`,
+    integrations: (orgId: string) => `/${orgId}/organization/integrations`,
+    membersList: (orgId: string) => `/${orgId}/organization/members/list`,
+    membersInvites: (orgId: string) => `/${orgId}/organization/members/invites`,
+    areas: (orgId: string) => `/${orgId}/organization/areas`,
+    projects: (orgId: string) => `/${orgId}/organization/projects`,
+    editor: (orgId: string) => `/${orgId}/organization/editor`,
+    about: (orgId: string) => `/${orgId}/organization/about`,
   },
 
   settings: {
@@ -60,6 +68,7 @@ export const routes = {
     integrations: (orgId: string) => `/${orgId}/settings/integrations`,
     security: (orgId: string) => `/${orgId}/settings/security`,
     userData: (orgId: string) => `/${orgId}/settings/user-data`,
+    preferences: (orgId: string) => `/${orgId}/settings/preferences`,
     dangerZone: (orgId: string) => `/${orgId}/settings/danger-zone`,
   },
 };

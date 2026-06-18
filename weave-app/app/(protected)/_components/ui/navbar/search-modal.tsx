@@ -16,6 +16,8 @@ import { NotesContext } from "@/app/_contexts/notes-context";
 import { ProjectsContext } from "@/app/_contexts/projects-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import Link from "next/link";
+import { useAuth } from "@/app/_contexts/auth-context";
+import { routes } from "@/app/_utils/routes";
 
 interface SearchResult {
   id: string;
@@ -43,6 +45,8 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const projectsOverview = projectsContext ? projectsContext.projectsOverview : [];
   const { t } = useLanguage();
   const searchT = t.navbar.searchModal;
+  const { user } = useAuth();
+  const orgId = user?.org_public_id || user?.public_id || "default";
 
   useEffect(() => {
     setMounted(true);
@@ -60,20 +64,20 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   }, [onClose]);
 
   const places: SearchResult[] = [
-    { id: "1", title: searchT.placeHome, type: "page", icon: Home, href: "/home" },
+    { id: "1", title: searchT.placeHome, type: "page", icon: Home, href: routes.home(orgId) },
     {
       id: "2",
       title: searchT.placeExplore,
       type: "page",
       icon: LayoutGrid,
-      href: "/weave-engine",
+      href: routes.weaveEngine.base(orgId),
     },
     {
       id: "4",
       title: searchT.placePreferences,
       type: "page",
       icon: Settings,
-      href: "/settings",
+      href: routes.settings.base(orgId),
     },
   ];
 
@@ -96,7 +100,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         icon: FileText,
         subtitle:
           note.tags && note.tags.length > 0 ? `#${note.tags.join(", #")}` : searchT.noteFallback,
-        href: `/notes/${note.public_id || note.id}`,
+        href: routes.notes.details(orgId, note.public_id || note.id),
       }));
 
     const matchedProjects: SearchResult[] = projectsOverview
@@ -112,7 +116,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         type: "project",
         icon: Folder,
         subtitle: project.status || searchT.projectFallback,
-        href: `/projects/${project.public_id || project.id}`,
+        href: routes.projects.board(orgId, project.public_id || project.id),
         color: project.color,
       }));
 
@@ -127,7 +131,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     type: "project",
     icon: Folder,
     subtitle: p.status,
-    href: `/projects/${p.public_id || p.id}`,
+    href: routes.projects.board(orgId, p.public_id || p.id),
     color: p.color,
   }));
 
@@ -137,7 +141,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     type: "note",
     icon: FileText,
     subtitle: n.tags?.[0] ? `#${n.tags[0]}` : searchT.noteFallback,
-    href: `/notes/${n.public_id || n.id}`,
+    href: routes.notes.details(orgId, n.public_id || n.id),
   }));
 
   const Section = ({
@@ -236,14 +240,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                 items={recentProjects}
                 emptyMessage={searchT.projectsEmpty}
                 viewAllLabel={searchT.allProjects}
-                viewAllHref="/projects"
+                viewAllHref={routes.projects.list(orgId)}
               />
               <Section
                 title={searchT.recentNotes}
                 items={recentNotes}
                 emptyMessage={searchT.notesEmpty}
                 viewAllLabel={searchT.allNotes}
-                viewAllHref="/notes"
+                viewAllHref={routes.notes.list(orgId)}
               />
             </>
           ) : (

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import {
   Settings,
   CreditCard,
@@ -22,6 +22,7 @@ import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
 import { OrganizationProvider } from "@/app/_contexts/organization-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
+import { routes } from "@/app/_utils/routes";
 
 type WorkspaceNavLeaf = {
   icon: LucideIcon;
@@ -36,9 +37,7 @@ type WorkspaceNavItem = WorkspaceNavLeaf & {
 };
 
 function isStandaloneOrganizationPath(pathname: string): boolean {
-  return (
-    pathname.startsWith("/organization/create") || pathname.startsWith("/organization/dashboard")
-  );
+  return pathname.includes("/organization/create") || pathname.includes("/organization/dashboard");
 }
 
 function collectPathMatchers(
@@ -103,6 +102,8 @@ function WorkspaceNavLink({
 
 function OrganizationLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const params = useParams();
+  const orgId = (params?.orgId as string) || "default";
   const { t } = useLanguage();
 
   const WORKSPACE_NAV: WorkspaceNavItem[] = useMemo(
@@ -110,37 +111,37 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
       {
         icon: Settings,
         label: t.nav.general,
-        href: "/organization/general",
+        href: routes.organization.general(orgId),
         type: "workspaceSettings",
       },
       {
         icon: CreditCard,
         label: t.nav.plans,
-        href: "/organization/plans",
+        href: routes.organization.plans(orgId),
         type: "workspacePlans",
       },
       {
         icon: Zap,
         label: t.nav.integrations,
-        href: "/organization/integrations",
+        href: routes.organization.integrations(orgId),
         type: "workspaceIntegrations",
       },
       {
         icon: Users,
         label: t.nav.members,
-        href: "/organization/members/list",
+        href: routes.organization.membersList(orgId),
         type: "workspaceMembers",
         subItems: [
           {
             icon: Users,
             label: t.nav.list,
-            href: "/organization/members/list",
+            href: routes.organization.membersList(orgId),
             type: "workspaceMembers",
           },
           {
             icon: MessageSquare,
             label: t.nav.invites,
-            href: "/organization/members/invites",
+            href: routes.organization.membersInvites(orgId),
             type: "workspaceInvites",
           },
         ],
@@ -148,24 +149,24 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
       {
         icon: Workflow,
         label: t.nav.areas,
-        href: "/organization/areas",
+        href: routes.organization.areas(orgId),
         type: "workspaceAreas",
       },
       {
         icon: Network,
         label: t.nav.projects,
-        href: "/organization/projects",
+        href: routes.organization.projects(orgId),
         type: "workspaceProjects",
       },
       {
         icon: PenLine,
         label: t.nav.editor,
-        href: "/organization/editor",
-        matchPaths: ["/organization/about"],
+        href: routes.organization.editor(orgId),
+        matchPaths: [routes.organization.about(orgId)],
         type: "workspaceEditor",
       },
     ],
-    [t]
+    [t, orgId]
   );
 
   const activeLeaf = useMemo(() => {

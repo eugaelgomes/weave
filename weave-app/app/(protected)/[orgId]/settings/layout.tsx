@@ -10,6 +10,9 @@ import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout
 import { ApiTokensProvider } from "@/app/_contexts/api-tokens-context";
 import { BackupProvider } from "@/app/_contexts/backup-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
+import { OrganizationProvider } from "@/app/_contexts/organization-context";
+import { useParams } from "next/navigation";
+import { routes } from "@/app/_utils/routes";
 
 type SettingsNavItem = {
   icon: LucideIcon;
@@ -21,6 +24,8 @@ type SettingsNavItem = {
 
 function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const params = useParams();
+  const orgId = (params?.orgId as string) || "default";
   const { t } = useLanguage();
 
   const SETTINGS_NAV: SettingsNavItem[] = useMemo(
@@ -28,31 +33,35 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
       {
         icon: User,
         label: t.nav.settings,
-        href: "/settings",
-        matchPaths: ["/settings/user-data", "/settings/danger-zone", "/settings/preferences"],
+        href: routes.settings.base(orgId),
+        matchPaths: [
+          routes.settings.userData(orgId),
+          routes.settings.dangerZone(orgId),
+          routes.settings.preferences(orgId),
+        ],
         type: "settings" as const,
       },
       {
         icon: CreditCard,
         label: t.nav.plans,
-        href: "/settings/plans",
+        href: routes.settings.plans(orgId),
         type: "plans" as const,
       },
       {
         icon: Lock,
         label: t.nav.security,
-        href: "/settings/security",
-        matchPaths: ["/settings/client-tokens"],
+        href: routes.settings.security(orgId),
+        matchPaths: [routes.settings.clientTokens(orgId)],
         type: "security" as const,
       },
       {
         icon: Zap,
         label: t.nav.integrations,
-        href: "/settings/integrations",
+        href: routes.settings.integrations(orgId),
         type: "integrations" as const,
       },
     ],
-    [t]
+    [t, orgId]
   );
 
   const activeItem = useMemo(() => {
@@ -122,12 +131,14 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ApiTokensProvider>
-      <BackupProvider>
-        <SlackProvider>
-          <SettingsLayoutContent>{children}</SettingsLayoutContent>
-        </SlackProvider>
-      </BackupProvider>
-    </ApiTokensProvider>
+    <OrganizationProvider>
+      <ApiTokensProvider>
+        <BackupProvider>
+          <SlackProvider>
+            <SettingsLayoutContent>{children}</SettingsLayoutContent>
+          </SlackProvider>
+        </BackupProvider>
+      </ApiTokensProvider>
+    </OrganizationProvider>
   );
 }

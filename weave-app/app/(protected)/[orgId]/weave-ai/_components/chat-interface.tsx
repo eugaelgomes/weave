@@ -946,7 +946,10 @@ export default function ChatInterface({
                                             )
                                           : null;
                                         let resolvedHref = href;
-                                        if (href.startsWith("/") && !href.startsWith(`/${orgId}/`)) {
+                                        if (
+                                          href.startsWith("/") &&
+                                          !href.startsWith(`/${orgId}/`)
+                                        ) {
                                           resolvedHref = `/${orgId}${href}`;
                                         }
                                         if (project) {
@@ -979,7 +982,10 @@ export default function ChatInterface({
                                             )
                                           : null;
                                         let resolvedHref = href;
-                                        if (href.startsWith("/") && !href.startsWith(`/${orgId}/`)) {
+                                        if (
+                                          href.startsWith("/") &&
+                                          !href.startsWith(`/${orgId}/`)
+                                        ) {
                                           resolvedHref = `/${orgId}${href}`;
                                         }
                                         if (note) {

@@ -291,7 +291,7 @@ function RecentItems({
   return (
     <div className="mt-1.5 border-t border-gray-200/80 pt-1.5 dark:border-white/10">
       <ul className="space-y-0.5 px-1">
-        {recentItems.map((item) => {
+        {recentItems.slice(0, 3).map((item) => {
           const basePath = item.type === "project" ? "projects" : "notes";
           const path = pathname.startsWith("/")
             ? `/${pathname.split("/")[1]}/${basePath}/${item.public_id || item.id}`

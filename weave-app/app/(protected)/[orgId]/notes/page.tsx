@@ -15,6 +15,7 @@ import { getCollaboratorDisplayName, getCollaboratorAvatarUrl } from "@/app/_uti
 import { getTagColor } from "@/app/_utils/tag-colors";
 import Pagination from "@/app/(protected)/_components/ui/notes/pagination";
 import { formatDate } from "@/app/_utils/format";
+import { routes } from "@/app/_utils/routes";
 import { FiCheckSquare } from "react-icons/fi";
 
 interface PaginationData {
@@ -490,7 +491,7 @@ const NotesWithPagination = () => {
         description: "",
         tags: [],
       });
-      if (newNote) router.push(`/notes/${newNote.public_id || newNote.id}`);
+      if (newNote) router.push(routes.notes.details(orgId, newNote.public_id || newNote.id));
     } catch (error: unknown) {
       console.error("Erro:", error);
 
@@ -1092,7 +1093,9 @@ const NotesWithPagination = () => {
                       </div>
                     )}
                     <Link
-                      href={selectionMode ? "#" : `/notes/${note.public_id || note.id}`}
+                      href={
+                        selectionMode ? "#" : routes.notes.details(orgId, note.public_id || note.id)
+                      }
                       onClick={(e) => {
                         if (selectionMode) {
                           e.preventDefault();
