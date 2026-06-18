@@ -37,7 +37,7 @@ async function searchMyNotes({ query, userId }) {
         // ignore
       }
     }
-    
+
     const isAzureOpenAI = baseUrl.includes(".openai.azure.com");
     const isAzureFoundry = baseUrl.includes("services.ai.azure.com");
     const isAzure = isAzureOpenAI || isAzureFoundry;
@@ -50,7 +50,7 @@ async function searchMyNotes({ query, userId }) {
     const headers = {
       "Content-Type": "application/json",
     };
-    
+
     if (isAzure) {
       headers["api-key"] = apiKey;
       headers["Authorization"] = `Bearer ${apiKey}`;

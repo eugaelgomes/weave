@@ -81,16 +81,21 @@ class ChatFunctionsService {
    * @param {Array<{name: string, arguments?: Record<string, unknown>}>} functionCalls - Array of tool execution details.
    * @param {string|null} [organizationId=null] - Optional organization ID scope for the calls.
    * @param {string} [lang="pt"] - User language for error translations.
+   * @param {Function} [onChunk=null] - Callback to stream real-time execution state.
    * @returns {Promise<Array<object>>} Results of all tool executions.
    */
   async executeFunctionCalls(
     userId,
     functionCalls = [],
     organizationId = null,
-    lang = "pt"
+    lang = "pt",
+    onChunk = null
   ) {
     const results = [];
     for (const functionCall of functionCalls) {
+      if (onChunk) {
+        onChunk({ type: "action_state", name: functionCall?.name, status: "running" });
+      }
       try {
         const execution = await this.executeFunctionCall(
           userId,
@@ -99,6 +104,9 @@ class ChatFunctionsService {
           lang
         );
         results.push(execution);
+        if (onChunk) {
+          onChunk({ type: "action_state", name: functionCall?.name, status: "completed", success: execution.success });
+        }
       } catch (error) {
         console.warn(
           `[weave-ai/chat] Tool execution failed for ${functionCall?.name}:`,
@@ -109,6 +117,9 @@ class ChatFunctionsService {
           success: false,
           error: error?.message || String(error),
         });
+        if (onChunk) {
+          onChunk({ type: "action_state", name: functionCall?.name, status: "completed", success: false });
+        }
       }
     }
     return results;

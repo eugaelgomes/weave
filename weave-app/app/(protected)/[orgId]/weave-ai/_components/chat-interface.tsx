@@ -9,7 +9,6 @@ import {
   X,
   Copy,
   Sparkles,
-  ChevronDown,
   ChevronUp,
   Globe,
   Lock,
@@ -33,6 +32,8 @@ import {
   Table,
   Download,
   Share2,
+  BrainCircuit,
+  ChevronDown,
 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import ReactMarkdown from "react-markdown";
@@ -680,7 +681,7 @@ export default function ChatInterface({
           {messages
             ?.filter((msg: any) => {
               if (msg.role === "system" || msg.role === "tool") return false;
-              if (msg.role === "assistant" && !msg.content?.trim()) return false;
+              if (msg.role === "assistant" && !msg.content?.trim() && (!msg.functionExecution || msg.functionExecution.length === 0)) return false;
               return true;
             })
             .map((msg: any) => {
@@ -705,6 +706,16 @@ export default function ChatInterface({
                 attachedNoteIds.length > 0 ||
                 attachedProjectIds.length > 0;
 
+              let mainContent = msg.content || "";
+              let reasoningText = null;
+              if (!isUser) {
+                const thinkMatch = mainContent.match(/<think>([\s\S]*?)(?:<\/think>|$)/);
+                if (thinkMatch) {
+                  reasoningText = thinkMatch[1].trim();
+                  mainContent = mainContent.replace(/<think>[\s\S]*?(?:<\/think>|$)/, "").trim();
+                }
+              }
+
               return (
                 <div
                   key={msg.id}
@@ -728,7 +739,30 @@ export default function ChatInterface({
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       ) : (
                         <div className="flex flex-col gap-2">
-                          {msg.content && (
+                          {Array.isArray(msg.functionExecution) && msg.functionExecution.map((exec: any, idx: number) => (
+                            <ActionExecutionCard key={`exec-${msg.id}-${idx}`} execution={exec} orgId={orgId} />
+                          ))}
+                          
+                          {reasoningText && (
+                            <div className="mb-2 w-fit min-w-[280px] max-w-2xl rounded-xl border border-neutral-200/60 bg-white/40 shadow-sm backdrop-blur-md dark:border-neutral-800/60 dark:bg-[#252525]/40">
+                              <details className="group" open={!mainContent}>
+                                <summary className="flex cursor-pointer select-none items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100">
+                                  <BrainCircuit className="h-4 w-4 text-brand-yellow" />
+                                  <span>{t.weaveAi.thinking || "Thinking..."}</span>
+                                  <ChevronDown className="ml-auto h-4 w-4 transition-transform group-open:rotate-180" />
+                                </summary>
+                                <div className="border-t border-neutral-200/60 px-4 py-3 dark:border-neutral-800/60">
+                                  <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none opacity-80 prose-p:leading-relaxed">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                      {reasoningText}
+                                    </ReactMarkdown>
+                                  </div>
+                                </div>
+                              </details>
+                            </div>
+                          )}
+                          
+                          {mainContent && (
                             <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-blockquote:border-l-brand-yellow prose-blockquote:bg-neutral-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-table:border-collapse prose-table:border prose-table:border-neutral-200 prose-th:bg-neutral-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-tr:border-b dark:prose-blockquote:bg-neutral-800/50 dark:prose-table:border-neutral-800 dark:prose-th:bg-neutral-900/50 max-w-none">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
@@ -1027,7 +1061,7 @@ export default function ChatInterface({
                                   },
                                 }}
                               >
-                                {msg.content}
+                                {mainContent}
                               </ReactMarkdown>
                             </div>
                           )}
@@ -1424,6 +1458,22 @@ export default function ChatInterface({
                 : "shadow-lg shadow-black/5 dark:shadow-black/20"
             }`}
           >
+            {/* Elegant Inner Cloud Glow */}
+            <div
+              className={`absolute inset-0 -z-10 overflow-hidden rounded-2xl transition-opacity duration-1000 ${
+                messages?.length === 0 && !loading ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <div 
+                className="absolute -left-10 top-0 h-full w-2/3 animate-pulse rounded-full bg-brand-yellow/20 blur-2xl dark:bg-brand-yellow/10" 
+                style={{ animationDuration: '4s' }} 
+              />
+              <div 
+                className="absolute -right-10 top-0 h-full w-2/3 animate-pulse rounded-full bg-sky-400/20 blur-2xl dark:bg-sky-500/10" 
+                style={{ animationDuration: '5s', animationDelay: '1s' }} 
+              />
+            </div>
+
             <input
               ref={fileInputRef}
               type="file"

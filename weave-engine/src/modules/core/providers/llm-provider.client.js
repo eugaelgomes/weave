@@ -156,7 +156,7 @@ async function callGenericApi(
 
   const isAzureOpenAI = config.baseURL.includes(".openai.azure.com");
   const isAzureFoundry = config.baseURL.includes("services.ai.azure.com");
-  
+
   let endpointUrl;
   if (isAzureOpenAI) {
     endpointUrl = `${config.baseURL}/chat/completions?api-version=2024-05-01-preview`;

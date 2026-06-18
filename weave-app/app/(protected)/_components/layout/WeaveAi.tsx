@@ -36,7 +36,7 @@ export default function WeaveAi() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  if (pathname.startsWith("/weave-ai")) return null;
+  if (!pathname || pathname.split("/").includes("weave-ai")) return null;
 
   return (
     <>

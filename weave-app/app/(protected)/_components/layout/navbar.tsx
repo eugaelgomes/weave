@@ -311,20 +311,19 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                     type="button"
                     onClick={() => setIsSearchOpen(true)}
                     className={cn(
-                      "group flex w-full min-w-0 items-center gap-2.5 rounded-full px-3 py-1 transition-all",
-                      navbarElevatedSurfaceClass
+                      "group flex w-full min-w-0 items-center gap-2.5 rounded-full px-3 py-1 transition-all bg-sky-800/5 hover:bg-sky-800/10 dark:bg-sky-800/10 dark:hover:bg-sky-800/15"
                     )}
                     aria-label={t.navbar.searchSystem}
                     title={t.navbar.searchSystem}
                   >
                     <Search
-                      className="group-hover:text-brand-yellow h-3.5 w-3.5 text-gray-500 transition-colors dark:text-gray-500"
+                      className="h-3.5 w-3.5 text-sky-800/70 transition-colors group-hover:text-sky-800 dark:text-sky-400/70 dark:group-hover:text-sky-400"
                       strokeWidth={1.75}
                     />
-                    <span className="flex-1 text-left text-[11px] text-gray-500 dark:text-gray-400">
+                    <span className="flex-1 text-left text-[11px] text-sky-800/80 dark:text-sky-300/80">
                       {t.navbar.searchPlaceholder}
                     </span>
-                    <kbd className="items-bottom dark:border-surface-dark-border flex gap-1 px-1.5 font-sans text-[10px] font-medium text-gray-500 dark:text-gray-500">
+                    <kbd className="items-bottom flex gap-1 px-1.5 font-sans text-[10px] font-medium text-sky-800/60 dark:text-sky-400/60 rounded">
                       <span>⌘</span>K
                     </kbd>
                   </button>

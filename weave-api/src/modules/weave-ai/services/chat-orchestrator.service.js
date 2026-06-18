@@ -339,7 +339,8 @@ class ChatOrchestratorService {
             userId,
             currentFunctions,
             organizationId,
-            userLanguage
+            userLanguage,
+            onChunk
           );
         functionExecution = [...functionExecution, ...currentExecutions];
         responseFunctions = [...responseFunctions, ...currentFunctions];
