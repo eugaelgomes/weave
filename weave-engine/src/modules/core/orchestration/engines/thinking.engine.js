@@ -7,7 +7,7 @@
  * - `../../prompts/agent-prompts`: For system prompt construction.
  * - `../../providers/llm-provider.client`: To execute the thinking generation.
  */
-const { buildSystemMessage } = require("../../prompts/agent-prompts");
+const { buildEngineSystemMessage } = require("../../prompts/agent-prompts");
 const { callAIProvider } = require("../../providers/llm-provider.client");
 
 const CONTENT_GENERATION_KEYWORDS =
@@ -36,7 +36,7 @@ async function processThinkingPhase({
   }
 
   const generationSystemMessage =
-    buildSystemMessage(enrichedContext) +
+    buildEngineSystemMessage(enrichedContext) +
     "\n\nYOU ARE AN EXPERT RESEARCHER AND WRITER. Your task is ONLY to generate the content requested by the user with maximum quality and detail. Do NOT try to edit notes now. Only provide complete, well-structured content in Markdown.";
 
   try {

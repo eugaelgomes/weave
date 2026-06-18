@@ -53,7 +53,7 @@ const schemas = [
         noteId: {
           type: "string",
           description:
-            "The internal UUID of the note that contains the comment.",
+            "The internal UUID of the note/task that contains the comment.",
         },
         commentId: {
           type: "string",
@@ -70,14 +70,14 @@ const schemas = [
   {
     name: "delete_note_comment",
     description:
-      "Permanently removes (soft-deletes) a comment from a note. Only the comment's original author can delete it.",
+      "Permanently removes (soft-deletes) a comment from a note/task. Only the comment's original author can delete it.",
     parameters: {
       type: "object",
       properties: {
         noteId: {
           type: "string",
           description:
-            "The internal UUID of the note that contains the comment.",
+            "The internal UUID of the note/task that contains the comment.",
         },
         commentId: {
           type: "string",

@@ -52,7 +52,10 @@ if (foundryUrl && foundryUrl.includes("/api/projects/")) {
 
 const openaiConfig = {
   apiKey: process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY,
-  baseURL: resolvedBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+  baseURL:
+    resolvedBaseUrl ||
+    process.env.OPENAI_BASE_URL ||
+    "https://api.openai.com/v1",
   maxTokens: 4096,
   model: AI_MODELS.OPENAI_GPT_5_4_MINI,
   provider: AI_PROVIDERS.OPENAI,

@@ -12,7 +12,10 @@ const { pool } = require("../../../../services/postgres.client");
  */
 async function listOrgMembers(args) {
   if (!args.organizationId) {
-    return { message: "User is not currently part of any organization. Cannot retrieve organization members." };
+    return {
+      message:
+        "User is not currently part of any organization. Cannot retrieve organization members.",
+    };
   }
 
   try {
@@ -60,7 +63,10 @@ async function listOrgMembers(args) {
  */
 async function getOrgMember(args) {
   if (!args.organizationId) {
-    return { message: "User is not currently part of any organization. Cannot retrieve organization member." };
+    return {
+      message:
+        "User is not currently part of any organization. Cannot retrieve organization member.",
+    };
   }
   if (!args.memberId) {
     return { error: "memberId is required." };

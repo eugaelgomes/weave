@@ -1,4 +1,6 @@
-const { callAIProvider } = require('./src/modules/core/providers/llm-provider.client.js');
+const {
+  callAIProvider,
+} = require("./src/modules/core/providers/llm-provider.client.js");
 
 async function run() {
   const options = {
@@ -6,20 +8,24 @@ async function run() {
       {
         name: "get_project_details",
         description: "Get details of a project",
-        parameters: { type: "object", properties: { projectId: { type: "string" } } }
-      }
+        parameters: {
+          type: "object",
+          properties: { projectId: { type: "string" } },
+        },
+      },
     ],
     allowEdit: true,
     forceToolUse: true,
-    onChunk: (c) => process.stdout.write(c)
+    onChunk: (c) => process.stdout.write(c),
   };
 
   try {
     const res = await callAIProvider({
-      prompt: "Execute get_project_details for projectId 'b3507864-b8e6-4f28-ae36-9c249c20e793'",
+      prompt:
+        "Execute get_project_details for projectId 'b3507864-b8e6-4f28-ae36-9c249c20e793'",
       model: "gemini-3.5-flash",
       systemMessage: "You are a helpful assistant.",
-      options
+      options,
     });
     console.log("\n\nFINAL RESULT:");
     console.log(JSON.stringify(res.toolCalls, null, 2));

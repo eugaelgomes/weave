@@ -49,7 +49,8 @@ const schemas = [
         },
         status: {
           type: "string",
-          description: "The initial status of the project (must be one of: 'OPEN', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'ARCHIVED'). Defaults to 'OPEN'.",
+          description:
+            "The initial status of the project (must be one of: 'OPEN', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'ARCHIVED'). Defaults to 'OPEN'.",
         },
       },
       required: ["title"],

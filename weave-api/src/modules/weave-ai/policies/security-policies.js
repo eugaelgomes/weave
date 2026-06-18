@@ -41,6 +41,14 @@ const OWNERSHIP_RULES = Object.freeze({
     allowCollaborator: true,
     requiresOwnership: false,
   },
+  delete_project: {
+    allowCollaborator: true, // the handler enforces proper write roles
+    requiresOwnership: false,
+  },
+  delete_note: {
+    allowCollaborator: true,
+    requiresOwnership: false,
+  },
 });
 
 /**

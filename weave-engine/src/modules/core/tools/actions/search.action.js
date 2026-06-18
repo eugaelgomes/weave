@@ -25,10 +25,15 @@ async function searchMyNotes({ query, userId }) {
   try {
     const apiKey = process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      throw new Error("FOUNDRY_API_KEY or OPENAI_API_KEY is not configured in engine");
+      throw new Error(
+        "FOUNDRY_API_KEY or OPENAI_API_KEY is not configured in engine"
+      );
     }
 
-    let baseUrl = process.env.FOUNDRY_PROJECT_URL || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    let baseUrl =
+      process.env.FOUNDRY_PROJECT_URL ||
+      process.env.OPENAI_BASE_URL ||
+      "https://api.openai.com/v1";
     if (baseUrl && baseUrl.includes("/api/projects/")) {
       try {
         const parsed = new URL(baseUrl);
@@ -58,7 +63,9 @@ async function searchMyNotes({ query, userId }) {
       headers["Authorization"] = `Bearer ${apiKey}`;
     }
 
-    const embeddingModel = isAzureFoundry ? "text-embedding-3-large" : "text-embedding-3-small";
+    const embeddingModel = isAzureFoundry
+      ? "text-embedding-3-large"
+      : "text-embedding-3-small";
 
     // Gerar o vetor da pergunta usando o provedor configurado
     const response = await fetch(endpointUrl, {

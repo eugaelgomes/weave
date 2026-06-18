@@ -12,7 +12,10 @@ const { pool } = require("../../../../services/postgres.client");
  */
 async function getOrganizationDetails(args) {
   if (!args.organizationId) {
-    return { message: "User is not currently part of any organization. Cannot retrieve organization details." };
+    return {
+      message:
+        "User is not currently part of any organization. Cannot retrieve organization details.",
+    };
   }
 
   try {

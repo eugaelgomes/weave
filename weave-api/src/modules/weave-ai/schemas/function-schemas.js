@@ -347,6 +347,32 @@ const FUNCTION_SCHEMAS = Object.freeze({
       type: "object",
     },
   },
+  delete_project: {
+    category: FunctionCategory.PROJECTS,
+    description: "Permanently (soft) delete a project.",
+    name: "delete_project",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        projectId: { type: "string" },
+      },
+      required: ["projectId"],
+      type: "object",
+    },
+  },
+  delete_note: {
+    category: FunctionCategory.NOTES,
+    description: "Permanently (soft) delete a note or task.",
+    name: "delete_note",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        noteId: { type: "string" },
+      },
+      required: ["noteId"],
+      type: "object",
+    },
+  },
 });
 
 /**

@@ -17,7 +17,7 @@ const {
   getEngineLlmRequestQueueRedisKey,
 } = require("../../services/redis-queue-keys");
 const { logger } = require("../../logger");
-const { buildSystemMessage } = require("../core/prompts/agent-prompts");
+const { buildChatSystemMessage } = require("../core/prompts/agent-prompts");
 const { buildEntityContext } = require("../core/context/entity-context.loader");
 const {
   executeAgenticTask,
@@ -352,7 +352,7 @@ class LlmQueueProcessor {
         });
 
         return {
-          systemMessage: buildSystemMessage({
+          systemMessage: buildChatSystemMessage({
             ...additionalContext,
             indexedNotes: entityContext.indexedNotes,
             indexedProjects: entityContext.indexedProjects,
@@ -479,7 +479,7 @@ class LlmQueueProcessor {
       organizationId,
     });
 
-    const baseMessage = buildSystemMessage({
+    const baseMessage = buildChatSystemMessage({
       ...payload.context,
       projectIds,
       noteIds,

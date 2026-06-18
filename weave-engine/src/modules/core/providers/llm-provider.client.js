@@ -264,7 +264,7 @@ async function callGenericApi(
             name: tc.function.name,
             arguments: tc.function.arguments,
           },
-          ...(tc.extra_content ? { extra_content: tc.extra_content } : {})
+          ...(tc.extra_content ? { extra_content: tc.extra_content } : {}),
         }));
       }
 
@@ -353,7 +353,37 @@ async function callGenericApi(
               if (!finalToolCalls) finalToolCalls = [];
               for (let i = 0; i < deltaToolCalls.length; i++) {
                 const tc = deltaToolCalls[i];
-                const tcIndex = tc.index !== undefined ? tc.index : i;
+                let tcIndex = tc.index;
+                if (tcIndex === undefined) {
+                  if (tc.id) {
+                    const existingIndex = finalToolCalls.findIndex(
+                      (t) => t && t.id === tc.id
+                    );
+                    tcIndex =
+                      existingIndex >= 0
+                        ? existingIndex
+                        : finalToolCalls.length;
+                  } else {
+                    tcIndex =
+                      finalToolCalls.length > 0 ? finalToolCalls.length - 1 : 0;
+                    if (
+                      tc.function?.name &&
+                      finalToolCalls[tcIndex] &&
+                      finalToolCalls[tcIndex].function.name
+                    ) {
+                      const oldName = finalToolCalls[tcIndex].function.name;
+                      const newName = tc.function.name;
+                      if (
+                        newName !== oldName &&
+                        !newName.startsWith(oldName) &&
+                        !oldName.startsWith(newName)
+                      ) {
+                        tcIndex = finalToolCalls.length;
+                      }
+                    }
+                  }
+                }
+
                 if (!finalToolCalls[tcIndex]) {
                   finalToolCalls[tcIndex] = {
                     id: tc.id,
@@ -369,10 +399,18 @@ async function callGenericApi(
                   finalToolCalls[tcIndex].extra_content = tc.extra_content;
                 }
                 if (tc.function?.name) {
-                  console.log(`[STREAM DEBUG] Chunk name: "${tc.function.name}", Current name: "${finalToolCalls[tcIndex].function.name}"`);
-                  if (tc.function.name === finalToolCalls[tcIndex].function.name) {
+                  console.log(
+                    `[STREAM DEBUG] Chunk name: "${tc.function.name}", Current name: "${finalToolCalls[tcIndex].function.name}"`
+                  );
+                  if (
+                    tc.function.name === finalToolCalls[tcIndex].function.name
+                  ) {
                     // Duplicate full name from some providers, ignore
-                  } else if (tc.function.name.startsWith(finalToolCalls[tcIndex].function.name)) {
+                  } else if (
+                    tc.function.name.startsWith(
+                      finalToolCalls[tcIndex].function.name
+                    )
+                  ) {
                     // Cumulative name, overwrite
                     finalToolCalls[tcIndex].function.name = tc.function.name;
                   } else {
@@ -381,14 +419,23 @@ async function callGenericApi(
                   }
                 }
                 if (tc.function?.arguments) {
-                  if (tc.function.arguments === finalToolCalls[tcIndex].function.arguments) {
+                  if (
+                    tc.function.arguments ===
+                    finalToolCalls[tcIndex].function.arguments
+                  ) {
                     // Duplicate full arguments from some providers, ignore
-                  } else if (tc.function.arguments.startsWith(finalToolCalls[tcIndex].function.arguments)) {
+                  } else if (
+                    tc.function.arguments.startsWith(
+                      finalToolCalls[tcIndex].function.arguments
+                    )
+                  ) {
                     // Cumulative arguments, overwrite
-                    finalToolCalls[tcIndex].function.arguments = tc.function.arguments;
+                    finalToolCalls[tcIndex].function.arguments =
+                      tc.function.arguments;
                   } else {
                     // Partial chunked arguments, append
-                    finalToolCalls[tcIndex].function.arguments += tc.function.arguments;
+                    finalToolCalls[tcIndex].function.arguments +=
+                      tc.function.arguments;
                   }
                 }
               }
@@ -413,7 +460,7 @@ async function callGenericApi(
               const fixed = str.split("}{")[0] + "}";
               return JSON.parse(fixed);
             }
-          } catch(err2) {}
+          } catch (err2) {}
           return {};
         }
       };
@@ -425,12 +472,15 @@ async function callGenericApi(
           name: toolCall.function.name,
         },
         toolCalls: finalToolCalls.map((tc) => {
-          return {
+          const mapped = {
             id: tc.id,
             name: tc.function.name,
             arguments: safeParse(tc.function.arguments),
-            extra_content: tc.extra_content,
           };
+          if (tc.extra_content) {
+            mapped.extra_content = tc.extra_content;
+          }
+          return mapped;
         }),
         text: null,
         toolCallId: toolCall.id,
@@ -491,11 +541,17 @@ async function callGenericApi(
         arguments: safeParse(toolCall.function.arguments),
         name: toolCall.function.name,
       },
-      toolCalls: message.tool_calls.map((tc) => ({
-        id: tc.id,
-        name: tc.function.name,
-        arguments: safeParse(tc.function.arguments),
-      })),
+      toolCalls: message.tool_calls.map((tc) => {
+        const mapped = {
+          id: tc.id,
+          name: tc.function.name,
+          arguments: safeParse(tc.function.arguments),
+        };
+        if (tc.extra_content) {
+          mapped.extra_content = tc.extra_content;
+        }
+        return mapped;
+      }),
       text: null,
       toolCallId: toolCall.id, // For backwards compatibility
       type: "function_call",

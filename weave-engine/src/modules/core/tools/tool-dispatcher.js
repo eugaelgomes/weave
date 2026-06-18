@@ -164,18 +164,23 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
  * @param {object} [executionContext={}] - Workspace context.
  * @returns {Array<object>} An array of OpenAI-compatible function schemas.
  */
-function getInternalToolDefinitions(allowWebSearch = true, executionContext = {}) {
-  let schemas = allowWebSearch ? internalToolSchemas : [
-    ...searchSchemas,
-    ...profileSchemas,
-    ...projectSchemas,
-    ...organizationSchemas,
-    ...brainSchemas,
-    ...orgMembersSchemas,
-    ...orgAreasSchemas,
-    ...noteSchemas,
-    ...noteCommentsSchemas,
-  ];
+function getInternalToolDefinitions(
+  allowWebSearch = true,
+  executionContext = {}
+) {
+  let schemas = allowWebSearch
+    ? internalToolSchemas
+    : [
+        ...searchSchemas,
+        ...profileSchemas,
+        ...projectSchemas,
+        ...organizationSchemas,
+        ...brainSchemas,
+        ...orgMembersSchemas,
+        ...orgAreasSchemas,
+        ...noteSchemas,
+        ...noteCommentsSchemas,
+      ];
 
   if (!executionContext.organizationId) {
     const orgTools = [
@@ -183,9 +188,9 @@ function getInternalToolDefinitions(allowWebSearch = true, executionContext = {}
       "list_org_members",
       "get_org_member",
       "list_org_areas",
-      "get_org_area"
+      "get_org_area",
     ];
-    schemas = schemas.filter(s => !orgTools.includes(s.name));
+    schemas = schemas.filter((s) => !orgTools.includes(s.name));
   }
 
   return schemas;

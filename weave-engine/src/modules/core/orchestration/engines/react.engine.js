@@ -104,7 +104,9 @@ async function executeAgenticTask({
   // Combine internal engine tools with API tools
   const availableFunctions = [...(functions || [])];
   if (allowEdit) {
-    availableFunctions.push(...getInternalToolDefinitions(allowWebSearch, executionContext));
+    availableFunctions.push(
+      ...getInternalToolDefinitions(allowWebSearch, executionContext)
+    );
   }
 
   const currentOptions = {
@@ -177,7 +179,7 @@ async function executeAgenticTask({
         tool_calls: toolCallsArray.map((t) => ({
           id: t.id,
           function: t.function,
-          ...(t.extra_content ? { extra_content: t.extra_content } : {})
+          ...(t.extra_content ? { extra_content: t.extra_content } : {}),
         })),
       });
 

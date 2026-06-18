@@ -30,8 +30,6 @@ pool.on("error", (error) => {
   logger.error("Engine database pool error", { error: error.message });
 });
 
-
-
 /**
  * Verifies connectivity and enforces read-only transactions.
  *
