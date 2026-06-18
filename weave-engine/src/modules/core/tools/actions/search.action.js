@@ -3,6 +3,7 @@
  * @description Implementation logic for the search.action AI tool.
  */
 const { pool } = require("../../../../services/postgres.client");
+const { URL } = require("url");
 
 /**
  * Searches the user's notes using text similarity/keywords.
@@ -22,20 +23,49 @@ async function searchMyNotes({ query, userId }) {
   }
 
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      throw new Error("OPENAI_API_KEY is not configured in engine");
+      throw new Error("FOUNDRY_API_KEY or OPENAI_API_KEY is not configured in engine");
     }
 
-    // Gerar o vetor da pergunta usando OpenAI
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
+    let baseUrl = process.env.FOUNDRY_PROJECT_URL || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    if (baseUrl && baseUrl.includes("/api/projects/")) {
+      try {
+        const parsed = new URL(baseUrl);
+        baseUrl = `${parsed.origin}/models`;
+      } catch {
+        // ignore
+      }
+    }
+    
+    const isAzureOpenAI = baseUrl.includes(".openai.azure.com");
+    const isAzureFoundry = baseUrl.includes("services.ai.azure.com");
+    const isAzure = isAzureOpenAI || isAzureFoundry;
+
+    let endpointUrl = `${baseUrl}/embeddings`;
+    if (isAzureOpenAI) {
+      endpointUrl = `${baseUrl}/embeddings?api-version=2024-05-01-preview`;
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    
+    if (isAzure) {
+      headers["api-key"] = apiKey;
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    } else {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
+    const embeddingModel = isAzureFoundry ? "text-embedding-3-large" : "text-embedding-3-small";
+
+    // Gerar o vetor da pergunta usando o provedor configurado
+    const response = await fetch(endpointUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
-        model: "text-embedding-3-small",
+        model: embeddingModel,
         input: query,
       }),
     });

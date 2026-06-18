@@ -49,6 +49,32 @@ const MODELS_REGISTRY = Object.freeze([
 
   // OpenAI Models
   {
+    id: "gpt-4.1-mini",
+    providerId: LLM_PROVIDERS.OPENAI,
+    name: "GPT-4.1 Mini",
+    version: "4.1 Mini",
+    description: "Small, fast and cost-effective intelligence model.",
+    contextWindow: 128000,
+    maxOutputTokens: 16384,
+    features: ["vision", "function_calling", "system_instructions"],
+    tags: ["fast", "efficient"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
+  {
+    id: "gpt-5.1",
+    providerId: LLM_PROVIDERS.OPENAI,
+    name: "GPT-5.1",
+    version: "5.1",
+    description: "Advanced intelligence model.",
+    contextWindow: 128000,
+    maxOutputTokens: 4096,
+    features: ["vision", "function_calling", "system_instructions"],
+    tags: ["advanced"],
+    deprecated: false,
+    supportedForAgents: true,
+  },
+  {
     id: "gpt-5.4",
     providerId: LLM_PROVIDERS.OPENAI,
     name: "GPT-5.4",

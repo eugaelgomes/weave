@@ -154,17 +154,24 @@ async function callGenericApi(
     );
   }
 
-  const isAzure = config.baseURL.includes("azure.com");
-  const endpointUrl = isAzure
-    ? `${config.baseURL}/chat/completions?api-version=2024-05-01-preview`
-    : `${config.baseURL}/chat/completions`;
+  const isAzureOpenAI = config.baseURL.includes(".openai.azure.com");
+  const isAzureFoundry = config.baseURL.includes("services.ai.azure.com");
+  
+  let endpointUrl;
+  if (isAzureOpenAI) {
+    endpointUrl = `${config.baseURL}/chat/completions?api-version=2024-05-01-preview`;
+  } else {
+    endpointUrl = `${config.baseURL}/chat/completions`;
+  }
 
   const requestHeaders = {
     "Content-Type": "application/json",
   };
 
-  if (isAzure) {
+  if (isAzureOpenAI || isAzureFoundry) {
+    // Both support api-key, Foundry also supports Bearer.
     requestHeaders["api-key"] = config.apiKey;
+    requestHeaders["Authorization"] = `Bearer ${config.apiKey}`;
   } else {
     requestHeaders["Authorization"] = `Bearer ${config.apiKey}`;
   }

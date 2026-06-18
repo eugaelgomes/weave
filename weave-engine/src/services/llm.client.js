@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const { URL } = require("url");
 
 const AI_PROVIDERS = {
   GEMINI: "gemini",
@@ -8,6 +9,8 @@ const AI_PROVIDERS = {
 const AI_MODELS = {
   GEMINI_3_1_PRO_PREVIEW: "gemini-3.1-pro-preview",
   GEMINI_3_5_FLASH: "gemini-3.5-flash",
+  OPENAI_GPT_4_1_MINI: "gpt-4.1-mini",
+  OPENAI_GPT_5_1: "gpt-5.1",
   OPENAI_GPT_5_4: "gpt-5.4",
   OPENAI_GPT_5_4_MINI: "gpt-5.4-mini",
 };
@@ -36,9 +39,20 @@ const geminiConfig = {
   topP: 0.95,
 };
 
+const foundryUrl = process.env.FOUNDRY_PROJECT_URL;
+let resolvedBaseUrl = foundryUrl;
+if (foundryUrl && foundryUrl.includes("/api/projects/")) {
+  try {
+    const parsed = new URL(foundryUrl);
+    resolvedBaseUrl = `${parsed.origin}/models`;
+  } catch {
+    // ignore
+  }
+}
+
 const openaiConfig = {
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+  apiKey: process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY,
+  baseURL: resolvedBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
   maxTokens: 4096,
   model: AI_MODELS.OPENAI_GPT_5_4_MINI,
   provider: AI_PROVIDERS.OPENAI,
