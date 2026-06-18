@@ -67,6 +67,7 @@ async function searchMyNotes({ query, userId }) {
       body: JSON.stringify({
         model: embeddingModel,
         input: query,
+        dimensions: 1536,
       }),
     });
 
