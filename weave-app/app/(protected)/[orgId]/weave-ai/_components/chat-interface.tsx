@@ -221,7 +221,7 @@ const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: stri
   }
 
   return (
-    <div className="mb-1.5 flex w-fit items-center gap-1.5 rounded-full bg-neutral-100/40 px-2.5 py-1 text-[11px] font-medium text-neutral-500 transition-opacity hover:opacity-100 opacity-80 dark:bg-neutral-800/30 dark:text-neutral-400">
+    <div className="mb-1.5 flex w-fit items-center gap-1.5 rounded-full bg-neutral-100/40 px-2.5 py-1 text-[11px] font-medium text-neutral-500 opacity-80 transition-opacity hover:opacity-100 dark:bg-neutral-800/30 dark:text-neutral-400">
       {execution.isRunning ? (
         <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
       ) : execution.success ? (
@@ -234,7 +234,7 @@ const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: stri
         <Link
           href={link}
           onClick={(e) => e.stopPropagation()}
-          className="ml-1 text-brand-yellow flex items-center gap-0.5 text-[10px] font-semibold hover:underline"
+          className="text-brand-yellow ml-1 flex items-center gap-0.5 text-[10px] font-semibold hover:underline"
         >
           {t.open} <ChevronRight className="h-3 w-3" />
         </Link>
@@ -246,21 +246,22 @@ const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: stri
 const ActionExecutionGroup = ({ executions, orgId }: { executions: any[]; orgId: string }) => {
   const [open, setOpen] = useState(false);
   const { locale } = useLanguage();
-  
+
   if (!executions || executions.length === 0) return null;
 
   const runningCount = executions.filter((e: any) => e.isRunning).length;
   const failedCount = executions.filter((e: any) => !e.isRunning && !e.success).length;
 
-  const text = locale === "en-US"
-    ? `${executions.length} agent action${executions.length > 1 ? "s" : ""}`
-    : `${executions.length} ${executions.length > 1 ? "ações" : "ação"} do agente`;
+  const text =
+    locale === "en-US"
+      ? `${executions.length} agent action${executions.length > 1 ? "s" : ""}`
+      : `${executions.length} ${executions.length > 1 ? "ações" : "ação"} do agente`;
 
   return (
     <div className="mb-2">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
+        className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-200"
       >
         <div className="flex h-4 w-4 items-center justify-center">
           {runningCount > 0 ? (
@@ -272,9 +273,13 @@ const ActionExecutionGroup = ({ executions, orgId }: { executions: any[]; orgId:
           )}
         </div>
         <span>{text}</span>
-        {open ? <ChevronUp className="h-3 w-3 text-neutral-400" /> : <ChevronDown className="h-3 w-3 text-neutral-400" />}
+        {open ? (
+          <ChevronUp className="h-3 w-3 text-neutral-400" />
+        ) : (
+          <ChevronDown className="h-3 w-3 text-neutral-400" />
+        )}
       </button>
-      
+
       {open && (
         <div className="mt-1.5 ml-4 flex flex-col gap-0.5 border-l border-neutral-200/50 pl-3 dark:border-neutral-800/50">
           {executions.map((exec: any, idx: number) => (
@@ -687,7 +692,12 @@ export default function ChatInterface({
           {messages
             ?.filter((msg: any) => {
               if (msg.role === "system" || msg.role === "tool") return false;
-              if (msg.role === "assistant" && !msg.content?.trim() && (!msg.functionExecution || msg.functionExecution.length === 0)) return false;
+              if (
+                msg.role === "assistant" &&
+                !msg.content?.trim() &&
+                (!msg.functionExecution || msg.functionExecution.length === 0)
+              )
+                return false;
               return true;
             })
             .map((msg: any) => {
@@ -745,23 +755,32 @@ export default function ChatInterface({
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       ) : (
                         <div className="flex flex-col gap-2">
-                          <ActionExecutionGroup 
-                            executions={Array.isArray(msg.functionExecution) 
-                              ? msg.functionExecution.filter((exec: any) => !["get_user_profile", "get_organization_details", "get_brain_structure"].includes(exec.name))
-                              : []} 
-                            orgId={orgId} 
+                          <ActionExecutionGroup
+                            executions={
+                              Array.isArray(msg.functionExecution)
+                                ? msg.functionExecution.filter(
+                                    (exec: any) =>
+                                      ![
+                                        "get_user_profile",
+                                        "get_organization_details",
+                                        "get_brain_structure",
+                                      ].includes(exec.name)
+                                  )
+                                : []
+                            }
+                            orgId={orgId}
                           />
-                          
+
                           {reasoningText && (
-                            <div className="mb-2 w-fit min-w-[280px] max-w-2xl rounded-xl border border-neutral-200/60 bg-white/40 shadow-sm backdrop-blur-md dark:border-neutral-800/60 dark:bg-[#252525]/40">
+                            <div className="mb-2 w-fit max-w-2xl min-w-[280px] rounded-xl border border-neutral-200/60 bg-white/40 shadow-sm backdrop-blur-md dark:border-neutral-800/60 dark:bg-[#252525]/40">
                               <details className="group" open={!mainContent}>
-                                <summary className="flex cursor-pointer select-none items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100">
-                                  <BrainCircuit className="h-4 w-4 text-brand-yellow" />
+                                <summary className="flex cursor-pointer items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-neutral-600 transition-colors select-none hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100">
+                                  <BrainCircuit className="text-brand-yellow h-4 w-4" />
                                   <span>{t.weaveAi.thinking || "Thinking..."}</span>
                                   <ChevronDown className="ml-auto h-4 w-4 transition-transform group-open:rotate-180" />
                                 </summary>
                                 <div className="border-t border-neutral-200/60 px-4 py-3 dark:border-neutral-800/60">
-                                  <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none opacity-80 prose-p:leading-relaxed">
+                                  <div className="prose prose-sm prose-neutral dark:prose-invert prose-p:leading-relaxed max-w-none opacity-80">
                                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                       {reasoningText}
                                     </ReactMarkdown>
@@ -770,7 +789,7 @@ export default function ChatInterface({
                               </details>
                             </div>
                           )}
-                          
+
                           {mainContent && (
                             <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-blockquote:border-l-brand-yellow prose-blockquote:bg-neutral-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-table:border-collapse prose-table:border prose-table:border-neutral-200 prose-th:bg-neutral-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-tr:border-b dark:prose-blockquote:bg-neutral-800/50 dark:prose-table:border-neutral-800 dark:prose-th:bg-neutral-900/50 max-w-none">
                               <ReactMarkdown
@@ -1473,13 +1492,13 @@ export default function ChatInterface({
                 messages?.length === 0 && !loading ? "opacity-100" : "opacity-0"
               }`}
             >
-              <div 
-                className="absolute -left-10 top-0 h-full w-2/3 animate-pulse rounded-full bg-brand-yellow/20 blur-2xl dark:bg-brand-yellow/10" 
-                style={{ animationDuration: '4s' }} 
+              <div
+                className="bg-brand-yellow/20 dark:bg-brand-yellow/10 absolute top-0 -left-10 h-full w-2/3 animate-pulse rounded-full blur-2xl"
+                style={{ animationDuration: "4s" }}
               />
-              <div 
-                className="absolute -right-10 top-0 h-full w-2/3 animate-pulse rounded-full bg-sky-400/20 blur-2xl dark:bg-sky-500/10" 
-                style={{ animationDuration: '5s', animationDelay: '1s' }} 
+              <div
+                className="absolute top-0 -right-10 h-full w-2/3 animate-pulse rounded-full bg-sky-400/20 blur-2xl dark:bg-sky-500/10"
+                style={{ animationDuration: "5s", animationDelay: "1s" }}
               />
             </div>
 

@@ -170,6 +170,7 @@ export const NoteSchema = z.object({
       name: z.string(),
       stage_id: z.string().nullable().optional(),
       stage_name: z.string().nullable().optional(),
+      stage_color: z.string().nullable().optional(),
     })
     .nullable()
     .optional(),

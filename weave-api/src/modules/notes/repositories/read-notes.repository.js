@@ -119,6 +119,7 @@ class ReadNotesRepository extends BaseRepository {
         p.title as project_name,
         n.project_stage_id::text,
         pst.name AS project_stage_name,
+        pst.color AS project_stage_color,
 
         -- organização (via projeto)
         p.organization_id::text AS org_id,
@@ -369,6 +370,7 @@ class ReadNotesRepository extends BaseRepository {
         p.title AS project_name,
         n.project_stage_id::text,
         pst.name AS project_stage_name,
+        pst.color AS project_stage_color,
         n.parent_id::text AS parent_id,
 
         tp.id AS priority_id,

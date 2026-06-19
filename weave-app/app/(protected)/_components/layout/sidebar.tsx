@@ -143,7 +143,7 @@ function NavItem({
           rowPadding,
           fontSize,
           showActiveHighlight
-            ? "bg-brand-yellow/40 text-slate-950"
+            ? "bg-black/10 text-slate-950 dark:bg-white/10 dark:text-white"
             : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
         )}
       >
@@ -161,7 +161,7 @@ function NavItem({
                 className={cn(
                   iconSize,
                   "shrink-0 transition-colors",
-                  active ? "text-slate-950" : "text-slate-950 dark:text-gray-400"
+                  active ? "text-slate-950 dark:text-white" : "text-slate-950 dark:text-gray-400"
                 )}
               />
               {isCollapsed && item.badge !== undefined && item.badge > 0 ? (
@@ -174,7 +174,9 @@ function NavItem({
               className={cn(
                 iconSize,
                 "shrink-0 transition-colors",
-                showActiveHighlight ? "text-slate-950" : "text-gray-800 dark:text-gray-400"
+                showActiveHighlight
+                  ? "text-slate-950 dark:text-white"
+                  : "text-gray-800 dark:text-gray-400"
               )}
             />
           )}
@@ -306,7 +308,7 @@ function RecentItems({
                   "focus-visible:ring-brand-yellow/50 flex w-full min-w-0 items-center gap-0 rounded-md font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none",
                   "px-2 py-1 text-[13px]",
                   active
-                    ? "bg-brand-yellow/40 text-slate-950"
+                    ? "bg-black/10 text-slate-950 dark:bg-white/10 dark:text-white"
                     : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
                 )}
               >
@@ -323,7 +325,9 @@ function RecentItems({
                       <ItemIcon
                         className={cn(
                           "size-4 shrink-0 transition-colors",
-                          active ? "text-slate-950" : "text-gray-800 dark:text-gray-400"
+                          active
+                            ? "text-slate-950 dark:text-white"
+                            : "text-gray-800 dark:text-gray-400"
                         )}
                       />
                     ) : null}

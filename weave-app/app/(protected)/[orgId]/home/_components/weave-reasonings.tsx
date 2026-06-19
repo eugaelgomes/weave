@@ -17,7 +17,6 @@ import { ReasoningDetailDialog } from "@/app/(protected)/[orgId]/home/_component
 import {
   engineInsetNoticeClass,
   engineFeedScrollClass,
-  engineShellClass,
   engineShellPageClass,
   engineTextLinkClass,
 } from "@/app/(protected)/[orgId]/weave-engine/_components/engine-styles";
@@ -211,10 +210,31 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
   return (
     <div
       className={cn(
-        variant === "home" ? "flex w-full flex-col p-1" : engineShellClass,
+        "relative flex w-full flex-col rounded-2xl bg-white/70 p-2 shadow-lg shadow-black/5 backdrop-blur-lg dark:bg-[#252525]/70 dark:shadow-black/20",
         variant === "page" && hasFeed && engineShellPageClass
       )}
     >
+      <div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl">
+        <div
+          className="bg-brand-yellow/20 dark:bg-brand-yellow/10 absolute top-0 -left-10 h-full w-2/3 animate-pulse rounded-full blur-2xl"
+          style={{ animationDuration: "4s" }}
+        />
+        <div
+          className="absolute top-0 -right-10 h-full w-2/3 animate-pulse rounded-full bg-sky-400/20 blur-2xl dark:bg-sky-500/10"
+          style={{ animationDuration: "5s", animationDelay: "1s" }}
+        />
+      </div>
+      {variant === "home" && (
+        <div className="animate-in fade-in mb-3 flex w-full items-center justify-start duration-500">
+          <h2 className="font-fredoka text-lg font-medium tracking-tight text-neutral-500 dark:text-neutral-500">
+            {t.home.greetingPrefix}{" "}
+            <span className="text-brand-yellow dark:text-brand-yellow font-semibold">
+              {user?.user_name?.split(" ")[0] || user?.username || ""}
+            </span>
+            ,
+          </h2>
+        </div>
+      )}
       <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         {variant === "home" ? (
           <div className="min-w-0">

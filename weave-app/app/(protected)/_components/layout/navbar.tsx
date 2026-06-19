@@ -283,7 +283,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
 
               {/* Weave title moved to Sidebar */}
 
-              {user?.org_id && isCollapsed && (
+              {/*{user?.org_id && isCollapsed && (
                 <div className="hidden items-center gap-2 self-center sm:flex">
                   <Link
                     href={
@@ -300,7 +300,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                     </span>
                   </Link>
                 </div>
-              )}
+              )}*/}
             </section>
 
             {/* Centro: respiro no mobile (1fr); busca + notificações no desktop */}
@@ -311,7 +311,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                     type="button"
                     onClick={() => setIsSearchOpen(true)}
                     className={cn(
-                      "group flex w-full min-w-0 items-center gap-2.5 rounded-full px-3 py-1 transition-all bg-sky-800/5 hover:bg-sky-800/10 dark:bg-sky-800/10 dark:hover:bg-sky-800/15"
+                      "group flex w-full min-w-0 items-center gap-2.5 rounded-full bg-sky-800/5 px-3 py-1 transition-all hover:bg-sky-800/10 dark:bg-sky-800/10 dark:hover:bg-sky-800/15"
                     )}
                     aria-label={t.navbar.searchSystem}
                     title={t.navbar.searchSystem}
@@ -323,7 +323,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                     <span className="flex-1 text-left text-[11px] text-sky-800/80 dark:text-sky-300/80">
                       {t.navbar.searchPlaceholder}
                     </span>
-                    <kbd className="items-bottom flex gap-1 px-1.5 font-sans text-[10px] font-medium text-sky-800/60 dark:text-sky-400/60 rounded">
+                    <kbd className="items-bottom flex gap-1 rounded px-1.5 font-sans text-[10px] font-medium text-sky-800/60 dark:text-sky-400/60">
                       <span>⌘</span>K
                     </kbd>
                   </button>

@@ -504,7 +504,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const getRecentProjects = useCallback((): ProjectOverview[] => {
     return projectsOverview
       .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime())
-      .slice(0, 6);
+      .slice(0, 10);
   }, [projectsOverview]);
 
   const getProjectsByStatus = useCallback(

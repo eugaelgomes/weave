@@ -87,6 +87,7 @@ class NotesReadController extends NotesBaseController {
               name: note.project_name,
               stage_id: note.project_stage_id || null,
               stage_name: note.project_stage_name || null,
+              stage_color: note.project_stage_color || null,
             }
           : null,
         associated_organization: note.org_id
@@ -162,6 +163,7 @@ class NotesReadController extends NotesBaseController {
               name: note.project_name,
               stage_id: note.project_stage_id || null,
               stage_name: note.project_stage_name || null,
+              stage_color: note.project_stage_color || null,
             }
           : null,
         associated_organization: note.org_id

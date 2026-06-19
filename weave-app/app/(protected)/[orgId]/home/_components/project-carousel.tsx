@@ -67,11 +67,12 @@ const formatDate = (dateString?: string | null) => {
 };
 
 export default function ProjectsCarousel({
-  projects,
+  projects: initialProjects,
   title,
   emptyMessage,
   emptyActionText,
 }: ProjectsCarouselProps) {
+  const projects = (initialProjects || []).slice(0, 10);
   const params = useParams();
   const orgId = params?.orgId as string;
   const { t, locale } = useLanguage();
@@ -277,7 +278,7 @@ export default function ProjectsCarousel({
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    className={`group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:shadow-surface-dark-sm dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-md border border-neutral-200 bg-neutral-50 p-2.5 font-normal shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:bg-[#1d1d1b] ${accentColor ? "border-l-2" : ""}`}
+                    className={`group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:shadow-surface-dark-sm dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-2.5 font-normal shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:bg-[#1d1d1b] ${accentColor ? "border-l-2" : ""}`}
                     style={accentColor ? { borderLeftColor: accentColor } : undefined}
                   >
                     <div className="flex flex-1 flex-col">

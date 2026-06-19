@@ -67,6 +67,7 @@ export interface NoteOverview {
   project_name?: string | null;
   stage_id?: string | null;
   stage_name?: string | null;
+  stage_color?: string | null;
   parent_id?: string | null;
   organization_id?: string | null;
   organization_name?: string | null;
@@ -237,6 +238,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       project_name: assoc?.name ?? note.project_name ?? null,
       stage_id: assoc?.stage_id ?? null,
       stage_name: assoc?.stage_name ?? null,
+      stage_color: assoc?.stage_color ?? null,
       parent_id: note.parent_id ?? null,
       organization_id: note.associated_organization?.id ?? null,
       organization_name: note.associated_organization?.name ?? null,
@@ -511,7 +513,7 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   const getRecentNotes = useCallback((): NoteOverview[] => {
     return notesOverview
       .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime())
-      .slice(0, 5);
+      .slice(0, 10);
   }, [notesOverview]);
 
   const getNotesByTag = useCallback(

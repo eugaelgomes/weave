@@ -33,18 +33,8 @@ export default function HomePage() {
   const recentProjects = getRecentProjects();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="flex-1 space-y-2 overflow-y-auto">
-        <div className="animate-in fade-in flex w-full items-center justify-start px-1 duration-500">
-          <h2 className="font-fredoka text-lg font-medium tracking-tight text-neutral-500 dark:text-neutral-500">
-            {t.home.greetingPrefix}{" "}
-            <span className="text-brand-yellow dark:text-brand-yellow font-semibold">
-              {user?.user_name?.split(" ")[0] || user?.username || ""}
-            </span>
-            ,
-          </h2>
-        </div>
-
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="-mx-1.5 flex-1 space-y-2 overflow-y-auto px-1.5 pb-4">
         <WeaveEngineDashboard variant="home" />
 
         <NotesCarousel notes={recentNotes} />
