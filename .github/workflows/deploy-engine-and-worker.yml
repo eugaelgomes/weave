@@ -191,8 +191,4 @@ jobs:
             echo "▶ Deploying worker..."
             $COMPOSE -f compose.worker.yml up -d
 
-            # Clean dangling images (old builds) and builder cache to free space without losing active cache layers
-            docker image prune -f || true
-            docker builder prune -f || true
-
             echo "✔ Engine & Worker deployed successfully."
