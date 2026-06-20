@@ -191,8 +191,12 @@ jobs:
             echo "▶ Deploying worker..."
             $COMPOSE -f compose.worker.yml up -d
 
-            # Clean dangling images (old builds) and builder cache to free space without losing active cache layers
-            docker image prune -f || true
-            docker builder prune -f || true
+            # Keep cleanup bounded so deploy does not hit SSH action timeout.
+            if command -v timeout >/dev/null 2>&1; then
+              timeout 60s docker image prune -f || true
+              timeout 60s docker builder prune -f || true
+            else
+              echo "Skipping Docker prune: 'timeout' command not available."
+            fi
 
             echo "✔ Engine & Worker deployed successfully."
