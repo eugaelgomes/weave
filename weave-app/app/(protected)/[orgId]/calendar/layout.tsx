@@ -8,6 +8,7 @@ import { CalendarHeader } from "@/app/(protected)/_components/ui/headers/calenda
 import { MicroCalendar } from "@/app/(protected)/[orgId]/calendar/_components/micro-calendar";
 import { CalendarPageViewProvider } from "@/app/(protected)/[orgId]/calendar/_contexts/calendar-page-view-context";
 import { NotesProvider } from "@/app/_contexts/notes-context";
+import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 
 export default function CalendarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -25,9 +26,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
           <div className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 dark:shadow-surface-dark-sm dark:border-surface-dark-border w-full max-w-[180px] flex-shrink-0 overflow-y-auto border-b border-neutral-200 bg-neutral-50 md:w-[220px] md:rounded-md md:border md:bg-white md:shadow-sm dark:bg-[#1d1d1b]/30 dark:md:border-neutral-800 dark:md:bg-neutral-900/50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
             <div className="space-y-4 p-2">
               <div>
-                <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                  Menu
-                </h2>
+                <SidebarSectionHeader title="Menu" />
 
                 <ul className="space-y-0.5">
                   <li>
@@ -56,9 +55,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
               <MicroCalendar />
 
               <div>
-                <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                  Legenda
-                </h2>
+                <SidebarSectionHeader title="Legenda" />
 
                 <div className="dark:border-surface-dark-border space-y-1.5 rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
                   <div className="flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-300">
@@ -77,9 +74,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
               </div>
 
               <div>
-                <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                  Dicas
-                </h2>
+                <SidebarSectionHeader title="Dicas" />
 
                 <div className="dark:border-surface-dark-border space-y-1 rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
                   <p className="flex items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">

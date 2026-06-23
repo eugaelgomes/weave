@@ -12,6 +12,7 @@ import { useAgent, AgentProvider } from "@/app/_contexts/agent-context";
 import { NotesProvider } from "@/app/_contexts/notes-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
+import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 import { routes } from "@/app/_utils/routes";
 
 function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
@@ -51,11 +52,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
     <div className="flex w-full flex-col px-2 py-3">
       {/* AGENTS SECTION */}
       <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between px-1">
-          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-            Agentes
-          </h2>
-        </div>
+        <SidebarSectionHeader title="Agentes" />
 
         <button
           type="button"
@@ -114,11 +111,7 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
 
       {/* CHATS SECTION */}
       <div>
-        <div className="mb-2 flex items-center justify-between px-1">
-          <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-            {t.weaveAi.yourChats}
-          </h2>
-        </div>
+        <SidebarSectionHeader title={t.weaveAi.yourChats} />
 
         <button
           onClick={() => {

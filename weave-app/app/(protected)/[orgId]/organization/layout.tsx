@@ -20,6 +20,7 @@ import {
 } from "@/app/(protected)/_components/ui/headers/workspace-header";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
+import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 import { OrganizationProvider } from "@/app/_contexts/organization-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
 import { routes } from "@/app/_utils/routes";
@@ -188,9 +189,7 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
 
   const sidebarContent = (
     <div className="p-2">
-      <h2 className="mb-3 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        {t.nav.workspace}
-      </h2>
+      <SidebarSectionHeader title={t.nav.workspace} />
 
       <ul className="space-y-0.5">
         {WORKSPACE_NAV.map((item) => {

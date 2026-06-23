@@ -15,6 +15,7 @@ import type {
   ProjectProperties,
 } from "@/app/_services/projects-service/projects-service";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
+import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 import { WeaveEngineProvider } from "@/app/_contexts/weave-engine-context";
 import { TagsProvider } from "@/app/_contexts/tags-context";
 import { TaskPrioritiesProvider } from "@/app/_contexts/task-priorities-context";
@@ -90,9 +91,7 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
 
   const sidebarContent = (
     <div className="py-2.5">
-      <h2 className="mb-2 px-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        Menu
-      </h2>
+      <SidebarSectionHeader title="Menu" className="mx-0 px-2" />
 
       <ul className="mb-4 space-y-0.5">
         <li>
@@ -117,9 +116,7 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
         </li>
       </ul>
 
-      <h2 className="mb-2 px-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        Meus Projetos
-      </h2>
+      <SidebarSectionHeader title="Meus Projetos" className="mx-0 px-2" />
 
       <ul className="space-y-0.5">
         {recentProjects.map((project) => {

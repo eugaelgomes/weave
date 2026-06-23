@@ -211,7 +211,8 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
     <div
       className={cn(
         "relative flex w-full flex-col rounded-2xl bg-white/70 p-2 shadow-lg shadow-black/5 backdrop-blur-lg dark:bg-[#252525]/70 dark:shadow-black/20",
-        variant === "page" && hasFeed && engineShellPageClass
+        variant === "page" && hasFeed && engineShellPageClass,
+        variant === "home" && "h-[400px]"
       )}
     >
       <div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl">
@@ -284,7 +285,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
         </div>
       </header>
 
-      <section className={cn(variant === "page" && hasFeed && "flex min-h-0 flex-1 flex-col")}>
+      <section className={cn(((variant === "page" && hasFeed) || variant === "home") && "flex min-h-0 flex-1 flex-col")}>
         {variant === "page" && (
           <div className="mb-2 flex items-center justify-between gap-2">
             <h3 className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
@@ -336,7 +337,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
         )}
 
         {!loading && !error && hasFeed && (
-          <div className={cn(variant === "page" && engineFeedScrollClass)}>
+          <div className={cn(variant === "page" ? engineFeedScrollClass : "min-h-0 flex-1 overflow-y-auto pr-1")}>
             {summaryParts.length > 0 && (
               <p className="mb-2 shrink-0 text-[11px] font-normal text-neutral-400 dark:text-neutral-500">
                 {summaryParts.join(" · ")}

@@ -7,6 +7,7 @@ import { User, Lock, Zap, CreditCard, type LucideIcon } from "lucide-react";
 import { SettingsHeader } from "@/app/(protected)/_components/ui/headers/settings-header";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
+import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 import { ApiTokensProvider } from "@/app/_contexts/api-tokens-context";
 import { BackupProvider } from "@/app/_contexts/backup-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
@@ -82,9 +83,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
 
   const sidebarContent = (
     <div className="p-2">
-      <h2 className="mb-3 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        {t.nav.settingsLabel}
-      </h2>
+      <SidebarSectionHeader title={t.nav.settingsLabel} />
 
       <ul className="space-y-0.5">
         {SETTINGS_NAV.map((item) => {

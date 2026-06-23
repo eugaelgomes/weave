@@ -53,7 +53,7 @@ export function ModuleLayout({
           {sidebarContent && (
             <div
               className={cn(
-                "hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white p-2 md:sticky md:h-[calc(100vh-auto)] dark:border-neutral-800 dark:bg-[#1d1d1b]",
+                "hidden w-full flex-shrink-0 overflow-y-auto rounded-md border border-neutral-200 bg-white md:sticky md:h-[calc(100vh-auto)] dark:border-neutral-800 dark:bg-[#1d1d1b]",
                 hideSidebarOnDesktop ? "md:hidden" : "md:block md:w-[200px]"
               )}
             >

@@ -142,7 +142,7 @@ export default function ProjectsCarousel({
 
   return (
     <div className="w-full">
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="mb-2 flex items-center justify-between gap-2 px-2">
         <h3 className="text-xs font-semibold text-neutral-500 sm:text-sm dark:text-neutral-100">
           {resolvedTitle}
         </h3>
@@ -187,7 +187,7 @@ export default function ProjectsCarousel({
         <div className="relative">
           <div
             ref={carouselRef}
-            className="no-scrollbar -mx-2 -my-4 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth px-2 py-4"
+            className="no-scrollbar -my-4 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth px-2 py-4"
           >
             {projects.map((project) => {
               const statusConfig = project.status

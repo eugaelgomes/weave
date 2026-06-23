@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Waypoints } from "lucide-react";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
+import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 
 import { WeaveFlowHeader } from "@/app/(protected)/_components/ui/headers/weave-flow-header";
 
@@ -13,9 +14,7 @@ export default function WeaveFlowLayout({ children }: { children: React.ReactNod
 
   const sidebarContent = (
     <div className="p-2">
-      <h2 className="mb-3 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        Weave Flow
-      </h2>
+      <SidebarSectionHeader title="Weave Flow" />
       <ul className="space-y-0.5">
         <li>
           <Link

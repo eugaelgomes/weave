@@ -14,6 +14,7 @@ import {
 import GlobalLoading from "@/app/_components/ui/global-loading";
 import { getNotePath } from "@/app/_utils/note-path";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
+import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 import { NotesProvider } from "@/app/_contexts/notes-context";
 import { TagsProvider } from "@/app/_contexts/tags-context";
 import { TaskPrioritiesProvider } from "@/app/_contexts/task-priorities-context";
@@ -39,10 +40,8 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
       : null;
 
   const sidebarContent = (
-    <div className="p-2.5">
-      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        Menu
-      </h2>
+    <div className="p-2">
+      <SidebarSectionHeader title="Menu" />
 
       <ul className="mb-4 space-y-0.5">
         <li>
@@ -67,9 +66,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
         </li>
       </ul>
 
-      <h2 className="mb-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-        Tarefas Recentes
-      </h2>
+      <SidebarSectionHeader title="Tarefas Recentes" />
 
       <ul className="space-y-0.5">
         {recentNotes.map((note) => {
