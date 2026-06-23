@@ -129,6 +129,10 @@ class ChatOrchestratorService {
       sessionId = session.id;
     }
 
+    if (onChunk && !payload.sessionId) {
+      onChunk({ type: "session_created", sessionId });
+    }
+
     const rawConversationHistory =
       await chatRepository.getSessionMessagesForContext(
         sessionId,

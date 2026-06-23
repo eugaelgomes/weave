@@ -193,6 +193,20 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         });
 
         const onChunk = (chunk: any) => {
+          if (chunk && chunk.type === "session_created" && chunk.sessionId) {
+            setCurrentSessionState((prev: ChatSession | null) => {
+              if (prev?.id === chunk.sessionId) return prev;
+              return {
+                id: chunk.sessionId,
+                title: data.message.substring(0, 50) + (data.message.length > 50 ? "..." : ""),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                messageCount: 1,
+              };
+            });
+            return;
+          }
+
           setMessages((prev: ChatMessage[]) => {
             const existingIndex = prev.findIndex((m) => m.id === optimisticAssistantMessageId);
 

@@ -405,10 +405,11 @@ export default function ChatInterface({
   useEffect(() => {
     if (chatId) return;
     if (!currentSession?.id || !isChatSessionId(currentSession.id)) return;
-    if (pathname !== `/${orgId}/weave-ai/chat`) return;
+    const normalizedPathname = pathname.replace(/\/$/, "");
+    if (normalizedPathname !== `/${orgId}/weave-ai/chat`) return;
     if (messages.length === 0) return;
-    router.replace(`/${orgId}/weave-ai/chat/${currentSession.id}`);
-  }, [chatId, currentSession?.id, messages.length, pathname, router]);
+    window.history.replaceState(null, "", `/${orgId}/weave-ai/chat/${currentSession.id}`);
+  }, [chatId, currentSession?.id, messages.length, pathname, orgId]);
 
   const handleSendText = async (messageText: string) => {
     if (!messageText.trim() || isTyping || !canSendAiMessage) return;
