@@ -167,7 +167,7 @@ export const NoteSchema = z.object({
   associated_project: z
     .object({
       id: z.string(),
-      name: z.string(),
+      name: z.string().nullable().optional(),
       stage_id: z.string().nullable().optional(),
       stage_name: z.string().nullable().optional(),
       stage_color: z.string().nullable().optional(),
