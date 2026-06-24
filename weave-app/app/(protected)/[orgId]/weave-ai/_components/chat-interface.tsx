@@ -792,7 +792,7 @@ export default function ChatInterface({
                           )}
 
                           {mainContent && (
-                            <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-blockquote:border-l-brand-yellow prose-blockquote:bg-neutral-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-table:border-collapse prose-table:border prose-table:border-neutral-200 prose-th:bg-neutral-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-tr:border-b dark:prose-blockquote:bg-neutral-800/50 dark:prose-table:border-neutral-800 dark:prose-th:bg-neutral-900/50 max-w-none">
+                            <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-blockquote:border-l-brand-yellow prose-blockquote:bg-neutral-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-table:border-collapse prose-table:border prose-table:border-neutral-200 prose-th:bg-neutral-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-tr:border-b dark:prose-blockquote:bg-neutral-800/50 dark:prose-table:border-neutral-800 dark:prose-th:bg-neutral-900/50 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 max-w-none">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 rehypePlugins={[rehypeHighlight]}
