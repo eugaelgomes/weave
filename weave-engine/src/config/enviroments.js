@@ -23,10 +23,10 @@ const envSchema = z
       }
       return Boolean(
         data.DATABASE_HOST_URL &&
-          data.DATABASE_NAME &&
-          data.DATABASE_PASSWORD &&
-          data.DATABASE_SERVICE_PORT &&
-          data.DATABASE_USERNAME
+        data.DATABASE_NAME &&
+        data.DATABASE_PASSWORD &&
+        data.DATABASE_SERVICE_PORT &&
+        data.DATABASE_USERNAME
       );
     },
     {
@@ -57,10 +57,10 @@ function hasDatabaseConfig() {
   }
   return Boolean(
     process.env.DATABASE_HOST_URL &&
-      process.env.DATABASE_NAME &&
-      process.env.DATABASE_PASSWORD &&
-      process.env.DATABASE_SERVICE_PORT &&
-      process.env.DATABASE_USERNAME
+    process.env.DATABASE_NAME &&
+    process.env.DATABASE_PASSWORD &&
+    process.env.DATABASE_SERVICE_PORT &&
+    process.env.DATABASE_USERNAME
   );
 }
 

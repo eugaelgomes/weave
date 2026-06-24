@@ -20,6 +20,7 @@ function appendStandardContext(basePrompt, context) {
 
   if (context.userLanguage) {
     prompt += `\n[LANG] Must answer in "${context.userLanguage}" unless requested otherwise.`;
+    prompt += `\n[TRANSLATION] ALWAYS translate internal database enum values (e.g., status like OPEN/VISIBLE/IN_PROGRESS, roles, priorities) to "${context.userLanguage}" before displaying them to the user. Never show raw enums.`;
   }
 
   const userId = context.userId || context.user_id;

@@ -12,7 +12,7 @@ const schemas = [
   {
     name: "search_my_notes",
     description:
-      "Searches the user's personal notes (also known as tasks) based on a keyword query.",
+      "Searches the user's personal notes (also known as tasks) based on a keyword query. (Important: Translate any enum values returned by the database to the user's language.)",
     parameters: searchMyNotesZodSchema.toJSONSchema(),
   },
 ];

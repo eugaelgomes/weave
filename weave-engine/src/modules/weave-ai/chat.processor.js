@@ -56,14 +56,29 @@ const ENGINE_DEAD_LETTER_QUEUE_KEY =
   process.env.REDIS_ENGINE_LLM_DEAD_LETTER_QUEUE_KEY ||
   "weave:engine:llm:dead-letter";
 
-const jobEnvelopeSchema = z.object({
-  responseQueueKey: z.string().trim().min(1),
-  payload: z.object({}).passthrough(),
-  attempts: z.number().int().nonnegative().catch(0).default(0),
-  createdAt: z.string().catch(() => new Date().toISOString()).default(() => new Date().toISOString()),
-  requestId: z.string().trim().catch(null).default(null).transform(v => v === "" ? null : v),
-  taskType: z.string().trim().catch("provider_call").default("provider_call").transform(v => v === "" ? "provider_call" : v),
-}).passthrough();
+const jobEnvelopeSchema = z
+  .object({
+    responseQueueKey: z.string().trim().min(1),
+    payload: z.object({}).passthrough(),
+    attempts: z.number().int().nonnegative().catch(0).default(0),
+    createdAt: z
+      .string()
+      .catch(() => new Date().toISOString())
+      .default(() => new Date().toISOString()),
+    requestId: z
+      .string()
+      .trim()
+      .catch(null)
+      .default(null)
+      .transform((v) => (v === "" ? null : v)),
+    taskType: z
+      .string()
+      .trim()
+      .catch("provider_call")
+      .default("provider_call")
+      .transform((v) => (v === "" ? "provider_call" : v)),
+  })
+  .passthrough();
 
 function resolveOrganizationId(payload = {}, context = {}) {
   return (

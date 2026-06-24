@@ -5,23 +5,36 @@
 const { z } = require("zod");
 
 const listNoteCommentsZodSchema = z.object({
-  noteId: z.string().describe("The internal UUID of the note/task to list comments for."),
+  noteId: z
+    .string()
+    .describe("The internal UUID of the note/task to list comments for."),
 });
 
 const createNoteCommentZodSchema = z.object({
-  noteId: z.string().describe("The internal UUID of the note/task to comment on."),
+  noteId: z
+    .string()
+    .describe("The internal UUID of the note/task to comment on."),
   text: z.string().describe("The plain text content of the comment."),
-  parentId: z.string().optional().describe("Optional UUID of a parent comment to reply to (threaded comments)."),
+  parentId: z
+    .string()
+    .optional()
+    .describe(
+      "Optional UUID of a parent comment to reply to (threaded comments)."
+    ),
 });
 
 const updateNoteCommentZodSchema = z.object({
-  noteId: z.string().describe("The internal UUID of the note/task that contains the comment."),
+  noteId: z
+    .string()
+    .describe("The internal UUID of the note/task that contains the comment."),
   commentId: z.string().describe("The UUID of the comment to update."),
   text: z.string().describe("The new plain text content for the comment."),
 });
 
 const deleteNoteCommentZodSchema = z.object({
-  noteId: z.string().describe("The internal UUID of the note/task that contains the comment."),
+  noteId: z
+    .string()
+    .describe("The internal UUID of the note/task that contains the comment."),
   commentId: z.string().describe("The UUID of the comment to delete."),
 });
 
@@ -29,7 +42,7 @@ const schemas = [
   {
     name: "list_note_comments",
     description:
-      "Lists all comments on a specific note or task, ordered from oldest to newest. Returns each comment's ID, author info (name, username, avatar), content text, and timestamps. The user must own or collaborate on the note.",
+      "Lists all comments on a specific note or task, ordered from oldest to newest. Returns each comment's ID, author info (name, username, avatar), content text, and timestamps. The user must own or collaborate on the note. (Important: Translate any enum values returned by the database to the user's language.)",
     parameters: listNoteCommentsZodSchema.toJSONSchema(),
   },
   {

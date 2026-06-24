@@ -18,28 +18,38 @@ const {
 const pdfParse = require("pdf-parse");
 const { z } = require("zod");
 
-const ProviderResponseSchema = z.object({
-  type: z.enum(["text", "function_call"]),
-  text: z.string().nullable(),
-  functionCall: z.object({
-    name: z.string(),
-    arguments: z.record(z.any()),
-  }).nullable(),
-  toolCalls: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      arguments: z.record(z.any()),
-      extra_content: z.string().optional(),
-    }).passthrough()
-  ).optional(),
-  toolCallId: z.string().optional(),
-  usage: z.object({
-    inputTokens: z.number(),
-    outputTokens: z.number(),
-    totalTokens: z.number(),
-  }).nullable(),
-}).passthrough();
+const ProviderResponseSchema = z
+  .object({
+    type: z.enum(["text", "function_call"]),
+    text: z.string().nullable(),
+    functionCall: z
+      .object({
+        name: z.string(),
+        arguments: z.record(z.any()),
+      })
+      .nullable(),
+    toolCalls: z
+      .array(
+        z
+          .object({
+            id: z.string(),
+            name: z.string(),
+            arguments: z.record(z.any()),
+            extra_content: z.string().optional(),
+          })
+          .passthrough()
+      )
+      .optional(),
+    toolCallId: z.string().optional(),
+    usage: z
+      .object({
+        inputTokens: z.number(),
+        outputTokens: z.number(),
+        totalTokens: z.number(),
+      })
+      .nullable(),
+  })
+  .passthrough();
 
 const MAX_INLINE_FILES_PER_REQUEST = Number.parseInt(
   process.env.WEAVE_MAX_INLINE_FILES_PER_REQUEST || "3",

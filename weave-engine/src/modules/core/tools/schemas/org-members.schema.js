@@ -14,13 +14,13 @@ const schemas = [
   {
     name: "list_org_members",
     description:
-      "Lists all active members of the organization the user belongs to. Returns each member's user ID, name, username, email, avatar, role (SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST), and status.",
+      "Lists all active members of the organization the user belongs to. Returns each member's user ID, name, username, email, avatar, role (SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST), and status. (Important: Translate any enum values returned by the database to the user's language.)",
     parameters: listOrgMembersZodSchema.toJSONSchema(),
   },
   {
     name: "get_org_member",
     description:
-      "Fetches detailed information about a specific organization member by their user ID. Returns the member's role, status, name, username, email, and avatar URL.",
+      "Fetches detailed information about a specific organization member by their user ID. Returns the member's role, status, name, username, email, and avatar URL. (Important: Translate any enum values returned by the database to the user's language.)",
     parameters: getOrgMemberZodSchema.toJSONSchema(),
   },
 ];

@@ -92,14 +92,22 @@ async function searchMyNotes({ query, userId }) {
         n.id,
         n.public_note_id,
         p.public_project_id,
+        p.title as project_name,
         n.title,
         n.description,
         n.tags,
         n.status,
+        n.due_date,
+        pst.name as stage_name,
+        tp.name as priority_name,
+        u.name as author_name,
         n.updated_at,
         1 - (n.embedding <=> $2::vector) AS similarity
       FROM notes n
       LEFT JOIN projects p ON n.project_id = p.id
+      LEFT JOIN project_stages pst ON n.project_stage_id = pst.id
+      LEFT JOIN task_priorities tp ON n.priority_id = tp.id
+      LEFT JOIN users u ON n.user_id = u.user_id
       WHERE n.deleted = false
         AND n.user_id = $1::uuid
         AND n.embedding IS NOT NULL

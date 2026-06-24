@@ -22,26 +22,28 @@ const {
 const RESPONSE_TTL_SECONDS = 60;
 const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;
 
-const proactiveJobSchema = z.object({
-  type: z.string().optional(),
-  prompt: z.string().optional(),
-  systemMessage: z.string().optional(),
-  model: z.string().optional(),
-  options: z.object({}).passthrough().optional(),
-  responseQueueKey: z.string().optional(),
-  payload: z.union([z.string(), z.object({}).passthrough()]).optional(),
-  projectId: z.string().optional(),
-  sprintId: z.string().optional(),
-  reasoningType: z.string().optional(),
-  title: z.string().optional(),
-  reportConfigId: z.string().optional(),
-  organizationId: z.string().optional(),
-  triggeredBy: z.string().optional(),
-  recipientScope: z.string().optional(),
-  customRecipients: z.array(z.string()).optional(),
-  expiresAt: z.string().optional(),
-  inputContext: z.object({}).passthrough().optional(),
-}).passthrough();
+const proactiveJobSchema = z
+  .object({
+    type: z.string().optional(),
+    prompt: z.string().optional(),
+    systemMessage: z.string().optional(),
+    model: z.string().optional(),
+    options: z.object({}).passthrough().optional(),
+    responseQueueKey: z.string().optional(),
+    payload: z.union([z.string(), z.object({}).passthrough()]).optional(),
+    projectId: z.string().optional(),
+    sprintId: z.string().optional(),
+    reasoningType: z.string().optional(),
+    title: z.string().optional(),
+    reportConfigId: z.string().optional(),
+    organizationId: z.string().optional(),
+    triggeredBy: z.string().optional(),
+    recipientScope: z.string().optional(),
+    customRecipients: z.array(z.string()).optional(),
+    expiresAt: z.string().optional(),
+    inputContext: z.object({}).passthrough().optional(),
+  })
+  .passthrough();
 
 const safetyEvaluationSchema = z.object({
   label: z.enum(["safe", "review", "unsafe"]),
@@ -285,7 +287,7 @@ class ProactiveQueueProcessor {
     const safetyPrompt = [
       "You are a safety reviewer for proactive AI output.",
       "Return ONLY valid JSON with keys:",
-      "- label: one of \"safe\", \"review\", \"unsafe\"",
+      '- label: one of "safe", "review", "unsafe"',
       "- reason: short reason in one sentence",
       "- sanitizedText: concise safe rewrite in plain text",
       "",
@@ -311,7 +313,9 @@ class ProactiveQueueProcessor {
 
       const text = this.extractText(data);
       const parsed = this.safeJsonParse(text);
-      const validation = parsed ? safetyEvaluationSchema.safeParse(parsed) : null;
+      const validation = parsed
+        ? safetyEvaluationSchema.safeParse(parsed)
+        : null;
 
       if (validation?.success) {
         return {

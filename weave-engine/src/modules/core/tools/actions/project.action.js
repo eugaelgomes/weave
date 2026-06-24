@@ -21,7 +21,12 @@ async function listMyProjects(args) {
   try {
     // Querying projects owned by or shared with the user
     const { rows } = await pool.query(
-      `SELECT p.id, p.public_project_id, p.title, p.description, p.status, p.updated_at
+      `SELECT 
+        p.id, p.public_project_id, p.title, p.description, p.status, p.updated_at,
+        (SELECT count(*) FROM notes n WHERE n.project_id = p.id AND n.deleted = false) as total_tasks,
+        (SELECT count(*) FROM notes n WHERE n.project_id = p.id AND n.deleted = false AND n.status = 'ARCHIVED') as archived_tasks,
+        (SELECT count(*) FROM project_stages ps WHERE ps.project_id = p.id) as total_stages,
+        (SELECT count(*) FROM project_members pm WHERE pm.project_id = p.id AND pm.deleted = false AND pm.suspended = false) as total_collaborators
        FROM projects p
        WHERE p.deleted = false 
          AND (p.user_id = $1::uuid 
