@@ -172,6 +172,139 @@ body {
   .font-fredoka {
     font-family: var(--font-fredoka), sans-serif;
   }
+
+  /* Pastel Highlight Colors for Chat Markdown */
+  .hl-red {
+    background-color: #ffe4e6;
+    color: #be123c;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-red {
+    background-color: #4c0519;
+    color: #fecdd3;
+  }
+
+  .hl-orange {
+    background-color: #ffedd5;
+    color: #c2410c;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-orange {
+    background-color: #431407;
+    color: #fed7aa;
+  }
+
+  .hl-yellow {
+    background-color: #fef9c3;
+    color: #a16207;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-yellow {
+    background-color: #422006;
+    color: #fef08a;
+  }
+
+  .hl-green {
+    background-color: #dcfce7;
+    color: #15803d;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-green {
+    background-color: #052e16;
+    color: #bbf7d0;
+  }
+
+  .hl-emerald {
+    background-color: #d1fae5;
+    color: #047857;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-emerald {
+    background-color: #022c22;
+    color: #a7f3d0;
+  }
+
+  .hl-teal {
+    background-color: #ccfbf1;
+    color: #0f766e;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-teal {
+    background-color: #042f2e;
+    color: #99f6e4;
+  }
+
+  .hl-cyan {
+    background-color: #cffafe;
+    color: #0e7490;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-cyan {
+    background-color: #083344;
+    color: #a5f3fc;
+  }
+
+  .hl-blue {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-blue {
+    background-color: #172554;
+    color: #bfdbfe;
+  }
+
+  .hl-indigo {
+    background-color: #e0e7ff;
+    color: #4338ca;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-indigo {
+    background-color: #1e1b4b;
+    color: #c7d2fe;
+  }
+
+  .hl-purple {
+    background-color: #f3e8ff;
+    color: #7e22ce;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-purple {
+    background-color: #3b0764;
+    color: #e9d5ff;
+  }
+
+  .hl-pink {
+    background-color: #fce7f3;
+    color: #be185d;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-pink {
+    background-color: #500724;
+    color: #fbcfe8;
+  }
+
+  .hl-gray {
+    background-color: #f3f4f6;
+    color: #374151;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .dark .hl-gray {
+    background-color: #111827;
+    color: #e5e7eb;
+  }
 }
 
 @keyframes spin {
