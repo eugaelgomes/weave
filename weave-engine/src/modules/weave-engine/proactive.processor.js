@@ -11,6 +11,7 @@
  * Used by:
  * - `weave-engine/src/index.js`: Instantiated at startup to begin background processing.
  */
+const { z } = require("zod");
 const redis = require("../../services/redis.client");
 const { logger } = require("../../logger");
 const { callAIProvider } = require("../core/providers/llm-provider.client");
@@ -20,6 +21,33 @@ const {
 
 const RESPONSE_TTL_SECONDS = 60;
 const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;
+
+const proactiveJobSchema = z.object({
+  type: z.string().optional(),
+  prompt: z.string().optional(),
+  systemMessage: z.string().optional(),
+  model: z.string().optional(),
+  options: z.object({}).passthrough().optional(),
+  responseQueueKey: z.string().optional(),
+  payload: z.union([z.string(), z.object({}).passthrough()]).optional(),
+  projectId: z.string().optional(),
+  sprintId: z.string().optional(),
+  reasoningType: z.string().optional(),
+  title: z.string().optional(),
+  reportConfigId: z.string().optional(),
+  organizationId: z.string().optional(),
+  triggeredBy: z.string().optional(),
+  recipientScope: z.string().optional(),
+  customRecipients: z.array(z.string()).optional(),
+  expiresAt: z.string().optional(),
+  inputContext: z.object({}).passthrough().optional(),
+}).passthrough();
+
+const safetyEvaluationSchema = z.object({
+  label: z.enum(["safe", "review", "unsafe"]),
+  reason: z.string().optional().default("Re-check completed"),
+  sanitizedText: z.string().optional().default(""),
+});
 
 class ProactiveQueueProcessor {
   constructor() {
@@ -52,7 +80,17 @@ class ProactiveQueueProcessor {
         }
 
         const [, payload] = result;
-        await this.processJob(JSON.parse(payload));
+        const parsedJob = JSON.parse(payload);
+        const validation = proactiveJobSchema.safeParse(parsedJob);
+
+        if (!validation.success) {
+          logger.warn("Engine Proactive job discarded: invalid envelope", {
+            issues: validation.error.issues,
+          });
+          continue;
+        }
+
+        await this.processJob(validation.data);
       } catch (error) {
         logger.error("Engine Proactive processor loop failed", {
           error: error.message,
@@ -273,23 +311,13 @@ class ProactiveQueueProcessor {
 
       const text = this.extractText(data);
       const parsed = this.safeJsonParse(text);
+      const validation = parsed ? safetyEvaluationSchema.safeParse(parsed) : null;
 
-      if (
-        parsed &&
-        (parsed.label === "safe" ||
-          parsed.label === "review" ||
-          parsed.label === "unsafe")
-      ) {
+      if (validation?.success) {
         return {
-          label: parsed.label,
-          reason:
-            typeof parsed.reason === "string" && parsed.reason
-              ? parsed.reason
-              : "Re-check completed",
-          sanitizedText:
-            typeof parsed.sanitizedText === "string"
-              ? parsed.sanitizedText.trim()
-              : "",
+          label: validation.data.label,
+          reason: validation.data.reason,
+          sanitizedText: validation.data.sanitizedText.trim(),
         };
       }
     } catch (error) {

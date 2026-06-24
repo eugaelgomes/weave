@@ -21,7 +21,7 @@ async function listMyProjects(args) {
   try {
     // Querying projects owned by or shared with the user
     const { rows } = await pool.query(
-      `SELECT p.id, p.title, p.description, p.status, p.updated_at
+      `SELECT p.id, p.public_project_id, p.title, p.description, p.status, p.updated_at
        FROM projects p
        WHERE p.deleted = false 
          AND (p.user_id = $1::uuid 
@@ -70,14 +70,14 @@ async function getProjectDetails(args) {
 
     const { rows } = await pool.query(
       `SELECT
-        p.id, p.title, p.description, p.status, p.properties, p.created_at, p.updated_at, p.projects_files,
+        p.id, p.public_project_id, p.title, p.description, p.status, p.properties, p.created_at, p.updated_at, p.projects_files,
         (
           SELECT jsonb_agg(jsonb_build_object('id', ps.id, 'name', ps.name, 'position', ps.position))
           FROM project_stages ps WHERE ps.project_id = p.id
         ) as stages,
         (
           SELECT jsonb_agg(jsonb_build_object(
-            'id', n.id, 'title', n.title, 'status', n.status, 
+            'id', n.id, 'public_note_id', n.public_note_id, 'title', n.title, 'status', n.status, 
             'stage_id', n.project_stage_id, 'priority_id', n.priority_id, 
             'tags', n.tags, 'updated_at', n.updated_at
           ))

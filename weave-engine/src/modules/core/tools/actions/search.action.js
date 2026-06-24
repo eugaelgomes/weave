@@ -90,6 +90,8 @@ async function searchMyNotes({ query, userId }) {
     const sql = `
       SELECT
         n.id,
+        n.public_note_id,
+        p.public_project_id,
         n.title,
         n.description,
         n.tags,
@@ -97,6 +99,7 @@ async function searchMyNotes({ query, userId }) {
         n.updated_at,
         1 - (n.embedding <=> $2::vector) AS similarity
       FROM notes n
+      LEFT JOIN projects p ON n.project_id = p.id
       WHERE n.deleted = false
         AND n.user_id = $1::uuid
         AND n.embedding IS NOT NULL

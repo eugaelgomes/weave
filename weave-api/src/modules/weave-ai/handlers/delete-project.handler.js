@@ -36,15 +36,22 @@ class DeleteProjectHandler {
       .getProjectById(args.projectId, userId)
       .catch(() => null);
 
-    const oldProject = Array.isArray(oldProjectRows) && oldProjectRows.length > 0 
-      ? oldProjectRows[0] 
-      : null;
+    const oldProject =
+      Array.isArray(oldProjectRows) && oldProjectRows.length > 0
+        ? oldProjectRows[0]
+        : null;
 
     let result;
     if (organizationId) {
-       result = await projectsDeleteRepository.deleteProjectInOrganization(args.projectId, organizationId);
+      result = await projectsDeleteRepository.deleteProjectInOrganization(
+        args.projectId,
+        organizationId
+      );
     } else {
-       result = await projectsDeleteRepository.deleteProject(args.projectId, userId);
+      result = await projectsDeleteRepository.deleteProject(
+        args.projectId,
+        userId
+      );
     }
 
     return {

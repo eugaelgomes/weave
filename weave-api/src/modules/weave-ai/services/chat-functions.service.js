@@ -94,7 +94,11 @@ class ChatFunctionsService {
     const results = [];
     for (const functionCall of functionCalls) {
       if (onChunk) {
-        onChunk({ type: "action_state", name: functionCall?.name, status: "running" });
+        onChunk({
+          type: "action_state",
+          name: functionCall?.name,
+          status: "running",
+        });
       }
       try {
         const execution = await this.executeFunctionCall(
@@ -105,7 +109,12 @@ class ChatFunctionsService {
         );
         results.push(execution);
         if (onChunk) {
-          onChunk({ type: "action_state", name: functionCall?.name, status: "completed", success: execution.success });
+          onChunk({
+            type: "action_state",
+            name: functionCall?.name,
+            status: "completed",
+            success: execution.success,
+          });
         }
       } catch (error) {
         console.warn(
@@ -118,7 +127,12 @@ class ChatFunctionsService {
           error: error?.message || String(error),
         });
         if (onChunk) {
-          onChunk({ type: "action_state", name: functionCall?.name, status: "completed", success: false });
+          onChunk({
+            type: "action_state",
+            name: functionCall?.name,
+            status: "completed",
+            success: false,
+          });
         }
       }
     }

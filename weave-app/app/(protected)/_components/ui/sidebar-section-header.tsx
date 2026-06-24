@@ -11,7 +11,12 @@ interface SidebarSectionHeaderProps {
 
 export function SidebarSectionHeader({ title, className, children }: SidebarSectionHeaderProps) {
   return (
-    <div className={cn("mb-2 flex items-center justify-between border-b border-neutral-100 pb-1 -mx-2 px-3 dark:border-neutral-800", className)}>
+    <div
+      className={cn(
+        "-mx-2 mb-2 flex items-center justify-between border-b border-neutral-100 px-3 pb-1 dark:border-neutral-800",
+        className
+      )}
+    >
       <h2 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
         {title}
       </h2>

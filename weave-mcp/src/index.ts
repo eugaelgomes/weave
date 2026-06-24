@@ -1,5 +1,9 @@
+import { config } from "dotenv";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createServer } from "./server.js";
+
+// Carrega as variáveis de ambiente
+config();
 
 async function run() {
   const server = createServer();

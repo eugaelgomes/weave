@@ -12,6 +12,7 @@
  * - `weave-engine/src/index.js`: Instantiated at startup to begin background processing.
  */
 /* eslint-disable sort-keys */
+const { z } = require("zod");
 const redis = require("../../services/redis.client");
 const {
   getEngineLlmRequestQueueRedisKey,
@@ -54,6 +55,15 @@ const ENGINE_JOB_MAX_RETRIES = Number.parseInt(
 const ENGINE_DEAD_LETTER_QUEUE_KEY =
   process.env.REDIS_ENGINE_LLM_DEAD_LETTER_QUEUE_KEY ||
   "weave:engine:llm:dead-letter";
+
+const jobEnvelopeSchema = z.object({
+  responseQueueKey: z.string().trim().min(1),
+  payload: z.object({}).passthrough(),
+  attempts: z.number().int().nonnegative().catch(0).default(0),
+  createdAt: z.string().catch(() => new Date().toISOString()).default(() => new Date().toISOString()),
+  requestId: z.string().trim().catch(null).default(null).transform(v => v === "" ? null : v),
+  taskType: z.string().trim().catch("provider_call").default("provider_call").transform(v => v === "" ? "provider_call" : v),
+}).passthrough();
 
 function resolveOrganizationId(payload = {}, context = {}) {
   return (
@@ -141,8 +151,11 @@ class LlmQueueProcessor {
       return null;
     }
 
-    if (!this.isValidJobEnvelope(parsedJob)) {
-      logger.warn("Engine LLM job discarded: invalid envelope");
+    const validation = jobEnvelopeSchema.safeParse(parsedJob);
+    if (!validation.success) {
+      logger.warn("Engine LLM job discarded: invalid envelope", {
+        issues: validation.error.issues,
+      });
       this.pushDeadLetter({
         errorCode: "ENGINE_JOB_INVALID_ENVELOPE",
         errorMessage: "Invalid job envelope",
@@ -151,56 +164,7 @@ class LlmQueueProcessor {
       return null;
     }
 
-    return {
-      ...parsedJob,
-      attempts:
-        Number.isInteger(parsedJob.attempts) && parsedJob.attempts >= 0
-          ? parsedJob.attempts
-          : 0,
-      createdAt:
-        typeof parsedJob.createdAt === "string"
-          ? parsedJob.createdAt
-          : new Date().toISOString(),
-      requestId:
-        typeof parsedJob.requestId === "string" &&
-        parsedJob.requestId.trim().length > 0
-          ? parsedJob.requestId.trim()
-          : null,
-      taskType:
-        typeof parsedJob.taskType === "string" &&
-        parsedJob.taskType.trim().length > 0
-          ? parsedJob.taskType
-          : "provider_call",
-    };
-  }
-
-  /**
-   * Validates the structural integrity of the parsed job object to prevent downstream crashes.
-   *
-   * @param {object} job - The parsed job object.
-   * @returns {boolean} True if the envelope contains all required fields (payload, responseQueueKey).
-   */
-  isValidJobEnvelope(job) {
-    if (!job || typeof job !== "object") {
-      return false;
-    }
-
-    if (
-      typeof job.responseQueueKey !== "string" ||
-      !job.responseQueueKey.trim()
-    ) {
-      return false;
-    }
-
-    if (
-      !job.payload ||
-      typeof job.payload !== "object" ||
-      Array.isArray(job.payload)
-    ) {
-      return false;
-    }
-
-    return true;
+    return validation.data;
   }
 
   /**

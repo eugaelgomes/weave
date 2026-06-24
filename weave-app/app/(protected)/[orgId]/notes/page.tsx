@@ -134,6 +134,19 @@ function formatShortDate(date: string | null | undefined): string {
   }).format(parsed);
 }
 
+function formatShortDateTime(date: string | null | undefined): string {
+  if (!date) return "—";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsed);
+}
+
 const NotesWithPagination = () => {
   const router = useRouter();
   const params = useParams();
@@ -1120,26 +1133,50 @@ const NotesWithPagination = () => {
                             )}
                           </div>
                           <span className="shrink-0 text-[9px] font-medium text-neutral-400 dark:text-neutral-500">
-                            {formatDate(note.updated_at)}
+                            {formatShortDateTime(note.updated_at || note.created_at)}
                           </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-neutral-500 dark:text-neutral-400">
                           <span
-                            className="max-w-[42%] truncate"
+                            className="flex max-w-[42%] items-center gap-1 truncate"
                             title={note.associated_project?.stage_name || undefined}
                           >
-                            <span className="text-neutral-400 dark:text-neutral-500">Est. </span>
-                            {note.associated_project?.stage_name || "—"}
+                            {note.associated_project?.stage_name ? (
+                              <>
+                                <span
+                                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      note.associated_project.stage_color || "#a3a3a3",
+                                  }}
+                                />
+                                <span className="truncate">
+                                  {note.associated_project.stage_name}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-neutral-400 dark:text-neutral-500">—</span>
+                            )}
                           </span>
                           <span className="text-neutral-300 dark:text-neutral-600">·</span>
                           <span
-                            className="max-w-[36%] truncate"
+                            className="flex max-w-[36%] items-center gap-1 truncate"
                             title={note.priority_name || undefined}
                           >
-                            {note.priority_name || "—"}
+                            {note.priority_name ? (
+                              <>
+                                <span
+                                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                  style={{ backgroundColor: note.priority_color || "#ca8a04" }}
+                                />
+                                <span className="truncate">{note.priority_name}</span>
+                              </>
+                            ) : (
+                              <span className="text-neutral-400 dark:text-neutral-500">—</span>
+                            )}
                           </span>
                           <span className="text-neutral-300 dark:text-neutral-600">·</span>
-                          <span className="shrink-0">{formatShortDate(note.due_date)}</span>
+                          <span className="shrink-0">{formatShortDateTime(note.due_date)}</span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 overflow-hidden">
@@ -1167,10 +1204,13 @@ const NotesWithPagination = () => {
                           <div className="flex shrink-0 items-center gap-2">
                             {note.project_name && (
                               <div
-                                className="flex h-4 w-4 items-center justify-center rounded bg-blue-50 dark:bg-blue-900/20"
+                                className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 dark:bg-blue-900/20"
                                 title={note.project_name}
                               >
-                                <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                                <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500"></div>
+                                <span className="truncate text-[9px] text-blue-700 dark:text-blue-300">
+                                  {note.project_name}
+                                </span>
                               </div>
                             )}
 
@@ -1259,13 +1299,34 @@ const NotesWithPagination = () => {
                           </div>
                         </div>
 
-                        <div className="col-span-1 min-w-0">
-                          <span
-                            className="block truncate text-[9px] text-neutral-600 dark:text-neutral-300"
-                            title={note.associated_project?.stage_name || undefined}
-                          >
-                            {note.associated_project?.stage_name || "—"}
-                          </span>
+                        <div className="col-span-1 flex min-w-0 items-center">
+                          {note.associated_project?.stage_name ? (
+                            <span
+                              className="inline-flex max-w-full items-center gap-1 truncate rounded px-1 py-0.5 text-[8px] font-medium text-neutral-900 dark:text-neutral-100"
+                              style={{
+                                borderLeftWidth: 2,
+                                borderLeftStyle: "solid",
+                                borderLeftColor: note.associated_project.stage_color || "#a3a3a3",
+                                backgroundColor: note.associated_project.stage_color
+                                  ? `${note.associated_project.stage_color}26`
+                                  : "rgba(163, 163, 163, 0.15)",
+                              }}
+                              title={note.associated_project.stage_name}
+                            >
+                              <span
+                                className="h-1.5 w-1.5 shrink-0 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15"
+                                style={{
+                                  backgroundColor: note.associated_project.stage_color || "#a3a3a3",
+                                }}
+                                aria-hidden
+                              />
+                              <span className="truncate">{note.associated_project.stage_name}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[9px] text-neutral-300 dark:text-neutral-700">
+                              —
+                            </span>
+                          )}
                         </div>
 
                         <div className="col-span-1 flex min-w-0 items-center">
@@ -1301,7 +1362,7 @@ const NotesWithPagination = () => {
                             className="text-[9px] text-neutral-600 dark:text-neutral-300"
                             title={note.due_date ? formatDate(note.due_date) : undefined}
                           >
-                            {formatShortDate(note.due_date)}
+                            {formatShortDateTime(note.due_date)}
                           </span>
                         </div>
 
@@ -1346,7 +1407,7 @@ const NotesWithPagination = () => {
                             className="truncate text-right text-[9px] font-medium text-neutral-500 dark:text-neutral-400"
                             title={formatDate(note.updated_at || note.created_at)}
                           >
-                            {formatShortDate(note.updated_at || note.created_at)}
+                            {formatShortDateTime(note.updated_at || note.created_at)}
                           </span>
                         </div>
                       </article>

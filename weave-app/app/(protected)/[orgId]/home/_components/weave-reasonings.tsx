@@ -285,7 +285,11 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
         </div>
       </header>
 
-      <section className={cn(((variant === "page" && hasFeed) || variant === "home") && "flex min-h-0 flex-1 flex-col")}>
+      <section
+        className={cn(
+          ((variant === "page" && hasFeed) || variant === "home") && "flex min-h-0 flex-1 flex-col"
+        )}
+      >
         {variant === "page" && (
           <div className="mb-2 flex items-center justify-between gap-2">
             <h3 className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
@@ -337,7 +341,11 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
         )}
 
         {!loading && !error && hasFeed && (
-          <div className={cn(variant === "page" ? engineFeedScrollClass : "min-h-0 flex-1 overflow-y-auto pr-1")}>
+          <div
+            className={cn(
+              variant === "page" ? engineFeedScrollClass : "min-h-0 flex-1 overflow-y-auto pr-1"
+            )}
+          >
             {summaryParts.length > 0 && (
               <p className="mb-2 shrink-0 text-[11px] font-normal text-neutral-400 dark:text-neutral-500">
                 {summaryParts.join(" · ")}

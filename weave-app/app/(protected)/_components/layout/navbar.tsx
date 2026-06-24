@@ -257,7 +257,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
     <>
       <header className="relative z-40 w-full shrink-0 print:hidden">
         <nav
-          className="mx-auto w-full max-w-[1920px] px-1.5 pt-1 pb-0.5 sm:px-2 lg:px-2 lg:py-0 lg:pb-0"
+          className="mx-auto w-full max-w-[1920px] px-1.5 pt-1 pb-0.5 sm:px-2 lg:px-2 lg:py-0 lg:pb-0 dark:bg-[#1d1d1b]"
           aria-label={t.navbar.mainNavigation}
         >
           <div
@@ -311,19 +311,19 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                     type="button"
                     onClick={() => setIsSearchOpen(true)}
                     className={cn(
-                      "group flex w-full min-w-0 items-center gap-2.5 rounded-full bg-sky-800/5 px-3 py-1 transition-all hover:bg-sky-800/10 dark:bg-sky-800/10 dark:hover:bg-sky-800/15"
+                      "group flex w-full min-w-0 items-center gap-2.5 rounded-full bg-gray-100 px-3 py-1 transition-all hover:bg-sky-800/10 dark:bg-zinc-800 dark:hover:bg-sky-800/15"
                     )}
                     aria-label={t.navbar.searchSystem}
                     title={t.navbar.searchSystem}
                   >
                     <Search
-                      className="h-3.5 w-3.5 text-sky-800/70 transition-colors group-hover:text-sky-800 dark:text-sky-400/70 dark:group-hover:text-sky-400"
+                      className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-gray-400 dark:text-gray-300 dark:group-hover:text-gray-400"
                       strokeWidth={1.75}
                     />
-                    <span className="flex-1 text-left text-[11px] text-sky-800/80 dark:text-sky-300/80">
+                    <span className="flex-1 text-left text-[11px] text-gray-400 dark:text-gray-400">
                       {t.navbar.searchPlaceholder}
                     </span>
-                    <kbd className="items-bottom flex gap-1 rounded px-1.5 font-sans text-[10px] font-medium text-sky-800/60 dark:text-sky-400/60">
+                    <kbd className="items-bottom flex gap-1 rounded px-1.5 font-sans text-[10px] font-medium text-gray-600 dark:text-gray-300">
                       <span>⌘</span>K
                     </kbd>
                   </button>

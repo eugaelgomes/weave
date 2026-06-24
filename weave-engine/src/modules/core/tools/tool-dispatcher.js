@@ -11,39 +11,40 @@
 const { logger } = require("../../../logger");
 
 const { searchWeb, readUrl } = require("./actions/web-browser.action");
-const { schemas: webBrowserSchemas } = require("./schemas/web-browser.schema");
+const { schemas: webBrowserSchemas, zodSchemas: webBrowserZodSchemas } = require("./schemas/web-browser.schema");
 
 const { searchMyNotes } = require("./actions/search.action");
-const { schemas: searchSchemas } = require("./schemas/search.schema");
+const { schemas: searchSchemas, zodSchemas: searchZodSchemas } = require("./schemas/search.schema");
 
 const { getUserProfile } = require("./actions/profile.action");
-const { schemas: profileSchemas } = require("./schemas/profile.schema");
+const { schemas: profileSchemas, zodSchemas: profileZodSchemas } = require("./schemas/profile.schema");
 
 const {
   listMyProjects,
   getProjectDetails,
 } = require("./actions/project.action");
-const { schemas: projectSchemas } = require("./schemas/project.schema");
+const { schemas: projectSchemas, zodSchemas: projectZodSchemas } = require("./schemas/project.schema");
 
 const { getOrganizationDetails } = require("./actions/organization.action");
 const {
   schemas: organizationSchemas,
+  zodSchemas: organizationZodSchemas,
 } = require("./schemas/organization.schema");
 
 const { consultBrain } = require("./actions/brain.action");
-const { schemas: brainSchemas } = require("./schemas/brain.schema");
+const { schemas: brainSchemas, zodSchemas: brainZodSchemas } = require("./schemas/brain.schema");
 
 const {
   listOrgMembers,
   getOrgMember,
 } = require("./actions/org-members.action");
-const { schemas: orgMembersSchemas } = require("./schemas/org-members.schema");
+const { schemas: orgMembersSchemas, zodSchemas: orgMembersZodSchemas } = require("./schemas/org-members.schema");
 
-const { schemas: orgAreasSchemas } = require("./schemas/org-areas.schema");
 const { listOrgAreas, getOrgArea } = require("./actions/org-areas.action");
+const { schemas: orgAreasSchemas, zodSchemas: orgAreasZodSchemas } = require("./schemas/org-areas.schema");
 
 const { getNoteDetails } = require("./actions/note.action");
-const { schemas: noteSchemas } = require("./schemas/note.schema");
+const { schemas: noteSchemas, zodSchemas: noteZodSchemas } = require("./schemas/note.schema");
 
 const {
   listNoteComments,
@@ -53,6 +54,7 @@ const {
 } = require("./actions/note-comments.action");
 const {
   schemas: noteCommentsSchemas,
+  zodSchemas: noteCommentsZodSchemas,
 } = require("./schemas/note-comments.schema");
 
 const INTERNAL_TOOLS = {
@@ -92,6 +94,19 @@ const internalToolSchemas = [
   ...noteCommentsSchemas,
 ];
 
+const ALL_ZOD_SCHEMAS = {
+  ...webBrowserZodSchemas,
+  ...searchZodSchemas,
+  ...profileZodSchemas,
+  ...projectZodSchemas,
+  ...organizationZodSchemas,
+  ...brainZodSchemas,
+  ...orgMembersZodSchemas,
+  ...orgAreasZodSchemas,
+  ...noteZodSchemas,
+  ...noteCommentsZodSchemas,
+};
+
 /**
  * Evaluates whether a given tool name is registered as an internal execution target.
  *
@@ -117,7 +132,21 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
   }
   logger.info(`Executing internal tool: ${functionName}`, { args });
   try {
-    const enrichedArgs = { ...args };
+    let validatedArgs = args;
+    const validator = ALL_ZOD_SCHEMAS[functionName];
+    if (validator) {
+      const parsed = validator.safeParse(args);
+      if (!parsed.success) {
+        logger.warn(`Invalid arguments for tool ${functionName}`, { issues: parsed.error.issues });
+        return {
+          error: `Invalid arguments for tool ${functionName}. Please fix them and try again.`,
+          details: parsed.error.issues
+        };
+      }
+      validatedArgs = parsed.data;
+    }
+
+    const enrichedArgs = { ...validatedArgs };
 
     // Inject server-side userId and organizationId for tools that need authenticated identity
     const TOOLS_NEEDING_CONTEXT = [

@@ -487,7 +487,7 @@ class WeaveAIRepository {
         originalSession.message_count,
         originalSession.last_model,
         originalSession.last_provider,
-        originalSession.total_tokens
+        originalSession.total_tokens,
       ]);
       const newSession = newSessionResult.rows[0];
 
@@ -514,7 +514,7 @@ class WeaveAIRepository {
         newSession.id,
         newUserId,
         null, // organization_id
-        originalSession.id
+        originalSession.id,
       ]);
 
       await client.query("COMMIT");

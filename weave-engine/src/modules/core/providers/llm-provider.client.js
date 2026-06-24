@@ -16,6 +16,30 @@ const {
   resolveDefaultModelName,
 } = require("../../../services/llm.client");
 const pdfParse = require("pdf-parse");
+const { z } = require("zod");
+
+const ProviderResponseSchema = z.object({
+  type: z.enum(["text", "function_call"]),
+  text: z.string().nullable(),
+  functionCall: z.object({
+    name: z.string(),
+    arguments: z.record(z.any()),
+  }).nullable(),
+  toolCalls: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      arguments: z.record(z.any()),
+      extra_content: z.string().optional(),
+    }).passthrough()
+  ).optional(),
+  toolCallId: z.string().optional(),
+  usage: z.object({
+    inputTokens: z.number(),
+    outputTokens: z.number(),
+    totalTokens: z.number(),
+  }).nullable(),
+}).passthrough();
 
 const MAX_INLINE_FILES_PER_REQUEST = Number.parseInt(
   process.env.WEAVE_MAX_INLINE_FILES_PER_REQUEST || "3",
@@ -466,7 +490,7 @@ async function callGenericApi(
       };
 
       const toolCall = finalToolCalls[0];
-      return {
+      return ProviderResponseSchema.parse({
         functionCall: {
           arguments: safeParse(toolCall.function.arguments),
           name: toolCall.function.name,
@@ -492,10 +516,10 @@ async function callGenericApi(
               totalTokens: finalUsage.total_tokens || 0,
             }
           : null,
-      };
+      });
     }
 
-    return {
+    return ProviderResponseSchema.parse({
       functionCall: null,
       text: fullContent,
       type: "text",
@@ -506,7 +530,7 @@ async function callGenericApi(
             totalTokens: finalUsage.total_tokens || 0,
           }
         : null,
-    };
+    });
   }
 
   const response = await axios.post(endpointUrl, payload, {
@@ -536,7 +560,7 @@ async function callGenericApi(
       }
     };
 
-    return {
+    return ProviderResponseSchema.parse({
       functionCall: {
         arguments: safeParse(toolCall.function.arguments),
         name: toolCall.function.name,
@@ -556,15 +580,15 @@ async function callGenericApi(
       toolCallId: toolCall.id, // For backwards compatibility
       type: "function_call",
       usage,
-    };
+    });
   }
 
-  return {
+  return ProviderResponseSchema.parse({
     functionCall: null,
     text: message?.content || "",
     type: "text",
     usage,
-  };
+  });
 }
 
 async function sleep(delayMs) {
