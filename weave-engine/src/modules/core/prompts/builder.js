@@ -1,4 +1,3 @@
-const { chatSystemPrompt, engineSystemPrompt } = require("./persona");
 const {
   estimateTokens,
   formatRole,
