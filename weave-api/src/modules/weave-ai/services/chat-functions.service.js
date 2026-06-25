@@ -41,7 +41,7 @@ class ChatFunctionsService {
     userId,
     functionCall,
     organizationId = null,
-    lang = "pt",
+    lang = "en-US",
     files = []
   ) {
     const t = getI18n(lang);
@@ -90,7 +90,7 @@ class ChatFunctionsService {
     userId,
     functionCalls = [],
     organizationId = null,
-    lang = "pt",
+    lang = "en-US",
     onChunk = null,
     files = []
   ) {
