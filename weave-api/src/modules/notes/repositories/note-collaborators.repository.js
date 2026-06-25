@@ -62,16 +62,16 @@ class NoteCollaboratorsRepository extends BaseRepository {
    * @param {string} userId - ID do usuário colaborador
    * @returns {Object} - Resultado da operação
    */
-  async removeCollaborator(noteId, userId) {
+  async removeCollaborator(noteId, userId, actorId) {
     const internalNoteId = await this._resolveInternalNoteId(noteId);
     if (!internalNoteId) return { rowCount: 0 };
 
     const query = `
       UPDATE note_collaborators 
-      SET removed_at = NOW(), removed = true, removed_by = 'owner'
+      SET removed_at = NOW(), removed = true, removed_by = $3::uuid
       WHERE note_id = $1::uuid AND user_id = $2::uuid AND removed = false;
     `;
-    const count = await this.rowCount(query, [internalNoteId, userId]);
+    const count = await this.rowCount(query, [internalNoteId, userId, actorId]);
     return { rowCount: count };
   }
 
@@ -89,7 +89,7 @@ class NoteCollaboratorsRepository extends BaseRepository {
     UPDATE note_collaborators
     SET removed_at = NOW(),
         removed = true,
-        removed_by = 'itself'
+        removed_by = $2::uuid
     WHERE note_id = $1::uuid
       AND user_id = $2::uuid
       AND removed = false

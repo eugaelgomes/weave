@@ -67,8 +67,8 @@ class NotificationsCreateRepository {
     const rows = await executeQuery(query, [
       normalized.userId,
       normalized.actorId,
-      normalized.type,
-      normalized.entityType,
+      normalized.type ? normalized.type.toUpperCase() : null,
+      normalized.entityType ? normalized.entityType.toUpperCase() : null,
       normalized.entityId,
       normalized.title,
       JSON.stringify(normalized.content || {}),

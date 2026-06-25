@@ -190,7 +190,8 @@ class NotesCollaboratorsController extends NotesBaseController {
       // Remover colaborador
       const result = await this.notesRepository.removeCollaborator(
         noteId,
-        collaboratorId
+        collaboratorId,
+        userId
       );
 
       if (result.rowCount === 0) {
