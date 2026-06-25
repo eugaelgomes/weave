@@ -2500,7 +2500,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
                                         className="group flex items-center gap-1 rounded-md bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-700 transition-colors dark:bg-neutral-800 dark:text-neutral-300"
                                       >
                                         <a
-                                          href={getStorageUrl(file.path)}
+                                          href={getStorageUrl(file.path as string)}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="inline-flex max-w-[120px] items-center gap-1.5 truncate hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -2508,7 +2508,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
                                           <span className="truncate">{file.name || "Arquivo"}</span>
                                         </a>
                                         <a
-                                          href={getStorageUrl(file.path)}
+                                          href={getStorageUrl(file.path as string)}
                                           download={file.name || "arquivo"}
                                           onClick={(e) => e.stopPropagation()}
                                           className="text-neutral-400 opacity-100 dark:text-neutral-500 dark:hover:text-neutral-300"
@@ -2518,7 +2518,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
                                         </a>
                                         {note.access?.canEdit && (
                                           <button
-                                            onClick={() => handleRemoveFile(file.id)}
+                                            onClick={() => handleRemoveFile(file.id as string)}
                                             className="ml-0.5 text-neutral-400 dark:text-neutral-500 dark:hover:text-red-400"
                                             title="Remover arquivo"
                                           >
@@ -2708,7 +2708,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
                     canComment={canUseNoteComments}
                     onClose={() => setCommentsSidebarOpen(false)}
                     searchMentionUsers={searchUsers}
-                    embeddableNoteFiles={note.properties?.files ?? []}
+                    embeddableNoteFiles={(note.properties?.files as any) ?? []}
                   />
                 </div>
               </div>
