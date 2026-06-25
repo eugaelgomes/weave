@@ -65,6 +65,17 @@ export function ProjectFilters({
 }: ProjectFiltersProps) {
   const { user } = useAuth();
 
+  const displayPriorities = React.useMemo(() => {
+    return taskPriorities && taskPriorities.length > 0
+      ? taskPriorities
+      : [
+          { id: "low", name: "Baixa" },
+          { id: "medium", name: "Média" },
+          { id: "high", name: "Alta" },
+          { id: "urgent", name: "Urgente" },
+        ];
+  }, [taskPriorities]);
+
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
   const [duePreset, setDuePreset] = useState<DueDatePreset>("all");
   const [createdPreset, setCreatedPreset] = useState<CreatedDatePreset>("all");
@@ -127,34 +138,34 @@ export function ProjectFilters({
     });
   };
 
-  const handlePriority = (priorityId: string) => {
+  const handlePriority = (priorityIds: string[]) => {
     update({
-      priority_id: priorityId === "all" ? undefined : [priorityId],
+      priority_id: priorityIds.length === 0 ? undefined : priorityIds,
     });
   };
 
-  const handleStage = (stageId: string) => {
+  const handleStage = (stageIds: string[]) => {
     update({
-      stage_id: stageId === "all" ? undefined : [stageId],
+      stage_id: stageIds.length === 0 ? undefined : stageIds,
     });
   };
 
-  const handleTag = (tagId: string) => {
+  const handleTag = (tagIds: string[]) => {
     update({
-      tags: tagId === "all" ? undefined : [tagId],
+      tags: tagIds.length === 0 ? undefined : tagIds,
     });
   };
 
-  const handlePerson = (userId: string | null) => {
-    update({ collaborator_user_id: userId ? [userId] : undefined });
+  const handlePerson = (userIds: string[]) => {
+    update({ collaborator_user_id: userIds.length === 0 ? undefined : userIds });
   };
 
   const clearDue = () => handleDuePreset("all");
   const clearCreated = () => handleCreatedPreset("all");
-  const clearPriority = () => handlePriority("all");
-  const clearStage = () => handleStage("all");
-  const clearTag = () => handleTag("all");
-  const clearPerson = () => handlePerson(null);
+  const clearPriority = () => handlePriority([]);
+  const clearStage = () => handleStage([]);
+  const clearTag = () => handleTag([]);
+  const clearPerson = () => handlePerson([]);
 
   const clearSearch = () => {
     setSearchInput("");
@@ -187,7 +198,7 @@ export function ProjectFilters({
   }));
 
   return (
-    <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 px-2 py-1">
+    <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-2 border-b border-neutral-100 px-2 py-1 dark:border-neutral-800/40">
       <div className="flex shrink-0 items-center">
         <FilterSearchInput
           value={searchInput}
@@ -221,18 +232,17 @@ export function ProjectFilters({
           options={[...DATE_PRESET_OPTIONS]}
         />
 
-        {taskPriorities.length > 0 && (
-          <FilterSelect
-            icon={Flag}
-            accent="rose"
-            placeholder="Prioridade"
-            title="Filtrar por prioridade"
-            value={filters.priority_id?.[0] ?? "all"}
-            onChange={handlePriority}
-            onClear={clearPriority}
-            options={taskPriorities.map((p) => ({ value: p.id, label: p.name }))}
-          />
-        )}
+        <FilterSelect
+          icon={Flag}
+          accent="rose"
+          placeholder="Prioridade"
+          title="Filtrar por prioridade"
+          multiple
+          value={filters.priority_id ?? []}
+          onChange={handlePriority}
+          onClear={clearPriority}
+          options={displayPriorities.map((p) => ({ value: p.id, label: p.name }))}
+        />
 
         {stages.length > 0 && (
           <FilterSelect
@@ -240,7 +250,8 @@ export function ProjectFilters({
             accent="purple"
             placeholder="Estágio"
             title="Filtrar por estágio"
-            value={filters.stage_id?.[0] ?? "all"}
+            multiple
+            value={filters.stage_id ?? []}
             onChange={handleStage}
             onClear={clearStage}
             options={stages.map((s) => ({ value: s.id, label: s.name }))}
@@ -253,7 +264,8 @@ export function ProjectFilters({
             accent="emerald"
             placeholder="Tags"
             title="Filtrar por tag"
-            value={filters.tags?.[0] ?? "all"}
+            multiple
+            value={filters.tags ?? []}
             onChange={handleTag}
             onClear={clearTag}
             options={projectTags.map((t) => ({ value: t.id, label: t.name }))}
@@ -261,7 +273,8 @@ export function ProjectFilters({
         )}
 
         <FilterPeopleSelect
-          value={filters.collaborator_user_id?.[0] ?? null}
+          multiple
+          value={filters.collaborator_user_id ?? []}
           onChange={handlePerson}
           collaborators={collaboratorsList}
           currentUserId={user?.id}
@@ -273,7 +286,7 @@ export function ProjectFilters({
           <button
             type="button"
             onClick={handleClear}
-            className="flex items-center gap-0.5 rounded-full border border-neutral-200 px-2 py-px text-[10px] font-medium text-neutral-500 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-red-600/50 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+            className="flex items-center gap-0.5 rounded-md border-0 bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
           >
             <X className="h-2 w-2" />
             <span>Limpar ({activeCount})</span>

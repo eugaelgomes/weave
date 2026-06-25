@@ -48,25 +48,40 @@ import { syncProjectTaskUrl } from "@/app/_utils/note-path";
 const COLUMN_WIDTH_CLASS = "w-[232px]";
 
 const TASK_CARD_FOOTER_ACTION = {
-  attachments: { icon: "text-sky-500", active: "bg-sky-500/10" },
-  tags: { icon: "text-amber-500", active: "bg-amber-500/10" },
-  collaborators: { icon: "text-violet-500", active: "bg-violet-500/10" },
-  date: { icon: "text-emerald-500", active: "bg-brand-primary-500/15 text-brand-primary-500" },
-  priority: { icon: "text-orange-500", active: "" },
+  attachments: {
+    icon: "text-neutral-400 dark:text-neutral-500",
+    active: "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300",
+  },
+  tags: {
+    icon: "text-neutral-400 dark:text-neutral-500",
+    active: "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300",
+  },
+  collaborators: {
+    icon: "text-neutral-400 dark:text-neutral-500",
+    active: "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300",
+  },
+  date: {
+    icon: "text-neutral-400 dark:text-neutral-500",
+    active: "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300",
+  },
+  priority: {
+    icon: "text-neutral-400 dark:text-neutral-500",
+    active: "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300",
+  },
 } as const;
 
 function footerActionButtonClass(
   action: keyof typeof TASK_CARD_FOOTER_ACTION,
-  opts: { disabled?: boolean; active?: boolean; extra?: string }
+  opts: { disabled?: boolean; active?: boolean; extra?: string; overrideActive?: boolean }
 ): string {
   const palette = TASK_CARD_FOOTER_ACTION[action];
-  const useActiveStyle = Boolean(opts.active && palette.active);
+  const useActiveStyle = Boolean(opts.active && palette.active && !opts.overrideActive);
   return [
     "inline-flex items-center gap-0.5 rounded-md p-0.5 transition-colors",
     opts.disabled
       ? "cursor-not-allowed opacity-40"
       : "hover:bg-neutral-100 dark:hover:bg-neutral-800",
-    useActiveStyle ? palette.active : palette.icon,
+    useActiveStyle ? palette.active : opts.overrideActive ? "" : palette.icon,
     opts.extra ?? "",
   ]
     .filter(Boolean)
@@ -196,6 +211,7 @@ function NoteCard({
   stageId,
   onAddSubtask,
   isDragging,
+  isStageDone,
 }: {
   note: any;
   getTagMeta: (tag: string) => { label: string; color: string };
@@ -207,6 +223,7 @@ function NoteCard({
   stageId?: string | null;
   onAddSubtask?: (parentNoteId: string, stageId: string, parentTitle: string) => void;
   isDragging?: boolean;
+  isStageDone?: boolean;
 }) {
   const [activeModal, setActiveModal] = useState<TaskModalKind | null>(null);
   const [dateDraft, setDateDraft] = useState("");
@@ -245,6 +262,43 @@ function NoteCard({
 
   const hasTags = selectedTagIds.size > 0;
   const hasCollaborators = selectedCollaboratorIds.size > 0;
+
+  const firstTag = note.tags?.[0];
+  const tagColor = useMemo(() => {
+    if (!firstTag) return null;
+    return getTagMeta(firstTag).color;
+  }, [firstTag, getTagMeta]);
+
+  const dateColor = useMemo(() => {
+    if (!dueDate) return null;
+    if (isStageDone) {
+      return "text-emerald-500";
+    }
+
+    // Extract YYYY-MM-DD safely without timezone shifts shifting it back a day
+    let dueStr = "";
+    if (typeof dueDate === "string") {
+      dueStr = dueDate.slice(0, 10);
+    } else {
+      const d = new Date(dueDate);
+      dueStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    }
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+
+    if (dueStr < todayStr) {
+      return "text-red-500";
+    }
+    if (dueStr === todayStr || dueStr === tomorrowStr) {
+      return "text-orange-500";
+    }
+    return "text-emerald-500";
+  }, [dueDate, isStageDone]);
 
   const stopDrag = (event: React.SyntheticEvent) => event.stopPropagation();
 
@@ -401,7 +455,7 @@ function NoteCard({
             stopDrag(event);
             onOpenNote();
           }}
-          className={`hover:text-brand-primary-500 dark:hover:text-brand-primary-500 mb-1 w-full cursor-pointer text-left text-xs leading-snug text-neutral-800 transition-colors hover:underline dark:text-neutral-100 ${
+          className={`hover:text-brand-primary-500 dark:hover:text-brand-primary-500 mb-1 block w-full cursor-pointer truncate text-left text-[11px] leading-snug font-medium text-neutral-600 transition-colors hover:underline dark:text-neutral-300 ${
             (onAddSubtask && stageId) || (note.parent_id && canWrite) ? "pr-14" : ""
           }`}
         >
@@ -409,7 +463,7 @@ function NoteCard({
         </button>
 
         {contentSnippet ? (
-          <p className="mb-1.5 line-clamp-3 text-xs leading-snug text-neutral-500 dark:text-neutral-400">
+          <p className="mb-1.5 line-clamp-3 text-[10px] leading-snug text-neutral-400 dark:text-neutral-500">
             {contentSnippet}
           </p>
         ) : null}
@@ -439,6 +493,7 @@ function NoteCard({
                 disabled: !canWrite,
                 active: hasTags,
               })}
+              style={hasTags && tagColor ? { color: tagColor } : undefined}
             >
               <Tags className="h-2.5 w-2.5 shrink-0" />
             </button>
@@ -464,6 +519,8 @@ function NoteCard({
               className={footerActionButtonClass("date", {
                 disabled: !canWrite,
                 active: Boolean(dueDate),
+                overrideActive: Boolean(dueDate && dateColor),
+                extra: dueDate && dateColor ? dateColor : undefined,
               })}
             >
               <Calendar className="h-2.5 w-2.5 shrink-0" />
@@ -487,12 +544,7 @@ function NoteCard({
                 active: Boolean(activePriorityMeta),
               })}
               style={
-                activePriorityMeta?.color_hex
-                  ? {
-                      backgroundColor: `${activePriorityMeta.color_hex}22`,
-                      color: activePriorityMeta.color_hex || undefined,
-                    }
-                  : undefined
+                activePriorityMeta?.color_hex ? { color: activePriorityMeta.color_hex } : undefined
               }
             >
               <Flag className="h-2.5 w-2.5 shrink-0" />
@@ -695,6 +747,7 @@ function TaskBranch({
   activeNoteId,
   allNotes,
   depth,
+  isStageDone,
 }: {
   note: any;
   childrenMap: Record<string, any[]>;
@@ -709,6 +762,7 @@ function TaskBranch({
   activeNoteId?: string | null;
   allNotes: any[];
   depth: number;
+  isStageDone?: boolean;
 }) {
   const subs = childrenMap[note.id] ?? [];
   const canAcceptDrop =
@@ -735,6 +789,7 @@ function TaskBranch({
         stageId={stageId}
         onAddSubtask={onAddSubtask}
         canAcceptDrop={canAcceptDrop}
+        isStageDone={isStageDone}
       />
       {subs.map((sub) => (
         <TaskBranch
@@ -752,6 +807,7 @@ function TaskBranch({
           activeNoteId={activeNoteId}
           allNotes={allNotes}
           depth={depth + 1}
+          isStageDone={isStageDone}
         />
       ))}
     </div>
@@ -769,6 +825,7 @@ function DraggableNoteCard({
   stageId,
   onAddSubtask,
   canAcceptDrop,
+  isStageDone,
 }: {
   note: any;
   getTagMeta: (tag: string) => { label: string; color: string };
@@ -780,6 +837,7 @@ function DraggableNoteCard({
   stageId?: string | null;
   onAddSubtask?: (parentNoteId: string, stageId: string, parentTitle: string) => void;
   canAcceptDrop?: boolean;
+  isStageDone?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: note.id,
@@ -826,6 +884,7 @@ function DraggableNoteCard({
         taskPriorities={taskPriorities}
         stageId={stageId}
         onAddSubtask={onAddSubtask}
+        isStageDone={isStageDone}
       />
     </div>
   );
@@ -1066,6 +1125,7 @@ export default function ProjectBoardV2({
                     activeNoteId={activeNote?.id ? String(activeNote.id) : null}
                     allNotes={projectNotes}
                     depth={0}
+                    isStageDone={Boolean(stage.properties?.is_done)}
                   />
                 ))
               )}
@@ -1085,6 +1145,9 @@ export default function ProjectBoardV2({
               onOpenNote={() => {}}
               taskPriorities={taskPriorities}
               isDragging
+              isStageDone={Boolean(
+                stages.find((s) => s.id === activeNote.project_stage_id)?.properties?.is_done
+              )}
             />
           </div>
         ) : null}

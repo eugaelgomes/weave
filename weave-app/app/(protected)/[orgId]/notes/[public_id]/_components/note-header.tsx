@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Download, Loader2, Palette, Share2, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Palette, Share2, Trash2, X, Maximize2 } from "lucide-react";
 
 import { type Note } from "@/app/_contexts/notes-context";
 
@@ -16,6 +16,11 @@ interface NoteDetailHeaderProps {
   onToggleColorPicker: () => void;
   setShowColorPicker: (show: boolean) => void;
   showColorPicker: boolean;
+  isModal?: boolean;
+  onOpenFullPage?: () => void;
+  editingTitle?: string;
+  onTitleChange?: (title: string) => void;
+  canEditTitle?: boolean;
 }
 
 const COLOR_PRESETS = [
@@ -43,17 +48,45 @@ export function NoteDetailHeader({
   onToggleColorPicker,
   setShowColorPicker,
   showColorPicker,
+  isModal,
+  onOpenFullPage,
+  editingTitle,
+  onTitleChange,
+  canEditTitle = true,
 }: NoteDetailHeaderProps) {
   return (
     <div className="dark:border-surface-dark-border flex-shrink-0 border-b border-neutral-200 bg-white px-1.5 dark:bg-[#1d1d1b]">
       <div className="mx-auto flex w-full items-center justify-between">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 rounded-md px-1.5 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-          title="Go back to notes list"
-        >
-          <ArrowLeft size={16} />
-        </button>
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 pr-4">
+          {!isModal && (
+            <button
+              onClick={onBack}
+              className="flex flex-shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1.5 text-sm font-medium text-neutral-600 transition-all hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              title="Voltar"
+            >
+              <ArrowLeft size={16} />
+            </button>
+          )}
+
+          {editingTitle !== undefined && onTitleChange ? (
+            <input
+              type="text"
+              value={editingTitle}
+              onChange={(e) => onTitleChange(e.target.value)}
+              placeholder="Título da tarefa..."
+              readOnly={!canEditTitle}
+              className={`min-w-0 flex-1 bg-transparent text-sm font-semibold text-neutral-800 placeholder-neutral-300 transition-colors outline-none dark:text-neutral-100 dark:placeholder-neutral-600 ${
+                canEditTitle
+                  ? "focus:placeholder-neutral-400 dark:focus:placeholder-neutral-500"
+                  : "cursor-default"
+              }`}
+            />
+          ) : isModal ? (
+            <h2 className="truncate px-2 py-1.5 text-sm font-semibold text-neutral-800 dark:text-neutral-100">
+              Visualizar Tarefa
+            </h2>
+          ) : null}
+        </div>
 
         <div className="flex items-center gap-1.5">
           {isSaving ? (
@@ -181,6 +214,29 @@ export function NoteDetailHeader({
                 <Download size={15} />
               )}
             </button>
+
+            {isModal && onOpenFullPage && (
+              <button
+                onClick={onOpenFullPage}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                title="Abrir em página inteira"
+              >
+                <Maximize2 size={15} />
+              </button>
+            )}
+
+            {isModal && (
+              <>
+                <div className="mx-0.5 hidden h-4 w-px bg-neutral-200 sm:block dark:bg-neutral-800" />
+                <button
+                  onClick={onBack}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  title="Fechar"
+                >
+                  <X size={18} />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

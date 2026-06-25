@@ -48,6 +48,8 @@ interface TaskNoteModalHeaderProps {
   parentNoteId?: string;
   draftColor?: string;
   onDraftColorChange?: (color: string) => void;
+  editingTitle?: string;
+  onTitleChange?: (title: string) => void;
 }
 
 export function TaskNoteModalHeader({
@@ -68,6 +70,8 @@ export function TaskNoteModalHeader({
   parentNoteId,
   draftColor,
   onDraftColorChange,
+  editingTitle,
+  onTitleChange,
 }: TaskNoteModalHeaderProps) {
   const router = useRouter();
   const params = useParams();
@@ -86,19 +90,30 @@ export function TaskNoteModalHeader({
   return (
     <div className="dark:border-surface-dark-border flex-shrink-0 border-b border-neutral-200 bg-white px-4 py-3 dark:bg-[#1d1d1b]">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2
-            id="task-note-modal-title"
-            className="text-sm font-semibold text-neutral-800 dark:text-neutral-100"
-          >
-            {mode === "create"
-              ? parentNoteId
-                ? "Nova subtarefa"
-                : "Nova tarefa"
-              : mode === "edit"
-                ? "Editar Tarefa"
-                : "Visualizar Tarefa"}
-          </h2>
+        <div className="flex min-w-0 flex-1 items-center gap-3 pr-4">
+          {editingTitle !== undefined && onTitleChange ? (
+            <input
+              id="task-note-modal-title"
+              type="text"
+              value={editingTitle}
+              onChange={(e) => onTitleChange(e.target.value)}
+              placeholder={parentNoteId ? "Nova subtarefa..." : "Nova tarefa..."}
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-neutral-800 placeholder-neutral-300 transition-colors outline-none focus:placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-600 dark:focus:placeholder-neutral-500"
+            />
+          ) : (
+            <h2
+              id="task-note-modal-title"
+              className="truncate text-sm font-semibold text-neutral-800 dark:text-neutral-100"
+            >
+              {mode === "create"
+                ? parentNoteId
+                  ? "Nova subtarefa"
+                  : "Nova tarefa"
+                : mode === "edit"
+                  ? "Editar Tarefa"
+                  : "Visualizar Tarefa"}
+            </h2>
+          )}
 
           {isSaving && (
             <div className="flex items-center gap-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/10 px-2.5 py-1">

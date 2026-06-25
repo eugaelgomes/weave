@@ -51,64 +51,10 @@ export function TaskNoteModalContent({
   createBlocks = [],
   onCreateBlocksChange,
 }: TaskNoteModalContentProps) {
-  const titleRef = useRef<HTMLTextAreaElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (titleRef.current) {
-      titleRef.current.style.height = "auto";
-      titleRef.current.style.height = `${titleRef.current.scrollHeight}px`;
-    }
-  }, [editingTitle]);
-
-  useEffect(() => {
-    if (descriptionRef.current) {
-      descriptionRef.current.style.height = "auto";
-      descriptionRef.current.style.height = `${descriptionRef.current.scrollHeight}px`;
-    }
-  }, [editingDescription]);
-
   const showEditor = mode !== "create" && note;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-4 py-4">
-      <div className="mb-4">
-        <textarea
-          ref={titleRef}
-          value={editingTitle}
-          onChange={(e) => {
-            onTitleChange(e.target.value);
-            e.target.style.height = "auto";
-            e.target.style.height = `${e.target.scrollHeight}px`;
-          }}
-          placeholder="Título da tarefa..."
-          rows={1}
-          readOnly={!canEdit}
-          className={`w-full resize-none overflow-hidden bg-transparent text-lg font-bold text-neutral-900 placeholder-neutral-300 transition-colors outline-none dark:text-neutral-100 dark:placeholder-neutral-600 ${
-            canEdit
-              ? "focus:placeholder-neutral-400 dark:focus:placeholder-neutral-500"
-              : "cursor-default"
-          }`}
-        />
-        <textarea
-          ref={descriptionRef}
-          value={editingDescription}
-          onChange={(e) => {
-            onDescriptionChange(e.target.value);
-            e.target.style.height = "auto";
-            e.target.style.height = `${e.target.scrollHeight}px`;
-          }}
-          placeholder="Adicionar descrição..."
-          rows={1}
-          readOnly={!canEdit}
-          className={`w-full resize-none overflow-hidden bg-transparent text-xs text-neutral-600 placeholder-neutral-300 transition-colors outline-none dark:text-neutral-400 dark:placeholder-neutral-600 ${
-            canEdit
-              ? "focus:placeholder-neutral-400 dark:focus:placeholder-neutral-500"
-              : "cursor-default"
-          }`}
-        />
-      </div>
-
       {showEditor && (
         <div className="min-h-0 flex-1">
           <div className="prose prose-sm dark:prose-invert max-w-none">

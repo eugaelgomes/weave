@@ -29,90 +29,82 @@ const accentClasses: Record<
   }
 > = {
   amber: {
-    pill: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-600/50 dark:bg-amber-950/60 dark:text-amber-300",
-    pillActive:
-      "border-amber-400 bg-amber-100 text-amber-800 ring-1 ring-amber-300/50 dark:border-amber-500 dark:bg-amber-900/70 dark:text-amber-200",
-    icon: "text-amber-500 dark:text-amber-400",
-    iconActive: "text-amber-600 dark:text-amber-300",
-    dropdown: "border-amber-200 dark:border-amber-700/60",
-    itemHover: "hover:bg-amber-50 dark:hover:bg-amber-950/50",
-    itemActive: "bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200",
+    pill: "bg-neutral-50/50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-200",
+    pillActive: "bg-neutral-100 text-amber-600 dark:bg-neutral-800 dark:text-amber-400",
+    icon: "text-neutral-400 dark:text-neutral-500",
+    iconActive: "text-amber-600 dark:text-amber-400",
+    dropdown: "border-neutral-200 dark:border-neutral-800",
+    itemHover: "hover:bg-neutral-50 dark:hover:bg-neutral-800/60",
+    itemActive: "bg-neutral-100 text-amber-600 dark:bg-neutral-800 dark:text-amber-400",
   },
   orange: {
-    pill: "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-600/50 dark:bg-orange-950/60 dark:text-orange-300",
-    pillActive:
-      "border-orange-400 bg-orange-100 text-orange-800 ring-1 ring-orange-300/50 dark:border-orange-500 dark:bg-orange-900/70 dark:text-orange-200",
-    icon: "text-orange-500 dark:text-orange-400",
-    iconActive: "text-orange-600 dark:text-orange-300",
-    dropdown: "border-orange-200 dark:border-orange-700/60",
-    itemHover: "hover:bg-orange-50 dark:hover:bg-orange-950/50",
-    itemActive: "bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200",
+    pill: "bg-neutral-50/50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-200",
+    pillActive: "bg-neutral-100 text-orange-600 dark:bg-neutral-800 dark:text-orange-400",
+    icon: "text-neutral-400 dark:text-neutral-500",
+    iconActive: "text-orange-600 dark:text-orange-400",
+    dropdown: "border-neutral-200 dark:border-neutral-800",
+    itemHover: "hover:bg-neutral-50 dark:hover:bg-neutral-800/60",
+    itemActive: "bg-neutral-100 text-orange-600 dark:bg-neutral-800 dark:text-orange-400",
   },
   blue: {
-    pill: "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-600/50 dark:bg-blue-950/60 dark:text-blue-300",
-    pillActive:
-      "border-blue-400 bg-blue-100 text-blue-800 ring-1 ring-blue-300/50 dark:border-blue-500 dark:bg-blue-900/70 dark:text-blue-200",
-    icon: "text-blue-500 dark:text-blue-400",
-    iconActive: "text-blue-600 dark:text-blue-300",
-    dropdown: "border-blue-200 dark:border-blue-700/60",
-    itemHover: "hover:bg-blue-50 dark:hover:bg-blue-950/50",
-    itemActive: "bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200",
+    pill: "bg-neutral-50/50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-200",
+    pillActive: "bg-neutral-100 text-blue-600 dark:bg-neutral-800 dark:text-blue-400",
+    icon: "text-neutral-400 dark:text-neutral-500",
+    iconActive: "text-blue-600 dark:text-blue-400",
+    dropdown: "border-neutral-200 dark:border-neutral-800",
+    itemHover: "hover:bg-neutral-50 dark:hover:bg-neutral-800/60",
+    itemActive: "bg-neutral-100 text-blue-600 dark:bg-neutral-800 dark:text-blue-400",
   },
   rose: {
-    pill: "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-600/50 dark:bg-rose-950/60 dark:text-rose-300",
-    pillActive:
-      "border-rose-400 bg-rose-100 text-rose-800 ring-1 ring-rose-300/50 dark:border-rose-500 dark:bg-rose-900/70 dark:text-rose-200",
-    icon: "text-rose-500 dark:text-rose-400",
-    iconActive: "text-rose-600 dark:text-rose-300",
-    dropdown: "border-rose-200 dark:border-rose-700/60",
-    itemHover: "hover:bg-rose-50 dark:hover:bg-rose-950/50",
-    itemActive: "bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200",
+    pill: "bg-neutral-50/50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-200",
+    pillActive: "bg-neutral-100 text-rose-600 dark:bg-neutral-800 dark:text-rose-400",
+    icon: "text-neutral-400 dark:text-neutral-500",
+    iconActive: "text-rose-600 dark:text-rose-400",
+    dropdown: "border-neutral-200 dark:border-neutral-800",
+    itemHover: "hover:bg-neutral-50 dark:hover:bg-neutral-800/60",
+    itemActive: "bg-neutral-100 text-rose-600 dark:bg-neutral-800 dark:text-rose-400",
   },
   purple: {
-    pill: "border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-600/50 dark:bg-purple-950/60 dark:text-purple-300",
-    pillActive:
-      "border-purple-400 bg-purple-100 text-purple-800 ring-1 ring-purple-300/50 dark:border-purple-500 dark:bg-purple-900/70 dark:text-purple-200",
-    icon: "text-purple-500 dark:text-purple-400",
-    iconActive: "text-purple-600 dark:text-purple-300",
-    dropdown: "border-purple-200 dark:border-purple-700/60",
-    itemHover: "hover:bg-purple-50 dark:hover:bg-purple-950/50",
-    itemActive: "bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200",
+    pill: "bg-neutral-50/50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-200",
+    pillActive: "bg-neutral-100 text-purple-600 dark:bg-neutral-800 dark:text-purple-400",
+    icon: "text-neutral-400 dark:text-neutral-500",
+    iconActive: "text-purple-600 dark:text-purple-400",
+    dropdown: "border-neutral-200 dark:border-neutral-800",
+    itemHover: "hover:bg-neutral-50 dark:hover:bg-neutral-800/60",
+    itemActive: "bg-neutral-100 text-purple-600 dark:bg-neutral-800 dark:text-purple-400",
   },
   emerald: {
-    pill: "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-600/50 dark:bg-emerald-950/60 dark:text-emerald-300",
-    pillActive:
-      "border-emerald-400 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300/50 dark:border-emerald-500 dark:bg-emerald-900/70 dark:text-emerald-200",
-    icon: "text-emerald-500 dark:text-emerald-400",
-    iconActive: "text-emerald-600 dark:text-emerald-300",
-    dropdown: "border-emerald-200 dark:border-emerald-700/60",
-    itemHover: "hover:bg-emerald-50 dark:hover:bg-emerald-950/50",
-    itemActive: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200",
+    pill: "bg-neutral-50/50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-200",
+    pillActive: "bg-neutral-100 text-emerald-600 dark:bg-neutral-800 dark:text-emerald-400",
+    icon: "text-neutral-400 dark:text-neutral-500",
+    iconActive: "text-emerald-600 dark:text-emerald-400",
+    dropdown: "border-neutral-200 dark:border-neutral-800",
+    itemHover: "hover:bg-neutral-50 dark:hover:bg-neutral-800/60",
+    itemActive: "bg-neutral-100 text-emerald-600 dark:bg-neutral-800 dark:text-emerald-400",
   },
   sky: {
-    pill: "border-sky-300 bg-sky-50 text-sky-700 dark:border-sky-600/50 dark:bg-sky-950/60 dark:text-sky-300",
-    pillActive:
-      "border-sky-400 bg-sky-100 text-sky-800 ring-1 ring-sky-300/50 dark:border-sky-500 dark:bg-sky-900/70 dark:text-sky-200",
-    icon: "text-sky-500 dark:text-sky-400",
-    iconActive: "text-sky-600 dark:text-sky-300",
-    dropdown: "border-sky-200 dark:border-sky-700/60",
-    itemHover: "hover:bg-sky-50 dark:hover:bg-sky-950/50",
-    itemActive: "bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200",
+    pill: "bg-neutral-50/50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-200",
+    pillActive: "bg-neutral-100 text-sky-600 dark:bg-neutral-800 dark:text-sky-400",
+    icon: "text-neutral-400 dark:text-neutral-500",
+    iconActive: "text-sky-600 dark:text-sky-400",
+    dropdown: "border-neutral-200 dark:border-neutral-800",
+    itemHover: "hover:bg-neutral-50 dark:hover:bg-neutral-800/60",
+    itemActive: "bg-neutral-100 text-sky-600 dark:bg-neutral-800 dark:text-sky-400",
   },
   neutral: {
-    pill: "border-neutral-200 bg-neutral-50 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-400",
-    pillActive:
-      "border-brand-yellow bg-brand-yellow/20 text-brand-navy ring-1 ring-brand-yellow/40 dark:border-brand-yellow/70 dark:bg-brand-yellow/15 dark:text-brand-beige",
+    pill: "bg-neutral-50/50 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800/80 dark:hover:text-neutral-200",
+    pillActive: "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200",
     icon: "text-neutral-400 dark:text-neutral-500",
-    iconActive: "text-brand-navy dark:text-brand-yellow",
-    dropdown: "border-neutral-200 dark:border-neutral-700",
+    iconActive: "text-neutral-800 dark:text-neutral-200",
+    dropdown: "border-neutral-200 dark:border-neutral-800",
     itemHover: "hover:bg-neutral-50 dark:hover:bg-neutral-800/60",
-    itemActive: "bg-brand-yellow/20 text-brand-navy dark:bg-brand-yellow/15 dark:text-brand-beige",
+    itemActive: "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200",
   },
 };
 
 export type FilterSelectProps = {
-  value: string;
-  onChange: (value: string) => void;
+  value: string | string[];
+  onChange: (value: any) => void;
   options: FilterSelectOption[];
   placeholder: string;
   icon?: LucideIcon;
@@ -121,6 +113,7 @@ export type FilterSelectProps = {
   accent?: FilterAccent;
   title?: string;
   className?: string;
+  multiple?: boolean;
 };
 
 export function FilterSelect({
@@ -134,13 +127,23 @@ export function FilterSelect({
   accent = "neutral",
   title,
   className,
+  multiple = false,
 }: FilterSelectProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const isActive = value !== emptyValue;
+  const isArray = Array.isArray(value);
+  const isActive = isArray ? value.length > 0 : value !== emptyValue;
   const style = accentClasses[accent];
-  const selectedLabel = options.find((o) => o.value === value)?.label;
+
+  let selectedLabel = placeholder;
+  if (!isArray) {
+    selectedLabel = options.find((o) => o.value === value)?.label ?? placeholder;
+  } else if (value.length === 1) {
+    selectedLabel = options.find((o) => o.value === value[0])?.label ?? placeholder;
+  } else if (value.length > 1) {
+    selectedLabel = `${value.length} seleções`;
+  }
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -162,8 +165,28 @@ export function FilterSelect({
   }, [open]);
 
   const handleSelect = (val: string) => {
-    onChange(val);
-    setOpen(false);
+    if (multiple && isArray) {
+      if (val === emptyValue) {
+        onChange([]);
+      } else {
+        if (value.includes(val)) {
+          onChange(value.filter((v) => v !== val));
+        } else {
+          onChange([...value, val]);
+        }
+      }
+    } else {
+      onChange(val);
+      setOpen(false);
+    }
+  };
+
+  const isSelected = (val: string) => {
+    if (multiple && isArray) {
+      if (val === emptyValue) return value.length === 0;
+      return value.includes(val);
+    }
+    return value === val;
   };
 
   const handleClear = (e: React.MouseEvent) => {
@@ -182,7 +205,7 @@ export function FilterSelect({
         aria-expanded={open}
         aria-haspopup="listbox"
         className={cn(
-          "group flex items-center gap-1 rounded-full border px-2 py-px text-[10px] font-medium transition-all",
+          "group flex items-center gap-1 rounded-md border-0 px-2 py-0.5 text-[10px] font-medium transition-all",
           isActive ? style.pillActive : style.pill
         )}
       >
@@ -225,30 +248,30 @@ export function FilterSelect({
             <button
               type="button"
               role="option"
-              aria-selected={value === emptyValue}
+              aria-selected={isSelected(emptyValue)}
               onClick={() => handleSelect(emptyValue)}
               className={cn(
                 "flex w-full items-center gap-1.5 px-2 py-1 text-left text-[10px] transition-colors",
-                value === emptyValue ? style.itemActive : style.itemHover
+                isSelected(emptyValue) ? style.itemActive : style.itemHover
               )}
             >
-              {value === emptyValue && <Check className="h-2.5 w-2.5" />}
-              <span className={value !== emptyValue ? "pl-4" : ""}>{placeholder}</span>
+              {isSelected(emptyValue) && <Check className="h-2.5 w-2.5" />}
+              <span className={!isSelected(emptyValue) ? "pl-4" : ""}>{placeholder}</span>
             </button>
             {options.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 role="option"
-                aria-selected={value === opt.value}
+                aria-selected={isSelected(opt.value)}
                 onClick={() => handleSelect(opt.value)}
                 className={cn(
                   "flex w-full items-center gap-1.5 px-2 py-1 text-left text-[10px] transition-colors",
-                  value === opt.value ? style.itemActive : style.itemHover
+                  isSelected(opt.value) ? style.itemActive : style.itemHover
                 )}
               >
-                {value === opt.value && <Check className="h-2.5 w-2.5" />}
-                <span className={value !== opt.value ? "pl-4" : ""}>{opt.label}</span>
+                {isSelected(opt.value) && <Check className="h-2.5 w-2.5" />}
+                <span className={!isSelected(opt.value) ? "pl-4" : ""}>{opt.label}</span>
               </button>
             ))}
           </div>
@@ -279,7 +302,7 @@ export function FilterSearchInput({
   return (
     <div
       className={cn(
-        "group relative flex items-center rounded-full border transition-all",
+        "group relative flex items-center rounded-md border-0 transition-all",
         isActive ? style.pillActive : style.pill,
         className
       )}
@@ -319,13 +342,14 @@ export type Collaborator = {
 };
 
 export type FilterPeopleSelectProps = {
-  value: string | null;
-  onChange: (userId: string | null) => void;
+  value: string | string[] | null;
+  onChange: (userIds: any) => void;
   collaborators: Collaborator[];
   currentUserId?: string;
   placeholder?: string;
   onClear?: () => void;
   className?: string;
+  multiple?: boolean;
 };
 
 function getInitials(name?: string, username?: string): string {
@@ -345,13 +369,19 @@ export function FilterPeopleSelect({
   placeholder = "Pessoas",
   onClear,
   className,
+  multiple = false,
 }: FilterPeopleSelectProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const style = accentClasses.sky;
-  const selected = collaborators.find((c) => c.user_id === value);
-  const isActive = !!value;
+  const isArray = Array.isArray(value);
+  const isActive = isArray ? value.length > 0 : !!value;
+
+  const selectedCollaborators = isArray
+    ? collaborators.filter((c) => value.includes(c.user_id))
+    : collaborators.filter((c) => c.user_id === value);
+  const firstSelected = selectedCollaborators[0];
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -373,8 +403,28 @@ export function FilterPeopleSelect({
   }, [open]);
 
   const handleSelect = (userId: string | null) => {
-    onChange(userId);
-    setOpen(false);
+    if (multiple && isArray) {
+      if (userId === null) {
+        onChange([]);
+      } else {
+        if (value.includes(userId)) {
+          onChange(value.filter((v) => v !== userId));
+        } else {
+          onChange([...value, userId]);
+        }
+      }
+    } else {
+      onChange(userId);
+      setOpen(false);
+    }
+  };
+
+  const isSelected = (userId: string | null) => {
+    if (multiple && isArray) {
+      if (userId === null) return value.length === 0;
+      return value.includes(userId);
+    }
+    return value === userId;
   };
 
   const handleClear = (e: React.MouseEvent) => {
@@ -399,20 +449,26 @@ export function FilterPeopleSelect({
         aria-expanded={open}
         aria-haspopup="listbox"
         className={cn(
-          "group flex items-center gap-1 rounded-full border px-1.5 py-px text-[10px] font-medium transition-all",
+          "group flex items-center gap-1 rounded-md border-0 px-1.5 py-0.5 text-[10px] font-medium transition-all",
           isActive ? style.pillActive : style.pill
         )}
       >
-        {selected ? (
-          selected.avatar_url ? (
-            <img
-              src={selected.avatar_url}
-              alt={selected.name || selected.username}
-              className="h-3.5 w-3.5 rounded-full object-cover"
-            />
+        {isActive ? (
+          (!isArray || value.length === 1) && firstSelected ? (
+            firstSelected.avatar_url ? (
+              <img
+                src={firstSelected.avatar_url}
+                alt={firstSelected.name || firstSelected.username}
+                className="h-3.5 w-3.5 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sky-200 text-[7px] font-bold text-sky-800 dark:bg-sky-800 dark:text-sky-200">
+                {getInitials(firstSelected.name, firstSelected.username)}
+              </span>
+            )
           ) : (
-            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sky-200 text-[7px] font-bold text-sky-800 dark:bg-sky-800 dark:text-sky-200">
-              {getInitials(selected.name, selected.username)}
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sky-200 text-[8px] font-bold text-sky-800 dark:bg-sky-800 dark:text-sky-200">
+              +{isArray ? value.length : 1}
             </span>
           )
         ) : (
@@ -433,10 +489,12 @@ export function FilterPeopleSelect({
           </span>
         )}
         <span className="max-w-[4rem] truncate">
-          {selected
-            ? selected.user_id === currentUserId
-              ? "Eu"
-              : selected.name || selected.username
+          {isActive
+            ? (!isArray || value.length === 1) && firstSelected
+              ? firstSelected.user_id === currentUserId
+                ? "Eu"
+                : firstSelected.name || firstSelected.username
+              : `${isArray ? value.length : 1} pessoas`
             : placeholder}
         </span>
 
@@ -471,34 +529,34 @@ export function FilterPeopleSelect({
             <button
               type="button"
               role="option"
-              aria-selected={!value}
+              aria-selected={isSelected(null)}
               onClick={() => handleSelect(null)}
               className={cn(
                 "flex w-full items-center gap-2 px-2 py-1.5 text-left text-[10px] transition-colors",
-                !value ? style.itemActive : style.itemHover
+                isSelected(null) ? style.itemActive : style.itemHover
               )}
             >
-              {!value && <Check className="h-2.5 w-2.5 shrink-0" />}
-              <span className={value ? "pl-4" : ""}>{placeholder}</span>
+              {isSelected(null) && <Check className="h-2.5 w-2.5 shrink-0" />}
+              <span className={!isSelected(null) ? "pl-4" : ""}>{placeholder}</span>
             </button>
 
             {sortedCollaborators.map((collab) => {
               const isMe = collab.user_id === currentUserId;
-              const isSelected = value === collab.user_id;
+              const isItemActive = isSelected(collab.user_id);
               return (
                 <button
                   key={collab.user_id}
                   type="button"
                   role="option"
-                  aria-selected={isSelected}
+                  aria-selected={isItemActive}
                   onClick={() => handleSelect(collab.user_id)}
                   className={cn(
                     "flex w-full items-center gap-2 px-2 py-1.5 text-left text-[10px] transition-colors",
-                    isSelected ? style.itemActive : style.itemHover
+                    isItemActive ? style.itemActive : style.itemHover
                   )}
                 >
-                  {isSelected && <Check className="h-2.5 w-2.5 shrink-0" />}
-                  <div className={cn("flex items-center gap-1.5", !isSelected && "pl-4")}>
+                  {isItemActive && <Check className="h-2.5 w-2.5 shrink-0" />}
+                  <div className={cn("flex items-center gap-1.5", !isItemActive && "pl-4")}>
                     {collab.avatar_url ? (
                       <img
                         src={collab.avatar_url}

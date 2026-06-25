@@ -18,6 +18,7 @@ import {
 } from "@/app/_contexts/projects-context";
 import { NoteCommentsProvider, useNoteComments } from "@/app/_contexts/note-comments-context";
 import { NoteCommentsSidebar } from "@/app/(protected)/[orgId]/notes/_components/note-comments-sidebar";
+import { NoteCommentsPanelProvider } from "@/app/_contexts/note-comments-panel-context";
 import {
   useTaskNoteModal,
   type TaskNoteModalMode,
@@ -25,6 +26,7 @@ import {
 import { TaskNoteModalHeader } from "@/app/(protected)/_components/task-note-modal/task-note-modal-header";
 import { TaskNoteModalMeta } from "@/app/(protected)/_components/task-note-modal/task-note-modal-meta";
 import { TaskNoteModalContent } from "@/app/(protected)/_components/task-note-modal/task-note-modal-content";
+import { SharedTaskDetail } from "@/app/(protected)/_components/shared-task-detail/shared-task-detail";
 import {
   emptyCreateTaskDraft,
   type CreateTaskDraft,
@@ -617,10 +619,21 @@ function TaskNoteModalInner() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="task-note-modal-title"
-        className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-[90vh] sm:max-h-[900px] sm:w-full sm:max-w-4xl sm:rounded-xl dark:bg-[#1d1d1b]"
+        className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-[90vh] sm:max-h-[900px] sm:w-full sm:max-w-5xl sm:rounded-xl dark:bg-[#1d1d1b]"
         onPointerDown={(e) => e.stopPropagation()}
       >
-        {loading ? (
+        {mode === "edit" && noteId ? (
+          <div className="flex min-h-0 flex-1 overflow-hidden">
+            <NoteCommentsPanelProvider>
+              <SharedTaskDetail
+                taskId={noteId}
+                orgId={user?.org_id || ""}
+                isModal={true}
+                onClose={closeModal}
+              />
+            </NoteCommentsPanelProvider>
+          </div>
+        ) : loading ? (
           <div className="flex flex-1 items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
           </div>
@@ -644,6 +657,8 @@ function TaskNoteModalInner() {
               parentNoteId={parentNoteId}
               draftColor={createDraft.color}
               onDraftColorChange={(color) => patchCreateDraft({ color })}
+              editingTitle={editingTitle}
+              onTitleChange={handleTitleChange}
             />
 
             <div className="flex min-h-0 flex-1 overflow-hidden">
