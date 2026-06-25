@@ -41,7 +41,8 @@ class ChatFunctionsService {
     userId,
     functionCall,
     organizationId = null,
-    lang = "pt"
+    lang = "pt",
+    files = []
   ) {
     const t = getI18n(lang);
     const name = String(functionCall?.name || "");
@@ -71,6 +72,7 @@ class ChatFunctionsService {
       lang,
       t,
       name,
+      files,
     });
   }
 
@@ -89,7 +91,8 @@ class ChatFunctionsService {
     functionCalls = [],
     organizationId = null,
     lang = "pt",
-    onChunk = null
+    onChunk = null,
+    files = []
   ) {
     const results = [];
     for (const functionCall of functionCalls) {
@@ -105,7 +108,8 @@ class ChatFunctionsService {
           userId,
           functionCall,
           organizationId,
-          lang
+          lang,
+          files
         );
         results.push(execution);
         if (onChunk) {

@@ -121,23 +121,17 @@ const FUNCTION_SCHEMAS = Object.freeze({
           description:
             "Fallback plain text content. Avoid using this; prefer 'blocks' for structured formatting.",
         },
+        attachChatFiles: {
+          description:
+            "Array of file names from the files the user uploaded in the chat context that you wish to attach to this note.",
+          items: { type: "string" },
+          type: "array",
+        },
         dueDate: {
           description: "ISO datetime string.",
           type: "string",
         },
-        files: {
-          description:
-            "Array of file references. Each object needs 'name' and 'url'.",
-          items: {
-            properties: {
-              name: { type: "string" },
-              url: { type: "string" },
-            },
-            required: ["name", "url"],
-            type: "object",
-          },
-          type: "array",
-        },
+
         priorityId: { type: "string" },
         projectId: { type: "string" },
         relations: {

@@ -9,6 +9,7 @@
  * - `../utils/markdown-to-blocks.util`: To convert markdown fallback text into TipTap blocks.
  */
 const notesRepository = require("@/modules/notes/notes.repository");
+const spacesService = require("@/services/storage");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
 const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
@@ -37,9 +38,9 @@ class CreateNoteHandler {
    * @param {object} context.t - Translation dictionary.
    * @param {string} context.name - Name of the tool being executed.
    * @returns {Promise<{name: string, result: object, success: boolean}>} The execution result payload.
-   * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string } context
+   * @param { userId: string, args: Record<string, unknown>, organizationId: string|null, lang: string, t: object, name: string, files: any[] } context
    */
-  async execute({ userId, args, organizationId, lang, t, name }) {
+  async execute({ userId, args, organizationId, lang, t, name, files }) {
     if (args.projectId) {
       await chatAccessUtil.assertProjectMutationAccess(
         userId,
@@ -105,10 +106,51 @@ class CreateNoteHandler {
     const propertiesUpdate = {};
     if (Array.isArray(args.urls) && args.urls.length > 0)
       propertiesUpdate.urls = args.urls;
-    if (Array.isArray(args.files) && args.files.length > 0)
-      propertiesUpdate.files = args.files;
+
     if (Array.isArray(args.relations) && args.relations.length > 0)
       propertiesUpdate.relations = args.relations;
+
+    if (
+      Array.isArray(args.attachChatFiles) &&
+      args.attachChatFiles.length > 0 &&
+      Array.isArray(files)
+    ) {
+      const filesToUpload = files.filter((f) => {
+        const fName = f.originalname || f.name;
+        return args.attachChatFiles.includes(fName);
+      });
+
+      if (filesToUpload.length > 0) {
+        const newFiles = await Promise.all(
+          filesToUpload.map(async (file) => {
+            const mimeType =
+              file.mimetype || file.mimeType || "application/octet-stream";
+            const originalName = file.originalname || file.name;
+            const buffer = Buffer.isBuffer(file.buffer)
+              ? file.buffer
+              : Buffer.from(file.buffer || "", "base64"); // if it came as base64 but chat controller uses multer so it's buffer
+              
+            const result = await spacesService.uploadNoteFile(
+              buffer,
+              mimeType,
+              noteId,
+              userId,
+              originalName
+            );
+            return {
+              id: result.fileName,
+              path: result.key || result.path || "",
+              name: originalName,
+              type: mimeType,
+            };
+          })
+        );
+        propertiesUpdate.files = [
+          ...(propertiesUpdate.files || []),
+          ...newFiles,
+        ];
+      }
+    }
 
     if (Object.keys(propertiesUpdate).length > 0) {
       updateData.properties = propertiesUpdate;
