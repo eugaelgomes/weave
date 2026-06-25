@@ -137,7 +137,18 @@ class ProactiveQueueProcessor {
     let finalPayload;
 
     try {
-      const initialResult = await this.runPrimaryPass(job);
+      const { createInitialState } = require("./proactive-agents/proactive.state");
+      const { proactiveGraph } = require("./proactive-agents/proactive.graph");
+
+      const initialState = createInitialState(job);
+      const finalState = await proactiveGraph.run(initialState, { maxIterations: 10 });
+
+      const initialResult = {
+        content: finalState.finalOutput || finalState.analysisResult || "No output generated.",
+        providerUsed: finalState.providerUsed || null,
+        raw: finalState,
+      };
+
       const safetyCheck = await this.runSafetyRecheck(job, initialResult);
       const safePolicyResult = this.applySafetyPolicy(
         initialResult,
