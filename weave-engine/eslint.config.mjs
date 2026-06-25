@@ -1,5 +1,6 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
+import pluginN from "eslint-plugin-n";
 
 export default [
   {
@@ -8,6 +9,9 @@ export default [
   {
     files: ["**/*.{js,cjs}"],
     ...pluginJs.configs.recommended,
+    plugins: {
+      n: pluginN,
+    },
     languageOptions: {
       globals: {
         ...globals.node,
@@ -30,6 +34,11 @@ export default [
       "prefer-const": "warn",
 
       "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
+
+      // Node/CommonJS Import Checks
+      "n/no-missing-require": "error",
+      "n/no-extraneous-require": "error",
+      "n/no-unpublished-require": "off",
     },
   },
 ];
