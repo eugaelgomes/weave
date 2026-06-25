@@ -741,10 +741,10 @@ function TaskNoteModalCommentsPanel({ note, onClose }: { note: Note; onClose: ()
   const embeddableFiles: NoteCommentsEmbeddableFile[] = React.useMemo(() => {
     const files = note.properties?.files || [];
     return files.map((f) => ({
-      id: f.id,
-      name: f.name,
-      path: f.path,
-      type: f.type,
+      id: f.id as string,
+      name: f.name as string,
+      path: f.path as string,
+      type: f.type as string,
     }));
   }, [note.properties?.files]);
 
