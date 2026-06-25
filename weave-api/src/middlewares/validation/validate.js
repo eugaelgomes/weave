@@ -9,7 +9,8 @@ const { AppError } = require("@/errors/app-error");
  * @returns {{ field: string; message: string }[]}
  */
 function formatZodErrors(zodError) {
-  return zodError.errors.map((issue) => ({
+  const issues = zodError.issues || zodError.errors || [];
+  return issues.map((issue) => ({
     field: issue.path.join(".") || "root",
     message: issue.message,
   }));

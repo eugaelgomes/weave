@@ -8,7 +8,7 @@ export const ApiTokenSchema = z
     organization_id: z.string().nullable().optional(),
     scopes: z.array(z.string()),
     expires_at: z.string().nullable(),
-    revoked_at: z.string().nullable(),
+    revoked_at: z.string().nullable().optional(),
     created_at: z.string(),
     updated_at: z.string().optional(),
     token: z.string().optional(),

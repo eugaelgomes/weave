@@ -57,6 +57,10 @@ class SigninController extends AuthBaseController {
         return next(AppError.unauthorized("Invalid credentials."));
       }
 
+      if (req.body.verify_only) {
+        return res.status(200).json({ status: "OK", message: "Credentials verified." });
+      }
+
       const organization = this._normalizeOrganization(user.organization);
       const defaultArea = this._normalizeDefaultArea(user.default_area);
 

@@ -13,6 +13,7 @@ const signinSchema = z
       .string({ required_error: "Password is required." })
       .min(1, "Password is required.")
       .max(255, "Invalid password length."),
+    verify_only: z.boolean().optional(),
   })
   .strict("Invalid signin payload structure.");
 

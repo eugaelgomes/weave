@@ -66,10 +66,10 @@ class CreateApiTokensController {
           organizationId
         );
 
-        if (role !== ORG_ROLES.SUPER_ADMIN) {
+        if (role !== ORG_ROLES.SUPER_ADMIN && role !== ORG_ROLES.ADMIN) {
           return res.status(403).json({
             error:
-              "Only super administrators can create API tokens with organization-level permissions.",
+              "Only administrators can create API tokens with organization-level permissions.",
           });
         }
       }
