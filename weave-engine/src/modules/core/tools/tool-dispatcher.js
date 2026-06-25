@@ -64,7 +64,11 @@ const {
   zodSchemas: orgAreasZodSchemas,
 } = require("./schemas/org-areas.schema");
 
-const { getNoteDetails } = require("./actions/note.action");
+const {
+  getNoteDetails,
+  readNoteContent,
+  listMyNotes,
+} = require("./actions/note.action");
 const {
   schemas: noteSchemas,
   zodSchemas: noteZodSchemas,
@@ -98,6 +102,8 @@ const INTERNAL_TOOLS = {
   get_org_area: getOrgArea,
   // Note header
   get_note_details: getNoteDetails,
+  read_note_content: readNoteContent,
+  list_my_notes: listMyNotes,
   // Note comments
   list_note_comments: listNoteComments,
   create_note_comment: createNoteComment,
@@ -189,6 +195,8 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
       "get_org_area",
       // Note
       "get_note_details",
+      "read_note_content",
+      "list_my_notes",
       // Note comments
       "list_note_comments",
       "create_note_comment",

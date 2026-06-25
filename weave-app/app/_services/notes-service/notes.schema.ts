@@ -33,11 +33,11 @@ export const NotePropertiesSchema = z.object({
   files: z
     .array(
       z.object({
-        id: z.string(),
-        path: z.string(),
-        name: z.string(),
-        type: z.string(),
-      })
+        id: z.string().optional(),
+        path: z.string().optional(),
+        name: z.string().optional(),
+        type: z.string().optional(),
+      }).passthrough()
     )
     .optional(),
   banner: z

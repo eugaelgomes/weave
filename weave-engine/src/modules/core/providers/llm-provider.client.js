@@ -15,7 +15,7 @@ const {
   normalizeModelName,
   resolveDefaultModelName,
 } = require("../../../services/llm.client");
-const pdfParse = require("pdf-parse");
+const { PDFParse } = require("pdf-parse");
 const { z } = require("zod");
 
 const ProviderResponseSchema = z
@@ -232,7 +232,8 @@ async function callGenericApi(
     if (file.mimeType === "application/pdf") {
       try {
         const pdfBuffer = Buffer.from(file.base64Data, "base64");
-        const pdfData = await pdfParse(pdfBuffer);
+        const parser = new PDFParse({ data: pdfBuffer });
+        const pdfData = await parser.getText();
         const textContent = pdfData.text || "";
         userContent.push({
           text: `\n\n--- FILE ATTACHED: ${file.name} ---\n${textContent}\n--- END OF FILE ---`,

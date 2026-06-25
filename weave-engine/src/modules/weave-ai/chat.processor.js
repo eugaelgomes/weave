@@ -503,7 +503,8 @@ ${
     ? `
 [Note Blocks Contract]
 - Allowed block types: ${Array.isArray(noteDocumentContract.allowedBlockTypes) ? noteDocumentContract.allowedBlockTypes.join(", ") : "unknown"}
-- IMPORTANT: Use the 'blocks' parameter in create_note/update_note_content tools.
+- IMPORTANT: To read exact task blocks, use the read_note_content tool.
+- IMPORTANT: Use the 'blocks' parameter in create_note/update_note_content tools when editing.
 - Each block: { type, properties: { text, attrs? } }
 - DO NOT use raw markdown in content strings. Structure content as blocks.
 - Never return empty. Must use structured function call if db action needed.`
