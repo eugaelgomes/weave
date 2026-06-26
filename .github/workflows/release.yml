@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Nome da tag (ex: v1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -20,6 +25,7 @@ jobs:
       - name: Generate Release Notes and Create Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
           generate_release_notes: true
           draft: false
           prerelease: false
