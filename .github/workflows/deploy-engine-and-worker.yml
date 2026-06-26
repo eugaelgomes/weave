@@ -21,7 +21,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── Validation (parallel) ─────────────────────────────────────────
   validate-engine:
     name: Validate engine
     runs-on: ubuntu-latest
@@ -108,7 +107,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── Deploy both services ──────────────────────────────────────────
   deploy:
     name: Deploy engine & worker
     runs-on: ubuntu-latest
