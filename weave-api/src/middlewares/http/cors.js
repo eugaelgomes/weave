@@ -61,7 +61,7 @@ function makeCorsOptions() {
       if (ok) {
         return cb(null, true);
       }
-      return cb(new Error("Origin not allowed by CORS."));
+      return cb(null, false);
     },
   };
 }
