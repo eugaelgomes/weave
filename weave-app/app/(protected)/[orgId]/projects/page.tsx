@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
-import { fetchProjectReasonings } from "@/app/_services/projects-service/reasonings-service";
+import { fetchProjectReasonings } from "@/app/_services/engine-service/reasonings-service";
 import { track } from "@vercel/analytics";
 import { AlertTriangle, BrainCircuit, FileWarning, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";

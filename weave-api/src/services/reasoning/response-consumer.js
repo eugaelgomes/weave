@@ -1,5 +1,5 @@
 const redis = require("@/services/queue/consumer-connection");
-const reasoningsRepository = require("@/modules/projects/repositories/reasonings.repository");
+const reasoningsRepository = require("@/modules/engine/repositories/reasonings.repository");
 const {
   getAiReportDeliveryQueueRedisKey,
   getEngineProactiveResponseQueueRedisKey,

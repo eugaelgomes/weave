@@ -23,6 +23,7 @@ const tagsRoutes = require("@/modules/tags/tags.routes");
 const taskPrioritiesRoutes = require("@/modules/task-priorities/task-priorities.routes");
 const weaveAiRoutes = require("@/modules/weave-ai/weave-ai.routes");
 const slackRoutes = require("@/modules/slack/slack.routes");
+const engineRoutes = require("@/modules/engine/engine.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -146,6 +147,7 @@ const routeRegistry = [
   { basePath: "/webhooks", handler: webhooksRoutes },
   { basePath: "/weave-ai", handler: weaveAiRoutes },
   { basePath: "/slack", handler: slackRoutes },
+  { basePath: "/engine", handler: engineRoutes },
 ];
 
 /**

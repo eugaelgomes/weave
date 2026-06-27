@@ -2,7 +2,7 @@
 
 import React from "react";
 import { X } from "lucide-react";
-import type { ReasoningContent } from "@/app/_services/projects-service/reasonings.schema";
+import type { ReasoningContent } from "@/app/_services/engine-service/reasonings.schema";
 import type { TranslationKeys } from "@/app/_i18n/locales/pt-BR";
 import {
   engineModalOverlayClass,

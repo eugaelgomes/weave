@@ -7,12 +7,12 @@ import type {
   ReasoningActionItem,
   ReasoningContent,
   ReasoningLean,
-} from "@/app/_services/projects-service/reasonings.schema";
+} from "@/app/_services/engine-service/reasonings.schema";
 import {
   fetchProjectReasonings,
   fetchReasoningActionItems,
   fetchReasoningById,
-} from "@/app/_services/projects-service/reasonings-service";
+} from "@/app/_services/engine-service/reasonings-service";
 
 export type HomeReasoningItem = ReasoningLean & {
   projectId: string;

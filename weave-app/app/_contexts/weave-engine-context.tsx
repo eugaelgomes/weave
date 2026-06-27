@@ -15,7 +15,7 @@ import type {
   ReasoningActionItem,
   ReasoningContent,
   ReasoningLean,
-} from "@/app/_services/projects-service/reasonings.schema";
+} from "@/app/_services/engine-service/reasonings.schema";
 import {
   createReasoning,
   fetchProjectReasonings,
@@ -24,8 +24,8 @@ import {
   triggerReasoning,
   updateReasoningActionItem,
   updateReasoningInteraction,
-} from "@/app/_services/projects-service/reasonings-service";
-import { fetchActiveSprint } from "@/app/_services/projects-service/projects-service";
+} from "@/app/_services/engine-service/reasonings-service";
+import { fetchActiveSprint } from "@/app/_services/engine-service/engine-service";
 
 export type WeaveEngineFeedItem = ReasoningLean & {
   projectId: string;

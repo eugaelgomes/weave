@@ -24,10 +24,6 @@ const {
   validateGetProjectStages,
   validateGetProjectNotes,
   validateGetProjectCollaborators,
-  validateGetProjectSprints,
-  validateGetProjectReasonings,
-  validateProjectIdParam,
-  validateReasoningParams,
   validateGetMyViewPref,
   validateSetMyViewPref,
 } = require("@/modules/projects/projects.validators");
@@ -203,98 +199,6 @@ router.patch(
   requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
   noteUpdateUpload.fields([{ name: "files", maxCount: 10 }]),
   ProjectsUpdateController.patchTaskInProject.bind(ProjectsUpdateController)
-);
-
-router.get(
-  "/:id/ai-report-config",
-  highTrafficLimiter,
-  validateProjectIdParam,
-  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
-  ProjectsReadController.getAiReportConfig.bind(ProjectsReadController)
-);
-router.put(
-  "/:id/ai-report-config",
-  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
-  ProjectsUpdateController.updateAiReportConfig.bind(ProjectsUpdateController)
-);
-
-router.get(
-  "/:id/sprints/active",
-  highTrafficLimiter,
-  validateProjectIdParam,
-  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
-  ProjectsReadController.getActiveSprint.bind(ProjectsReadController)
-);
-
-router.get(
-  "/:id/sprints",
-  highTrafficLimiter,
-  validateGetProjectSprints,
-  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
-  ProjectsReadController.getProjectSprints.bind(ProjectsReadController)
-);
-
-router.post(
-  "/:id/sprints",
-  standardTrafficLimiter,
-  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
-  ProjectsUpdateController.createSprint.bind(ProjectsUpdateController)
-);
-router.patch(
-  "/:id/sprints/:sprintId/complete",
-  standardTrafficLimiter,
-  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
-  ProjectsUpdateController.completeSprint.bind(ProjectsUpdateController)
-);
-
-router.get(
-  "/:id/reasonings",
-  highTrafficLimiter,
-  validateGetProjectReasonings,
-  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
-  ProjectsReadController.getReasonings.bind(ProjectsReadController)
-);
-router.get(
-  "/:id/reasonings/:reasoningId",
-  highTrafficLimiter,
-  validateReasoningParams,
-  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
-  ProjectsReadController.getReasoningById.bind(ProjectsReadController)
-);
-router.get(
-  "/:id/reasonings/:reasoningId/action-items",
-  highTrafficLimiter,
-  validateReasoningParams,
-  requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
-  ProjectsReadController.getReasoningActionItems.bind(ProjectsReadController)
-);
-router.post(
-  "/:id/reasonings/trigger",
-  standardTrafficLimiter,
-  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
-  ProjectsUpdateController.triggerReasoningGeneration.bind(
-    ProjectsUpdateController
-  )
-);
-router.post(
-  "/:id/reasonings",
-  standardTrafficLimiter,
-  requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
-  ProjectsUpdateController.createReasoning.bind(ProjectsUpdateController)
-);
-router.patch(
-  "/:id/reasonings/:reasoningId/interaction",
-  standardTrafficLimiter,
-  ProjectsUpdateController.updateReasoningInteraction.bind(
-    ProjectsUpdateController
-  )
-);
-router.patch(
-  "/:id/reasonings/:reasoningId/action-items/:itemId",
-  standardTrafficLimiter,
-  ProjectsUpdateController.updateReasoningActionItem.bind(
-    ProjectsUpdateController
-  )
 );
 
 module.exports = router;

@@ -113,7 +113,6 @@ export const API_ENDPOINTS = {
   PROJECTS_STAGES: (projectId: string) => `/projects/${projectId}/stages`,
   PROJECTS_STAGE_BY_ID: (projectId: string, stageId: string) =>
     `/projects/${projectId}/stages/${stageId}`,
-  PROJECTS_AI_REPORT_CONFIG: (projectId: string) => `/projects/${projectId}/ai-report-config`,
   PROJECTS_COLLABORATORS: (projectId: string) => `/projects/${projectId}/collaborators`,
   PROJECTS_NOTES: (projectId: string) => `/projects/${projectId}/notes`,
   PROJECTS_NOTE_STAGE: (projectId: string, noteId: string) =>
@@ -130,22 +129,25 @@ export const API_ENDPOINTS = {
   ORGANIZATIONS_TASK_PRIORITIES: (orgId: string) => `/organizations/${orgId}/task-priorities`,
 
   // Sprints
-  PROJECTS_SPRINTS: (projectId: string) => `/projects/${projectId}/sprints`,
-  PROJECTS_SPRINT_ACTIVE: (projectId: string) => `/projects/${projectId}/sprints/active`,
-  PROJECTS_SPRINT_COMPLETE: (projectId: string, sprintId: string) =>
-    `/projects/${projectId}/sprints/${sprintId}/complete`,
+  ENGINE_SPRINTS: (projectId: string) => `/engine/${projectId}/sprints`,
+  ENGINE_SPRINT_ACTIVE: (projectId: string) => `/engine/${projectId}/sprints/active`,
+  ENGINE_SPRINT_COMPLETE: (projectId: string, sprintId: string) =>
+    `/engine/${projectId}/sprints/${sprintId}/complete`,
 
   // Reasonings
-  PROJECTS_REASONINGS: (projectId: string) => `/projects/${projectId}/reasonings`,
-  PROJECTS_REASONINGS_TRIGGER: (projectId: string) => `/projects/${projectId}/reasonings/trigger`,
-  PROJECTS_REASONING_BY_ID: (projectId: string, reasoningId: string) =>
-    `/projects/${projectId}/reasonings/${reasoningId}`,
-  PROJECTS_REASONING_ACTION_ITEMS: (projectId: string, reasoningId: string) =>
-    `/projects/${projectId}/reasonings/${reasoningId}/action-items`,
-  PROJECTS_REASONING_INTERACTION: (projectId: string, reasoningId: string) =>
-    `/projects/${projectId}/reasonings/${reasoningId}/interaction`,
-  PROJECTS_REASONING_ACTION_ITEM: (projectId: string, reasoningId: string, itemId: string) =>
-    `/projects/${projectId}/reasonings/${reasoningId}/action-items/${itemId}`,
+  ENGINE_REASONINGS: (projectId: string) => `/engine/${projectId}/reasonings`,
+  ENGINE_REASONINGS_TRIGGER: (projectId: string) => `/engine/${projectId}/reasonings/trigger`,
+  ENGINE_REASONING_BY_ID: (projectId: string, reasoningId: string) =>
+    `/engine/${projectId}/reasonings/${reasoningId}`,
+  ENGINE_REASONING_ACTION_ITEMS: (projectId: string, reasoningId: string) =>
+    `/engine/${projectId}/reasonings/${reasoningId}/action-items`,
+  ENGINE_REASONING_INTERACTION: (projectId: string, reasoningId: string) =>
+    `/engine/${projectId}/reasonings/${reasoningId}/interaction`,
+  ENGINE_REASONING_ACTION_ITEM: (projectId: string, reasoningId: string, itemId: string) =>
+    `/engine/${projectId}/reasonings/${reasoningId}/action-items/${itemId}`,
+
+  // AI Report Config
+  ENGINE_AI_REPORT_CONFIG: (projectId: string) => `/engine/${projectId}/ai-report-config`,
 
   // Backup
   BACKUP_REQUEST: "/backup/request",

@@ -48,8 +48,6 @@ const PROJECT_MEMBER_ROLES = [
 const NOTES_STATUSES = ["VISIBLE", "SECURE", "ARCHIVED"];
 const NOTE_SORT_FIELDS = ["updated_at", "created_at", "due_date", "title"];
 const STAGE_SORT_FIELDS = ["position", "name", "created_at"];
-const SPRINT_SORT_FIELDS = ["start_date", "end_date", "sprint_number"];
-const REASONING_SORT_FIELDS = ["created_at", "updated_at"];
 
 const INCLUDE_PROJECT_LIST = ["collaborators", "notes", "subprojects"];
 
@@ -321,121 +319,7 @@ const validateGetProjectCollaborators = [
   },
 ];
 
-/**
- * Legacy: no `page` → cap limit at 50 (previous behavior). With `page` → offset pagination.
- *
- * @param {import('express').Request} req
- */
-function attachParsedSprints(req) {
-  const q = req.query;
-  const hasPaging =
-    q.page !== undefined && q.page !== null && String(q.page).trim() !== "";
 
-  let pagination;
-  if (hasPaging) {
-    pagination = parsePagination(q.page, q.limit);
-  } else {
-    const lim = Math.min(parseInt(String(q.limit ?? 20), 10) || 20, 50);
-    pagination = { page: 1, limit: lim, offset: 0 };
-  }
-
-  const sort = parseSort(q.sort, SPRINT_SORT_FIELDS, {
-    field: "sprint_number",
-    order: "desc",
-  });
-
-  const statusCsv = parseCsvStrings(q.status || "", { maxItems: 10 }).map((s) =>
-    s.toLowerCase()
-  );
-  const allowedSprint = ["active", "completed", "planned", "cancelled"];
-  const statusFilter = statusCsv.filter((s) => allowedSprint.includes(s));
-
-  req.parsedQuery = {
-    pagination,
-    sort,
-    useOffsetPagination: hasPaging,
-    filters: {
-      status: statusFilter,
-      start_from:
-        parseIsoDateOnly(q.start_from) || parseIsoDateTime(q.start_from),
-      start_to: parseIsoDateOnly(q.start_to) || parseIsoDateTime(q.start_to),
-      end_from: parseIsoDateOnly(q.end_from) || parseIsoDateTime(q.end_from),
-      end_to: parseIsoDateOnly(q.end_to) || parseIsoDateTime(q.end_to),
-    },
-  };
-}
-
-const validateGetProjectSprints = [
-  validate(schemas.projectIdParamSchema, "params"),
-  validate(schemas.getProjectSprintsSchema, "query"),
-  (req, res, next) => {
-    attachParsedSprints(req);
-    next();
-  },
-];
-
-/**
- * @param {import('express').Request} req
- */
-function attachParsedReasonings(req) {
-  const q = req.query;
-  const hasPaging =
-    q.page !== undefined && q.page !== null && String(q.page).trim() !== "";
-
-  let pagination;
-  if (hasPaging) {
-    pagination = parsePagination(q.page, q.limit);
-  } else {
-    const lim = Math.min(parseInt(String(q.limit ?? 20), 10) || 20, 50);
-    pagination = { page: 1, limit: lim, offset: 0 };
-  }
-
-  const sort = parseSort(q.sort, REASONING_SORT_FIELDS, {
-    field: "created_at",
-    order: "desc",
-  });
-
-  let isRead = null;
-  if (q.is_read !== undefined && q.is_read !== "") {
-    isRead = String(q.is_read).toLowerCase() === "true";
-  }
-  let isPinned = null;
-  if (q.is_pinned !== undefined && q.is_pinned !== "") {
-    isPinned = String(q.is_pinned).toLowerCase() === "true";
-  }
-  let isDismissed = null;
-  if (q.is_dismissed !== undefined && q.is_dismissed !== "") {
-    isDismissed = String(q.is_dismissed).toLowerCase() === "true";
-  }
-
-  req.parsedQuery = {
-    pagination,
-    sort,
-    useOffsetPagination: hasPaging,
-    filters: {
-      sprintId: q.sprintId && isUuid(q.sprintId) ? q.sprintId : null,
-      reasoningType:
-        q.reasoningType && typeof q.reasoningType === "string"
-          ? q.reasoningType.trim().slice(0, 64)
-          : null,
-      from: parseIsoDateTime(q.from),
-      to: parseIsoDateTime(q.to),
-      is_read: isRead,
-      is_pinned: isPinned,
-      is_dismissed: isDismissed,
-      created_by: q.created_by && isUuid(q.created_by) ? q.created_by : null,
-    },
-  };
-}
-
-const validateGetProjectReasonings = [
-  validate(schemas.projectIdParamSchema, "params"),
-  validate(schemas.getProjectReasoningsSchema, "query"),
-  (req, res, next) => {
-    attachParsedReasonings(req);
-    next();
-  },
-];
 
 /** Query keys that enable list envelope + filtering for GET /projects/:id/stages */
 const PROJECT_STAGES_LIST_TRIGGER_KEYS = [
@@ -477,40 +361,13 @@ const PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS = [
   "added_to",
 ];
 
-/** GET /projects/:id/sprints */
-const PROJECT_SPRINTS_LIST_TRIGGER_KEYS = [
-  "page",
-  "limit",
-  "sort",
-  "status",
-  "start_from",
-  "start_to",
-  "end_from",
-  "end_to",
-];
 
-/** GET /projects/:id/reasonings */
-const PROJECT_REASONINGS_LIST_TRIGGER_KEYS = [
-  "page",
-  "limit",
-  "sort",
-  "sprintId",
-  "reasoningType",
-  "from",
-  "to",
-  "is_read",
-  "is_pinned",
-  "is_dismissed",
-  "created_by",
-];
 
 const validateProjectIdParam = [
   validate(schemas.projectIdParamSchema, "params"),
 ];
 
-const validateReasoningParams = [
-  validate(schemas.reasoningParamsSchema, "params"),
-];
+
 
 const validateGetMyViewPref = [
   validate(schemas.projectIdParamSchema, "params"),
@@ -555,20 +412,15 @@ const PROJECTS_LIST_TRIGGER_KEYS = [
 module.exports = {
   PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS,
   PROJECT_NOTES_LIST_TRIGGER_KEYS,
-  PROJECT_REASONINGS_LIST_TRIGGER_KEYS,
   PROJECT_STAGES_LIST_TRIGGER_KEYS,
-  PROJECT_SPRINTS_LIST_TRIGGER_KEYS,
   PROJECTS_LIST_TRIGGER_KEYS,
   attachParsedProjectsList,
   validateGetProjectById,
   validateGetProjectCollaborators,
   validateGetProjectNotes,
-  validateGetProjectReasonings,
   validateGetProjects,
   validateGetProjectStages,
-  validateGetProjectSprints,
   validateGetMyViewPref,
   validateProjectIdParam,
-  validateReasoningParams,
   validateSetMyViewPref,
 };

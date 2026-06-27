@@ -57,8 +57,8 @@ export async function fetchProjectReasonings(
 
   const qs = params.toString();
   const endpoint = qs
-    ? `${API_ENDPOINTS.PROJECTS_REASONINGS(projectId)}?${qs}`
-    : API_ENDPOINTS.PROJECTS_REASONINGS(projectId);
+    ? `${API_ENDPOINTS.ENGINE_REASONINGS(projectId)}?${qs}`
+    : API_ENDPOINTS.ENGINE_REASONINGS(projectId);
 
   const response = await apiClient.get(endpoint);
   const raw = await handleResponse<unknown>(response);
@@ -71,7 +71,7 @@ export async function fetchReasoningById(
   reasoningId: string
 ): Promise<ReasoningContent> {
   const response = await apiClient.get(
-    API_ENDPOINTS.PROJECTS_REASONING_BY_ID(projectId, reasoningId)
+    API_ENDPOINTS.ENGINE_REASONING_BY_ID(projectId, reasoningId)
   );
   const raw = await handleResponse<unknown>(response);
   const data = ReasoningContentEnvelopeSchema.parse(raw);
@@ -83,7 +83,7 @@ export async function fetchReasoningActionItems(
   reasoningId: string
 ): Promise<ReasoningActionItem[]> {
   const response = await apiClient.get(
-    API_ENDPOINTS.PROJECTS_REASONING_ACTION_ITEMS(projectId, reasoningId)
+    API_ENDPOINTS.ENGINE_REASONING_ACTION_ITEMS(projectId, reasoningId)
   );
   const raw = await handleResponse<unknown>(response);
   const data = ReasoningActionItemsEnvelopeSchema.parse(raw);
@@ -91,14 +91,14 @@ export async function fetchReasoningActionItems(
 }
 
 export async function createReasoning(projectId: string, payload: CreateReasoningPayload) {
-  const response = await apiClient.post(API_ENDPOINTS.PROJECTS_REASONINGS(projectId), payload);
+  const response = await apiClient.post(API_ENDPOINTS.ENGINE_REASONINGS(projectId), payload);
   const raw = await handleResponse<unknown>(response);
   return ReasoningCreateEnvelopeSchema.parse(raw);
 }
 
 export async function triggerReasoning(projectId: string, payload: TriggerReasoningPayload = {}) {
   const response = await apiClient.post(
-    API_ENDPOINTS.PROJECTS_REASONINGS_TRIGGER(projectId),
+    API_ENDPOINTS.ENGINE_REASONINGS_TRIGGER(projectId),
     payload
   );
   return handleResponse<unknown>(response);
@@ -110,7 +110,7 @@ export async function updateReasoningInteraction(
   payload: UpdateReasoningInteractionPayload
 ) {
   const response = await apiClient.patch(
-    API_ENDPOINTS.PROJECTS_REASONING_INTERACTION(projectId, reasoningId),
+    API_ENDPOINTS.ENGINE_REASONING_INTERACTION(projectId, reasoningId),
     payload
   );
   const raw = await handleResponse<unknown>(response);
@@ -124,7 +124,7 @@ export async function updateReasoningActionItem(
   payload: UpdateReasoningActionItemPayload
 ) {
   const response = await apiClient.patch(
-    API_ENDPOINTS.PROJECTS_REASONING_ACTION_ITEM(projectId, reasoningId, itemId),
+    API_ENDPOINTS.ENGINE_REASONING_ACTION_ITEM(projectId, reasoningId, itemId),
     payload
   );
   const raw = await handleResponse<unknown>(response);

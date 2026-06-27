@@ -3,7 +3,7 @@
 import React from "react";
 import { ChevronDown, ChevronRight, Pin, PinOff, X } from "lucide-react";
 import type { WeaveEngineFeedItem } from "@/app/_contexts/weave-engine-context";
-import type { ReasoningActionItem } from "@/app/_services/projects-service/reasonings.schema";
+import type { ReasoningActionItem } from "@/app/_services/engine-service/reasonings.schema";
 import type { TranslationKeys } from "@/app/_i18n/locales/pt-BR";
 import { cn } from "@/lib/utils";
 import {

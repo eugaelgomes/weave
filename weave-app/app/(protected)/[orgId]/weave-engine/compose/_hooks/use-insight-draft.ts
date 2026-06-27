@@ -9,7 +9,7 @@ import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { blocksToMarkdown, hasMarkdownContent } from "@/app/_utils/blocks-to-markdown";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
-import { fetchActiveSprint } from "@/app/_services/projects-service/projects-service";
+import { fetchActiveSprint } from "@/app/_services/engine-service/engine-service";
 import { ApiError } from "@/app/_services/api-error";
 import {
   getReasoningTypeLabel,

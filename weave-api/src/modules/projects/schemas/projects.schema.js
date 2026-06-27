@@ -85,30 +85,7 @@ const getProjectCollaboratorsSchema = z.object({
   added_to: z.string().datetime().optional(),
 });
 
-const getProjectSprintsSchema = z.object({
-  page: z.union([z.string(), z.number()]).optional(),
-  limit: z.union([z.string(), z.number()]).optional(),
-  sort: z.string().max(64).optional(),
-  status: z.string().max(120).optional(),
-  start_from: z.string().optional(),
-  start_to: z.string().optional(),
-  end_from: z.string().optional(),
-  end_to: z.string().optional(),
-});
 
-const getProjectReasoningsSchema = z.object({
-  page: z.union([z.string(), z.number()]).optional(),
-  limit: z.union([z.string(), z.number()]).optional(),
-  sort: z.string().max(64).optional(),
-  sprintId: z.string().uuid().optional(),
-  reasoningType: z.string().max(64).optional(),
-  from: z.string().datetime().optional(),
-  to: z.string().datetime().optional(),
-  is_read: z.enum(["true", "false"]).optional(),
-  is_pinned: z.enum(["true", "false"]).optional(),
-  is_dismissed: z.enum(["true", "false"]).optional(),
-  created_by: z.string().uuid().optional(),
-});
 
 const setMyViewPrefSchema = z.object({
   view: z.enum(["board", "list"], {
@@ -121,10 +98,7 @@ const projectIdParamSchema = z.object({
   projectId: z.string().uuid("projectId must be a valid UUID").optional(),
 });
 
-const reasoningParamsSchema = z.object({
-  id: z.string().uuid("id must be a valid UUID"),
-  reasoningId: z.string().uuid("reasoningId must be a valid UUID"),
-});
+
 
 module.exports = {
   getProjectsSchema,
@@ -132,9 +106,6 @@ module.exports = {
   getProjectStagesSchema,
   getProjectNotesSchema,
   getProjectCollaboratorsSchema,
-  getProjectSprintsSchema,
-  getProjectReasoningsSchema,
   setMyViewPrefSchema,
   projectIdParamSchema,
-  reasoningParamsSchema,
 };

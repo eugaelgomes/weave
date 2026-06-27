@@ -22,18 +22,6 @@ import {
   createTaskInStage as createTaskInStageService,
   patchProjectTask as patchProjectTaskService,
   fetchProjectsStats as fetchProjectsStatsService,
-  fetchAiReportConfig as fetchAiReportConfigService,
-  putProjectAiReportConfig as putProjectAiReportConfigService,
-  fetchSprints as fetchSprintsService,
-  fetchActiveSprint as fetchActiveSprintService,
-  createSprint as createSprintService,
-  completeSprint as completeSprintService,
-  fetchReasonings as fetchReasoningsService,
-  fetchReasoningById as fetchReasoningByIdService,
-  fetchReasoningActionItems as fetchReasoningActionItemsService,
-  createReasoning as createReasoningService,
-  updateReasoningInteraction as updateReasoningInteractionService,
-  updateReasoningActionItem as updateReasoningActionItemService,
   type Project,
   type ProjectProperties,
   type SubProject,
@@ -51,17 +39,7 @@ import {
   type ProjectNotesListFilters,
   type ProjectDashboardStats,
   type ProjectStatsFilters,
-  type AiReportConfig,
-  type AiReportConfigUpsertPayload,
   type PostProjectCollaboratorPayload,
-  type Sprint,
-  type CreateSprintPayload,
-  type CompleteSprintPayload,
-  type Reasoning,
-  type ReasoningActionItem,
-  type CreateReasoningPayload,
-  type UpdateReasoningInteractionPayload,
-  type UpdateReasoningActionItemPayload,
 } from "../_services/projects-service/projects-service";
 import {
   fetchProjectTags as fetchProjectTagsService,
@@ -82,6 +60,30 @@ import {
 } from "../_services/projects-service/project-taxonomy-service";
 import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import {
+  fetchAiReportConfig as fetchAiReportConfigService,
+  putProjectAiReportConfig as putProjectAiReportConfigService,
+  fetchSprints as fetchSprintsService,
+  fetchActiveSprint as fetchActiveSprintService,
+  createSprint as createSprintService,
+  completeSprint as completeSprintService,
+  fetchReasonings as fetchReasoningsService,
+  fetchReasoningById as fetchReasoningByIdService,
+  fetchReasoningActionItems as fetchReasoningActionItemsService,
+  createReasoning as createReasoningService,
+  updateReasoningInteraction as updateReasoningInteractionService,
+  updateReasoningActionItem as updateReasoningActionItemService,
+  type AiReportConfig,
+  type AiReportConfigUpsertPayload,
+  type Sprint,
+  type CreateSprintPayload,
+  type CompleteSprintPayload,
+  type Reasoning,
+  type ReasoningActionItem,
+  type CreateReasoningPayload,
+  type UpdateReasoningInteractionPayload,
+  type UpdateReasoningActionItemPayload,
+} from "../_services/engine-service/engine-service";
 
 // Tipos específicos do contexto / Overview
 export type {
@@ -102,6 +104,7 @@ export type {
   UpdateReasoningInteractionPayload,
   UpdateReasoningActionItemPayload,
 };
+export type { PostProjectCollaboratorPayload } from "../_services/projects-service/projects-service";
 export type {
   ProjectTag,
   TaskPriority,
