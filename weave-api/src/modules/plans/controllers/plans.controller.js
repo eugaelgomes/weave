@@ -1,12 +1,12 @@
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { executeQuery } = require("@/database/connection");
 const { USAGE_PATHS } = require("@/services/plans/plan-paths");
 const { enqueuePlanUsageJob } = require("@/services/queue/queue-controller");
 
 class PlanUsageManager {
   /**
-   * Gerencia o ciclo de uso: busca o registro e cria se não existir.
-   * O rollover mensal agora é executado pelo worker.
+   * Manages the usage cycle: fetches the record and creates if it doesn't exist.
+   * Monthly rollover is now executed by the worker.
    */
   /**
    *
@@ -17,14 +17,14 @@ class PlanUsageManager {
   async managePlanUsage(userId, orgId = null) {
     let usageRecord = await PlansRepository.getPlanUsage(userId, orgId);
 
-    // 1. Inicialização "Lazy" (Cria no primeiro uso)
+    // 1. "Lazy" initialization (Creates on first use)
     if (!usageRecord) {
       usageRecord = await this._initializeFirstUsage(userId, orgId);
     }
 
     if (!usageRecord) {
       throw new Error(
-        "Não foi possível inicializar o uso: Usuário sem plano atribuído."
+        "Could not initialize usage: User without assigned plan."
       );
     }
 
@@ -32,19 +32,19 @@ class PlanUsageManager {
   }
 
   /**
-   * Compara uso atual com o limite (Síncrono)
+   * Compares current usage with the limit (Synchronous)
    */
   checkLimit(planDetails, planUsage, actionPath, limitPath) {
     const currentUsage = this.getNestedValue(planUsage, actionPath) || 0;
     const limit = this.getNestedValue(planDetails, limitPath);
 
-    if (limit === null || limit === undefined) return true; // Ilimitado
+    if (limit === null || limit === undefined) return true; // Unlimited
 
     return currentUsage < limit;
   }
 
   /**
-   * Valida e busca uso em um único passo (Assíncrono)
+   * Validates and fetches usage in a single step (Asynchronous)
    */
   async canPerformAction(
     userId,
@@ -65,11 +65,11 @@ class PlanUsageManager {
   }
 
   // ==========================================
-  // MÉTODOS DE CONSUMO (INCREMENTOS)
+  // CONSUMPTION METHODS (INCREMENTS)
   // ==========================================
 
   /**
-   * Incrementa o total de notas criadas
+   * Increments the total of created notes
    */
   async consumeNoteCreation(usageId) {
     return enqueuePlanUsageJob({
@@ -91,7 +91,7 @@ class PlanUsageManager {
   }
 
   /**
-   * Incrementa o total de projetos criados
+   * Increments the total of created projects
    */
   async consumeProjectCreation(usageId) {
     return enqueuePlanUsageJob({
@@ -113,7 +113,7 @@ class PlanUsageManager {
   }
 
   /**
-   * Incrementa uso de IA (mensagens e opcionalmente tokens)
+   * Increments AI usage (messages and optionally tokens)
    */
   async consumeAiMessage(usageId, tokens = 0) {
     return enqueuePlanUsageJob({
@@ -124,7 +124,7 @@ class PlanUsageManager {
   }
 
   /**
-   * Incrementa uso de storage (arquivos e MB)
+   * Increments storage usage (files and MB)
    */
   async consumeStorage(usageId, fileSizeMb) {
     return enqueuePlanUsageJob({
@@ -135,7 +135,7 @@ class PlanUsageManager {
   }
 
   /**
-   * Incrementa contadores de exportação
+   * Increments export counters
    */
   async consumeExport(usageId, type = "notes") {
     return enqueuePlanUsageJob({
@@ -146,18 +146,18 @@ class PlanUsageManager {
   }
 
   // ==========================================
-  // LÓGICA INTERNA E HELPERS
+  // INTERNAL LOGIC AND HELPERS
   // ==========================================
 
   /**
-   * Busca histórico de uso do usuário
+   * Fetches user usage history
    */
   async getUserUsageHistory(userId, limit = 12) {
     return await PlansRepository.getUsageHistory(userId, limit);
   }
 
   /**
-   * Gera relatório de uso
+   * Generates usage report
    */
   async generateUsageReport(userId) {
     const history = await this.getUserUsageHistory(userId);

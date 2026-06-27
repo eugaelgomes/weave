@@ -2,7 +2,7 @@ const BackupBaseController = require("./base.controller");
 const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.repository");
 
 /**
- * Estado e histórico de jobs de backup.
+ * Backup jobs status and history.
  */
 class BackupJobsController extends BackupBaseController {
   /**
@@ -21,15 +21,15 @@ class BackupJobsController extends BackupBaseController {
       if (!job)
         return res.status(404).json({
           status: "Not Found",
-          error: "Job não encontrado",
-          message: "O job solicitado não existe ou expirou",
+          error: "Job not found",
+          message: "The requested job does not exist or has expired",
         });
 
       if (job.userId !== userId) {
         return res.status(403).json({
           status: "Forbidden",
-          error: "Acesso negado a este job",
-          message: "Você não tem permissão para acessar este job",
+          error: "Access denied",
+          message: "You do not have permission to access this job",
         });
       }
 
@@ -40,14 +40,14 @@ class BackupJobsController extends BackupBaseController {
       res.status(200).json({
         status: "OK",
         job_id: job.id,
-        message: "Status do backup recuperado com sucesso",
+        message: "Backup status retrieved successfully",
         details: {
           backup_status: job.status,
           progress: job.progress,
           created_at: job.createdAt,
           started_at: job.startedAt,
           completed_at: job.completedAt,
-          elapsed_time: `${elapsedMinutes} minuto${elapsedMinutes !== 1 ? "s" : ""}`,
+          elapsed_time: `${elapsedMinutes} minute${elapsedMinutes !== 1 ? "s" : ""}`,
           error: job.error,
           result: job.result,
         },
@@ -74,7 +74,7 @@ class BackupJobsController extends BackupBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Histórico de backups recuperado com sucesso",
+        message: "Backup history retrieved successfully",
         total: jobs.length,
         details: {
           jobs: jobs.map((job) => ({

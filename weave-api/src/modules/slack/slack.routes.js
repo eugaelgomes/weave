@@ -1,9 +1,14 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { validate } = require("@/middlewares/validation/validate");
 const {
   structuralLimiter,
   standardTrafficLimiter,
 } = require("@/middlewares/security/request-limiters");
+const {
+  setDefaultChannelSchema,
+  slackOauthCallbackSchema,
+} = require("./schemas/slack.schema");
 
 const SlackIntegrationsController = require("@/modules/slack/controllers/slack-integrations.controller");
 const SlackOauthController = require("@/modules/slack/controllers/slack-oauth.controller");
@@ -28,6 +33,7 @@ router.put(
   "/integrations/default-channel",
   verifyToken,
   structuralLimiter,
+  validate(setDefaultChannelSchema, "body"),
   SlackIntegrationsController.setDefaultChannel.bind(
     SlackIntegrationsController
   )
@@ -53,6 +59,7 @@ router.get(
 
 router.get(
   "/oauth/callback",
+  validate(slackOauthCallbackSchema, "query"),
   SlackOauthController.slackOAuthCallback.bind(SlackOauthController)
 );
 

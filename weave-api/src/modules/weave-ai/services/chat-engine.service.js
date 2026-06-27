@@ -11,7 +11,7 @@
  * - `weave-ai/services/chat-orchestrator.service.js`: To dispatch generation requests during the chat loop.
  */
 const { randomUUID } = require("crypto");
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const engineRpcRedis = require("@/services/queue/engine-rpc-connection");
 const {
   getEngineLlmRequestQueueRedisKey,

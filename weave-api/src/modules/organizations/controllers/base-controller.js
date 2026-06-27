@@ -40,9 +40,9 @@ class OrganizationsBaseController {
   }
 
   /**
-   * Gets the active organization associated with the user (via membership + papel `member_role`).
-   * @param {string} userId
-   * @returns {Promise<Object|null>} The organization or null if there is no active organization.
+   * Gets the active organization associated with the user (via membership + role `member_role`).
+   * @param {string} userId - User ID
+   * @returns {Promise<Object|null>} Organization data with injected `member_role` or null if not found
    */
   async _getUserOrganization(userId) {
     return this.organizationsRepository.getActiveOrganizationWithMembership(
@@ -51,10 +51,10 @@ class OrganizationsBaseController {
   }
 
   /**
-   * @param {Object|null} organization — resultado de `_getUserOrganization` (inclui `member_role`)
+   * @param {Object|null} organization — result of `_getUserOrganization` (includes `member_role`)
    * @param {string} permission — `ORG_PERMISSIONS.*`
    * @param {Response} res
-   * @returns {boolean} true se autorizado
+   * @returns {boolean} true if authorized
    */
   _ensureOrgPermission(organization, permission, res) {
     if (!organization) {
@@ -77,8 +77,10 @@ class OrganizationsBaseController {
   }
 
   /**
-   * Garante que o utilizador tem uma das permissões listadas (ex.: marca + domínios no mesmo PUT).
+   * Ensures that the user has one of the listed permissions (e.g., brand + domains in the same PUT).
+   * @param {Object|null} organization
    * @param {string[]} permissions
+   * @param {Response} res
    */
   _ensureOrgPermissionAny(organization, permissions, res) {
     if (!organization) {
@@ -100,15 +102,17 @@ class OrganizationsBaseController {
     return true;
   }
 
-  /** Expõe constantes para controladores que precisem de checagens compostas. */
+  /** Exposes constants for controllers that need compound checks. */
   get _orgPermissions() {
     return ORG_PERMISSIONS;
   }
 
   /**
-   * Papel em `organization_members` (via getActiveOrganizationWithMembership).
-   * @param {Object|null} organization
-   * @param {string} permission — ORG_PERMISSIONS.*
+   * Role in `organization_members` (via getActiveOrganizationWithMembership).
+   * @param {Object} organization - Organization object
+   * @param {string} permissionKey - Key of the permission (e.g. MANAGE_MEMBERS)
+   * @param {Response} [res] - Optional Express response object for automatic 403
+   * @returns {boolean} True if permitted, false otherwise
    */
   _orgRoleHasPermission(organization, permission) {
     const role = organization?.member_role;

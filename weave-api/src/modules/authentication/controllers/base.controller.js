@@ -1,5 +1,5 @@
 /**
- * Controller base do módulo de autenticação: normalização de organização e área padrão.
+ * Base controller for the authentication module: organization and default area normalization.
  */
 class AuthBaseController {
   /**

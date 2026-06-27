@@ -82,12 +82,6 @@ class SlackOauthController extends WebhooksBaseController {
         );
       }
 
-      if (!code || !state) {
-        return res
-          .status(400)
-          .json({ error: "Missing code or state parameters" });
-      }
-
       const decoded = verifySlackInstallState(String(state));
       if (!decoded) {
         return res.status(400).json({ error: "Invalid or expired state" });

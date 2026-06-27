@@ -1,11 +1,11 @@
 const BaseRepository = require("./base.repository");
 
 /**
- * Consultas usadas no login por usuário/senha e dados enriquecidos de sessão.
+ * Queries used in username/password login and enriched session data.
  */
 class SigninRepository extends BaseRepository {
   /**
-   * @param {string} username O nome de usuário ou e-mail
+   * @param {string} username The username or email
    * @returns {Promise<import('@/types/models').User | null>}
    */
   async findUserByUsername(username) {

@@ -60,7 +60,6 @@
     "express-jwt": "^8.4.1",
     "express-rate-limit": "^7.2.0",
     "express-session": "^1.18.0",
-    "express-validator": "^7.0.1",
     "google-auth-library": "^9.14.1",
     "googleapis": "^171.4.0",
     "helmet": "^7.1.0",

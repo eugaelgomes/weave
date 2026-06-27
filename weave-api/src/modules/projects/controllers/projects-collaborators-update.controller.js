@@ -62,11 +62,11 @@ class ProjectsCollaboratorsUpdateController extends ProjectsCoreController {
             );
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao atualizar role");
+        throw new Error("Failed to update role");
       }
 
       res.status(200).json({
-        message: "Role atualizado com sucesso",
+        message: "Role successfully updated",
         collaborators: result[0].collaborators,
       });
     } catch (error) {

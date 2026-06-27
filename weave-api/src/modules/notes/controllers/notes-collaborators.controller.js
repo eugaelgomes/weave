@@ -1,8 +1,8 @@
 const NotesBaseController = require("./base.controller");
 const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-const PlanUsageManager = require("@/modules/plans/plans.controller");
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const {
   collabMail,
 } = require("@/services/email/templates/note-collab-notification");
@@ -17,7 +17,7 @@ const {
 const APP_FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 /**
- * Colaboradores em notas.
+ * Collaborators in notes.
  */
 class NotesCollaboratorsController extends NotesBaseController {
   async addCollaborator(req, res, next) {
@@ -25,26 +25,26 @@ class NotesCollaboratorsController extends NotesBaseController {
       const { noteId } = req.params;
       const { userId: collaboratorId } = req.body;
 
-      // Validação de autenticação
+      // Authentication validation
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar/Criar registro de uso
+      // Fetch/Create usage record
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
-      // Buscar detalhes do plano
+      // Fetch plan details
       const planDetails = await PlansRepository.getPlanById(
         getUserPlan.plan_id
       );
 
       if (!usageRecord || !planDetails) {
         return res.status(404).json({
-          error: "Configuração de plano não encontrada para este usuário.",
+          error: "Plan configuration not found for this user.",
         });
       }
 
-      // Validar limite de colaboradores por nota
+      // Validate collaborators limit per note
       const currentCollaborators =
         await this.notesRepository.getCollaboratorsByNoteId(noteId);
       const maxCollaborators =
@@ -54,62 +54,62 @@ class NotesCollaboratorsController extends NotesBaseController {
         return sendPlanLimitExceeded(res, {
           resource: "note_collaborators",
           limit_key: "limits.max_collaborators_per_note",
-          error: "Limite de colaboradores atingido",
-          message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por nota.`,
+          error: "Collaborators limit reached",
+          message: `Your plan (${planDetails.name}) allows only ${maxCollaborators} collaborators per note.`,
         });
       }
 
-      // Verificar se a nota existe e pertence ao usuário
+      // Verify if the note exists and belongs to the user
       await this._validateNoteOwnership(noteId, userId);
 
-      // Validação de dados obrigatórios
+      // Mandatory data validation
       if (!collaboratorId) {
-        throw new Error("ID do colaborador é obrigatório");
+        throw new Error("Collaborator ID is required");
       }
 
-      // Verificar se o usuário não está tentando adicionar a si mesmo
+      // Verify if the user is not trying to add themselves
       if (collaboratorId === userId) {
-        throw new Error("Você não pode adicionar a si mesmo como colaborador");
+        throw new Error("You cannot add yourself as a collaborator");
       }
 
       if (await respondIfWorkspaceShareDenied(res, userId, collaboratorId)) {
         return;
       }
 
-      // Verificar se o colaborador já está ativo
+      // Verify if the collaborator is already active
       const isAlreadyCollaborator = await this.notesRepository.isCollaborator(
         noteId,
         collaboratorId
       );
 
       if (isAlreadyCollaborator) {
-        throw new Error("Usuário já é colaborador desta nota");
+        throw new Error("User is already a collaborator in this note");
       }
 
-      // Adicionar ou reativar colaborador
+      // Add or reactivate collaborator
       const result = await this.notesRepository.addCollaborator(
         noteId,
         collaboratorId
       );
 
       if (!result) {
-        throw new Error("Usuário já é colaborador desta nota");
+        throw new Error("User is already a collaborator in this note");
       }
 
-      // Buscar dados do colaborador adicionado e da nota
+      // Fetch data of the added collaborator and the note
       const collaborators =
         await this.notesRepository.getCollaboratorsByNoteId(noteId);
       const newCollaborator = collaborators.find(
         (c) => c.user_id === collaboratorId
       );
 
-      // Buscar dados completos do colaborador para o email
+      // Fetch complete collaborator data for the email
       const collaboratorData =
         await SearchUsersRepository.findById(collaboratorId);
       const ownerData = await SearchUsersRepository.findById(userId);
       const noteData = await this.notesRepository.getNoteById(noteId);
 
-      // Enviar email de notificação (não bloquear a resposta se falhar)
+      // Send notification email (do not block the response if it fails)
       if (collaboratorData && ownerData && noteData) {
         try {
           collabMail(
@@ -121,14 +121,14 @@ class NotesCollaboratorsController extends NotesBaseController {
           );
         } catch (emailError) {
           console.error(
-            "Erro ao enviar email de colaboração:",
+            "Error sending collaboration email:",
             emailError.message
           );
-          // Não falhamos a operação por causa do email
+          // We don't fail the operation because of the email
         }
       }
 
-      // Adicionar notificação no sistema
+      // Add notification to the system
       if (noteData) {
         await NotificationsRepository.createNotification({
           userId: collaboratorId,
@@ -136,7 +136,7 @@ class NotesCollaboratorsController extends NotesBaseController {
           type: "note_shared",
           entityType: "note",
           entityId: noteId,
-          title: `Você foi adicionado à nota ${noteData.title}`,
+          title: `You have been added to the note ${noteData.title}`,
           content: {
             action: "collaborator_added",
             note_id: noteId,
@@ -154,7 +154,7 @@ class NotesCollaboratorsController extends NotesBaseController {
       }
 
       res.status(201).json({
-        message: "Colaborador adicionado com sucesso",
+        message: "Collaborator added successfully",
         collaborator: newCollaborator,
       });
     } catch (error) {
@@ -163,31 +163,31 @@ class NotesCollaboratorsController extends NotesBaseController {
   }
 
   /**
-   * DELETE /api/notes/:noteId/collaborators/:collaboratorId - Remover colaborador
-   * Remove um colaborador da nota
+   * DELETE /api/notes/:noteId/collaborators/:collaboratorId - Remove collaborator
+   * Removes a collaborator from the note
    */
   async removeCollaborator(req, res, next) {
     try {
       const { noteId, collaboratorId } = req.params;
 
-      // Validação de autenticação
+      // Authentication validation
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e pertence ao usuário
+      // Verify if the note exists and belongs to the user
       const note = await this._validateNoteOwnership(noteId, userId);
 
-      // Verificar se o colaborador existe na nota
+      // Verify if the collaborator exists in the note
       const isCollaborator = await this.notesRepository.isCollaborator(
         noteId,
         collaboratorId
       );
 
       if (!isCollaborator) {
-        throw new Error("Usuário não é colaborador desta nota");
+        throw new Error("User is not a collaborator in this note");
       }
 
-      // Remover colaborador
+      // Remove collaborator
       const result = await this.notesRepository.removeCollaborator(
         noteId,
         collaboratorId,
@@ -195,11 +195,11 @@ class NotesCollaboratorsController extends NotesBaseController {
       );
 
       if (result.rowCount === 0) {
-        throw new Error("Falha ao remover colaborador");
+        throw new Error("Failed to remove collaborator");
       }
 
       res.status(200).json({
-        message: "Colaborador removido com sucesso",
+        message: "Collaborator removed successfully",
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -207,8 +207,8 @@ class NotesCollaboratorsController extends NotesBaseController {
   }
 
   /**
-   * PUT /api/notes/:noteId/recuseCollaboration - Recusar colaboração
-   * Permite que um colaborador remova a si mesmo de uma nota compartilhada
+   * PUT /api/notes/:noteId/recuseCollaboration - Refuse collaboration
+   * Allows a collaborator to remove themselves from a shared note
    */
   async recuseCollaboration(req, res, next) {
     try {
@@ -216,7 +216,7 @@ class NotesCollaboratorsController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Impedir que o dono recuse a própria nota
+      // Prevent the owner from refusing their own note
       //await this._validateNotOwner(noteId, userId);
 
       const result = await this.notesRepository.recuseCollaboration(
@@ -227,13 +227,14 @@ class NotesCollaboratorsController extends NotesBaseController {
       if (result.rowCount === 0) {
         return res.status(400).json({
           success: false,
-          message: "Você já recusou ou não era colaborador desta nota",
+          message:
+            "You have already refused or were not a collaborator in this note",
         });
       }
 
       res.status(200).json({
         success: true,
-        message: "Você não é mais colaborador desta nota",
+        message: "You are no longer a collaborator in this note",
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -241,28 +242,28 @@ class NotesCollaboratorsController extends NotesBaseController {
   }
 
   /**
-   * GET /api/notes/:noteId/collaborators - Listar colaboradores
-   * Lista todos os colaboradores de uma nota
+   * GET /api/notes/:noteId/collaborators - List collaborators
+   * Lists all collaborators of a note
    */
   async getCollaborators(req, res, next) {
     try {
       const { noteId } = req.params;
 
-      // Validação de autenticação
+      // Authentication validation
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Verificar se a nota existe e o usuário tem acesso (proprietário ou colaborador pode ver)
+      // Verify if the note exists and the user has access (owner or collaborator can view)
       await this._validateNoteAccess(noteId, userId);
 
-      // Buscar colaboradores pelo /:id da nota
+      // Fetch collaborators by note /:id
       const collaborators =
         await this.notesRepository.getCollaboratorsByNoteId(noteId);
 
       if (collaborators.length === 0) {
         return res.status(200).json({
           collaborators: [],
-          message: "Nenhum colaborador encontrado.",
+          message: "No collaborators found.",
         });
       } else {
         res.status(200).json({

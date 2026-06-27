@@ -1,11 +1,12 @@
 const express = require("express");
-const { body } = require("express-validator");
 
 const PlansManager = require("@/services/plans/manager");
-const PlansMeController = require("@/modules/plans/plans-me.controller");
-const PlansUsageHistoryController = require("@/modules/plans/plans-usage-history.controller");
-const PlansSubscriptionController = require("@/modules/plans/plans-subscription.controller");
+const PlansMeController = require("@/modules/plans/controllers/plans-me.controller");
+const PlansUsageHistoryController = require("@/modules/plans/controllers/plans-usage-history.controller");
+const PlansSubscriptionController = require("@/modules/plans/controllers/plans-subscription.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { validate } = require("@/middlewares/validation/validate");
+const { changePlanSchema } = require("./schemas/plans.schema");
 const {
   highTrafficLimiter,
 } = require("@/middlewares/security/request-limiters");
@@ -35,7 +36,7 @@ router.get(
 router.put(
   "/subscription",
   verifyToken,
-  body("planId").isString().notEmpty().withMessage("planId is required"),
+  validate(changePlanSchema, "body"),
   PlansSubscriptionController.changePlan.bind(PlansSubscriptionController)
 );
 

@@ -2,7 +2,7 @@ const { fromUnknown } = require("@/errors");
 const MutateApiTokensRepository = require("@/modules/api-tokens/repositories/mutate-api-tokens.repository");
 
 /**
- * Revogação e eliminação lógica de API tokens.
+ * Revocation and logical deletion of API tokens.
  */
 class MutateApiTokensController {
   /**

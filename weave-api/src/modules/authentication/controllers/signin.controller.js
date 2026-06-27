@@ -7,12 +7,12 @@ const authLogs = require("@/utils/system-logs/auth-logs");
 const storageFileUtils = require("@/utils/data/presign-storage-files");
 const {
   buildJwtPayload,
-} = require("@/modules/authentication/jwt-payload.schema");
+} = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const presignObjectFields = storageFileUtils.presignObjectFields;
 
 /**
- * Login com usuário/e-mail e senha.
+ * Login with username/email and password.
  */
 class SigninController extends AuthBaseController {
   /**

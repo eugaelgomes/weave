@@ -14,9 +14,18 @@ const {
 } = require("@/middlewares/security/request-limiters");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
+const { validate } = require("@/middlewares/validation/validate");
+const {
+  createAccountSchema,
+  activateAccountSchema,
+  checkUsernamePublicSchema,
+  checkAvailabilitySchema,
+  updateProfileSchema,
+  searchUsersSchema,
+  confirmDeleteAccountSchema,
+} = require("./schemas/users.schema");
 
 // Utils
-const { inputValidation } = require("@/utils/data/input-validation");
 const upload = require("@/utils/data/profile-img");
 const validateCompressedImageSize = require("@/utils/image-validator");
 
@@ -30,7 +39,7 @@ router.post(
   structuralLimiter,
   upload.single("profileImage"),
   validateCompressedImageSize,
-  inputValidation(),
+  validate(createAccountSchema, "body"),
   CreateUsersController.createUser.bind(CreateUsersController)
 );
 
@@ -38,6 +47,7 @@ router.post(
 router.post(
   "/activate-account",
   standardTrafficLimiter,
+  validate(activateAccountSchema, "body"),
   CreateUsersController.activateAccount.bind(CreateUsersController)
 );
 
@@ -54,6 +64,7 @@ router.get(
   "/check-availability",
   verifyToken,
   standardTrafficLimiter,
+  validate(checkAvailabilitySchema, "query"),
   UserDataController.checkAvailability.bind(UserDataController)
 );
 
@@ -61,6 +72,7 @@ router.get(
 router.get(
   "/check-username",
   standardTrafficLimiter,
+  validate(checkUsernamePublicSchema, "query"),
   UserDataController.checkUsernamePublic.bind(UserDataController)
 );
 
@@ -71,6 +83,7 @@ router.put(
   standardTrafficLimiter,
   upload.single("profilePicture"),
   validateCompressedImageSize,
+  validate(updateProfileSchema, "body"),
   UserDataController.updateProfile.bind(UserDataController)
 );
 
@@ -80,6 +93,7 @@ router.get(
   verifyToken,
   highTrafficLimiter,
   requireScope("users:read"),
+  validate(searchUsersSchema, "query"),
   (req, res, next) => {
     SearchUsersController.searchUsers(req, res, next);
   }
@@ -109,6 +123,7 @@ router.delete(
 // Confirm Delete User
 router.post(
   "/confirm-delete-account",
+  validate(confirmDeleteAccountSchema, "body"),
   DeleteUsersController.confirmDeleteUser.bind(DeleteUsersController)
 );
 

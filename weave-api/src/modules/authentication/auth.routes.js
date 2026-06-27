@@ -12,7 +12,7 @@ const LogoutController = require("@/modules/authentication/controllers/logout.co
 const {
   oauthCallbackSchema,
   signinSchema,
-} = require("@/modules/authentication/payload-validation");
+} = require("@/modules/authentication/schemas/auth.schema");
 
 const router = express.Router();
 

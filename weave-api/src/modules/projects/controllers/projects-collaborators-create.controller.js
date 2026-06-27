@@ -1,6 +1,6 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
-const PlanUsageManager = require("@/modules/plans/plans.controller");
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
@@ -111,7 +111,7 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
             );
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao adicionar colaborador");
+        throw new Error("Failed to add collaborator");
       }
 
       res.status(201).json({

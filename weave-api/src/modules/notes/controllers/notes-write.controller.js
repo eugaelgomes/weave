@@ -1,7 +1,7 @@
 const NotesBaseController = require("./base.controller");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
-const PlanUsageManager = require("@/modules/plans/plans.controller");
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const taskPrioritiesRepository = require("@/modules/task-priorities/repositories/task-priorities.repository");
 const {
   ALLOWED_NOTE_STATUSES,
@@ -18,7 +18,7 @@ const { PLAN_PATHS } = require("@/services/plans/plan-paths");
 const { resolveProjectIdToUuid } = require("@/utils/project-id-lookup");
 
 /**
- * Criação, atualização e exclusão de notas.
+ * Creation, update, and deletion of notes.
  */
 class NotesWriteController extends NotesBaseController {
   _parseBaseRevision(rawValue) {
@@ -27,7 +27,7 @@ class NotesWriteController extends NotesBaseController {
     }
     const parsed = Number(rawValue);
     if (!Number.isInteger(parsed) || parsed < 1) {
-      throw new Error("baseRevision inválido");
+      throw new Error("Invalid baseRevision");
     }
     return parsed;
   }
@@ -68,7 +68,7 @@ class NotesWriteController extends NotesBaseController {
     });
     return {
       code: "NOTE_CONFLICT",
-      error: "Conflito de edição detectado",
+      error: "Edit conflict detected",
       noteId,
       currentRevision:
         latestNote?.revision === undefined || latestNote?.revision === null
@@ -88,32 +88,32 @@ class NotesWriteController extends NotesBaseController {
         try {
           blocksPayload = JSON.parse(blocksPayload);
         } catch {
-          return res.status(400).json({ error: "blocks deve ser JSON válido" });
+          return res.status(400).json({ error: "blocks must be a valid JSON" });
         }
       }
 
       const { title, description, tags = [], status, project_id } = req.body;
 
-      // 1. Validação de autenticação
+      // 1. Authentication validation
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // 2. BUSCAR/CRIAR O REGISTRO DE USO (USANDO O MANAGER)
+      // 2. FETCH/CREATE USAGE RECORD (USING MANAGER)
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
-      // 3. BUSCAR DETALHES DO PLANO (LIMITES E NOME)
+      // 3. FETCH PLAN DETAILS (LIMITS AND NAME)
       const planDetails = await PlansRepository.getPlanById(
         getUserPlan.plan_id
       );
 
       if (!usageRecord || !planDetails) {
         return res.status(404).json({
-          error: "Configuração de plano não encontrada para este usuário.",
+          error: "Plan configuration not found for this user.",
         });
       }
 
-      // 4. VALIDAR LIMITE DE NOTAS
+      // 4. VALIDATE NOTES LIMIT
       const canCreate = PlanUsageManager.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
@@ -125,15 +125,15 @@ class NotesWriteController extends NotesBaseController {
         return sendPlanLimitExceeded(res, {
           resource: "notes",
           limit_key: PLAN_PATHS.LIMITS.MAX_NOTES,
-          error: "Limite de notas atingido",
-          message: `Seu plano (${planDetails.name}) permite apenas ${planDetails.details.limits.max_notes} notas.`,
+          error: "Notes limit reached",
+          message: `Your plan (${planDetails.name}) allows only ${planDetails.details.limits.max_notes} notes.`,
         });
       }
 
       const noteStatus = normalizeNoteStatus(status);
       if (!noteStatus || !ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
-          error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
+          error: `Invalid status. Allowed: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
         });
       }
 
@@ -141,7 +141,7 @@ class NotesWriteController extends NotesBaseController {
       if (blocksPayload !== undefined && blocksPayload !== null) {
         try {
           if (!Array.isArray(blocksPayload)) {
-            return res.status(400).json({ error: "blocks deve ser array" });
+            return res.status(400).json({ error: "blocks must be an array" });
           }
           normalizedBlocks = normalizeBlocksTree(blocksPayload);
         } catch (error) {
@@ -156,11 +156,11 @@ class NotesWriteController extends NotesBaseController {
       });
       if (!resolvedTitle) {
         return res.status(400).json({
-          error: "Informe um título ou texto na descrição ou nos blocos.",
+          error: "Provide a title or text in the description or blocks.",
         });
       }
 
-      // 6. Criação da nota no banco
+      // 6. Create note in the database
       const newNote = await this.notesRepository.createNotesQuery(
         userId,
         resolvedTitle,
@@ -182,10 +182,10 @@ class NotesWriteController extends NotesBaseController {
         await this.notesRepository.insertDefaultNoteBlock(newNote.id, userId);
       }
 
-      // 7. INCREMENTAR O USO
+      // 7. INCREMENT USAGE
       await PlanUsageManager.consumeNoteCreation(usageRecord.id);
 
-      // 8. Formata e retorna a nota criada
+      // 8. Format and return the created note
       const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
         String(newNote.id)
       );
@@ -203,7 +203,7 @@ class NotesWriteController extends NotesBaseController {
         try {
           blocksPayload = JSON.parse(blocksPayload);
         } catch {
-          return res.status(400).json({ error: "blocks deve ser JSON válido" });
+          return res.status(400).json({ error: "blocks must be a valid JSON" });
         }
       }
 
@@ -216,26 +216,26 @@ class NotesWriteController extends NotesBaseController {
         project_id,
       } = req.body;
 
-      // Validação de autenticação
+      // Authentication validation
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Buscar/Criar registro de uso
+      // Fetch/Create usage record
       const usageRecord = await PlanUsageManager.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
-      // Buscar detalhes do plano
+      // Fetch plan details
       const planDetails = await PlansRepository.getPlanById(
         getUserPlan.plan_id
       );
 
       if (!usageRecord || !planDetails) {
         return res.status(404).json({
-          error: "Configuração de plano não encontrada para este usuário.",
+          error: "Plan configuration not found for this user.",
         });
       }
 
-      // Validar limite de notas
+      // Validate notes limit
       const canCreate = PlanUsageManager.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
@@ -247,15 +247,15 @@ class NotesWriteController extends NotesBaseController {
         return sendPlanLimitExceeded(res, {
           resource: "notes",
           limit_key: PLAN_PATHS.LIMITS.MAX_NOTES,
-          error: "Limite de notas atingido",
-          message: `Seu plano (${planDetails.name}) permite apenas ${planDetails.details.limits.max_notes} notas.`,
+          error: "Notes limit reached",
+          message: `Your plan (${planDetails.name}) allows only ${planDetails.details.limits.max_notes} notes.`,
         });
       }
 
       const noteStatus = normalizeNoteStatus(status);
       if (!noteStatus || !ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
         return res.status(400).json({
-          error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
+          error: `Invalid status. Allowed: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
         });
       }
 
@@ -263,7 +263,7 @@ class NotesWriteController extends NotesBaseController {
       if (blocksPayload !== undefined && blocksPayload !== null) {
         try {
           if (!Array.isArray(blocksPayload)) {
-            return res.status(400).json({ error: "blocks deve ser array" });
+            return res.status(400).json({ error: "blocks must be an array" });
           }
           normalizedBlocks = normalizeBlocksTree(blocksPayload);
         } catch (error) {
@@ -280,11 +280,11 @@ class NotesWriteController extends NotesBaseController {
       if (!resolvedTitle) {
         return res.status(400).json({
           error:
-            "Informe um título ou texto na descrição, no bloco inicial ou nos blocos.",
+            "Provide a title or text in the description, initial block or blocks.",
         });
       }
 
-      // Criação da nota + utilizador (sem document jsonb)
+      // Note creation + user (without document jsonb)
       const result = await this.notesRepository.createCompleteNote(
         userId,
         resolvedTitle,
@@ -308,14 +308,14 @@ class NotesWriteController extends NotesBaseController {
         );
       }
 
-      // Incrementar o uso de notas
+      // Increment notes usage
       await PlanUsageManager.consumeNoteCreation(usageRecord.id);
 
       const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
         String(result.note_id)
       );
 
-      // Montar estrutura completa da nota com todos os dados das tabelas relacionadas
+      // Assemble the complete note structure with all related table data
       const completeNote = {
         id: result.note_id,
         public_id: result.public_note_id || null,
@@ -342,7 +342,7 @@ class NotesWriteController extends NotesBaseController {
         blocks,
       };
 
-      // Retorna a nota completíssima criada
+      // Returns the newly created complete note
       res.status(201).json(completeNote);
     } catch (error) {
       this._handleError(error, res, next);
@@ -353,8 +353,8 @@ class NotesWriteController extends NotesBaseController {
     try {
       const { id } = req.params;
 
-      // Quando multipart/form-data, campos texto vêm como strings
-      // Parsear properties se vier como string JSON
+      // When multipart/form-data, text fields come as strings
+      // Parse properties if it comes as a JSON string
       let {
         title,
         description,
@@ -374,7 +374,7 @@ class NotesWriteController extends NotesBaseController {
         } catch {
           return res
             .status(400)
-            .json({ error: "properties deve ser um JSON válido" });
+            .json({ error: "properties must be a valid JSON" });
         }
       }
 
@@ -395,15 +395,15 @@ class NotesWriteController extends NotesBaseController {
         ).toLowerCase() === "true";
       if (occEnforced && parsedBaseRevision === null) {
         return res.status(400).json({
-          error: "baseRevision é obrigatório para atualizar a nota",
+          error: "baseRevision is required to update the note",
         });
       }
 
-      // Validação de autenticação
+      // Authentication validation
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de acesso à nota (proprietário ou colaborador pode editar)
+      // Note access validation (owner or collaborator can edit)
       const { note, isOwner, isCollaborator, hasOrgProjectAccess } =
         await this._validateNoteAccess(id, userId);
 
@@ -417,24 +417,25 @@ class NotesWriteController extends NotesBaseController {
         if (pid) {
           const tp = await taskPrioritiesRepository.findActiveById(pid);
           if (!tp) {
-            return res.status(400).json({ error: "Prioridade inválida" });
+            return res.status(400).json({ error: "Invalid priority" });
           }
           const scopeOrg = note.scope_org_id || null;
           const noteProjectId = note.project_id || null;
           if (tp.project_id) {
             if (tp.project_id !== noteProjectId) {
               return res.status(400).json({
-                error: "Prioridade não pertence ao projeto desta nota",
+                error: "Priority does not belong to the project of this note",
               });
             }
           } else if (tp.org_id) {
             if (!scopeOrg || tp.org_id !== scopeOrg) {
               return res.status(400).json({
-                error: "Prioridade não pertence à organização desta nota",
+                error:
+                  "Priority does not belong to the organization of this note",
               });
             }
           } else {
-            return res.status(400).json({ error: "Prioridade inválida" });
+            return res.status(400).json({ error: "Invalid priority" });
           }
         }
       }
@@ -442,24 +443,24 @@ class NotesWriteController extends NotesBaseController {
       if (due_date !== undefined && due_date !== null && due_date !== "") {
         const t = new Date(due_date).getTime();
         if (Number.isNaN(t)) {
-          return res.status(400).json({ error: "due_date inválida" });
+          return res.status(400).json({ error: "Invalid due_date" });
         }
       }
 
       if (deleted !== undefined && !isOwner && !hasOrgProjectAccess) {
-        throw new Error("Apenas o proprietário pode excluir a nota");
+        throw new Error("Only the owner can delete the note");
       }
 
       if (status !== undefined) {
         const normalized = normalizeNoteStatus(status);
         if (!normalized || !ALLOWED_NOTE_STATUSES.includes(normalized)) {
           return res.status(400).json({
-            error: `Status inválido. Permitidos: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
+            error: `Invalid status. Allowed: ${ALLOWED_NOTE_STATUSES.join(", ")}`,
           });
         }
       }
 
-      // Prepara os dados para atualização (apenas campos fornecidos)
+      // Prepares the data for update (only provided fields)
       const updateData = {};
       if (title !== undefined) {
         const trimmed =
@@ -468,7 +469,7 @@ class NotesWriteController extends NotesBaseController {
           const blocksFromDb =
             await this.notesRepository.findNoteBlocksTreeByNoteId(id);
           const derived = deriveTitleFromBlocks(blocksFromDb);
-          updateData.title = derived || "Sem título";
+          updateData.title = derived || "Untitled";
         } else {
           updateData.title = title;
         }
@@ -485,7 +486,7 @@ class NotesWriteController extends NotesBaseController {
         if (nextProjectId) {
           const resolvedProjectId = await resolveProjectIdToUuid(nextProjectId);
           if (!resolvedProjectId) {
-            return res.status(404).json({ error: "Projeto não encontrado" });
+            return res.status(404).json({ error: "Project not found" });
           }
           nextProjectId = resolvedProjectId;
         }
@@ -498,7 +499,7 @@ class NotesWriteController extends NotesBaseController {
             if (!firstStageId) {
               return res.status(400).json({
                 error:
-                  "O projeto não possui estágios. Crie pelo menos um estágio antes de associar tarefas.",
+                  "The project has no stages. Create at least one stage before associating tasks.",
               });
             }
             updateData.project_stage_id = firstStageId;
@@ -521,11 +522,11 @@ class NotesWriteController extends NotesBaseController {
             ? null
             : new Date(due_date).toISOString();
       }
-      // Processar properties (campos JSON) e arquivos enviados
+      // Process properties (JSON fields) and uploaded files
       const propertiesUpdate = properties || {};
       const uploadedDocumentImages = [];
 
-      // Coletar todos os arquivos que serão enviados para validação de plano
+      // Collect all files to be uploaded for plan validation
       const allUploadedFiles = [
         ...(req.files?.icon || []),
         ...(req.files?.banner || []),
@@ -533,7 +534,7 @@ class NotesWriteController extends NotesBaseController {
         ...(req.files?.documentImages || []),
       ];
 
-      // Validar limites do plano antes de fazer qualquer upload
+      // Validate plan limits before making any upload
       let usageRecord = null;
       let totalUploadSizeMb = 0;
 
@@ -546,7 +547,7 @@ class NotesWriteController extends NotesBaseController {
 
         if (!usageRecord || !planDetails) {
           return res.status(404).json({
-            error: "Configuração de plano não encontrada para este usuário.",
+            error: "Plan configuration not found for this user.",
           });
         }
 
@@ -555,26 +556,26 @@ class NotesWriteController extends NotesBaseController {
         const totalMonthlyUploadMb =
           planDetails.details?.limits?.storage?.total_monthly_upload_mb;
 
-        // Validar tamanho individual de cada arquivo
+        // Validate individual file size
         if (maxFileSizeMb) {
           for (const file of allUploadedFiles) {
             const fileSizeMb = file.size / (1024 * 1024);
             if (fileSizeMb > maxFileSizeMb) {
               return res.status(413).json({
-                error: "Arquivo excede o tamanho máximo permitido",
-                message: `O arquivo "${file.originalname}" tem ${fileSizeMb.toFixed(2)} MB. Seu plano (${planDetails.name}) permite arquivos de até ${maxFileSizeMb} MB.`,
+                error: "File exceeds maximum allowed size",
+                message: `The file "${file.originalname}" is ${fileSizeMb.toFixed(2)} MB. Your plan (${planDetails.name}) allows files up to ${maxFileSizeMb} MB.`,
               });
             }
           }
         }
 
-        // Calcular total a ser enviado
+        // Calculate total to be uploaded
         totalUploadSizeMb = allUploadedFiles.reduce(
           (sum, file) => sum + file.size / (1024 * 1024),
           0
         );
 
-        // Validar limite mensal de upload
+        // Validate monthly upload limit
         if (totalMonthlyUploadMb) {
           const currentUsageMb =
             PlanUsageManager.getNestedValue(
@@ -586,17 +587,17 @@ class NotesWriteController extends NotesBaseController {
             return sendPlanLimitExceeded(res, {
               resource: "storage",
               limit_key: PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD,
-              error: "Limite de armazenamento mensal atingido",
-              message: `Seu plano (${planDetails.name}) permite ${totalMonthlyUploadMb} MB de upload por mês. Uso atual: ${currentUsageMb.toFixed(2)} MB.`,
+              error: "Monthly storage limit reached",
+              message: `Your plan (${planDetails.name}) allows ${totalMonthlyUploadMb} MB of upload per month. Current usage: ${currentUsageMb.toFixed(2)} MB.`,
             });
           }
         }
       }
 
-      // Processar upload de ícone
+      // Process icon upload
       if (req.files?.icon?.[0]) {
         const iconFile = req.files.icon[0];
-        // Deletar ícone anterior se existir
+        // Delete previous icon if exists
         const currentNote = await this.notesRepository.getNoteById(id);
         if (currentNote?.properties?.icon?.path) {
           const oldKey = currentNote.properties.icon.path;
@@ -615,10 +616,10 @@ class NotesWriteController extends NotesBaseController {
         };
       }
 
-      // Processar upload de banner
+      // Process banner upload
       if (req.files?.banner?.[0]) {
         const bannerFile = req.files.banner[0];
-        // Deletar banner anterior se existir
+        // Delete previous banner if exists
         const currentNote = await this.notesRepository.getNoteById(id);
         if (currentNote?.properties?.banner?.path) {
           const oldKey = currentNote.properties.banner.path;
@@ -637,7 +638,7 @@ class NotesWriteController extends NotesBaseController {
         };
       }
 
-      // Processar upload de arquivos
+      // Process files upload
       if (req.files?.files?.length > 0) {
         const currentNote = await this.notesRepository.getNoteById(id);
         const currentFiles = currentNote?.properties?.files || [];
@@ -682,8 +683,8 @@ class NotesWriteController extends NotesBaseController {
         );
       }
 
-      // Remover arquivos do storage ao remover icon, banner ou files
-      // Remover ícone
+      // Remove files from storage when removing icon, banner, or files
+      // Remove icon
       if (propertiesUpdate.icon && propertiesUpdate.icon.path === "") {
         const currentNote = await this.notesRepository.getNoteById(id);
         if (currentNote?.properties?.icon?.path) {
@@ -691,7 +692,7 @@ class NotesWriteController extends NotesBaseController {
           if (oldKey) await spacesService.deleteImage(oldKey);
         }
       }
-      // Remover banner
+      // Remove banner
       if (propertiesUpdate.banner && propertiesUpdate.banner.path === "") {
         const currentNote = await this.notesRepository.getNoteById(id);
         if (currentNote?.properties?.banner?.path) {
@@ -699,11 +700,11 @@ class NotesWriteController extends NotesBaseController {
           if (oldKey) await spacesService.deleteImage(oldKey);
         }
       }
-      // Remover arquivos
+      // Remove files
       if (propertiesUpdate.files && Array.isArray(propertiesUpdate.files)) {
         const currentNote = await this.notesRepository.getNoteById(id);
         const currentFiles = currentNote?.properties?.files || [];
-        // Descobrir quais arquivos foram removidos
+        // Find which files were removed
         const removedFiles = currentFiles.filter(
           (f) => !propertiesUpdate.files.find((nf) => nf.id === f.id)
         );
@@ -712,7 +713,7 @@ class NotesWriteController extends NotesBaseController {
         }
       }
 
-      // Registrar consumo de storage no plano após uploads bem-sucedidos
+      // Register storage consumption in plan after successful uploads
       if (usageRecord && totalUploadSizeMb > 0) {
         await PlanUsageManager.consumeStorage(
           usageRecord.id,
@@ -720,9 +721,9 @@ class NotesWriteController extends NotesBaseController {
         );
       }
 
-      // Imagem do corpo: faça PATCH em /notes/:noteId/blocks/:blockId após upload (uploadDocumentImages).
+      // Body image: do PATCH in /notes/:noteId/blocks/:blockId after upload (uploadDocumentImages).
 
-      // Se há properties para atualizar
+      // If there are properties to update
       if (Object.keys(propertiesUpdate).length > 0) {
         updateData.properties = propertiesUpdate;
       }
@@ -733,7 +734,7 @@ class NotesWriteController extends NotesBaseController {
 
       if (!hadOtherUpdates && !hadFilesWithoutDbRow) {
         return res.status(400).json({
-          error: "Nenhum campo fornecido para atualização",
+          error: "No fields provided for update",
         });
       }
 
@@ -747,7 +748,7 @@ class NotesWriteController extends NotesBaseController {
         if (!updatedNote) {
           const latestNote = await this.notesRepository.getNoteById(id);
           if (!latestNote) {
-            return res.status(404).json({ error: "Nota não encontrada" });
+            return res.status(404).json({ error: "Note not found" });
           }
           console.info("[notes.update.conflict]", {
             baseRevision: parsedBaseRevision,

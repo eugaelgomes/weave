@@ -16,8 +16,8 @@ const { randomUUID } = require("crypto");
 const { v5: uuidv5 } = require("uuid");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
-const PlansRepository = require("@/modules/plans/plans.repository");
-const PlanUsageManager = require("@/modules/plans/plans.controller");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
 const {
   resolveAuthorizedFunctions,

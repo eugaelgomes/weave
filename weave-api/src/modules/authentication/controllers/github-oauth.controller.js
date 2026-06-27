@@ -9,19 +9,19 @@ const OrganizationsRepository = require("@/modules/organizations/repositories/or
 const oauthState = require("@/modules/authentication/oauth-state");
 const {
   buildJwtPayload,
-} = require("@/modules/authentication/jwt-payload.schema");
+} = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
 
-/** Callback fixo; cadastrar a mesma URL na OAuth App do GitHub. */
+/** Fixed callback; register the same URL in the GitHub OAuth App. */
 const GITHUB_OAUTH_REDIRECT_URI =
   process.env.NODE_ENV === "production"
     ? "https://apis.weavenotes.app/api/v1/auth/signin/sso/github/callback"
     : "http://localhost:8080/api/v1/auth/signin/sso/github/callback";
 
 /**
- * Fluxo OAuth2 GitHub (redirect e callback).
+ * GitHub OAuth2 flow (redirect and callback).
  */
 class GithubOauthController extends AuthBaseController {
   /**
@@ -56,12 +56,12 @@ class GithubOauthController extends AuthBaseController {
       }
 
       if (error) {
-        console.error("Erro durante a autenticação com o GitHub", error);
+        console.error("Error during GitHub authentication", error);
         return res.redirect(`${frontendURL}/?error=authorization_denied`);
       }
 
       if (!code) {
-        console.error("Código de autorização do GitHub não encontrado");
+        console.error("GitHub authorization code not found");
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 

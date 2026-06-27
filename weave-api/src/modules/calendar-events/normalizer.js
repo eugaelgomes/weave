@@ -147,73 +147,6 @@ const normalizeCreatePayload = (body, creatorId) => {
   };
 };
 
-const validateCreatePayload = (payload) => {
-  if (!payload.title) {
-    return "Campo obrigatorio: title";
-  }
-
-  if (!payload.startTime || !payload.endTime) {
-    return "Campos obrigatorios: start_time e end_time";
-  }
-
-  if (payload.endTime <= payload.startTime) {
-    return "end_time deve ser maior que start_time";
-  }
-
-  if (payload.organizationId && !isValidUUID(payload.organizationId)) {
-    return "organization_id invalido";
-  }
-
-  if (payload.noteId && !isValidPublicOrUuid(payload.noteId)) {
-    return "note_id invalido";
-  }
-
-  if (payload.projectId && !isValidPublicOrUuid(payload.projectId)) {
-    return "project_id invalido";
-  }
-
-  if (payload.isAllDay === null) {
-    return "is_all_day deve ser booleano";
-  }
-
-  if (payload.isFromNote === null) {
-    return "is_from_note deve ser booleano";
-  }
-
-  if (payload.isFromProject === null) {
-    return "is_from_project deve ser booleano";
-  }
-
-  if (!payload.syncStatus) {
-    return "sync_status invalido";
-  }
-
-  if (payload.syncWithGoogle === null) {
-    return "sync_with_google deve ser booleano";
-  }
-
-  if (payload.createGoogleMeet === null) {
-    return "create_google_meet deve ser booleano";
-  }
-
-  if (payload.createGoogleMeet && !payload.syncWithGoogle) {
-    return "create_google_meet requer sync_with_google = true";
-  }
-
-  if (payload.attendees.length && !payload.syncWithGoogle) {
-    return "attendees requer sync_with_google = true";
-  }
-
-  const hasInvalidEmail = payload.attendees.some(
-    (email) => !EMAIL_REGEX.test(email)
-  );
-  if (hasInvalidEmail) {
-    return "attendees contem emails invalidos";
-  }
-
-  return null;
-};
-
 const buildGoogleEventBody = (payload) => {
   const requestBody = {
     description: payload.description || undefined,
@@ -365,58 +298,6 @@ const normalizeUpdateFields = (body) => {
   return fields;
 };
 
-const validateUpdateFields = (fields) => {
-  if (fields.title !== undefined && !fields.title) {
-    return "title nao pode ser vazio";
-  }
-
-  if (fields.start_time !== undefined && !fields.start_time) {
-    return "start_time invalido";
-  }
-
-  if (fields.end_time !== undefined && !fields.end_time) {
-    return "end_time invalido";
-  }
-
-  if (
-    fields.start_time &&
-    fields.end_time &&
-    fields.end_time <= fields.start_time
-  ) {
-    return "end_time deve ser maior que start_time";
-  }
-
-  if (fields.organization_id && !isValidUUID(fields.organization_id)) {
-    return "organization_id invalido";
-  }
-
-  if (fields.note_id && !isValidPublicOrUuid(fields.note_id)) {
-    return "note_id invalido";
-  }
-
-  if (fields.project_id && !isValidPublicOrUuid(fields.project_id)) {
-    return "project_id invalido";
-  }
-
-  if (fields.is_all_day === null) {
-    return "is_all_day deve ser booleano";
-  }
-
-  if (fields.is_from_note === null) {
-    return "is_from_note deve ser booleano";
-  }
-
-  if (fields.is_from_project === null) {
-    return "is_from_project deve ser booleano";
-  }
-
-  if (fields.sync_status === null) {
-    return "sync_status invalido";
-  }
-
-  return null;
-};
-
 module.exports = {
   isValidUUID,
   parseDate,
@@ -424,8 +305,6 @@ module.exports = {
   parseSyncStatus,
   normalizeAttendees,
   normalizeCreatePayload,
-  validateCreatePayload,
   buildGoogleEventBody,
   normalizeUpdateFields,
-  validateUpdateFields,
 };

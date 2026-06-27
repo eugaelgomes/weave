@@ -2,6 +2,11 @@
 
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { validate } = require("@/middlewares/validation/validate");
+const {
+  apiTokenParamsSchema,
+  createApiTokenSchema,
+} = require("./schemas/api-tokens.schema");
 
 const ScopesController = require("@/modules/api-tokens/controllers/scopes.controller");
 const CreateApiTokensController = require("@/modules/api-tokens/controllers/create-api-tokens.controller");
@@ -19,14 +24,17 @@ router.get(
 );
 router.post(
   "/create-token",
+  validate(createApiTokenSchema, "body"),
   CreateApiTokensController.createToken.bind(CreateApiTokensController)
 );
 router.post(
   "/:id/revoke",
+  validate(apiTokenParamsSchema, "params"),
   MutateApiTokensController.revokeToken.bind(MutateApiTokensController)
 );
 router.delete(
   "/:id",
+  validate(apiTokenParamsSchema, "params"),
   MutateApiTokensController.deleteToken.bind(MutateApiTokensController)
 );
 

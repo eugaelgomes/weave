@@ -91,9 +91,6 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         req.body?.channel_id ??
         req.body?.channelId ??
         req.body?.default_channel_id;
-      if (!channelId || typeof channelId !== "string") {
-        return res.status(400).json({ error: "channel_id is required" });
-      }
 
       const integration =
         await ReadSlackIntegrationsRepository.findActiveByOrganizationId(

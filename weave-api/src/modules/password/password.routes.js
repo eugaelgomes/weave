@@ -1,26 +1,23 @@
 const express = require("express");
-const { body } = require("express-validator");
+const { validate } = require("@/middlewares/validation/validate");
 
-const PasswordController = require("@/modules/password/password.controller");
-const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
+const PasswordController = require("@/modules/password/controllers/password.controller");
+const {
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} = require("./schemas/password.schema");
 
 const router = express.Router();
 
 router.post(
   "/forgot-password",
-  [
-    body("email")
-      .trim()
-      .isEmail()
-      .bail()
-      .custom((value) => !hasPlusAliasInLocalPart(value))
-      .withMessage("E-mails com alias (+) no endereço não são permitidos."),
-  ],
+  validate(forgotPasswordSchema, "body"),
   PasswordController.forgotPassword.bind(PasswordController)
 );
 
 router.post(
   "/reset-password",
+  validate(resetPasswordSchema, "body"),
   PasswordController.resetPassword.bind(PasswordController)
 );
 

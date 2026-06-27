@@ -1,11 +1,11 @@
 /**
- * Controller base de notificações: validação de usuário autenticado (`verifyToken`).
+ * Base controller for notifications: authenticated user validation (`verifyToken`).
  */
 class NotificationsBaseController {
   /**
    * @param {import('express').Request} req
-   * @returns {string|number} `req.user.userId` quando autenticado.
-   * @throws {Error} Quando a requisição não tem usuário autenticado.
+   * @returns {string|number} `req.user.userId` when authenticated.
+   * @throws {Error} When the request has no authenticated user.
    */
   _validateAuthentication(req) {
     if (!req.user || !req.user.userId) {
@@ -23,14 +23,14 @@ class NotificationsBaseController {
     try {
       return this._validateAuthentication(req);
     } catch {
-      res.status(401).json({ error: "Usuário não autenticado" });
+      res.status(401).json({ error: "User is not authenticated" });
       return null;
     }
   }
 
   _handleRepositoryResult(result, res) {
     if (!result) {
-      res.status(404).json({ error: "Notificação não encontrada" });
+      res.status(404).json({ error: "Notification not found" });
       return null;
     }
 

@@ -121,8 +121,6 @@ class OrganizationsController extends OrganizationsBaseController {
         settings,
       } = req.body;
 
-      this._validateRequiredFields({ org_name });
-
       let unique_name;
       if (providedUniqueName) {
         unique_name = normalizeOrganizationName(providedUniqueName);
@@ -272,7 +270,6 @@ class OrganizationsController extends OrganizationsBaseController {
       let updatedUniqueName = currentOrg.unique_name;
 
       if (org_name && org_name !== currentOrg.org_name) {
-        this._validateRequiredFields({ org_name });
         updatedUniqueName = await generateUniqueOrganizationName(org_name);
       }
 

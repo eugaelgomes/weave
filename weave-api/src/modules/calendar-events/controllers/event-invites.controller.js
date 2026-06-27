@@ -3,12 +3,6 @@ const eventInvitesRepository = require("../repositories/event-invites.repository
 const calendarEventsRepository = require("../repositories/calendar-events.repository");
 
 class EventInvitesController {
-  _validateInvitePayload(payload) {
-    if (!payload.email || typeof payload.email !== "string") {
-      throw new Error("E-mail é obrigatório e deve ser uma string válido");
-    }
-  }
-
   async createInvite(req, res, next) {
     try {
       const { eventId } = req.params;
@@ -24,10 +18,8 @@ class EventInvitesController {
       if (!event) {
         return res
           .status(404)
-          .json({ error: "Evento não encontrado ou acesso restrito" });
+          .json({ error: "Event not found or access restricted" });
       }
-
-      this._validateInvitePayload(req.body);
 
       const newInvite = await eventInvitesRepository.createInvite({
         eventId,
@@ -46,9 +38,6 @@ class EventInvitesController {
           .status(409)
           .json({ error: "This email has already been invited to the event." });
       }
-      if (error.message.includes("E-mail") || error.message.includes("email")) {
-        return res.status(400).json({ error: "Email is required." });
-      }
       next(fromUnknown(error));
     }
   }
@@ -65,7 +54,7 @@ class EventInvitesController {
       });
 
       if (!event) {
-        return res.status(404).json({ error: "Evento não encontrado" });
+        return res.status(404).json({ error: "Event not found" });
       }
 
       const invites = await eventInvitesRepository.listInvitesByEvent(eventId);
@@ -88,15 +77,13 @@ class EventInvitesController {
       });
 
       if (!event) {
-        return res.status(404).json({ error: "Evento não encontrado" });
+        return res.status(404).json({ error: "Event not found" });
       }
 
       // Check if invite exists for this event
       const invite = await eventInvitesRepository.getInviteById(inviteId);
       if (!invite || invite.event_id !== eventId) {
-        return res
-          .status(404)
-          .json({ error: "Convite não encontrado no evento" });
+        return res.status(404).json({ error: "Invite not found in the event" });
       }
 
       const updatedInvite = await eventInvitesRepository.updateInvite({
@@ -123,14 +110,12 @@ class EventInvitesController {
       });
 
       if (!event) {
-        return res.status(404).json({ error: "Evento não encontrado" });
+        return res.status(404).json({ error: "Event not found" });
       }
 
       const invite = await eventInvitesRepository.getInviteById(inviteId);
       if (!invite || invite.event_id !== eventId) {
-        return res
-          .status(404)
-          .json({ error: "Convite não encontrado no evento" });
+        return res.status(404).json({ error: "Invite not found in the event" });
       }
 
       await eventInvitesRepository.deleteInvite(inviteId);

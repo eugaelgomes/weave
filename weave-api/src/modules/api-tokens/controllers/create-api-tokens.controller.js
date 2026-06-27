@@ -12,7 +12,7 @@ const TOKEN_PREFIX = "wn_";
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS, 10) || 12;
 
 /**
- * Criação de API tokens (secret mostrado uma vez).
+ * API tokens creation (secret shown only once).
  */
 class CreateApiTokensController {
   /**
@@ -25,10 +25,6 @@ class CreateApiTokensController {
     try {
       const { name, organizationId, scopes, expiresAt } = req.body;
       const { userId } = req.user;
-
-      if (!name || name.trim() === "") {
-        return res.status(400).json({ error: "Token name is required." });
-      }
 
       const rawPrefix = crypto.randomBytes(6).toString("hex");
       const rawSecret = crypto.randomBytes(32).toString("hex");

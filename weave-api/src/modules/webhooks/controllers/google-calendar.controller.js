@@ -8,7 +8,7 @@ const WEBHOOK_BASE = process.env.GOOGLE_WEBHOOK_URL || "http://localhost:8080";
 const CALENDAR_WEBHOOK_ADDRESS = `${WEBHOOK_BASE}/api/v1/webhooks/google/calendar`;
 
 /**
- * Google Calendar: webhook push, SSE, listagem de eventos, status e desconexão.
+ * Google Calendar: webhook push, SSE, event listing, status and disconnection.
  */
 class GoogleCalendarController extends WebhooksBaseController {
   constructor() {
@@ -17,10 +17,10 @@ class GoogleCalendarController extends WebhooksBaseController {
   }
 
   /**
-   * Registra um webhook (watch) no Google Calendar para receber notificações
-   * de alterações no calendário primário do usuário.
-   * @param {string} userId - ID do usuário no sistema
-   * @param {object} tokens - Tokens OAuth2 do Google (access_token, refresh_token)
+   * Registers a webhook (watch) on Google Calendar to receive notifications
+   * of changes in the user's primary calendar.
+   * @param {string} userId - User ID in the system
+   * @param {object} tokens - Google OAuth2 tokens (access_token, refresh_token)
    */
   async registerCalendarWatch(userId, tokens) {
     const channelId = uuidv4();
@@ -54,8 +54,8 @@ class GoogleCalendarController extends WebhooksBaseController {
   }
 
   /**
-   * Recebe notificações push do Google Calendar (webhook).
-   * Responde 200 para sync e eventos recebidos.
+   * Receives push notifications from Google Calendar (webhook).
+   * Responds 200 for sync and received events.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
@@ -89,7 +89,7 @@ class GoogleCalendarController extends WebhooksBaseController {
   }
 
   /**
-   * Abre stream SSE para avisar o frontend sobre mudanças recebidas via webhook.
+   * Opens an SSE stream to notify the frontend about changes received via webhook.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
@@ -137,9 +137,9 @@ class GoogleCalendarController extends WebhooksBaseController {
   }
 
   /**
-   * Retorna os eventos do Google Calendar do usuário autenticado.
-   * Aceita query params `timeMin` e `timeMax` para filtrar o intervalo.
-   * Busca eventos de todos os calendários acessíveis e deduplica por id.
+   * Returns Google Calendar events for the authenticated user.
+   * Accepts query params `timeMin` and `timeMax` to filter the interval.
+   * Fetches events from all accessible calendars and deduplicates by id.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
@@ -268,7 +268,7 @@ class GoogleCalendarController extends WebhooksBaseController {
   }
 
   /**
-   * Verifica se o usuário possui tokens do Google Calendar armazenados.
+   * Checks if the user has stored Google Calendar tokens.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
@@ -288,8 +288,8 @@ class GoogleCalendarController extends WebhooksBaseController {
   }
 
   /**
-   * Desconecta o Google Calendar: para os webhooks ativos no Google
-   * e remove tokens e webhooks do banco de dados.
+   * Disconnects Google Calendar: stops active webhooks on Google
+   * and removes tokens and webhooks from the database.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */

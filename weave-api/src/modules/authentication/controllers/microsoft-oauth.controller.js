@@ -9,7 +9,7 @@ const OrganizationsRepository = require("@/modules/organizations/repositories/or
 const oauthState = require("@/modules/authentication/oauth-state");
 const {
   buildJwtPayload,
-} = require("@/modules/authentication/jwt-payload.schema");
+} = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
@@ -56,12 +56,12 @@ class MicrosoftOauthController extends AuthBaseController {
       }
 
       if (error) {
-        console.error("Erro durante a autenticação com Microsoft", error);
+        console.error("Error during Microsoft authentication", error);
         return res.redirect(`${frontendURL}/?error=authorization_denied`);
       }
 
       if (!code) {
-        console.error("Código de autorização da Microsoft não encontrado");
+        console.error("Microsoft authorization code not found");
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 

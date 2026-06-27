@@ -4,7 +4,7 @@ const TagsBaseController = require("@/modules/tags/controllers/base.controller")
 
 class TagsController extends TagsBaseController {
   /**
-   * Cria uma tag.
+   * Create a tag.
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -17,10 +17,6 @@ class TagsController extends TagsBaseController {
 
       const { project_id, org_id } = req.params;
       const { name, color } = req.body;
-
-      if (!name) {
-        return res.status(400).json({ error: "Tag name is required" });
-      }
 
       const tag = await TagsRepository.createTag({
         projectId: project_id || null,
@@ -36,7 +32,7 @@ class TagsController extends TagsBaseController {
   }
 
   /**
-   * Busca tags filtrando por projeto ou organização.
+   * Fetch tags by filtering by project or organization.
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -56,7 +52,7 @@ class TagsController extends TagsBaseController {
   }
 
   /**
-   * Atualiza dados de uma tag existente.
+   * Update existing tag data.
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -83,7 +79,7 @@ class TagsController extends TagsBaseController {
   }
 
   /**
-   * Deleta uma tag logicamente do banco de dados (soft delete).
+   * Logically delete a tag from the database (soft delete).
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res

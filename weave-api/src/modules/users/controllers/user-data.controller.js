@@ -98,11 +98,11 @@ const mapPlanUsageInfo = (usageData) => {
 };
 
 /**
- * Perfil do usuário autenticado: leitura, atualização e imagem.
+ * Authenticated user profile: read, update and image.
  */
 class UserDataController extends BaseController {
   /**
-   * Redireciona para a URL da imagem de perfil do usuário logado.
+   * Redirects to the logged user's profile image URL.
    *
    * @param {UserDataRequest} req
    * @param {import('express').Response} res
@@ -110,7 +110,7 @@ class UserDataController extends BaseController {
    */
   async getProfileImage(req, res, next) {
     try {
-      // Usa userId do usuário logado
+      // Uses logged user's userId
       const userId = req.user.userId;
 
       this._validateAuthentication(req, res, next);
@@ -121,7 +121,7 @@ class UserDataController extends BaseController {
         return res.status(404).send("Profile image not found.");
       }
 
-      // Redireciona para a URL da imagem
+      // Redirects to the image URL
       return res.redirect(user.avatar_url);
     } catch (error) {
       console.error("Error retrieving profile image:", error);
@@ -130,7 +130,7 @@ class UserDataController extends BaseController {
   }
 
   /**
-   * Retorna metadados da imagem de perfil (sem redirecionar).
+   * Returns profile image metadata (without redirecting).
    *
    * @param {UserDataRequest} req
    * @param {import('express').Response} res
@@ -167,7 +167,7 @@ class UserDataController extends BaseController {
   }
 
   /**
-   * Perfil completo (`/me`): dados de perfil, organização, plano e URLs pré-assinadas.
+   * Complete profile (`/me`): profile, organization, plan data and pre-signed URLs.
    *
    * @param {UserDataRequest} req
    * @param {import('express').Response} res
@@ -189,8 +189,8 @@ class UserDataController extends BaseController {
       const defaultArea = mapDefaultAreaInfo(user.default_area);
       const planUsage = mapPlanUsageInfo(user.current_usage);
 
-      // Gerar URLs pré-assinadas para evitar acesso não autorizado e direto ao S3
-      // A duração de 12 horas mantém a imagem visível no frontend pelo mesmo tempo de vida de uma sessão normal (embora ela use os cookies do next/auth)
+      // Generate pre-signed URLs to prevent unauthorized and direct access to S3
+      // The 12-hour duration keeps the image visible in the frontend for the same lifespan as a normal session (although it uses next/auth cookies)
       const protectedUser = await presignObjectFields(user, ["avatar_url"], {
         expiresIn: 12 * 60 * 60,
         userId: req.user.userId,
@@ -242,7 +242,7 @@ class UserDataController extends BaseController {
         },
       });
     } catch (error) {
-      console.error("Erro ao buscar perfil:", error);
+      console.error("Error fetching profile:", error);
       this._handleError(error, res, next);
     }
   }
@@ -274,7 +274,7 @@ class UserDataController extends BaseController {
   }
 
   /**
-   * Checa disponibilidade de `email`, `username` e `phone_number` para o usuário autenticado.
+   * Checks availability of `email`, `username` and `phone_number` for the authenticated user.
    *
    * @param {UserDataRequest} req
    * @param {import('express').Response} res
@@ -303,7 +303,7 @@ class UserDataController extends BaseController {
   }
 
   /**
-   * Atualiza perfil, preferências, e-mail (com fluxo de validação), senha e avatar opcional (`profilePicture`).
+   * Updates profile, preferences, email (with validation flow), password and optional avatar (`profilePicture`).
    *
    * @param {UserDataRequest} req
    * @param {import('express').Response} res

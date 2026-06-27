@@ -7,7 +7,7 @@ const {
 } = require("@/modules/organizations/organization-role-policy");
 const { AppError, fromUnknown, ERROR_CODES } = require("@/errors");
 /**
- * Base dos controllers de notas: autenticação, acesso e formatação.
+ * Base of the notes controllers: authentication, access, and formatting.
  */
 class NotesBaseController {
   constructor() {
@@ -34,8 +34,8 @@ class NotesBaseController {
   }
 
   /**
-   * Nota associada a projeto da organização ativa e utilizador com ACCESS_ALL_ORG_PROJECTS.
-   * @param {Object} note — linha de getNoteById
+   * Note associated with a project of the active organization and user with ACCESS_ALL_ORG_PROJECTS.
+   * @param {Object} note - getNoteById row
    * @param {string} userId
    */
   async _hasOrgWideAccessToProjectNote(note, userId) {
@@ -52,7 +52,7 @@ class NotesBaseController {
     return Boolean(rows?.length);
   }
 
-  /** Org ativa quando o utilizador pode ver todas as notas dos projetos dessa org (via `project_id`). */
+  /** Active org when the user can see all notes of the projects of this org (via `project_id`). */
   async _getOrgWideNotesScopeOrganizationId(userId) {
     const membership =
       await organizationsRepository.getActiveOrganizationWithMembership(userId);
@@ -63,7 +63,7 @@ class NotesBaseController {
   }
 
   /**
-   * Valida e verifica propriedade da nota ou se é colaborador
+   * Validates and verifies note ownership or if is a collaborator
    * @param {string} noteId
    * @param {string} userId
    * @returns {Object}
@@ -113,8 +113,8 @@ class NotesBaseController {
   }
 
   /**
-   * Variante otimizada para caminhos de alta frequência (edição de blocos).
-   * Evita carregar payload completo da nota quando só precisamos validar acesso.
+   * Optimized variant for high-frequency paths (block editing).
+   * Avoids loading complete note payload when we only need to validate access.
    * @param {string} noteId
    * @param {string} userId
    * @returns {Promise<{ note: Object, isOwner: boolean, isCollaborator: boolean, hasOrgProjectAccess: boolean }>}
@@ -169,7 +169,7 @@ class NotesBaseController {
   }
 
   /**
-   * Valida e verifica propriedade da nota
+   * Validates and verifies note ownership
    * @param {string} noteId
    * @param {string} userId
    * @returns {Object}
@@ -202,7 +202,7 @@ class NotesBaseController {
   }
 
   /**
-   * Formata a resposta padrão de uma nota
+   * Formats the standard response of a note
    * @param {Object} note
    * @param {Array} blocks
    * @returns {Object}
@@ -243,7 +243,7 @@ class NotesBaseController {
   }
 
   /**
-   * Trata erros específicos e retorna resposta HTTP apropriada
+   * Handles specific errors and returns appropriate HTTP response
    * @param {Error} error
    * @param {Object} res
    * @param {Function} next

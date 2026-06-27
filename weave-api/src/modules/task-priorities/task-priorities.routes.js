@@ -13,6 +13,12 @@ const {
   resolveProjectPublicIdParam,
   resolveOrganizationPublicIdParam,
 } = require("@/middlewares/public-id-resolver");
+const { validate } = require("@/middlewares/validation/validate");
+const {
+  taskPrioritiesParamsSchema,
+  createTaskPrioritySchema,
+  updateTaskPrioritySchema,
+} = require("./schemas/task-priorities.schema");
 
 const router = Router({ mergeParams: true });
 
@@ -35,20 +41,26 @@ router.use((req, res, next) => {
 router.post(
   "/:project_id/create-priority",
   requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
+  validate(createTaskPrioritySchema, "body"),
   TaskPrioritiesController.createPriority.bind(TaskPrioritiesController)
 );
 router.get(
   "/:project_id/task-priorities",
+  validate(taskPrioritiesParamsSchema, "params"),
   TaskPrioritiesController.getPriorities.bind(TaskPrioritiesController)
 );
 router.patch(
   "/:project_id/task-priorities/:priority_id",
   requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
+  validate(updateTaskPrioritySchema, "body"),
   TaskPrioritiesController.updatePriority.bind(TaskPrioritiesController)
 );
 router.delete(
   "/:project_id/task-priorities/:priority_id",
   requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
   TaskPrioritiesController.deletePriority.bind(TaskPrioritiesController)
 );
 
@@ -56,20 +68,26 @@ router.delete(
 router.post(
   "/:org_id/task-priorities",
   requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
+  validate(createTaskPrioritySchema, "body"),
   TaskPrioritiesController.createPriority.bind(TaskPrioritiesController)
 );
 router.get(
   "/:org_id/task-priorities",
+  validate(taskPrioritiesParamsSchema, "params"),
   TaskPrioritiesController.getPriorities.bind(TaskPrioritiesController)
 );
 router.patch(
   "/:org_id/task-priorities/:priority_id",
   requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
+  validate(updateTaskPrioritySchema, "body"),
   TaskPrioritiesController.updatePriority.bind(TaskPrioritiesController)
 );
 router.delete(
   "/:org_id/task-priorities/:priority_id",
   requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
   TaskPrioritiesController.deletePriority.bind(TaskPrioritiesController)
 );
 

@@ -11,37 +11,37 @@ const ORG_ROLES = Object.freeze({
   GUEST: "GUEST",
 });
 
-/** Permissões atómicas (ações sensíveis). */
+/** Atomic permissions (sensitive actions). */
 const ORG_PERMISSIONS = Object.freeze({
-  /** Ver/editar/gestão de qualquer projeto com org_id = organização ativa (admin / super_admin) */
+  /** View/edit/manage any project with org_id = active organization (admin / super_admin) */
   ACCESS_ALL_ORG_PROJECTS: "access_all_org_projects",
-  /** Visualização de diretório de membros da organização */
+  /** View organization members directory */
   VIEW_MEMBER_DIRECTORY: "view_member_directory",
-  /** Convidar/remover membros e alterar papéis */
+  /** Invite/remove members and change roles */
   MANAGE_MEMBERS: "manage_members",
-  /** Estrutura de áreas; super_admin (papel em DB), alinhado a gestores de área no controlador */
+  /** Area structure; super_admin (DB role), aligned with area managers in controller */
   MANAGE_AREAS: "manage_areas",
-  /** Alterar plano / billing da organização (quando existir endpoint self-service) */
+  /** Change organization plan / billing (when self-service endpoint exists) */
   MANAGE_BILLING_PLANS: "manage_billing_plans",
-  /** Definir integrações globais da organização */
+  /** Define global organization integrations */
   MANAGE_GLOBAL_INTEGRATIONS: "manage_global_integrations",
-  /** Logo, banner, nome, descrição, unique_name, propriedades/branding */
+  /** Logo, banner, name, description, unique_name, properties/branding */
   MANAGE_BRAND: "manage_brand",
-  /** Domínios customizados, verificação DNS, SSO */
+  /** Custom domains, DNS verification, SSO */
   MANAGE_DOMAINS: "manage_domains",
-  /** Encerrar / restaurar a organização (conta org) */
+  /** Terminate / restore the organization (org account) */
   MANAGE_ORG_LIFECYCLE: "manage_org_lifecycle",
-  /** CRUD de projetos, colaboradores em projeto, notas associadas */
+  /** Project CRUD, project collaborators, associated notes */
   MANAGE_PROJECTS: "manage_projects",
-  /** Tags ao nível de projeto ou organização */
+  /** Project or organization level tags */
   MANAGE_TAGS: "manage_tags",
-  /** Prioridades de tarefas (projeto ou organização) */
+  /** Task priorities (project or organization) */
   MANAGE_TASK_PRIORITIES: "manage_task_priorities",
-  /** Agentes Weave AI, partilha, conhecimento (não inclui consumo de chat) */
+  /** Weave AI agents, sharing, knowledge (excludes chat consumption) */
   MANAGE_WEAVE_AI: "manage_weave_ai",
 });
 
-/** Mapa papel → permissões. `super_admin` tudo; `admin` gestão diária; `billing_manager` só financeiro. */
+/** Map role → permissions. `super_admin` everything; `admin` daily management; `billing_manager` financial only. */
 const PERMISSIONS_BY_ROLE = Object.freeze({
   [ORG_ROLES.SUPER_ADMIN]: Object.values(ORG_PERMISSIONS),
   [ORG_ROLES.ADMIN]: [

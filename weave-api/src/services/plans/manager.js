@@ -1,4 +1,4 @@
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 
 const { USAGE_PATHS } = require("@/services/plans/plan-paths");
 

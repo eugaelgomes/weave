@@ -1,9 +1,9 @@
 const ROLE_LABELS = {
   super_admin: "super admin",
   admin: "admin",
-  member: "membro",
-  guest: "convidado",
-  viewer: "visualizador",
+  member: "member",
+  guest: "guest",
+  viewer: "viewer",
 };
 
 const RESERVED_CONTEXT_KEYS = new Set([
@@ -143,7 +143,7 @@ const createBaseContent = (payload, options = {}) => {
     cleanSentence(options.message) ||
     cleanSentence(rawContent.message) ||
     payload.title ||
-    "Você possui uma nova notificação.";
+    "You have a new notification.";
 
   const resolvedSummary =
     cleanSentence(options.summary) ||
@@ -200,9 +200,9 @@ const buildOrganizationActionContent = (payload) => {
   if (actionKey === "member_added") {
     const message =
       payload.content?.message ||
-      `Você foi adicionado(a) à organização ${
+      `You have been added to the organization ${
         organizationName || "Weave Notes"
-      }${roleLabel ? ` como ${roleLabel}` : ""}.`;
+      }${roleLabel ? ` as ${roleLabel}` : ""}.`;
 
     return createBaseContent(payload, {
       actionKey,
@@ -223,15 +223,15 @@ const buildOrganizationInviteContent = (payload) => {
     const inviterName = payload.content?.inviter_name;
     const message =
       payload.content?.message ||
-      `${inviterName || "Um membro"} convidou você para a organização ${
+      `${inviterName || "A member"} invited you to the organization ${
         organizationName || "Weave Notes"
-      }${roleLabel ? ` como ${roleLabel}` : ""}.`;
+      }${roleLabel ? ` as ${roleLabel}` : ""}.`;
 
     return createBaseContent(payload, {
       actionKey,
       entityName: organizationName,
       message,
-      actionText: "Acesse suas organizações para aceitar ou recusar o convite.",
+      actionText: "Access your organizations to accept or decline the invite.",
     });
   }
 
@@ -239,7 +239,7 @@ const buildOrganizationInviteContent = (payload) => {
     const newMemberName = payload.content?.new_member_name;
     const message =
       payload.content?.message ||
-      `${newMemberName || "Um novo membro"} aceitou seu convite e agora faz parte da organização ${organizationName || "Weave Notes"}.`;
+      `${newMemberName || "A new member"} accepted your invite and is now part of the organization ${organizationName || "Weave Notes"}.`;
 
     return createBaseContent(payload, {
       actionKey,
@@ -259,15 +259,15 @@ const buildProjectInviteContent = (payload) => {
   if (actionKey === "collaborator_added") {
     const message =
       payload.content?.message ||
-      `Você foi adicionado(a) ao projeto ${projectTitle || "sem título"}${
-        roleLabel ? ` como ${roleLabel}` : ""
+      `You have been added to the project ${projectTitle || "untitled"}${
+        roleLabel ? ` as ${roleLabel}` : ""
       }.`;
 
     return createBaseContent(payload, {
       actionKey,
       entityName: projectTitle,
       message,
-      actionText: "Abra o projeto para começar a colaborar.",
+      actionText: "Open the project to start collaborating.",
     });
   }
 
@@ -282,7 +282,7 @@ const buildProjectActionContent = (payload) => {
   if (actionKey === "collaborator_updated") {
     const message =
       payload.content?.message ||
-      `Sua permissão no projeto ${projectTitle || "sem título"} foi atualizada para ${roleLabel || "uma nova função"}.`;
+      `Your permission in the project ${projectTitle || "untitled"} was updated to ${roleLabel || "a new role"}.`;
 
     return createBaseContent(payload, {
       actionKey,
@@ -302,13 +302,13 @@ const buildNoteSharedContent = (payload) => {
     const sharedByName = payload.content?.shared_by_name;
     const message =
       payload.content?.message ||
-      `${sharedByName || "O proprietário"} compartilhou a nota ${noteTitle || "sem título"} com você.`;
+      `${sharedByName || "The owner"} shared the note ${noteTitle || "untitled"} with you.`;
 
     return createBaseContent(payload, {
       actionKey,
       entityName: noteTitle,
       message,
-      actionText: "Abra a nota e comece a colaborar.",
+      actionText: "Open the note and start collaborating.",
     });
   }
 
@@ -321,16 +321,16 @@ const buildJobActionContent = (payload) => {
   if (actionKey === "backup_completed") {
     const expiresAt = payload.content?.expires_at;
     const formattedExpiration = formatDateTime(expiresAt);
-    const baseMessage = "Seu backup está pronto para download.";
+    const baseMessage = "Your backup is ready for download.";
     const message =
       payload.content?.message ||
-      `${baseMessage}${formattedExpiration ? ` O link expira em ${formattedExpiration}.` : ""}`;
+      `${baseMessage}${formattedExpiration ? ` The link expires at ${formattedExpiration}.` : ""}`;
 
     return createBaseContent(payload, {
       actionKey,
       entityName: payload.content?.job_name || null,
       message,
-      actionText: "Baixe o backup em até 48 horas para evitar expiração.",
+      actionText: "Download the backup within 48 hours to avoid expiration.",
       url: payload.content?.download_url,
     });
   }
@@ -355,7 +355,7 @@ const normalizeNotificationPayload = (payload = {}) => {
     title:
       typeof payload.title === "string" && payload.title.trim().length > 0
         ? payload.title.trim()
-        : "Notificação",
+        : "Notification",
   };
 
   safePayload.content = ensureObject(payload.content);

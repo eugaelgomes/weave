@@ -1,7 +1,7 @@
 const NotesBaseController = require("./base.controller");
 
 /**
- * Leitura: lista, detalhe e estatísticas.
+ * Read: list, detail, and statistics.
  */
 class NotesReadController extends NotesBaseController {
   async getAllNotes(req, res, next) {
@@ -9,7 +9,7 @@ class NotesReadController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Parâmetros de query com valores padrão
+      // Query parameters with default values
       const {
         page = 1,
         limit = 10,
@@ -19,7 +19,7 @@ class NotesReadController extends NotesBaseController {
         sortOrder = "desc",
       } = req.query;
 
-      //  Processar parâmetros de paginação e filtros
+      // Process pagination and filter parameters
       const paginationOptions = {
         page: parseInt(page) || 1,
         limit: Math.min(parseInt(limit) || 10, 50),
@@ -125,11 +125,11 @@ class NotesReadController extends NotesBaseController {
     try {
       const { id } = req.params;
 
-      // Validação de autenticação
+      // Authentication validation
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Validação de acesso à nota (proprietário ou colaborador)
+      // Note access validation (owner or collaborator)
       const { note, isOwner, isCollaborator, hasOrgProjectAccess } =
         await this._validateNoteAccess(id, userId);
 
@@ -137,7 +137,7 @@ class NotesReadController extends NotesBaseController {
         String(note.id)
       );
 
-      // Montar estrutura completa da nota
+      // Assemble the complete note structure
       const completeNote = {
         id: note.id,
         public_id: note.public_note_id || null,

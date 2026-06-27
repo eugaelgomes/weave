@@ -5,7 +5,7 @@ const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/loo
 const secretsService = require("@/services/secrets");
 const {
   jwtPayloadSchema,
-} = require("@/modules/authentication/jwt-payload.schema");
+} = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const secretsManager = secretsService.secretsManager;
 

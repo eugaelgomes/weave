@@ -1,7 +1,7 @@
 const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { generatePublicId } = require("@/utils/generate-public-id");
 
 /**

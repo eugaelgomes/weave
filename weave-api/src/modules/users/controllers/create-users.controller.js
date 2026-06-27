@@ -15,11 +15,11 @@ const {
  */
 
 /**
- * Cadastro de conta e ativação por e-mail.
+ * Account registration and email activation.
  */
 class CreateUsersController extends BaseController {
   /**
-   * Cria usuário (multipart com `profileImage` opcional), envia e-mail de boas-vindas e token de ativação.
+   * Creates user (multipart with optional `profileImage`), sends welcome email and activation token.
    *
    * @param {CreateUserRequest} req
    * @param {import('express').Response} res
@@ -101,7 +101,7 @@ class CreateUsersController extends BaseController {
             console.error("Image upload failed:", saveResult.error);
           }
         } catch (imageError) {
-          console.error("Erro processando imagem:", imageError);
+          console.error("Error processing image:", imageError);
         }
       }
 
@@ -132,7 +132,7 @@ class CreateUsersController extends BaseController {
   }
 
   /**
-   * Confirma e-mail com `token` **ou** par `code` + `email`.
+   * Confirms email with `token` **or** pair `code` + `email`.
    *
    * @param {import('express').Request & { body: { token?: string, code?: string, email?: string } }} req
    * @param {import('express').Response} res
@@ -167,7 +167,7 @@ class CreateUsersController extends BaseController {
         });
       }
 
-      // Verifica o email
+      // Verify the email
       const verifiedUser = await UserTokensRepository.verifyUserEmail(
         tokenRecord.user_id
       );
@@ -176,7 +176,7 @@ class CreateUsersController extends BaseController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Desativa o token (funciona p/ token ou code pois deactivate usa id do registro)
+      // Deactivates the token (works for token or code since deactivate uses record id)
       await UserTokensRepository.deactivateEmailToken(tokenRecord.token);
 
       return res.status(200).json({
@@ -189,7 +189,7 @@ class CreateUsersController extends BaseController {
         },
       });
     } catch (error) {
-      console.error("Erro ao ativar conta:", error);
+      console.error("Error activating account:", error);
       this._handleError(error, res, next);
     }
   }

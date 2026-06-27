@@ -14,7 +14,7 @@ const {
 } = require("@/utils/note-id-lookup");
 
 /**
- * CRUD e reordenação de blocos (`note_blocks`).
+ * CRUD and reordering of blocks (`note_blocks`).
  */
 class NoteBlocksController extends NotesBaseController {
   _parsePositiveInt(rawValue, fieldName) {
@@ -23,7 +23,7 @@ class NoteBlocksController extends NotesBaseController {
     }
     const parsed = Number(rawValue);
     if (!Number.isInteger(parsed) || parsed < 1) {
-      throw new Error(`${fieldName} inválido`);
+      throw new Error(`Invalid ${fieldName}`);
     }
     return parsed;
   }
@@ -35,7 +35,7 @@ class NoteBlocksController extends NotesBaseController {
         block.properties?.attrs?.src
       ) {
         const src = block.properties.attrs.src;
-        // Detecta se é um link externo (http/https) que não é do nosso storage ou se é base64/data URI
+        // Detects if it's an external link (http/https) not from our storage or a base64/data URI
         const isExternalHttp =
           /^https?:\/\//i.test(src) &&
           !src.includes("/notes/") &&
@@ -46,9 +46,7 @@ class NoteBlocksController extends NotesBaseController {
 
         if (isExternalHttp || isDataUri) {
           try {
-            console.info(
-              `[notes.blocks.sync] Processando mídia para upload...`
-            );
+            console.info(`[notes.blocks.sync] Processing media for upload...`);
             const resp = await fetch(src);
             if (resp.ok) {
               const contentType = resp.headers.get("content-type");
@@ -67,16 +65,16 @@ class NoteBlocksController extends NotesBaseController {
                 );
                 block.properties.attrs.src = newUrl;
                 console.info(
-                  `[notes.blocks.sync] Mídia salva no storage: ${newUrl}`
+                  `[notes.blocks.sync] Media saved in storage: ${newUrl}`
                 );
               }
             }
           } catch (e) {
             console.error(
-              `[notes.blocks.sync] Falha ao processar mídia (${isDataUri ? "data-uri" : src}):`,
+              `[notes.blocks.sync] Failed to process media (${isDataUri ? "data-uri" : src}):`,
               e.message
             );
-            // Continua com a url original, o validador decidirá se passa
+            // Continue with the original URL, the validator will decide if it passes
           }
         }
       }
@@ -144,7 +142,7 @@ class NoteBlocksController extends NotesBaseController {
 
       const existing = await this.notesRepository.findNoteBlockById(blockId);
       if (!existing || String(existing.note_id) !== String(noteId)) {
-        return res.status(404).json({ error: "Bloco não encontrado" });
+        return res.status(404).json({ error: "Block not found" });
       }
       const expectedVersion = this._parsePositiveInt(
         req.body?.expectedVersion ?? req.body?.expected_version,
@@ -163,7 +161,7 @@ class NoteBlocksController extends NotesBaseController {
         });
         return res.status(409).json({
           code: "BLOCK_CONFLICT",
-          error: "Conflito de edição no bloco",
+          error: "Edit conflict on block",
           blockId,
           expectedVersion,
           currentVersion: Number(existing.version),
@@ -194,14 +192,14 @@ class NoteBlocksController extends NotesBaseController {
           });
           return res.status(409).json({
             code: "BLOCK_CONFLICT",
-            error: "Conflito de edição no bloco",
+            error: "Edit conflict on block",
             blockId,
             expectedVersion,
             currentVersion: Number(latest.version),
             serverBlock: latest,
           });
         }
-        return res.status(404).json({ error: "Bloco não encontrado" });
+        return res.status(404).json({ error: "Block not found" });
       }
       if (
         String(
@@ -241,14 +239,12 @@ class NoteBlocksController extends NotesBaseController {
 
       const existing = await this.notesRepository.findNoteBlockById(blockId);
       if (!existing || String(existing.note_id) !== String(noteId)) {
-        return res.status(404).json({ error: "Bloco não encontrado" });
+        return res.status(404).json({ error: "Block not found" });
       }
 
       const n = await this.notesRepository.softDeleteNoteBlocks([blockId]);
       if (n === 0) {
-        return res
-          .status(400)
-          .json({ error: "Não foi possível remover o bloco" });
+        return res.status(400).json({ error: "Could not remove the block" });
       }
       return res.status(200).json({ success: true });
     } catch (error) {
@@ -275,7 +271,7 @@ class NoteBlocksController extends NotesBaseController {
           : String(parentRaw);
       const orderedIds = req.body?.ordered_ids ?? req.body?.orderedIds;
       if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
-        return res.status(400).json({ error: "ordered_ids inválido" });
+        return res.status(400).json({ error: "Invalid ordered_ids" });
       }
 
       const updated = await this.notesRepository.reorderNoteBlocks(
@@ -290,7 +286,7 @@ class NoteBlocksController extends NotesBaseController {
   }
 
   /**
-   * PUT /api/notes/:noteId/blocks — substitui todos os blocos (sync em massa)
+   * PUT /api/notes/:noteId/blocks — replace all blocks (bulk sync)
    */
   async putSync(req, res, next) {
     try {
@@ -306,12 +302,12 @@ class NoteBlocksController extends NotesBaseController {
         "baseRevision"
       );
       if (baseRevision === null) {
-        return res.status(400).json({ error: "baseRevision é obrigatório" });
+        return res.status(400).json({ error: "baseRevision is required" });
       }
 
       const tree = req.body?.blocks;
       if (!Array.isArray(tree)) {
-        return res.status(400).json({ error: "blocks deve ser array" });
+        return res.status(400).json({ error: "blocks must be an array" });
       }
 
       await this._processExternalMedia(tree, noteId, userId);
@@ -342,7 +338,7 @@ class NoteBlocksController extends NotesBaseController {
           });
           return res.status(409).json({
             code: "NOTE_CONFLICT",
-            error: "Conflito de edição detectado",
+            error: "Edit conflict detected",
             noteId,
             currentRevision:
               latestNote?.revision === undefined ||

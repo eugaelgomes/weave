@@ -13,6 +13,12 @@ const {
   resolveProjectPublicIdParam,
   resolveOrganizationPublicIdParam,
 } = require("@/middlewares/public-id-resolver");
+const { validate } = require("@/middlewares/validation/validate");
+const {
+  tagsParamsSchema,
+  createTagSchema,
+  updateTagSchema,
+} = require("./schemas/tags.schema");
 
 const router = Router({ mergeParams: true });
 
@@ -33,17 +39,26 @@ router.use((req, res, next) => {
 router.post(
   "/:project_id/tags",
   requireManageTags,
+  validate(tagsParamsSchema, "params"),
+  validate(createTagSchema, "body"),
   TagsController.createTag.bind(TagsController)
 );
-router.get("/:project_id/tags", TagsController.getTags.bind(TagsController));
+router.get(
+  "/:project_id/tags",
+  validate(tagsParamsSchema, "params"),
+  TagsController.getTags.bind(TagsController)
+);
 router.patch(
   "/:project_id/tags/:tag_id",
   requireManageTags,
+  validate(tagsParamsSchema, "params"),
+  validate(updateTagSchema, "body"),
   TagsController.updateTag.bind(TagsController)
 );
 router.delete(
   "/:project_id/tags/:tag_id",
   requireManageTags,
+  validate(tagsParamsSchema, "params"),
   TagsController.deleteTag.bind(TagsController)
 );
 
@@ -51,17 +66,26 @@ router.delete(
 router.post(
   "/:org_id/tags",
   requireManageTags,
+  validate(tagsParamsSchema, "params"),
+  validate(createTagSchema, "body"),
   TagsController.createTag.bind(TagsController)
 );
-router.get("/:org_id/tags", TagsController.getTags.bind(TagsController));
+router.get(
+  "/:org_id/tags",
+  validate(tagsParamsSchema, "params"),
+  TagsController.getTags.bind(TagsController)
+);
 router.patch(
   "/:org_id/tags/:tag_id",
   requireManageTags,
+  validate(tagsParamsSchema, "params"),
+  validate(updateTagSchema, "body"),
   TagsController.updateTag.bind(TagsController)
 );
 router.delete(
   "/:org_id/tags/:tag_id",
   requireManageTags,
+  validate(tagsParamsSchema, "params"),
   TagsController.deleteTag.bind(TagsController)
 );
 

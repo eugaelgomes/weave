@@ -1,6 +1,6 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const PlanUsageManager = require("@/modules/plans/plans.controller");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
 
 class ProjectsDeleteController extends ProjectsCoreController {
   async deleteProject(req, res, next) {
@@ -33,7 +33,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
           : await this.projectsRepository.deleteProject(id, userId);
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao deletar projeto");
+        throw new Error("Failed to delete project");
       }
 
       // Decrementar o uso de projetos
@@ -94,7 +94,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
           );
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao remover colaborador");
+        throw new Error("Failed to remove collaborator");
       }
 
       res.status(200).json({
@@ -145,9 +145,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
             );
 
       if (!result || result.length === 0) {
-        throw new Error(
-          "Falha ao remover nota. Verifique se você tem permissão"
-        );
+        throw new Error("Failed to remove note. Check your permissions.");
       }
 
       res.status(200).json({

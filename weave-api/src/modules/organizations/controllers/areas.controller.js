@@ -15,7 +15,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
     this.areasRepository = areasRepository;
   }
 
-  /** Papel em `organization_members` (alinhado ao motor de permissões). */
+  /** Role in `organization_members` (aligned with permission engine). */
   _canManageOrgStructure(organization) {
     return this._orgRoleHasPermission(
       organization,
@@ -33,7 +33,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
   }
 
   /**
-   * admin/super_admin com MANAGE_AREAS ou gestor da área.
+   * Admin/super_admin with MANAGE_AREAS or area manager.
    * @returns {Promise<boolean>}
    */
   async _requireAreaWriteAccess(res, organization, areaId, userId) {
@@ -43,7 +43,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
     }
     res.status(403).json({
       error:
-        "Permissão insuficiente. É necessário administrador da organização ou gestor da área.",
+        "Insufficient permissions. Organization administrator or area manager required.",
       success: false,
     });
     return false;
@@ -186,16 +186,8 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       if (!isSubArea && !canOrgStructure) {
         return res.status(403).json({
-          error:
-            "Somente administradores da organização podem criar áreas principais",
+          error: "Only organization administrators can create root areas",
           success: false,
-        });
-      }
-
-      if (!area_name || typeof area_name !== "string") {
-        return res.status(400).json({
-          success: false,
-          error: "area_name is required and must be a string",
         });
       }
 
@@ -222,7 +214,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!normalizedSlug) {
         return res
           .status(400)
-          .json({ success: false, error: "Slug inválido para a área" });
+          .json({ success: false, error: "Invalid area slug" });
       }
 
       const uniqueSlug = await this._ensureUniqueSlug(
@@ -278,11 +270,11 @@ class OrganizationAreasController extends OrganizationsBaseController {
           .json({ success: false, error: "Area not found" });
       }
 
-      // Bloqueia alterações estruturais em área raiz
+      // Block structural changes in root area
       if (existingArea.is_root_area && req.body.parent_area_id !== undefined) {
         return res.status(400).json({
           success: false,
-          error: "A área raiz não pode ser movida para outra área pai.",
+          error: "The root area cannot be moved to another parent area.",
         });
       }
 
@@ -304,22 +296,10 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const updates = {};
 
       if (area_name !== undefined) {
-        if (!area_name || typeof area_name !== "string") {
-          return res.status(400).json({
-            success: false,
-            error: "area_name deve ser uma string válida",
-          });
-        }
         updates.area_name = area_name.trim();
       }
 
       if (description !== undefined) {
-        if (description !== null && typeof description !== "string") {
-          return res.status(400).json({
-            success: false,
-            error: "description deve ser uma string",
-          });
-        }
         updates.description = description?.trim() || null;
       }
 
@@ -328,11 +308,6 @@ class OrganizationAreasController extends OrganizationsBaseController {
       }
 
       if (active !== undefined) {
-        if (typeof active !== "boolean") {
-          return res
-            .status(400)
-            .json({ success: false, error: "active deve ser booleano" });
-        }
         updates.active = active;
       }
 
@@ -340,7 +315,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         if (parent_area_id === existingArea.id) {
           return res.status(400).json({
             success: false,
-            error: "Área não pode ser pai de si mesma",
+            error: "An area cannot be its own parent",
           });
         }
         if (parent_area_id) {
@@ -357,7 +332,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         if (!baseSlug) {
           return res
             .status(400)
-            .json({ success: false, error: "Slug inválido" });
+            .json({ success: false, error: "Invalid slug" });
         }
 
         const finalSlug = await this._ensureUniqueSlug(
@@ -376,7 +351,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Área atualizada com sucesso",
+        message: "Area updated successfully",
         data: updatedArea,
       });
     } catch (error) {
@@ -411,7 +386,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (area.is_root_area) {
         return res.status(400).json({
           success: false,
-          error: "A área raiz não pode ser removida.",
+          error: "The root area cannot be removed.",
         });
       }
 
@@ -428,7 +403,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Área removida com sucesso",
+        message: "Area removed successfully",
         data: deletedArea,
       });
     } catch (error) {
@@ -507,19 +482,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       }
 
       const { user_id, role = ORG_ROLES.MEMBER } = req.body;
-      if (!user_id) {
-        return res
-          .status(400)
-          .json({ success: false, error: "user_id is required" });
-      }
-      const normalizedRole =
-        typeof role === "string" ? role.trim().toUpperCase() : "";
-      if (!AREA_MEMBER_ROLES.includes(normalizedRole)) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid area member role. Use ADMIN, MEMBER or GUEST",
-        });
-      }
+      const normalizedRole = role.trim().toUpperCase();
 
       const targetUser = await SearchUsersRepository.findById(user_id);
       if (!targetUser) {
@@ -535,7 +498,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!isMember) {
         return res.status(400).json({
           success: false,
-          error: "Usuário precisa ser membro da organização",
+          error: "User must be an organization member",
         });
       }
 
@@ -547,7 +510,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (existingMember) {
         return res.status(400).json({
           success: false,
-          error: "Usuário já está associado a esta área",
+          error: "User is already associated with this area",
         });
       }
 
@@ -561,7 +524,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       res.status(201).json({
         status: "OK",
-        message: "Membro adicionado à área",
+        message: "Member added to area",
         data: member,
       });
     } catch (error) {
@@ -584,15 +547,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       const { areaId, memberId } = req.params;
       const { role } = req.body;
-
-      const normalizedRole =
-        typeof role === "string" ? role.trim().toUpperCase() : "";
-      if (!normalizedRole || !AREA_MEMBER_ROLES.includes(normalizedRole)) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid area member role. Use ADMIN, MEMBER or GUEST",
-        });
-      }
+      const normalizedRole = role.trim().toUpperCase();
 
       const area = await this.areasRepository.getAreaById(
         areaId,
@@ -631,7 +586,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Membro atualizado com sucesso",
+        message: "Member updated successfully",
         data: updated,
       });
     } catch (error) {
@@ -690,7 +645,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Membro removido da área",
+        message: "Member removed from area",
         data: removed,
       });
     } catch (error) {

@@ -82,13 +82,6 @@ class AgentsController {
         project_id,
       } = req.body;
 
-      if (!name || !model_provider || !model_name) {
-        return res.status(400).json({
-          success: false,
-          error: t.agentFieldsRequired,
-        });
-      }
-
       const personality = normalizeAgentPersonality({
         instructions,
         role,
@@ -139,7 +132,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao criar agente:", error);
+      console.error("Error creating agent:", error);
       res.status(500).json({
         success: false,
         error: t.createAgentFailed,
@@ -259,7 +252,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao atualizar agente:", error);
+      console.error("Error updating agent:", error);
       res.status(500).json({ success: false, error: t.updateAgentFailed });
     }
   }
@@ -287,7 +280,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao deletar agente:", error);
+      console.error("Error deleting agent:", error);
       res.status(500).json({ success: false, error: t.deleteAgentFailed });
     }
   }
@@ -306,12 +299,6 @@ class AgentsController {
       const userId = this._validateAuthentication(req);
       const { id } = req.params;
       const { sharedWith } = req.body;
-
-      if (!Array.isArray(sharedWith)) {
-        return res
-          .status(400)
-          .json({ success: false, error: t.sharedWithMustBeArray });
-      }
 
       const updatedAgent = await agentRepository.shareAgent(
         id,
@@ -334,7 +321,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao compartilhar agente:", error);
+      console.error("Error sharing agent:", error);
       res.status(500).json({ success: false, error: t.shareAgentFailed });
     }
   }
@@ -378,7 +365,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao buscar agentes:", error);
+      console.error("Error fetching agents:", error);
       res.status(500).json({
         success: false,
         error: t.fetchAgentsFailed,
@@ -413,7 +400,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao buscar agente:", error);
+      console.error("Error fetching agent:", error);
       res.status(500).json({
         success: false,
         error: t.fetchAgentFailed,
@@ -438,12 +425,6 @@ class AgentsController {
       const { id } = req.params;
       const { projectId } = req.body;
 
-      if (!projectId) {
-        return res
-          .status(400)
-          .json({ success: false, error: t.projectIdRequired });
-      }
-
       const updatedAgent = await agentRepository.assignToProject(
         id,
         userId,
@@ -462,7 +443,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao vincular agente ao projeto:", error);
+      console.error("Error assigning agent to project:", error);
       res.status(500).json({ success: false, error: t.assignProjectFailed });
     }
   }
@@ -499,7 +480,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao desvincular agente do projeto:", error);
+      console.error("Error unassigning agent from project:", error);
       res.status(500).json({
         success: false,
         error: t.unassignProjectFailed,
@@ -524,12 +505,6 @@ class AgentsController {
       const { id } = req.params;
       const { isActive } = req.body;
 
-      if (typeof isActive !== "boolean") {
-        return res
-          .status(400)
-          .json({ success: false, error: t.isActiveMustBeBoolean });
-      }
-
       const updatedAgent = await agentRepository.toggleActive(
         id,
         userId,
@@ -548,7 +523,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao alternar estado do agente:", error);
+      console.error("Error toggling agent state:", error);
       res.status(500).json({ success: false, error: t.toggleActiveFailed });
     }
   }
@@ -582,7 +557,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao duplicar agente:", error);
+      console.error("Error duplicating agent:", error);
       res.status(500).json({ success: false, error: t.duplicateAgentFailed });
     }
   }
@@ -608,7 +583,7 @@ class AgentsController {
           error: error.message || t.unauthenticated,
         });
       }
-      console.error("Erro ao obter provedores e modelos:", error);
+      console.error("Error fetching providers and models:", error);
       res.status(500).json({
         success: false,
         error: t.fetchProvidersFailed,

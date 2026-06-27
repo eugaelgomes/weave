@@ -1,22 +1,17 @@
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
-const { validationResult } = require("express-validator");
+
 const { fromUnknown } = require("@/errors");
-const PasswordRepository = require("@/modules/password/password.repository");
+const PasswordRepository = require("@/modules/password/repositories/password.repository");
 const {
   mail_rescue_pass,
 } = require("@/services/email/templates/rescue-password");
 
 class PasswordController {
-  // FORGOT PASSWORD
+  /**
+   * Request password reset link (forgot password)
+   */
   async forgotPassword(req, res) {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "Invalid email", errors: errors.array() });
-    }
-
     const email = req.body.email;
 
     try {
@@ -26,7 +21,7 @@ class PasswordController {
         return res.status(400).json({ message: "User not found." });
       }
 
-      // Verificar se email_verified = true
+      // Check if email_verified is true
       if (!userExists.email_verified) {
         return res.status(403).json({
           message: "Email not verified. Please activate your account first.",
@@ -36,10 +31,10 @@ class PasswordController {
 
       const token = crypto.randomBytes(10).toString("hex");
 
-      // Desativa tokens antigos
+      // Deactivate old tokens
       await PasswordRepository.deactivateOldTokens(userExists.user_id);
 
-      // Novo token 1h
+      // New 1h token
       await PasswordRepository.createToken(userExists.user_id, token);
 
       const emailResult = await mail_rescue_pass(email, token, userExists.name);
@@ -57,7 +52,7 @@ class PasswordController {
         });
       }
 
-      // Retorno em caso 200
+      // Return response on success
       return res.status(202).json({
         status: "OK",
         message:
@@ -71,19 +66,11 @@ class PasswordController {
     }
   }
 
-  // RESERT PASSWORD
+  /**
+   * Reset user password using token
+   */
   async resetPassword(req, res, next) {
     const { token, password: newPassword } = req.body;
-
-    if (!token || !newPassword) {
-      return res.status(400).json({
-        message: "Token and new password are required",
-        received: {
-          token: !!token,
-          password: !!newPassword,
-        },
-      });
-    }
 
     try {
       const tokenRecord = await PasswordRepository.findTokenByValue(token);
@@ -93,7 +80,7 @@ class PasswordController {
         });
       }
 
-      // Busca o usuário pelo ID associado ao token
+      // Find the user by the ID associated with the token
       const userExists = await PasswordRepository.findUserById(
         tokenRecord.user_id
       );

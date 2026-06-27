@@ -1,13 +1,13 @@
 const BackupBaseController = require("./base.controller");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.repository");
-const PlansRepository = require("@/modules/plans/plans.repository");
-const PlanUsageManager = require("@/modules/plans/plans.controller");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
 const { enqueueBackupExportJob } = require("@/services/queue/queue-controller");
 
 /**
- * Pedido de backup assíncrono e execução do job (CSV, storage, e-mail).
+ * Asynchronous backup request and job execution (CSV, storage, e-mail).
  */
 class BackupExportController extends BackupBaseController {
   /**
@@ -24,8 +24,8 @@ class BackupExportController extends BackupBaseController {
       if (!this._validateUserId(userId)) {
         return res.status(400).json({
           status: "Bad Request",
-          error: "ID de usuário inválido",
-          message: "O formato do ID de usuário não é válido",
+          error: "Invalid user ID",
+          message: "The user ID format is invalid",
         });
       }
 
@@ -33,8 +33,8 @@ class BackupExportController extends BackupBaseController {
       if (!userPlan || !userPlan.plan_id) {
         return res.status(403).json({
           status: "Forbidden",
-          error: "Plano não encontrado",
-          message: "Você precisa ter um plano ativo para solicitar backups",
+          error: "Plan not found",
+          message: "You must have an active plan to request backups",
         });
       }
 
@@ -64,7 +64,7 @@ class BackupExportController extends BackupBaseController {
 
         return res.status(406).json({
           status: "Too Many Requests",
-          message: `Você atingiu o limite de ${limit} backup(s) por mês do seu plano ${planDetails.name}`,
+          message: `You have reached the limit of ${limit} backup(s) per month for your ${planDetails.name} plan`,
           details: {
             current_usage: currentUsage,
             monthly_limit: limit,
@@ -87,9 +87,9 @@ class BackupExportController extends BackupBaseController {
       if (activeJob) {
         return res.status(409).json({
           status: "Conflict",
-          error: "Backup já em andamento",
+          error: "Backup already in progress",
           message:
-            "Aguarde a conclusão do backup atual antes de solicitar outro",
+            "Please wait for the current backup to complete before requesting another",
           details: {
             job_id: activeJob.id,
             backup_status: activeJob.status,
@@ -102,7 +102,7 @@ class BackupExportController extends BackupBaseController {
       if (!user)
         return res.status(404).json({
           status: "Not Found",
-          error: "Usuário não encontrado",
+          error: "User not found",
         });
 
       const job = await backupJobsRepository.createJob(
@@ -133,10 +133,10 @@ class BackupExportController extends BackupBaseController {
         status: "OK",
         job_id: job.id,
         message:
-          "Backup solicitado com sucesso! Você receberá um email quando estiver pronto.",
+          "Backup requested successfully! You will receive an email when it is ready.",
         details: {
           backup_status: "pending",
-          estimated_time: "2-5 minutos",
+          estimated_time: "2-5 minutes",
           user_email: user.email,
           created_at: job.createdAt,
           usage: {

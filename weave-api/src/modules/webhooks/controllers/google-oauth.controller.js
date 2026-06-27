@@ -6,16 +6,16 @@ const WebhooksBaseController = require("@/modules/webhooks/controllers/base.cont
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 /**
- * OAuth2 do Google Calendar: `GET /api/v1/webhooks/google/auth` e callback
+ * Google Calendar OAuth2: `GET /api/v1/webhooks/google/auth` and callback
  * `GET /api/v1/webhooks/google/callback`.
  *
- * O `redirect_uri` está fixo em `@/hooks/google/google-calendar.js`:
- * produção `https://apis.weavenotes.app/api/v1/webhooks/google/callback`,
+ * The `redirect_uri` is hardcoded in `@/hooks/google/google-calendar.js`:
+ * production `https://apis.weavenotes.app/api/v1/webhooks/google/callback`,
  * dev `http://localhost:8080/api/v1/webhooks/google/callback`.
  */
 class GoogleOauthController extends WebhooksBaseController {
   /**
-   * Redireciona o usuário para a tela de consentimento OAuth2 do Google.
+   * Redirects the user to the Google OAuth2 consent screen.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
@@ -35,20 +35,14 @@ class GoogleOauthController extends WebhooksBaseController {
   }
 
   /**
-   * Callback OAuth2 do Google. Troca o authorization code por tokens,
-   * persiste-os no banco e registra o webhook de notificações do Calendar.
+   * Google OAuth2 callback. Exchanges authorization code for tokens,
+   * persists them in the database, and registers the Calendar webhook.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
   async googleCallback(req, res) {
     try {
       const { code, state } = req.query;
-
-      if (!code || !state) {
-        return res
-          .status(400)
-          .json({ error: "Parâmetros code/state ausentes" });
-      }
 
       const { userId } = JSON.parse(
         Buffer.from(state, "base64").toString("utf-8")

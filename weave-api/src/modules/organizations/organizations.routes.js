@@ -18,6 +18,30 @@ const {
 // Utils
 const upload = require("@/utils/data/profile-img");
 const validateImages = require("@/utils/image-validator");
+const { validate } = require("@/middlewares/validation/validate");
+
+// Schemas
+const {
+  createOrganizationSchema,
+  updateOrganizationSchema,
+} = require("./schemas/organizations.schema");
+const {
+  inviteMemberSchema,
+  inviteMembersBulkSchema,
+  acceptInviteSchema,
+  updateMemberRoleSchema,
+} = require("./schemas/members.schema");
+const {
+  createAreaSchema,
+  updateAreaSchema,
+  addAreaMemberSchema,
+  updateAreaMemberSchema,
+} = require("./schemas/areas.schema");
+const {
+  createDomainSchema,
+  updateSsoSettingsSchema,
+} = require("./schemas/domains.schema");
+const { saveStepOneSchema } = require("./schemas/creation-steps.schema");
 
 const router = express.Router();
 
@@ -34,6 +58,7 @@ router.post(
   standardTrafficLimiter,
   upload.single("profileImage"),
   validateImages,
+  validate(acceptInviteSchema, "body"),
   organizationMembersController.acceptInvite.bind(organizationMembersController)
 );
 
@@ -54,6 +79,7 @@ router.get(
 router.post(
   "/domains",
   structuralLimiter,
+  validate(createDomainSchema, "body"),
   organizationDomainsController.createDomain.bind(organizationDomainsController)
 );
 
@@ -72,6 +98,7 @@ router.delete(
 router.patch(
   "/domains/:domainId/sso",
   structuralLimiter,
+  validate(updateSsoSettingsSchema, "body"),
   organizationDomainsController.updateSsoSettings.bind(
     organizationDomainsController
   )
@@ -87,6 +114,7 @@ router.get(
 router.post(
   "/areas",
   structuralLimiter,
+  validate(createAreaSchema, "body"),
   organizationAreasController.createArea.bind(organizationAreasController)
 );
 
@@ -99,6 +127,7 @@ router.get(
 router.put(
   "/areas/:areaId",
   structuralLimiter,
+  validate(updateAreaSchema, "body"),
   organizationAreasController.updateArea.bind(organizationAreasController)
 );
 
@@ -117,12 +146,14 @@ router.get(
 router.post(
   "/areas/:areaId/members",
   structuralLimiter,
+  validate(addAreaMemberSchema, "body"),
   organizationAreasController.addAreaMember.bind(organizationAreasController)
 );
 
 router.patch(
   "/areas/:areaId/members/:memberId",
   structuralLimiter,
+  validate(updateAreaMemberSchema, "body"),
   organizationAreasController.updateAreaMember.bind(organizationAreasController)
 );
 
@@ -135,6 +166,7 @@ router.delete(
 router.post(
   "/",
   structuralLimiter,
+  validate(createOrganizationSchema, "body"),
   // Keep POST /organizations aligned with step-1 onboarding contract.
   organizationCreationStepsController.saveStepOne.bind(
     organizationCreationStepsController
@@ -152,6 +184,7 @@ router.get(
 router.post(
   "/creation-steps/step-1",
   structuralLimiter,
+  validate(saveStepOneSchema, "body"),
   organizationCreationStepsController.saveStepOne.bind(
     organizationCreationStepsController
   )
@@ -168,6 +201,7 @@ router.post(
 router.put(
   "/",
   structuralLimiter,
+  validate(updateOrganizationSchema, "body"),
   organizationsController.updateOrganization.bind(organizationsController)
 );
 
@@ -195,6 +229,7 @@ router.get(
 
 router.patch(
   "/members/:memberId",
+  validate(updateMemberRoleSchema, "body"),
   organizationMembersController.updateMemberRole.bind(
     organizationMembersController
   )
@@ -207,11 +242,13 @@ router.delete(
 
 router.post(
   "/invites",
+  validate(inviteMemberSchema, "body"),
   organizationMembersController.inviteMember.bind(organizationMembersController)
 );
 
 router.post(
   "/invites/bulk",
+  validate(inviteMembersBulkSchema, "body"),
   organizationMembersController.inviteMembersBulk.bind(
     organizationMembersController
   )

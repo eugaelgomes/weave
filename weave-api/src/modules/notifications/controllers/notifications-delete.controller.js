@@ -20,7 +20,7 @@ class NotificationsDeleteController extends NotificationsBaseController {
       });
 
       if (!result) {
-        return res.status(404).json({ error: "Notificação não encontrada" });
+        return res.status(404).json({ error: "Notification not found" });
       }
 
       res.status(200).json({ success: true });

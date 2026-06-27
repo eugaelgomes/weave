@@ -6,6 +6,7 @@ const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
   resolveNotePublicIdParam,
 } = require("@/middlewares/public-id-resolver");
+const { validate } = require("@/middlewares/validation/validate");
 const {
   commentFilesUpload,
   noteUpdateUpload,
@@ -15,6 +16,24 @@ const {
   standardTrafficLimiter,
   notesBlockWriteLimiter,
 } = require("@/middlewares/security/request-limiters");
+
+const {
+  noteIdParamSchema,
+  blockIdParamSchema,
+  commentIdParamSchema,
+  collaboratorIdParamSchema,
+  listNotesQuerySchema,
+  createNoteSchema,
+  createCompleteNoteSchema,
+  updateNoteSchema,
+  createNoteBlockSchema,
+  updateNoteBlockSchema,
+  reorderNoteBlocksSchema,
+  putSyncNoteBlocksSchema,
+  createCommentSchema,
+  updateCommentSchema,
+  addCollaboratorSchema,
+} = require("./schemas/notes.schema");
 
 // Import controllers
 const NotesReadController = require("@/modules/notes/controllers/notes-read.controller");
@@ -50,41 +69,81 @@ router.use((req, res, next) => {
   return requireScope("notes:write")(req, res, next);
 });
 
-router.get("/", highTrafficLimiter, (req, res, next) => {
-  NotesReadController.getAllNotes(req, res, next);
-});
+router.get(
+  "/",
+  highTrafficLimiter,
+  validate(listNotesQuerySchema, "query"),
+  (req, res, next) => {
+    NotesReadController.getAllNotes(req, res, next);
+  }
+);
 
 router.get("/stats", highTrafficLimiter, (req, res, next) => {
   NotesReadController.getNotesStats(req, res, next);
 });
 
-router.post("/complete", standardTrafficLimiter, (req, res, next) => {
-  NotesWriteController.createCompleteNote(req, res, next);
-});
+router.post(
+  "/complete",
+  standardTrafficLimiter,
+  validate(createCompleteNoteSchema, "body"),
+  (req, res, next) => {
+    NotesWriteController.createCompleteNote(req, res, next);
+  }
+);
 
-router.get("/:noteId/export/pdf", (req, res, next) => {
-  NotesExportController.exportNoteAsPDF(req, res, next);
-});
+router.get(
+  "/:noteId/export/pdf",
+  validate(noteIdParamSchema, "params"),
+  (req, res, next) => {
+    NotesExportController.exportNoteAsPDF(req, res, next);
+  }
+);
 
-router.get("/:noteId/blocks", standardTrafficLimiter, (req, res, next) => {
-  NoteBlocksController.list(req, res, next);
-});
+router.get(
+  "/:noteId/blocks",
+  standardTrafficLimiter,
+  validate(noteIdParamSchema, "params"),
+  (req, res, next) => {
+    NoteBlocksController.list(req, res, next);
+  }
+);
 
-router.post("/:noteId/blocks/reorder", blockWriteLimiter, (req, res, next) => {
-  NoteBlocksController.reorder(req, res, next);
-});
+router.post(
+  "/:noteId/blocks/reorder",
+  blockWriteLimiter,
+  validate(noteIdParamSchema, "params"),
+  validate(reorderNoteBlocksSchema, "body"),
+  (req, res, next) => {
+    NoteBlocksController.reorder(req, res, next);
+  }
+);
 
-router.put("/:noteId/blocks", standardTrafficLimiter, (req, res, next) => {
-  NoteBlocksController.putSync(req, res, next);
-});
+router.put(
+  "/:noteId/blocks",
+  standardTrafficLimiter,
+  validate(noteIdParamSchema, "params"),
+  validate(putSyncNoteBlocksSchema, "body"),
+  (req, res, next) => {
+    NoteBlocksController.putSync(req, res, next);
+  }
+);
 
-router.post("/:noteId/blocks", blockWriteLimiter, (req, res, next) => {
-  NoteBlocksController.create(req, res, next);
-});
+router.post(
+  "/:noteId/blocks",
+  blockWriteLimiter,
+  validate(noteIdParamSchema, "params"),
+  validate(createNoteBlockSchema, "body"),
+  (req, res, next) => {
+    NoteBlocksController.create(req, res, next);
+  }
+);
 
 router.patch(
   "/:noteId/blocks/:blockId",
   blockWriteLimiter,
+  validate(noteIdParamSchema, "params"),
+  validate(blockIdParamSchema, "params"),
+  validate(updateNoteBlockSchema, "body"),
   (req, res, next) => {
     NoteBlocksController.update(req, res, next);
   }
@@ -93,12 +152,14 @@ router.patch(
 router.delete(
   "/:noteId/blocks/:blockId",
   blockWriteLimiter,
+  validate(noteIdParamSchema, "params"),
+  validate(blockIdParamSchema, "params"),
   (req, res, next) => {
     NoteBlocksController.softDelete(req, res, next);
   }
 );
 
-router.get("/:id", (req, res, next) => {
+router.get("/:id", validate(noteIdParamSchema, "params"), (req, res, next) => {
   NotesReadController.getNoteById(req, res, next);
 });
 
@@ -106,12 +167,13 @@ router.post(
   "/:id/document-images",
   standardTrafficLimiter,
   noteUpdateUpload.array("documentImages", 20),
+  validate(noteIdParamSchema, "params"),
   (req, res, next) => {
     NotesWriteController.uploadDocumentImages(req, res, next);
   }
 );
 
-router.post("/", (req, res, next) => {
+router.post("/", validate(createNoteSchema, "body"), (req, res, next) => {
   NotesWriteController.createNote(req, res, next);
 });
 
@@ -123,6 +185,8 @@ router.put(
     { name: "files", maxCount: 10 },
     { name: "documentImages", maxCount: 20 },
   ]),
+  validate(noteIdParamSchema, "params"),
+  validate(updateNoteSchema, "body"),
   (req, res, next) => {
     NotesWriteController.updateNote(req, res, next);
   }
@@ -132,49 +196,92 @@ router.delete("/", (req, res, next) => {
   NotesWriteController.deleteNote(req, res, next);
 });
 
-router.delete("/:id", (req, res, next) => {
-  NotesWriteController.deleteNote(req, res, next);
-});
+router.delete(
+  "/:id",
+  validate(noteIdParamSchema, "params"),
+  (req, res, next) => {
+    NotesWriteController.deleteNote(req, res, next);
+  }
+);
 
-router.get("/:noteId/comments", (req, res, next) => {
-  NotesCommentsController.listComments(req, res, next);
-});
+router.get(
+  "/:noteId/comments",
+  validate(noteIdParamSchema, "params"),
+  (req, res, next) => {
+    NotesCommentsController.listComments(req, res, next);
+  }
+);
 
-router.post("/:noteId/comments", (req, res, next) => {
-  NotesCommentsController.createComment(req, res, next);
-});
+router.post(
+  "/:noteId/comments",
+  validate(noteIdParamSchema, "params"),
+  validate(createCommentSchema, "body"),
+  (req, res, next) => {
+    NotesCommentsController.createComment(req, res, next);
+  }
+);
 
 router.post(
   "/:noteId/comments/attachments",
   standardTrafficLimiter,
   commentFilesUpload.array("files", 10),
+  validate(noteIdParamSchema, "params"),
   (req, res, next) => {
     NotesCommentsController.uploadCommentFiles(req, res, next);
   }
 );
 
-router.put("/:noteId/comments/:commentId", (req, res, next) => {
-  NotesCommentsController.updateComment(req, res, next);
-});
+router.put(
+  "/:noteId/comments/:commentId",
+  validate(noteIdParamSchema, "params"),
+  validate(commentIdParamSchema, "params"),
+  validate(updateCommentSchema, "body"),
+  (req, res, next) => {
+    NotesCommentsController.updateComment(req, res, next);
+  }
+);
 
-router.delete("/:noteId/comments/:commentId", (req, res, next) => {
-  NotesCommentsController.deleteComment(req, res, next);
-});
+router.delete(
+  "/:noteId/comments/:commentId",
+  validate(noteIdParamSchema, "params"),
+  validate(commentIdParamSchema, "params"),
+  (req, res, next) => {
+    NotesCommentsController.deleteComment(req, res, next);
+  }
+);
 
-router.get("/:noteId/collaborators", (req, res, next) => {
-  NotesCollaboratorsController.getCollaborators(req, res, next);
-});
+router.get(
+  "/:noteId/collaborators",
+  validate(noteIdParamSchema, "params"),
+  (req, res, next) => {
+    NotesCollaboratorsController.getCollaborators(req, res, next);
+  }
+);
 
-router.post("/:noteId/collaborators", (req, res, next) => {
-  NotesCollaboratorsController.addCollaborator(req, res, next);
-});
+router.post(
+  "/:noteId/collaborators",
+  validate(noteIdParamSchema, "params"),
+  validate(addCollaboratorSchema, "body"),
+  (req, res, next) => {
+    NotesCollaboratorsController.addCollaborator(req, res, next);
+  }
+);
 
-router.put("/:noteId/recuseCollaboration", (req, res, next) => {
-  NotesCollaboratorsController.recuseCollaboration(req, res, next);
-});
+router.put(
+  "/:noteId/recuseCollaboration",
+  validate(noteIdParamSchema, "params"),
+  (req, res, next) => {
+    NotesCollaboratorsController.recuseCollaboration(req, res, next);
+  }
+);
 
-router.delete("/:noteId/collaborators/:collaboratorId", (req, res, next) => {
-  NotesCollaboratorsController.removeCollaborator(req, res, next);
-});
+router.delete(
+  "/:noteId/collaborators/:collaboratorId",
+  validate(noteIdParamSchema, "params"),
+  validate(collaboratorIdParamSchema, "params"),
+  (req, res, next) => {
+    NotesCollaboratorsController.removeCollaborator(req, res, next);
+  }
+);
 
 module.exports = router;

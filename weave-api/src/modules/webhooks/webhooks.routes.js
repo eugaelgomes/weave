@@ -2,6 +2,11 @@ const express = require("express");
 const GoogleOauthController = require("@/modules/webhooks/controllers/google-oauth.controller");
 const GoogleCalendarController = require("@/modules/webhooks/controllers/google-calendar.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { validate } = require("@/middlewares/validation/validate");
+const {
+  googleCallbackSchema,
+  getCalendarEventsSchema,
+} = require("./schemas/webhooks.schema");
 
 const router = express.Router();
 
@@ -13,6 +18,7 @@ router.get(
 
 router.get(
   "/google/callback",
+  validate(googleCallbackSchema, "query"),
   GoogleOauthController.googleCallback.bind(GoogleOauthController)
 );
 
@@ -26,6 +32,7 @@ router.post(
 router.get(
   "/google/calendar/events",
   verifyToken,
+  validate(getCalendarEventsSchema, "query"),
   GoogleCalendarController.getCalendarEvents.bind(GoogleCalendarController)
 );
 

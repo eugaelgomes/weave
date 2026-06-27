@@ -2,7 +2,7 @@ const BackupBaseController = require("./base.controller");
 const FetchBackupDataRepository = require("@/modules/backup/repositories/fetch-backup-data.repository");
 
 /**
- * Resumo agregado dos dados elegíveis para backup.
+ * Aggregated summary of eligible backup data.
  */
 class BackupSummaryController extends BackupBaseController {
   /**
@@ -67,7 +67,7 @@ class BackupSummaryController extends BackupBaseController {
 
       res.status(200).json({
         status: "OK",
-        message: "Resumo de backup gerado com sucesso",
+        message: "Backup summary generated successfully",
         generated_at: new Date().toISOString(),
         details: {
           summary,

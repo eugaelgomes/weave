@@ -1,7 +1,7 @@
 const BaseRepository = require("./base.repository");
 
 /**
- * Busca de usuário por e-mail (OAuth, duplicidade, recuperação).
+ * Search for user by email (OAuth, duplication, recovery).
  */
 class FindUserRepository extends BaseRepository {
   /**

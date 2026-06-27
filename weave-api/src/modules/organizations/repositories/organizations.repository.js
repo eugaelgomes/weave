@@ -9,7 +9,7 @@ const {
 
 class OrganizationsRepository {
   /**
-   * Papel do utilizador na organização (organization_members.role).
+   * User's role in the organization (organization_members.role).
    * @param {string} organization_id
    * @param {string} user_id
    * @returns {Promise<string|null>}
@@ -47,8 +47,8 @@ class OrganizationsRepository {
   }
 
   /**
-   * Organização ativa do utilizador com `member_role` para o motor de permissões.
-   * Usa membership; se só existir como owner legacy sem linha em members, usa fallback.
+   * Active organization of the user with `member_role` for the permissions engine.
+   * Uses membership; if only exists as owner legacy without row in members, uses fallback.
    */
   async getActiveOrganizationWithMembership(user_id) {
     const query = `
@@ -527,7 +527,7 @@ class OrganizationsRepository {
 
       const organization = orgResult.rows[0];
 
-      // Atualiza o usuário com o organization_id criado
+      // Update user with created organization_id
       const updateUserQuery = `
       UPDATE users
       SET organization_id = $1,
@@ -541,7 +541,7 @@ class OrganizationsRepository {
         defaultPlanId,
       ]);
 
-      // Adiciona associação do usuário à org
+      // Add association of the user to the org
       await this.addOrganizationMember(
         organization.id,
         user_id,
@@ -551,12 +551,12 @@ class OrganizationsRepository {
         client
       );
 
-      // Cria a área raiz (central) da organização
+      // Create root (central) area of the organization
       const rootAreaSlug = unique_name || "central";
       await client.query(
         `INSERT INTO organization_areas (
            organization_id, area_name, slug, description, properties, created_by, is_root_area
-         ) VALUES ($1, 'Central', $2, 'Área central da organização', '{}'::jsonb, $3, true)`,
+         ) VALUES ($1, 'Central', $2, 'Central area of the organization', '{}'::jsonb, $3, true)`,
         [organization.id, rootAreaSlug, user_id]
       );
 

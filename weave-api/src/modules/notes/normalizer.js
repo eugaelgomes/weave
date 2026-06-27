@@ -3,7 +3,7 @@ const UUID_REGEX =
 
 const PATH_NAMESPACE_PREFIX = "weave-notes/";
 
-/** Prefixo da key no bucket para anexos de comentários (fora de `notes/…`). */
+/** Bucket key prefix for comment attachments (outside `notes/…`). */
 const COMMENT_FILES_STORAGE_ROOT = "notes-comments-files";
 
 const COMMENT_FILES_PATH_PREFIX = `${COMMENT_FILES_STORAGE_ROOT}/`;
@@ -23,8 +23,8 @@ function stripStorageNamespace(path) {
 }
 
 /**
- * Conteúdo padrão do jsonb `content` em `notes_comments`, alinhado ao modelo de blocos das notas.
- * @see server/docs/notes.md — estrutura do bloco
+ * Default content for jsonb `content` in `notes_comments`, aligned with the notes block model.
+ * @see server/docs/notes.md — block structure
  */
 const DEFAULT_COMMENT_CONTENT = Object.freeze({
   blocks: [
@@ -38,7 +38,7 @@ const DEFAULT_COMMENT_CONTENT = Object.freeze({
 });
 
 /**
- * Garante que cada `path` pertence ao uploader e à nota (evita referenciar keys alheias).
+ * Ensures that each `path` belongs to the uploader and the note (avoids referencing external keys).
  *
  * @param {Array<{ path?: string }>} files
  * @param {string} userId
@@ -51,10 +51,10 @@ function assertCommentFilesStorageScope(files, userId, noteId) {
     const path = typeof f.path === "string" ? f.path : "";
     const stripped = stripStorageNamespace(path);
     if (!stripped.startsWith(COMMENT_FILES_PATH_PREFIX)) {
-      throw new Error("Arquivo de comentário inválido");
+      throw new Error("Invalid comment file");
     }
     if (!stripped.includes(userSeg) || !stripped.includes(noteSeg)) {
-      throw new Error("Arquivo de comentário inválido");
+      throw new Error("Invalid comment file");
     }
   }
 }
@@ -95,8 +95,8 @@ function normalizeCommentContent(raw) {
 }
 
 /**
- * Entrada no jsonb `files`: metadados do objeto no Spaces (mesmo padrão dos arquivos da nota).
- * Path esperado: `notes-comments-files/userId_{uuid}/noteId_{uuid}/files/{uuid}_{nome}`.
+ * Entry in jsonb `files`: object metadata in Spaces (same pattern as note files).
+ * Expected path: `notes-comments-files/userId_{uuid}/noteId_{uuid}/files/{uuid}_{name}`.
  *
  * @param {unknown} raw
  * @returns {{ id: string; name: string; path: string; type: string }[]}
@@ -159,7 +159,7 @@ function normalizeCommentCreatePayload(body) {
         : null;
 
   if (parentRaw && !parentId) {
-    throw new Error("parent_id inválido");
+    throw new Error("Invalid parent_id");
   }
 
   return { content, files, parentId };

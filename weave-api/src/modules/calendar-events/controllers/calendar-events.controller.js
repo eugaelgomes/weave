@@ -4,14 +4,11 @@ const GoogleOauthTokensRepository = require("@/modules/webhooks/repositories/goo
 const googleService = require("@/hooks/google/google-calendar");
 
 const {
-  isValidUUID,
   parseDate,
   extractBoolean,
   normalizeCreatePayload,
-  validateCreatePayload,
   buildGoogleEventBody,
   normalizeUpdateFields,
-  validateUpdateFields,
 } = require("../normalizer");
 const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
 const { resolveProjectIdToUuid } = require("@/utils/project-id-lookup");
@@ -25,7 +22,7 @@ class CalendarEventsController {
     const userId = req.user?.userId;
 
     if (!userId) {
-      res.status(401).json({ error: "Usuario nao autenticado" });
+      res.status(401).json({ error: "User is not authenticated" });
       return null;
     }
 
@@ -37,7 +34,7 @@ class CalendarEventsController {
       payload.creatorId
     );
     if (!tokens) {
-      throw new Error("Google Calendar nao conectado");
+      throw new Error("Google Calendar is not connected");
     }
 
     const calendarId = payload.googleCalendarId || "primary";
@@ -87,15 +84,11 @@ class CalendarEventsController {
       if (!creatorId) return;
 
       const payload = normalizeCreatePayload(req.body, creatorId);
-      const error = validateCreatePayload(payload);
-      if (error) {
-        return res.status(400).json({ error });
-      }
 
       if (payload.noteId) {
         const resolvedNoteId = await resolveNoteIdToUuid(payload.noteId);
         if (!resolvedNoteId) {
-          return res.status(404).json({ error: "Nota não encontrada" });
+          return res.status(404).json({ error: "Note not found" });
         }
         payload.noteId = resolvedNoteId;
       }
@@ -104,7 +97,7 @@ class CalendarEventsController {
           payload.projectId
         );
         if (!resolvedProjectId) {
-          return res.status(404).json({ error: "Projeto não encontrado" });
+          return res.status(404).json({ error: "Project not found" });
         }
         payload.projectId = resolvedProjectId;
       }
@@ -120,7 +113,7 @@ class CalendarEventsController {
         } catch (syncError) {
           return res.status(400).json({
             error:
-              syncError.message || "Falha ao sincronizar com Google Calendar",
+              syncError.message || "Failed to synchronize with Google Calendar",
           });
         }
       }
@@ -143,24 +136,6 @@ class CalendarEventsController {
       const from = parseDate(req.query.from);
       const to = parseDate(req.query.to);
 
-      if (organizationId && !isValidUUID(organizationId)) {
-        return res.status(400).json({ error: "organization_id invalido" });
-      }
-
-      if (includeDeleted === null) {
-        return res
-          .status(400)
-          .json({ error: "include_deleted deve ser booleano" });
-      }
-
-      if (req.query.from && !from) {
-        return res.status(400).json({ error: "from invalido" });
-      }
-
-      if (req.query.to && !to) {
-        return res.status(400).json({ error: "to invalido" });
-      }
-
       const events = await this.calendarEventsRepository.listEvents({
         creatorId,
         from,
@@ -181,9 +156,6 @@ class CalendarEventsController {
       if (!creatorId) return;
 
       const { eventId } = req.params;
-      if (!isValidUUID(eventId)) {
-        return res.status(400).json({ error: "eventId invalido" });
-      }
 
       const event = await this.calendarEventsRepository.getEventById({
         creatorId,
@@ -191,7 +163,7 @@ class CalendarEventsController {
       });
 
       if (!event) {
-        return res.status(404).json({ error: "Evento nao encontrado" });
+        return res.status(404).json({ error: "Event not found" });
       }
 
       return res.status(200).json({ event });
@@ -206,26 +178,19 @@ class CalendarEventsController {
       if (!creatorId) return;
 
       const { eventId } = req.params;
-      if (!isValidUUID(eventId)) {
-        return res.status(400).json({ error: "eventId invalido" });
-      }
 
       const fields = normalizeUpdateFields(req.body || {});
-      const validationError = validateUpdateFields(fields);
-      if (validationError) {
-        return res.status(400).json({ error: validationError });
-      }
 
       if (!Object.keys(fields).length) {
         return res.status(400).json({
-          error: "Nenhum campo valido foi informado para atualizacao",
+          error: "No valid fields provided for update",
         });
       }
 
       if (fields.note_id) {
         const resolvedNoteId = await resolveNoteIdToUuid(fields.note_id);
         if (!resolvedNoteId) {
-          return res.status(404).json({ error: "Nota não encontrada" });
+          return res.status(404).json({ error: "Note not found" });
         }
         fields.note_id = resolvedNoteId;
       }
@@ -234,7 +199,7 @@ class CalendarEventsController {
           fields.project_id
         );
         if (!resolvedProjectId) {
-          return res.status(404).json({ error: "Projeto não encontrado" });
+          return res.status(404).json({ error: "Project not found" });
         }
         fields.project_id = resolvedProjectId;
       }
@@ -245,7 +210,7 @@ class CalendarEventsController {
       });
 
       if (!current) {
-        return res.status(404).json({ error: "Evento nao encontrado" });
+        return res.status(404).json({ error: "Event not found" });
       }
 
       if (
@@ -255,7 +220,7 @@ class CalendarEventsController {
       ) {
         return res
           .status(400)
-          .json({ error: "end_time deve ser maior que start_time" });
+          .json({ error: "end_time must be greater than start_time" });
       }
 
       if (
@@ -265,7 +230,7 @@ class CalendarEventsController {
       ) {
         return res
           .status(400)
-          .json({ error: "end_time deve ser maior que start_time" });
+          .json({ error: "end_time must be greater than start_time" });
       }
 
       const event = await this.calendarEventsRepository.updateEvent({
@@ -275,7 +240,7 @@ class CalendarEventsController {
       });
 
       if (!event) {
-        return res.status(404).json({ error: "Evento nao encontrado" });
+        return res.status(404).json({ error: "Event not found" });
       }
 
       return res.status(200).json({ event });
@@ -290,9 +255,6 @@ class CalendarEventsController {
       if (!creatorId) return;
 
       const { eventId } = req.params;
-      if (!isValidUUID(eventId)) {
-        return res.status(400).json({ error: "eventId invalido" });
-      }
 
       const result = await this.calendarEventsRepository.softDeleteEvent({
         creatorId,
@@ -300,7 +262,7 @@ class CalendarEventsController {
       });
 
       if (!result) {
-        return res.status(404).json({ error: "Evento nao encontrado" });
+        return res.status(404).json({ error: "Event not found" });
       }
 
       return res.status(200).json({ success: true });
@@ -317,7 +279,9 @@ class CalendarEventsController {
       const tokens =
         await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
-        return res.status(400).json({ error: "Google Calendar não conectado" });
+        return res
+          .status(400)
+          .json({ error: "Google Calendar is not connected" });
 
       const { calendar } = googleService.getCalendarClientWithAuth({
         access_token: tokens.access_token,
@@ -342,7 +306,9 @@ class CalendarEventsController {
       const tokens =
         await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
-        return res.status(400).json({ error: "Google Calendar não conectado" });
+        return res
+          .status(400)
+          .json({ error: "Google Calendar is not connected" });
 
       const { calendar } = googleService.getCalendarClientWithAuth({
         access_token: tokens.access_token,
@@ -367,7 +333,9 @@ class CalendarEventsController {
       const tokens =
         await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens)
-        return res.status(400).json({ error: "Google Calendar não conectado" });
+        return res
+          .status(400)
+          .json({ error: "Google Calendar is not connected" });
 
       const { calendar } = googleService.getCalendarClientWithAuth({
         access_token: tokens.access_token,

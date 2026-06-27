@@ -3,8 +3,8 @@ const {
   ALLOWED_PROJECT_STATUSES,
   normalizeProjectStatus,
 } = require("@/utils/patterns/product-patterns");
-const PlanUsageManager = require("@/modules/plans/plans.controller");
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
 const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
 const {
@@ -145,7 +145,7 @@ class ProjectsCreateController extends ProjectsCoreController {
       );
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao criar projeto");
+        throw new Error("Failed to create project");
       }
 
       // Incrementar o uso de projetos
@@ -179,7 +179,7 @@ class ProjectsCreateController extends ProjectsCoreController {
         } catch (autoAddError) {
           // Non-blocking: log and continue
           console.error(
-            "[Auto-Add Members] Falha ao adicionar membros automaticamente:",
+            "[Auto-Add Members] Failed to auto-add members:",
             autoAddError
           );
         }
@@ -292,7 +292,7 @@ class ProjectsCreateController extends ProjectsCoreController {
           );
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao adicionar colaborador");
+        throw new Error("Failed to add collaborator");
       }
 
       res.status(201).json({

@@ -25,13 +25,6 @@ class NotificationsCreateController extends NotificationsBaseController {
 
       const userId = targetUserId || target_user_id;
 
-      if (!userId || !type || !entity_type || !entity_id || !title) {
-        return res.status(400).json({
-          error:
-            "Campos obrigatórios: user_id, type, entity_type, entity_id e title",
-        });
-      }
-
       const notification =
         await this.notificationsRepository.createNotification({
           userId,

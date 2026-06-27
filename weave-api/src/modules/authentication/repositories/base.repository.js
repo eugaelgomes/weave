@@ -1,7 +1,7 @@
 const { executeQuery } = require("@/database/connection");
 
 /**
- * Base para repositórios de autenticação: expõe `executeQuery`.
+ * Base for authentication repositories: exposes `executeQuery`.
  */
 class BaseRepository {
   constructor() {

@@ -9,6 +9,14 @@ const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
   requireOrgPermission,
 } = require("@/middlewares/auth/require-org-permission");
+const { validate } = require("@/middlewares/validation/validate");
+const {
+  createUserAgentSchema,
+  updateAgentSchema,
+  shareAgentSchema,
+  assignToProjectSchema,
+  toggleActiveSchema,
+} = require("./schemas/weave-ai.schema");
 const {
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
@@ -199,12 +207,14 @@ router.post(
   "/agents",
   requireManageWeaveAi,
   knowledgeUpload,
+  validate(createUserAgentSchema, "body"),
   bind(agentController, "createUserAgent")
 );
 router.put(
   "/agents/:id",
   requireManageWeaveAi,
   knowledgeUpload,
+  validate(updateAgentSchema, "body"),
   bind(agentController, "updateAgent")
 );
 router.delete(
@@ -215,6 +225,7 @@ router.delete(
 router.post(
   "/agents/:id/share",
   requireManageWeaveAi,
+  validate(shareAgentSchema, "body"),
   bind(agentController, "shareAgent")
 );
 
@@ -222,6 +233,7 @@ router.post(
 router.put(
   "/agents/:id/project",
   requireManageWeaveAi,
+  validate(assignToProjectSchema, "body"),
   bind(agentController, "assignToProject")
 );
 router.delete(
@@ -234,6 +246,7 @@ router.delete(
 router.patch(
   "/agents/:id/active",
   requireManageWeaveAi,
+  validate(toggleActiveSchema, "body"),
   bind(agentController, "toggleActive")
 );
 router.post(

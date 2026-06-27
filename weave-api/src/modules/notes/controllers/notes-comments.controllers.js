@@ -8,7 +8,7 @@ const {
 } = require("../normalizer");
 
 /**
- * Comentários em notas (`notes_comments`).
+ * Comments on notes (`notes_comments`).
  */
 class NotesCommentsController extends NotesBaseController {
   constructor() {
@@ -49,13 +49,13 @@ class NotesCommentsController extends NotesBaseController {
       try {
         payload = normalizeCommentCreatePayload(req.body || {});
       } catch (e) {
-        throw new Error(e.message || "Dados inválidos");
+        throw new Error(e.message || "Invalid data");
       }
 
       if (payload.parentId) {
         const parent = await this.commentsRepository.getById(payload.parentId);
         if (!parent || parent.note_id !== noteId) {
-          throw new Error("Comentário pai não encontrado");
+          throw new Error("Parent comment not found");
         }
       }
 
@@ -93,12 +93,12 @@ class NotesCommentsController extends NotesBaseController {
 
       const existing = await this.commentsRepository.getById(commentId);
       if (!existing || existing.note_id !== noteId) {
-        throw new Error("Comentário não encontrado");
+        throw new Error("Comment not found");
       }
 
       const patch = normalizeCommentUpdatePayload(req.body || {});
       if (patch.content === undefined && patch.files === undefined) {
-        throw new Error("Nenhum campo para atualizar");
+        throw new Error("No fields to update");
       }
 
       if (patch.files !== undefined && patch.files.length > 0) {
@@ -111,7 +111,7 @@ class NotesCommentsController extends NotesBaseController {
         patch
       );
       if (!updated) {
-        throw new Error("Comentário não encontrado");
+        throw new Error("Comment not found");
       }
 
       res.status(200).json(updated);
@@ -121,7 +121,7 @@ class NotesCommentsController extends NotesBaseController {
   }
 
   /**
-   * POST /api/notes/:noteId/comments/attachments — envia arquivos para `notes-comments-files/…`
+   * POST /api/notes/:noteId/comments/attachments — uploads files to `notes-comments-files/…`
    */
   async uploadCommentFiles(req, res, next) {
     try {
@@ -133,7 +133,7 @@ class NotesCommentsController extends NotesBaseController {
 
       const uploads = req.files || [];
       if (!uploads.length) {
-        throw new Error("Nenhum arquivo enviado");
+        throw new Error("No files sent");
       }
 
       const files = await Promise.all(
@@ -173,15 +173,15 @@ class NotesCommentsController extends NotesBaseController {
 
       const existing = await this.commentsRepository.getById(commentId);
       if (!existing || existing.note_id !== noteId) {
-        throw new Error("Comentário não encontrado");
+        throw new Error("Comment not found");
       }
 
       const ok = await this.commentsRepository.softDelete(commentId, userId);
       if (!ok) {
-        throw new Error("Comentário não encontrado");
+        throw new Error("Comment not found");
       }
 
-      res.status(200).json({ message: "Comentário removido com sucesso" });
+      res.status(200).json({ message: "Comment removed successfully" });
     } catch (error) {
       this._handleError(error, res, next);
     }

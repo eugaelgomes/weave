@@ -130,12 +130,6 @@ class OrganizationDomainsController extends OrganizationsBaseController {
         return;
 
       const { domain_name: domainName } = req.body;
-      if (!domainName) {
-        return res.status(400).json({
-          success: false,
-          error: "domain_name is required",
-        });
-      }
 
       const normalizedDomain = this._validateDomainName(domainName);
 
@@ -344,38 +338,9 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       }
 
       const { provider, metadata, enabled } = req.body;
-
-      if (enabled !== undefined && typeof enabled !== "boolean") {
-        return res.status(400).json({
-          success: false,
-          error: "enabled must be a boolean",
-        });
-      }
-
       const shouldEnable = enabled === undefined ? true : enabled;
 
-      if (!provider || typeof provider !== "string") {
-        return res.status(400).json({
-          success: false,
-          error: "provider is required",
-        });
-      }
-
       const normalizedProvider = provider.trim().toLowerCase();
-
-      if (normalizedProvider !== "saml") {
-        return res.status(400).json({
-          success: false,
-          error: "Currently only SAML providers are supported",
-        });
-      }
-
-      if (!metadata || typeof metadata !== "object") {
-        return res.status(400).json({
-          success: false,
-          error: "metadata is required and must be an object",
-        });
-      }
 
       const sanitizeString = (value) =>
         typeof value === "string" ? value.trim() : null;
@@ -387,18 +352,6 @@ class OrganizationDomainsController extends OrganizationsBaseController {
         sloUrl: sanitizeString(metadata.sloUrl),
         certificate: sanitizeString(metadata.certificate),
       };
-
-      if (
-        !samlMetadata.entityId ||
-        !samlMetadata.ssoUrl ||
-        !samlMetadata.certificate
-      ) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "metadata must contain entityId, ssoUrl (or acsUrl) and certificate",
-        });
-      }
 
       const updatedDomain = await this.domainRepository.updateSsoConfiguration(
         domain.id,

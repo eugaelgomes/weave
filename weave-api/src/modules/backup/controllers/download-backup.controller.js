@@ -3,7 +3,7 @@ const BackupDownloadTokensRepository = require("@/modules/backup/repositories/ba
 const storageService = require("@/services/storage/index");
 
 /**
- * Download público por token (rota sem `verifyToken`).
+ * Public download by token (route without `verifyToken`).
  */
 class DownloadBackupController extends BackupBaseController {
   /**
@@ -16,37 +16,31 @@ class DownloadBackupController extends BackupBaseController {
     try {
       const { token } = req.params;
 
-      if (!token) {
-        return res.status(400).json({
-          status: "Bad Request",
-          error: "Token não fornecido",
-        });
-      }
-
       const tokenRecord =
         await BackupDownloadTokensRepository.getTokenWithJob(token);
 
       if (!tokenRecord) {
         return res.status(404).json({
           status: "Not Found",
-          error: "Token inválido ou já utilizado",
-          message: "O link de download não é válido ou já foi usado",
+          error: "Invalid or already used token",
+          message: "The download link is invalid or has already been used",
         });
       }
 
       if (new Date() > new Date(tokenRecord.expires_at)) {
         return res.status(410).json({
           status: "Gone",
-          error: "Token expirado",
-          message: "O link de download expirou. Solicite um novo backup.",
+          error: "Expired token",
+          message:
+            "The download link has expired. Please request a new backup.",
         });
       }
 
       if (req.user?.userId && req.user.userId !== tokenRecord.user_id) {
         return res.status(403).json({
           status: "Forbidden",
-          error: "Acesso negado",
-          message: "Você não tem permissão para acessar este backup",
+          error: "Access denied",
+          message: "You do not have permission to access this backup",
         });
       }
 
@@ -54,8 +48,8 @@ class DownloadBackupController extends BackupBaseController {
       if (!result || !result.storageKey) {
         return res.status(500).json({
           status: "Internal Server Error",
-          error: "Backup não encontrado no storage",
-          message: "Não foi possível localizar o arquivo de backup",
+          error: "Backup not found in storage",
+          message: "Could not locate the backup file",
         });
       }
 
@@ -67,7 +61,7 @@ class DownloadBackupController extends BackupBaseController {
       if (!fileContent) {
         return res.status(500).json({
           status: "Internal Server Error",
-          error: "Falha ao recuperar arquivo do storage",
+          error: "Failed to retrieve file from storage",
         });
       }
 
@@ -81,7 +75,7 @@ class DownloadBackupController extends BackupBaseController {
       res.setHeader("Content-Length", fileContent.length);
       res.send(fileContent);
     } catch (error) {
-      console.error("Erro no download de backup:", error);
+      console.error("Error downloading backup:", error);
       this._handleError(error, res, next);
     }
   }

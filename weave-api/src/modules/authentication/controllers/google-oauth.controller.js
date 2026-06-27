@@ -9,19 +9,19 @@ const OrganizationsRepository = require("@/modules/organizations/repositories/or
 const oauthState = require("@/modules/authentication/oauth-state");
 const {
   buildJwtPayload,
-} = require("@/modules/authentication/jwt-payload.schema");
+} = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
 
-/** Callback fixo; cadastrar a mesma URL no Google Cloud Console. */
+/** Fixed callback; register the same URL in the Google Cloud Console. */
 const GOOGLE_OAUTH_REDIRECT_URI =
   process.env.NODE_ENV === "production"
     ? "https://apis.weavenotes.app/api/v1/auth/signin/sso/google/callback"
     : "http://localhost:8080/api/v1/auth/signin/sso/google/callback";
 
 /**
- * Fluxo OAuth2 Google (redirect e callback).
+ * Google OAuth2 flow (redirect and callback).
  */
 class GoogleOauthController extends AuthBaseController {
   /**
@@ -62,12 +62,12 @@ class GoogleOauthController extends AuthBaseController {
       }
 
       if (error) {
-        console.error("Erro na autorização Google:", error);
+        console.error("Google authorization error:", error);
         return res.redirect(`${frontendURL}/?error=authorization_denied`);
       }
 
       if (!code) {
-        console.error("Código de autorização não encontrado");
+        console.error("Authorization code not found");
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 

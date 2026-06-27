@@ -10,11 +10,11 @@ const {
 const crypto = require("crypto");
 
 /**
- * Fluxo de exclusão de conta (solicitação por e-mail e confirmação por token).
+ * Account deletion flow (email request and token confirmation).
  */
 class DeleteUsersController extends BaseController {
   /**
-   * Gera token de exclusão e envia e-mail de confirmação ao usuário autenticado.
+   * Generates deletion token and sends confirmation email to the authenticated user.
    *
    * @param {import('express').Request & { user: { userId: string|number } }} req
    * @param {import('express').Response} res
@@ -49,7 +49,7 @@ class DeleteUsersController extends BaseController {
             token
           );
         } catch (emailError) {
-          console.error("Falha ao enviar email para:", emailError);
+          console.error("Failed to send email to:", emailError);
           return res.status(500).json({
             error: "Email error",
             message:
@@ -69,13 +69,13 @@ class DeleteUsersController extends BaseController {
         });
       }
     } catch (error) {
-      console.error("Erro ao solicitar exclusão da conta:", error);
+      console.error("Error requesting account deletion:", error);
       this._handleError(error, res, next);
     }
   }
 
   /**
-   * Confirma exclusão definitiva da conta a partir do `token` recebido por e-mail.
+   * Confirms final account deletion from the `token` received by email.
    *
    * @param {import('express').Request & { body: { token?: string } }} req
    * @param {import('express').Response} res
@@ -112,10 +112,10 @@ class DeleteUsersController extends BaseController {
         });
       }
 
-      // Desativa o token
+      // Deactivate token
       await DeleteUsersRepository.deactivateDeleteAccountToken(token);
 
-      // Deleta o usuário
+      // Delete user
       const deleteResult = await DeleteUsersRepository.deleteUser(userId);
 
       if (deleteResult && deleteResult.length > 0) {
@@ -127,7 +127,7 @@ class DeleteUsersController extends BaseController {
           );
         } catch (emailError) {
           console.error(
-            "Falha ao enviar email de confirmação de exclusão:",
+            "Failed to send deletion confirmation email:",
             emailError
           );
         }
@@ -143,7 +143,7 @@ class DeleteUsersController extends BaseController {
         });
       }
     } catch (error) {
-      console.error("Erro ao confirmar exclusão da conta:", error);
+      console.error("Error confirming account deletion:", error);
       this._handleError(error, res, next);
     }
   }

@@ -5,8 +5,8 @@ const {
   ALLOWED_PROJECT_STATUSES,
   normalizeProjectStatus,
 } = require("@/utils/patterns/product-patterns");
-const PlanUsageManager = require("@/modules/plans/plans.controller");
-const PlansRepository = require("@/modules/plans/plans.repository");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { PLAN_PATHS } = require("@/services/plans/plan-paths");
 const {
   inviteProjectMember,
@@ -175,7 +175,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       // Formatar e retornar o projeto atualizado
       const formattedProject = this._formatProjectResponse(updatedProject);
       res.status(200).json({
-        message: "Projeto atualizado com sucesso",
+        message: "Project successfully updated",
         project: formattedProject,
       });
     } catch (error) {
@@ -348,7 +348,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
                 projectWithOwner[0].public_id
               ).catch((err) => {
                 console.error(
-                  "❌ [EMAIL DEBUG] Erro ao enviar email de convite:",
+                  "❌ [EMAIL DEBUG] Error sending invitation email:",
                   err
                 );
               });
@@ -374,7 +374,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
               );
             }
           } catch (emailError) {
-            console.error("Erro ao preparar email de convite:", emailError);
+            console.error("Error preparing invitation email:", emailError);
           }
           break;
         }
@@ -410,7 +410,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
                 collaboratorId,
                 role
               );
-          message = "Role atualizado com sucesso";
+          message = "Role successfully updated";
 
           await NotificationsRepository.createNotification({
             userId: collaboratorId,
@@ -456,7 +456,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao gerenciar colaborador");
+        throw new Error("Failed to manage collaborator");
       }
 
       res.status(200).json({
@@ -515,11 +515,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
           );
 
       if (!result || result.length === 0) {
-        throw new Error("Falha ao atualizar role");
+        throw new Error("Failed to update role");
       }
 
       res.status(200).json({
-        message: "Role atualizado com sucesso",
+        message: "Role successfully updated",
         collaborators: result[0].collaborators,
       });
     } catch (error) {
@@ -635,9 +635,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
             });
           }
         }
-        throw new Error(
-          "Falha ao gerenciar nota. Verifique se você tem permissão"
-        );
+        throw new Error("Failed to manage note. Check your permissions.");
       }
 
       res.status(200).json({
@@ -710,7 +708,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
           });
         }
         throw new Error(
-          "Falha ao adicionar nota. Verifique se você tem permissão ou se a nota já está associada"
+          "Failed to add note. Check your permissions or if the note is already associated."
         );
       }
 
@@ -763,9 +761,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
             );
 
       if (!result || result.length === 0) {
-        throw new Error(
-          "Falha ao atualizar nota. Verifique se você tem permissão"
-        );
+        throw new Error("Failed to update note. Check your permissions.");
       }
 
       res.status(200).json({
@@ -1319,7 +1315,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       );
 
       res.status(200).json({
-        message: "Estágio da nota atualizado com sucesso",
+        message: "Note stage successfully updated",
         noteId: result[0].id,
         newStageId: result[0].project_stage_id,
         notes,
@@ -1411,7 +1407,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       res.status(200).json({
-        message: "Estágio atualizado com sucesso",
+        message: "Stage successfully updated",
         stage: this._formatProjectStage(result[0]),
       });
     } catch (error) {

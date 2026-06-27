@@ -1,4 +1,5 @@
-const { query, param, body, validationResult } = require("express-validator");
+const { validate } = require("@/middlewares/validation/validate");
+const schemas = require("./schemas/projects.schema");
 const {
   parseCsvEnum,
   parseCsvUuid,
@@ -9,44 +10,6 @@ const {
   parseSort,
   trimSearch,
 } = require("@/utils/http/list-query");
-
-/** Route param names validated as UUID — invalid values yield HTTP 400. */
-const UUID_PARAM_NAMES = new Set([
-  "id",
-  "projectId",
-  "noteId",
-  "stageId",
-  "sprintId",
-  "reasoningId",
-  "collaboratorId",
-  "itemId",
-]);
-
-/**
- * Query/body validation → 422; invalid UUID route params → 400.
- *
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- * @param {import('express').NextFunction} next
- */
-function validateRequest(req, res, next) {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    const arr = errors.array();
-    const paramErr = arr.some((e) => UUID_PARAM_NAMES.has(String(e.path)));
-    const status = paramErr ? 400 : 422;
-    return res.status(status).json({
-      error: {
-        message: paramErr ? "Invalid path parameters" : "Validation failed",
-        details: arr.map((e) => ({
-          path: e.path,
-          msg: e.msg,
-        })),
-      },
-    });
-  }
-  next();
-}
 
 function isUuid(v) {
   return (
@@ -179,44 +142,7 @@ function attachParsedProjectsList(req) {
 }
 
 const validateGetProjects = [
-  query("page").optional().isInt({ min: 1 }).toInt(),
-  query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
-  query("sort").optional().isString().trim().isLength({ max: 64 }),
-  query("include").optional().isString().trim().isLength({ max: 200 }),
-  query("search").optional().isString().trim().isLength({ max: 120 }),
-  query("status").optional().isString().trim().isLength({ max: 200 }),
-  query("methodology").optional().isString().trim().isLength({ max: 120 }),
-  query("visibility").optional().isString().trim().isLength({ max: 120 }),
-  query("ownership")
-    .optional()
-    .isIn(["owned", "collaborating", "all", "OWNED", "COLLABORATING", "ALL"]),
-  query("owner_user_id").optional().isUUID(),
-  query("collaborator_user_id").optional().isUUID(),
-  query("organization_id").optional().isUUID(),
-  query("parent_only").optional().isIn(["true", "false"]),
-  query("has_parent").optional().isIn(["true", "false"]),
-  query("created_from").optional().isISO8601(),
-  query("created_to").optional().isISO8601(),
-  query("updated_from").optional().isISO8601(),
-  query("updated_to").optional().isISO8601(),
-  query("start_from")
-    .optional()
-    .matches(/^\d{4}-\d{2}-\d{2}$/),
-  query("start_to")
-    .optional()
-    .matches(/^\d{4}-\d{2}-\d{2}$/),
-  query("target_end_from")
-    .optional()
-    .matches(/^\d{4}-\d{2}-\d{2}$/),
-  query("target_end_to")
-    .optional()
-    .matches(/^\d{4}-\d{2}-\d{2}$/),
-  query("progress_min").optional().isFloat({ min: 0, max: 100 }),
-  query("progress_max").optional().isFloat({ min: 0, max: 100 }),
-  query("priority").optional().isString().trim().isLength({ max: 80 }),
-  query("tags").optional().isString().trim().isLength({ max: 2000 }),
-  query("active").optional().isIn(["true", "false"]),
-  validateRequest,
+  validate(schemas.getProjectsSchema, "query"),
   (req, res, next) => {
     try {
       attachParsedProjectsList(req);
@@ -278,9 +204,8 @@ function attachParsedProjectDetail(req) {
 }
 
 const validateGetProjectById = [
-  param("id").isUUID().withMessage("id must be a valid UUID"),
-  query("include").optional().isString().trim().isLength({ max: 200 }),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
+  validate(schemas.getProjectByIdSchema, "query"),
   (req, res, next) => {
     attachParsedProjectDetail(req);
     next();
@@ -314,13 +239,8 @@ function attachParsedStages(req) {
 }
 
 const validateGetProjectStages = [
-  param("id").isUUID().withMessage("id must be a valid UUID"),
-  query("page").optional().isInt({ min: 1 }).toInt(),
-  query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
-  query("sort").optional().isString().trim().isLength({ max: 64 }),
-  query("include_done").optional().isIn(["true", "false"]),
-  query("search").optional().isString().trim().isLength({ max: 80 }),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
+  validate(schemas.getProjectStagesSchema, "query"),
   (req, res, next) => {
     attachParsedStages(req);
     next();
@@ -362,28 +282,8 @@ function attachParsedNotes(req) {
 }
 
 const validateGetProjectNotes = [
-  param("projectId").isUUID().withMessage("projectId must be a valid UUID"),
-  query("page").optional().isInt({ min: 1 }).toInt(),
-  query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
-  query("sort").optional().isString().trim().isLength({ max: 64 }),
-  query("search").optional().isString().trim().isLength({ max: 120 }),
-  query("status").optional().isString().trim().isLength({ max: 120 }),
-  query("priority_id").optional().isString().trim().isLength({ max: 800 }),
-  query("tags").optional().isString().trim().isLength({ max: 4000 }),
-  query("stage_id").optional().isString().trim().isLength({ max: 800 }),
-  query("created_by").optional().isString().trim().isLength({ max: 800 }),
-  query("collaborator_user_id")
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 800 }),
-  query("due_from").optional().isISO8601(),
-  query("due_to").optional().isISO8601(),
-  query("created_from").optional().isISO8601(),
-  query("created_to").optional().isISO8601(),
-  query("updated_from").optional().isISO8601(),
-  query("updated_to").optional().isISO8601(),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
+  validate(schemas.getProjectNotesSchema, "query"),
   (req, res, next) => {
     attachParsedNotes(req);
     next();
@@ -413,15 +313,8 @@ function attachParsedCollaborators(req) {
 }
 
 const validateGetProjectCollaborators = [
-  param("projectId").isUUID().withMessage("projectId must be a valid UUID"),
-  query("page").optional().isInt({ min: 1 }).toInt(),
-  query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
-  query("sort").optional().isString().trim().isLength({ max: 64 }),
-  query("role").optional().isString().trim().isLength({ max: 120 }),
-  query("search").optional().isString().trim().isLength({ max: 80 }),
-  query("added_from").optional().isISO8601(),
-  query("added_to").optional().isISO8601(),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
+  validate(schemas.getProjectCollaboratorsSchema, "query"),
   (req, res, next) => {
     attachParsedCollaborators(req);
     next();
@@ -473,16 +366,8 @@ function attachParsedSprints(req) {
 }
 
 const validateGetProjectSprints = [
-  param("id").isUUID().withMessage("id must be a valid UUID"),
-  query("page").optional().isInt({ min: 1 }).toInt(),
-  query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
-  query("sort").optional().isString().trim().isLength({ max: 64 }),
-  query("status").optional().isString().trim().isLength({ max: 120 }),
-  query("start_from").optional().isString().trim(),
-  query("start_to").optional().isString().trim(),
-  query("end_from").optional().isString().trim(),
-  query("end_to").optional().isString().trim(),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
+  validate(schemas.getProjectSprintsSchema, "query"),
   (req, res, next) => {
     attachParsedSprints(req);
     next();
@@ -544,19 +429,8 @@ function attachParsedReasonings(req) {
 }
 
 const validateGetProjectReasonings = [
-  param("id").isUUID().withMessage("id must be a valid UUID"),
-  query("page").optional().isInt({ min: 1 }).toInt(),
-  query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
-  query("sort").optional().isString().trim().isLength({ max: 64 }),
-  query("sprintId").optional().isUUID(),
-  query("reasoningType").optional().isString().trim().isLength({ max: 64 }),
-  query("from").optional().isISO8601(),
-  query("to").optional().isISO8601(),
-  query("is_read").optional().isIn(["true", "false"]),
-  query("is_pinned").optional().isIn(["true", "false"]),
-  query("is_dismissed").optional().isIn(["true", "false"]),
-  query("created_by").optional().isUUID(),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
+  validate(schemas.getProjectReasoningsSchema, "query"),
   (req, res, next) => {
     attachParsedReasonings(req);
     next();
@@ -631,27 +505,20 @@ const PROJECT_REASONINGS_LIST_TRIGGER_KEYS = [
 ];
 
 const validateProjectIdParam = [
-  param("id").isUUID().withMessage("id must be a valid UUID"),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
 ];
 
 const validateReasoningParams = [
-  param("id").isUUID().withMessage("id must be a valid UUID"),
-  param("reasoningId").isUUID().withMessage("reasoningId must be a valid UUID"),
-  validateRequest,
+  validate(schemas.reasoningParamsSchema, "params"),
 ];
 
 const validateGetMyViewPref = [
-  param("id").isUUID().withMessage("id must be a valid UUID"),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
 ];
 
 const validateSetMyViewPref = [
-  param("id").isUUID().withMessage("id must be a valid UUID"),
-  body("view")
-    .isIn(["board", "list"])
-    .withMessage("view must be board or list"),
-  validateRequest,
+  validate(schemas.projectIdParamSchema, "params"),
+  validate(schemas.setMyViewPrefSchema, "body"),
 ];
 
 /** Query keys that enable list envelope + filtering for GET /projects */
@@ -703,6 +570,5 @@ module.exports = {
   validateGetMyViewPref,
   validateProjectIdParam,
   validateReasoningParams,
-  validateRequest,
   validateSetMyViewPref,
 };

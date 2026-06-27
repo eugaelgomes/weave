@@ -68,7 +68,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
     );
     if (total >= MAX_SUPER_ADMINS) {
       res.status(400).json({
-        error: `Limite de ${MAX_SUPER_ADMINS} super administradores por workspace foi atingido`,
+        error: `Limit of ${MAX_SUPER_ADMINS} super admins per workspace reached`,
       });
       return false;
     }
@@ -102,10 +102,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const { memberId } = req.params;
       const { role } = req.body;
-
-      if (!validRoles.includes(role)) {
-        return res.status(400).json({ error: "Invalid role" });
-      }
 
       const currentOrg = await this._getUserOrganization(authUserId);
       if (!currentOrg) {
@@ -188,7 +184,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return res.status(400).json({
           success: false,
           error:
-            "Não é possível remover um administrador. Altere o papel para MEMBER antes de remover.",
+            "Cannot remove an administrator. Change role to MEMBER before removing.",
         });
       }
 
@@ -316,29 +312,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
         target_areas = [],
       } = req.body;
 
-      if (!email) {
-        return res.status(400).json({ error: "Email is required" });
-      }
-
-      if (hasPlusAliasInLocalPart(email)) {
-        return res.status(400).json({
-          error:
-            "Email addresses using a plus (+) alias in the local part are not allowed.",
-        });
-      }
-
-      if (!name || typeof name !== "string" || !name.trim()) {
-        return res.status(400).json({ error: "Name is required" });
-      }
-
       const normalizedRole =
         typeof role === "string" ? role.trim().toUpperCase() : "";
-      if (!validRoles.includes(normalizedRole)) {
-        return res.status(400).json({
-          error:
-            "Invalid role. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST",
-        });
-      }
 
       const currentOrg = await this._getUserOrganization(authUserId);
       if (!currentOrg) {
@@ -359,10 +334,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
         normalizedRole === ORG_ROLES.ADMIN ||
         normalizedRole === ORG_ROLES.SUPER_ADMIN;
 
-      if (!Array.isArray(target_areas)) {
-        return res.status(400).json({ error: "target_areas must be an array" });
-      }
-
       const validTargetAreas = [];
       for (const tArea of target_areas) {
         if (!tArea.area_id) continue;
@@ -376,12 +347,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
             .json({ error: `Area not found: ${tArea.area_id}` });
 
         const resolvedProjectRole = this._resolveProjectMemberRole(tArea.role);
-        if (!PROJECT_MEMBER_ROLES.includes(resolvedProjectRole)) {
-          return res.status(400).json({
-            error:
-              "Invalid project_member_role. Use: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER",
-          });
-        }
         validTargetAreas.push({
           area_id: tArea.area_id,
           role: resolvedProjectRole,
@@ -490,20 +455,19 @@ class OrganizationMembersController extends OrganizationsBaseController {
           await this.organizationsRepository.findOrgInviteByTokenDiagnostic(
             token
           );
-        if (!diag)
-          return res.status(404).json({ error: "Convite não encontrado" });
+        if (!diag) return res.status(404).json({ error: "Invite not found" });
         if (diag.deleted)
-          return res.status(410).json({ error: "Este convite foi cancelado" });
+          return res.status(410).json({ error: "This invite was canceled" });
         if (diag.invite_verified)
           return res
             .status(409)
-            .json({ error: "Este convite já foi utilizado" });
+            .json({ error: "This invite has already been used" });
         if (new Date(diag.expires_at) < new Date())
           return res.status(410).json({
             error:
-              "Este convite expirou. Peça ao administrador um novo convite.",
+              "This invite has expired. Ask the administrator for a new invite.",
           });
-        return res.status(400).json({ error: "Convite inválido ou expirado" });
+        return res.status(400).json({ error: "Invalid or expired invite" });
       }
 
       const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
@@ -544,10 +508,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
       let { token, name, username, password } = req.body;
       const authUserId = req.user?.userId;
 
-      if (!token) {
-        return res.status(400).json({ error: "Token is required" });
-      }
-
       // Extract the UUID part from the token to be forgiving of extra garbage characters
       const uuidMatch = token.match(
         /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
@@ -564,21 +524,20 @@ class OrganizationMembersController extends OrganizationsBaseController {
           await this.organizationsRepository.findOrgInviteByTokenDiagnostic(
             token
           );
-        if (!diag)
-          return res.status(404).json({ error: "Convite não encontrado" });
+        if (!diag) return res.status(404).json({ error: "Invite not found" });
         if (diag.deleted)
-          return res.status(410).json({ error: "Este convite foi cancelado" });
+          return res.status(410).json({ error: "This invite was canceled" });
         if (diag.invite_verified)
           return res.status(409).json({
             error:
-              "Este convite já foi utilizado. Entre em contato com o administrador para um novo convite.",
+              "This invite has already been used. Please contact the administrator for a new invite.",
           });
         if (new Date(diag.expires_at) < new Date())
           return res.status(410).json({
             error:
-              "Este convite expirou. Peça ao administrador um novo convite.",
+              "This invite has expired. Ask the administrator for a new invite.",
           });
-        return res.status(400).json({ error: "Convite inválido ou expirado" });
+        return res.status(400).json({ error: "Invalid or expired invite" });
       }
 
       const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
@@ -905,11 +864,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!authUserId) return;
 
       const { invites } = req.body;
-      if (!Array.isArray(invites) || invites.length === 0) {
-        return res
-          .status(400)
-          .json({ error: "An array of invites is required" });
-      }
 
       const currentOrg = await this._getUserOrganization(authUserId);
       if (!currentOrg) {
@@ -938,15 +892,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
         } = inviteData;
 
         try {
-          if (!email || hasPlusAliasInLocalPart(email)) {
-            throw new Error("Invalid email");
-          }
-
           const normalizedRole =
             typeof role === "string" ? role.trim().toUpperCase() : "";
-          if (!validRoles.includes(normalizedRole)) {
-            throw new Error("Invalid role");
-          }
 
           const pending =
             await this.organizationsRepository.checkExistingInvite(

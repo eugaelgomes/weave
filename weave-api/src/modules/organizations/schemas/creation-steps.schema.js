@@ -1,0 +1,37 @@
+const { z } = require("zod");
+const {
+  ORGANIZATION_BUSINESS_ROLES,
+} = require("@/modules/organizations/services/organization-creation-steps.service");
+
+/**
+ * Validates the request body for saving organization creation step 1.
+ */
+const saveStepOneSchema = z.object({
+  org_name: z.string().trim().min(1, "org_name is required"),
+  unique_name: z.string().trim().min(1, "unique_name is required"),
+  description: z.string().trim().optional().nullable(),
+  logo_url: z.string().url("Invalid logo URL").optional().nullable(),
+  organization_role: z.enum(ORGANIZATION_BUSINESS_ROLES, {
+    errorMap: () => ({
+      message: `organization_role must be one of: ${ORGANIZATION_BUSINESS_ROLES.join(", ")}`,
+    }),
+  }),
+  default_locale: z
+    .string()
+    .regex(
+      /^[a-z]{2}-[A-Z]{2}$/,
+      "default_locale must use format ll-CC (example: en-US)"
+    )
+    .optional()
+    .nullable(),
+  country: z
+    .string()
+    .regex(/^[A-Z]{2}$/, "country must use 2-letter ISO code (example: US, BR)")
+    .optional()
+    .nullable(),
+  language: z.string().trim().optional().nullable(),
+});
+
+module.exports = {
+  saveStepOneSchema,
+};

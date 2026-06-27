@@ -33,7 +33,7 @@ const {
  */
 
 /**
- * Leitura e atualização de dados de perfil e preferências em `users`.
+ * Reads and updates profile data and preferences in `users`.
  */
 class UserDataRepository extends BaseRepository {
   /**
@@ -67,7 +67,7 @@ class UserDataRepository extends BaseRepository {
   }
 
   /**
-   * Atualiza apenas os campos informados. Sem campos, devolve o registro atual.
+   * Updates only the provided fields. With no fields, returns the current record.
    *
    * @param {string|number} userId
    * @param {UserProfileUpdates} updates

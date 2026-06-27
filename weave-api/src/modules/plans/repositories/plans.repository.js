@@ -31,7 +31,7 @@ class PlansRepository {
   }
 
   // ==========================================
-  // Query com todos os planos (not-deleted)
+  // Query with all plans (not-deleted)
   // ==========================================
   async getAllPlans() {
     const query = `
@@ -307,7 +307,7 @@ class PlansRepository {
   }
 
   // ==========================================
-  // ESCRITA E INICIALIZAÇÃO (WRITE)
+  // WRITE AND INITIALIZATION
   // ==========================================
 
   async createInitialUsage(
@@ -379,19 +379,19 @@ class PlansRepository {
   }
 
   // ==========================================
-  // Snapshot Mensal e Reset de Uso
+  // Monthly Snapshot and Usage Reset
   // ==========================================
 
   /**
-   * Incremento Inteligente: Atualiza o JSONB e, se for nota ou IA, atualiza a coluna de Auditoria (Lifetime)
+   * Smart Increment: Updates JSONB and, if note or AI, updates the Audit column (Lifetime)
    */
   async incrementUsageCounter(usageId, jsonPath, amount = 1) {
-    // Detecta se o path é de nota ou IA para atualizar a coluna de auditoria correspondente
+    // Detects if the path is note or AI to update the corresponding audit column
     const isNote = jsonPath.includes("notes_total");
     const isAI = jsonPath.includes("messages_sent");
     const isStorage = jsonPath.includes("storage");
 
-    // Usar numeric para storage (valores decimais em MB), int para o restante
+    // Use numeric for storage (decimal values in MB), int for the rest
     const castType = isStorage ? "numeric" : "int";
 
     const query = `
@@ -428,7 +428,7 @@ class PlansRepository {
   }
 
   // ==========================================
-  // GESTÃO DE CICLO E HISTÓRICO (HISTORY)
+  // CYCLE AND HISTORY MANAGEMENT
   // ==========================================
 
   async updateFullUsage(usageId, usageDetails, lastResetAt = null) {
@@ -448,7 +448,7 @@ class PlansRepository {
   }
 
   /**
-   * Salva o snapshot do mês na tabela de histórico
+   * Saves the month's snapshot in the history table
    */
   async saveUsageHistory(historyData) {
     const {
@@ -493,7 +493,7 @@ class PlansRepository {
   }
 
   /**
-   * Atualiza estatísticas de lifetime
+   * Updates lifetime stats
    */
   async updateLifetimeStats(usageId, increments) {
     const query = `
@@ -532,7 +532,7 @@ class PlansRepository {
   }
 
   /**
-   * Busca histórico de uso
+   * Fetches usage history
    */
   async getUsageHistory(userId, limit = 12) {
     const query = `

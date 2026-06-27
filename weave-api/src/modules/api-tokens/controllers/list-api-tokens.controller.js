@@ -2,7 +2,7 @@ const { fromUnknown } = require("@/errors");
 const ListApiTokensRepository = require("@/modules/api-tokens/repositories/list-api-tokens.repository");
 
 /**
- * Listagem de tokens do utilizador autenticado.
+ * Listing of API tokens for the authenticated user.
  */
 class ListApiTokensController {
   /**

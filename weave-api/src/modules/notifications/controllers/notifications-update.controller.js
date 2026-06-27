@@ -15,15 +15,7 @@ class NotificationsUpdateController extends NotificationsBaseController {
 
       const { notificationId } = req.params;
       const rawIsRead = req.body?.is_read ?? req.body?.isRead;
-      const parsedIsRead = this._extractBoolean(rawIsRead);
-
-      if (parsedIsRead === null) {
-        return res
-          .status(400)
-          .json({ error: "O campo is_read deve ser booleano" });
-      }
-
-      const isRead = typeof parsedIsRead === "boolean" ? parsedIsRead : true;
+      const isRead = typeof rawIsRead === "boolean" ? rawIsRead : true;
 
       const result = await this.notificationsRepository.markNotificationRead({
         notificationId,
@@ -60,15 +52,7 @@ class NotificationsUpdateController extends NotificationsBaseController {
 
       const { notificationId } = req.params;
       const rawInTrash = req.body?.in_trash ?? req.body?.inTrash;
-      const parsedInTrash = this._extractBoolean(rawInTrash);
-
-      if (parsedInTrash === null) {
-        return res
-          .status(400)
-          .json({ error: "O campo in_trash deve ser booleano" });
-      }
-
-      const inTrash = typeof parsedInTrash === "boolean" ? parsedInTrash : true;
+      const inTrash = typeof rawInTrash === "boolean" ? rawInTrash : true;
 
       const result = await this.notificationsRepository.toggleTrashStatus({
         notificationId,

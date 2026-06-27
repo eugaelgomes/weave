@@ -4,7 +4,7 @@ const TaskPrioritiesBaseController = require("@/modules/task-priorities/controll
 
 class TaskPrioritiesController extends TaskPrioritiesBaseController {
   /**
-   * Cria uma prioridade de tarefa.
+   * Create a task priority.
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -17,10 +17,6 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
 
       const { project_id, org_id } = req.params;
       const { name, color, level } = req.body;
-
-      if (!name || level === undefined) {
-        return res.status(400).json({ error: "Nome e nível são obrigatórios" });
-      }
 
       const priority = await TaskPrioritiesRepository.createPriority({
         projectId: project_id || null,
@@ -37,7 +33,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
   }
 
   /**
-   * Busca lista de prioridades de tarefa de um projeto ou organização.
+   * Fetch a list of task priorities for a project or organization.
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -57,7 +53,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
   }
 
   /**
-   * Atualiza dados de uma prioridade já existente.
+   * Update data of an existing task priority.
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -87,7 +83,7 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
   }
 
   /**
-   * Remove uma prioridade de maneira lógica.
+   * Logically remove a task priority.
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
