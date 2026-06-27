@@ -6,7 +6,6 @@ import {
   fetchApiTokens,
   createApiToken,
   revokeApiToken,
-  deleteApiToken,
   fetchApiTokensScopes,
   type ApiToken,
   type ApiScope,
