@@ -39,7 +39,4 @@ export const revokeApiToken = async (id: string): Promise<void> => {
   await handleResponse<unknown>(response);
 };
 
-export const deleteApiToken = async (id: string): Promise<void> => {
-  const response = await apiClient.delete(API_ENDPOINTS.API_TOKENS_DELETE(id));
-  await handleResponse<unknown>(response);
-};
+

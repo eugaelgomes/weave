@@ -221,7 +221,6 @@ export const API_ENDPOINTS = {
   API_TOKENS_LIST: "/api-tokens/get-tokens",
   API_TOKENS_CREATE: "/api-tokens/create-token",
   API_TOKENS_REVOKE: (id: string) => `/api-tokens/${id}/revoke`,
-  API_TOKENS_DELETE: (id: string) => `/api-tokens/${id}`,
 };
 
 export interface ApiRequestOptions extends RequestInit {

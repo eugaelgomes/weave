@@ -32,10 +32,6 @@ router.post(
   validate(apiTokenParamsSchema, "params"),
   MutateApiTokensController.revokeToken.bind(MutateApiTokensController)
 );
-router.delete(
-  "/:id",
-  validate(apiTokenParamsSchema, "params"),
-  MutateApiTokensController.deleteToken.bind(MutateApiTokensController)
-);
+
 
 module.exports = router;

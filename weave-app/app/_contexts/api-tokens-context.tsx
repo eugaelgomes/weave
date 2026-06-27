@@ -25,7 +25,6 @@ type ApiTokensContextType = {
     organizationId?: string | null
   ) => Promise<{ success: boolean; data?: ApiToken; message?: string }>;
   revokeToken: (id: string) => Promise<{ success: boolean; message?: string }>;
-  removeToken: (id: string) => Promise<{ success: boolean; message?: string }>;
 };
 
 const ApiTokensContext = createContext<ApiTokensContextType | undefined>(undefined);
@@ -97,16 +96,7 @@ export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const removeToken = async (id: string) => {
-    try {
-      await deleteApiToken(id);
-      setApiTokens((prev) => prev.filter((token) => token.id !== id));
-      return { success: true };
-    } catch (error) {
-      console.error("Erro ao deletar API token:", error);
-      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-    }
-  };
+
 
   return (
     <ApiTokensContext.Provider
@@ -117,7 +107,6 @@ export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         loadApiTokens,
         generateApiToken,
         revokeToken,
-        removeToken,
       }}
     >
       {children}

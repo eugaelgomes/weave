@@ -32,28 +32,7 @@ class MutateApiTokensController {
     }
   }
 
-  /**
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns {Promise<void>}
-   */
-  async deleteToken(req, res, next) {
-    try {
-      const { id } = req.params;
-      const { userId } = req.user;
 
-      const deleted = await MutateApiTokensRepository.deleteToken(id, userId);
-
-      if (!deleted) {
-        return res.status(404).json({ error: "Token not found." });
-      }
-
-      res.status(200).json({ message: "Token deleted successfully." });
-    } catch (error) {
-      next(fromUnknown(error));
-    }
-  }
 }
 
 module.exports = new MutateApiTokensController();

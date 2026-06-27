@@ -146,7 +146,7 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
 
 export function SettingsApiTokens() {
   const { t } = useLanguage();
-  const { apiTokens, scopesInfo, loadingTokens, generateApiToken, revokeToken, removeToken } =
+  const { apiTokens, scopesInfo, loadingTokens, generateApiToken, revokeToken } =
     useApiTokens();
   const { organization } = useOrganization();
 
@@ -163,7 +163,7 @@ export function SettingsApiTokens() {
   const [expiresAt, setExpiresAt] = useState<string>("");
   const blogUrl = process.env.NEXT_PUBLIC_BLOG_URL || "https://discover.weavenotes.app";
 
-  const [actionModal, setActionModal] = useState<{ id: string; type: "revoke" | "delete" } | null>(
+  const [actionModal, setActionModal] = useState<{ id: string; type: "revoke" } | null>(
     null
   );
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -502,13 +502,7 @@ export function SettingsApiTokens() {
                               <ShieldOff size={14} />
                             </button>
                           )}
-                          <button
-                            onClick={() => setActionModal({ id: token.id, type: "delete" })}
-                            className="rounded p-1 text-neutral-400 transition-colors hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30"
-                            title={t.clientTokens.deleteRecord}
-                          >
-                            <Trash2 size={14} />
-                          </button>
+
                         </div>
                       </td>
                     </tr>
@@ -532,23 +526,12 @@ export function SettingsApiTokens() {
         onClose={() => setActionModal(null)}
         onConfirm={() => {
           if (actionModal?.type === "revoke") revokeToken(actionModal.id);
-          else removeToken(actionModal?.id ?? "");
           setActionModal(null);
         }}
-        title={
-          actionModal?.type === "revoke"
-            ? t.clientTokens.revokeModalTitle
-            : t.clientTokens.deleteModalTitle
-        }
-        description={
-          actionModal?.type === "revoke"
-            ? t.clientTokens.revokeModalDesc
-            : t.clientTokens.deleteModalDesc
-        }
-        confirmText={
-          actionModal?.type === "revoke" ? t.clientTokens.revokeBtn : t.clientTokens.deleteBtn
-        }
-        variant={actionModal?.type === "revoke" ? "amber" : "danger"}
+        title={t.clientTokens.revokeModalTitle}
+        description={t.clientTokens.revokeModalDesc}
+        confirmText={t.clientTokens.revokeBtn}
+        variant="amber"
       />
 
       <PasswordConfirmModal
