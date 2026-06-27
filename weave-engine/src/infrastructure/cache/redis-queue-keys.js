@@ -3,6 +3,7 @@ const DEFAULT_ENGINE_LLM_RESPONSE_PREFIX = "weave:engine:llm:responses";
 const DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY = "queue:engine-proactive-tasks";
 const DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY =
   "queue:engine-proactive-responses";
+const DEFAULT_EMAIL_QUEUE_KEY = "weave:emails:queue";
 
 /**
  * Queue key where server pushes LLM requests.
@@ -53,6 +54,15 @@ function getEngineProactiveResponseQueueRedisKey() {
   );
 }
 
+/**
+ * Queue key for emails.
+ *
+ * @returns {string}
+ */
+function getEmailQueueRedisKey() {
+  return process.env.REDIS_EMAIL_QUEUE_KEY || DEFAULT_EMAIL_QUEUE_KEY;
+}
+
 module.exports = {
   DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY,
   DEFAULT_ENGINE_LLM_RESPONSE_PREFIX,
@@ -62,4 +72,5 @@ module.exports = {
   getEngineLlmResponsePrefixRedisKey,
   getEngineProactiveResponseQueueRedisKey,
   getEngineProactiveTaskQueueRedisKey,
+  getEmailQueueRedisKey,
 };

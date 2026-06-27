@@ -27,7 +27,7 @@ async function orchestratorNode(state) {
     }
 
     // Extract JSON block
-    const jsonMatch = resultText.match(/\\{[\\s\\S]*\\}/);
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("Orchestrator failed to return valid JSON");
     }

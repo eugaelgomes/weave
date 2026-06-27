@@ -19,7 +19,9 @@ const {
 } = require("../../ai-core/providers/llm-provider.client");
 const {
   getEngineProactiveTaskQueueRedisKey,
+  getEmailQueueRedisKey,
 } = require("../../infrastructure/cache/redis-queue-keys");
+const { pool } = require("../../infrastructure/database/postgres.client");
 
 const RESPONSE_TTL_SECONDS = 60;
 const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;
@@ -144,7 +146,7 @@ class ProactiveQueueProcessor {
 
       const initialState = createInitialState(job);
       const finalState = await proactiveGraph.run(initialState, {
-        maxIterations: 10,
+        maxIterations: 7,
       });
 
       const initialResult = {
@@ -247,6 +249,33 @@ class ProactiveQueueProcessor {
     if (job.responseQueueKey) {
       await redis.lpush(job.responseQueueKey, JSON.stringify(finalPayload));
       await redis.expire(job.responseQueueKey, RESPONSE_TTL_SECONDS);
+    }
+
+    if (!finalPayload.success && job.triggeredBy) {
+      try {
+        const userRes = await pool.query(
+          "SELECT email, deleted_at FROM users WHERE id = $1 LIMIT 1",
+          [job.triggeredBy]
+        );
+        if (userRes.rows.length > 0) {
+          const user = userRes.rows[0];
+          if (!user.deleted_at) {
+            const emailPayload = {
+              to: user.email,
+              subject: "Proactive Reasoning Job Failed",
+              text: `Your background proactive reasoning job '${job.title || jobType}' has failed to process.`,
+              html: `<p>Your background proactive reasoning job <b>${job.title || jobType}</b> has failed to process.</p>`,
+            };
+            await redis.lpush(getEmailQueueRedisKey(), JSON.stringify({
+              payload: emailPayload,
+              queuedAt: new Date().toISOString()
+            }));
+            logger.info("Sent failure notification email to user", { userId: job.triggeredBy });
+          }
+        }
+      } catch (dbErr) {
+        logger.error("Failed to fetch user or send failure email", { error: dbErr.message });
+      }
     }
   }
 
