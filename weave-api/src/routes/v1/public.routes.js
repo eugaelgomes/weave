@@ -1,5 +1,6 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { API_SCOPES } = require("@/config/api-scopes");
 const {
   logPublicApiRequest,
 } = require("@/middlewares/http/log-public-api-request");
@@ -18,6 +19,10 @@ const {
 
 const DEFAULT_VERSION = "v1";
 
+/**
+ * Array of public routes definitions
+ * @type {Array<{method: string, path: string, middlewares: Array<Function>, handler: Function}>}
+ */
 const publicRoutes = [
   {
     method: "get",
@@ -34,6 +39,13 @@ const publicRoutes = [
   },
 ];
 
+/**
+ * Creates and configures the Express router for public API endpoints
+ *
+ * @param {object} options - Router options
+ * @param {string} [options.version="v1"] - The API version
+ * @returns {import('express').Router} Express Router instance
+ */
 const createPublicRouter = ({ version = DEFAULT_VERSION } = {}) => {
   const router = express.Router();
 
@@ -62,7 +74,7 @@ const createPublicRouter = ({ version = DEFAULT_VERSION } = {}) => {
     "/users/search",
     verifyToken,
     highTrafficLimiter,
-    requireScope("users:read"),
+    requireScope(API_SCOPES.USERS_READ),
     (req, res, next) => SearchUsersController.searchUsers(req, res, next)
   );
 

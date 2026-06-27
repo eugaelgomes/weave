@@ -1,4 +1,7 @@
+// src/routes/v1/internal.routes.js
+
 const express = require("express");
+
 const {
   issueInternalChallenge,
   verifyInternalWebChallenge,
@@ -24,23 +27,46 @@ const slackRoutes = require("@/modules/slack/slack.routes");
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
+/**
+ * Parses a comma-separated string of origins into an array of trimmed origin strings
+ *
+ * @param {string} rawValue - Comma-separated list of allowed origins
+ * @returns {Array<string>} Array of parsed origins
+ */
 const parseOriginList = (rawValue = "") =>
   rawValue
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
 
+/**
+ * Resolves the list of production origins from environment variables
+ *
+ * @returns {Array<string>} Array of allowed production origins
+ */
 const resolveProductionOrigins = () => {
   const envValue =
     process.env.PRODUCTION_ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS || "";
   return parseOriginList(envValue);
 };
 
-// Configurar matchers semelhantes ao CORS
+// Configure CORS-like matchers
+/**
+ * Escapes regular expression special characters in a string
+ *
+ * @param {string} s - The string to escape
+ * @returns {string} The escaped string
+ */
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/**
+ * Builds a matcher function for a given origin pattern (supporting wildcards)
+ *
+ * @param {string} allowed - The allowed origin pattern (can contain '*')
+ * @returns {Function} A function that takes an origin and returns true if it matches the pattern
+ */
 function buildMatcher(allowed) {
   if (allowed.includes("*")) {
     const pattern = "^" + allowed.split("*").map(escapeRegExp).join(".*") + "$";
@@ -54,11 +80,24 @@ const PRODUCTION_ORIGINS_LIST = resolveProductionOrigins();
 const originMatchers = PRODUCTION_ORIGINS_LIST.map(buildMatcher);
 let missingOriginConfigLogged = false;
 
+/**
+ * Determines whether a specific path should skip origin guards
+ *
+ * @param {string} path - The request path
+ * @returns {boolean} True if the path should bypass origin checks
+ */
 const shouldSkipOriginGuard = (path) =>
   path.startsWith("/webhooks") ||
   path.startsWith("/auth/signin/sso") ||
   path.startsWith("/auth/sso");
 
+/**
+ * Checks if a given origin is allowed to access the API
+ *
+ * @param {string} origin - The origin header from the request
+ * @param {boolean} isDev - Whether the server is running in development mode
+ * @returns {boolean} True if the origin is allowed, false otherwise
+ */
 const isAllowedOrigin = (origin, isDev) => {
   if (!origin) {
     return true;
@@ -72,17 +111,21 @@ const isAllowedOrigin = (origin, isDev) => {
     if (!missingOriginConfigLogged) {
       missingOriginConfigLogged = true;
       console.warn(
-        "[Origin Guard] Nenhuma origem de produção configurada. Defina PRODUCTION_ALLOWED_ORIGINS ou ALLOWED_ORIGINS para restringir o acesso."
+        "[Origin Guard] No production origin configured. Set PRODUCTION_ALLOWED_ORIGINS or ALLOWED_ORIGINS to restrict access."
       );
     }
     return true;
   }
 
-  // Remove trailing slashes origin caso venha da policy para conferir
+  // Remove trailing slashes from origin if it comes from the policy for checking
   const normalizedOrigin = origin.replace(/\/+$/, "");
   return originMatchers.some((fn) => fn(normalizedOrigin));
 };
 
+/**
+ * Registry mapping base paths to their respective handler routes
+ * @type {Array<{basePath: string, handler: import('express').Router}>}
+ */
 const routeRegistry = [
   { basePath: "/api-tokens", handler: apiTokensRoutes },
   { basePath: "/auth", handler: authRoutes },
@@ -105,6 +148,13 @@ const routeRegistry = [
   { basePath: "/slack", handler: slackRoutes },
 ];
 
+/**
+ * Creates and configures the Express router for internal API endpoints
+ *
+ * @param {object} options - Router options
+ * @param {string} [options.version="v1"] - The API version
+ * @returns {import('express').Router} Express Router instance
+ */
 const createInternalRouter = ({ version = DEFAULT_VERSION } = {}) => {
   const router = express.Router();
 
@@ -119,7 +169,7 @@ const createInternalRouter = ({ version = DEFAULT_VERSION } = {}) => {
     const originAllowed = isAllowedOrigin(req.headers.origin, isDev);
 
     if (!originAllowed) {
-      return res.status(403).json({ error: "Acesso negado." });
+      return res.status(403).json({ error: "Access denied." });
     }
 
     return next();

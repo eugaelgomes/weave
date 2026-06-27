@@ -468,12 +468,10 @@ class ChatController {
 
       const session = await chatRepository.getSharedSessionByToken(token);
       if (!session) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            error: "Shared session not found or link expired",
-          });
+        return res.status(404).json({
+          success: false,
+          error: "Shared session not found or link expired",
+        });
       }
 
       return res.json({ success: true, session });

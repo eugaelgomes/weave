@@ -7,7 +7,7 @@ const UserDataRepository = require("@/modules/users/repositories/user-data.repos
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const { presignObjectFields } = require("@/utils/data/presign-storage-files");
-const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
+const updateProfileLogs = require("@/utils/system-logs/update-profile-logs");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
 const UserDataService = require("@/services/users/user-data.service");
 const {

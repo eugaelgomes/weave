@@ -1,3 +1,5 @@
+// src/modules/api-tokens/api-tokens.routes.js
+
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 

@@ -10,7 +10,7 @@ const {
   sendEmailChangeValidation,
 } = require("@/services/email/templates/reset-password");
 const spacesService = require("@/services/storage");
-const updateProfileLogs = require("@/utils/system_logs/update_profile-logs");
+const updateProfileLogs = require("@/utils/system-logs/update-profile-logs");
 const {
   normalizeEmail,
   normalizeUsername,

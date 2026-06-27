@@ -29,7 +29,7 @@ app.get("/health", (req, res) => {
 
   res.send({
     message: "All systems operational",
-    service: "weave-notes-api",
+    service: "Weave APIs",
     status: "online",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
@@ -44,7 +44,8 @@ configureGlobalMiddlewares(app);
 /**
  * 3. Routing (Internal & Public APIs)
  */
-registerApiRoutes(app, { version: "v1" });
+const SUPPORTED_VERSIONS = ["v1"];
+SUPPORTED_VERSIONS.forEach((version) => registerApiRoutes(app, { version }));
 
 /**
  * 4. Error Handling & Fallbacks (404 / 500)

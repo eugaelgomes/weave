@@ -1,88 +1,90 @@
 /**
  * API token scope definitions and validation utilities.
  */
+const { API_SCOPES: SCOPES } = require("@/config/api-scopes");
+
 const API_SCOPES = [
   {
-    id: "notes:read",
+    id: SCOPES.NOTES_READ,
     name: "Read Notes",
     description:
       "Allows listing and viewing the content of all notes the user has access to.",
   },
   {
-    id: "notes:write",
+    id: SCOPES.NOTES_WRITE,
     name: "Create/Edit Notes",
     description:
       "Allows creating new notes and modifying existing ones (requires appropriate permissions).",
   },
   {
-    id: "notes:delete",
+    id: SCOPES.NOTES_DELETE,
     name: "Delete Notes",
     description: "Allows moving notes to trash or deleting them permanently.",
   },
   {
-    id: "projects:read",
+    id: SCOPES.PROJECTS_READ,
     name: "Read Projects",
     description: "Allows viewing projects and their associated data.",
   },
   {
-    id: "projects:write",
+    id: SCOPES.PROJECTS_WRITE,
     name: "Create/Edit Projects",
     description: "Allows creating new projects and modifying existing ones.",
   },
   {
-    id: "profile:read",
+    id: SCOPES.PROFILE_READ,
     name: "Read Profile",
     description: "Allows access to basic user data (name, ID, avatar).",
   },
   {
-    id: "organizations:read",
+    id: SCOPES.ORGANIZATIONS_READ,
     name: "Read Organizations",
     description: "Allows viewing organizational data and members.",
   },
   {
-    id: "calendar:read",
+    id: SCOPES.CALENDAR_READ,
     name: "Read Calendar Events",
     description:
       "Allows reading events related to calendars and scheduled tasks.",
   },
   {
-    id: "calendar:write",
+    id: SCOPES.CALENDAR_WRITE,
     name: "Create/Edit Calendar Events",
     description: "Allows creating, updating, and managing calendar events.",
   },
   {
-    id: "tags:read",
+    id: SCOPES.TAGS_READ,
     name: "Read Tags",
     description: "Allows reading organization and project tags.",
   },
   {
-    id: "tags:write",
+    id: SCOPES.TAGS_WRITE,
     name: "Manage Tags",
     description: "Allows creating, updating and deleting tags.",
   },
   {
-    id: "priorities:read",
+    id: SCOPES.PRIORITIES_READ,
     name: "Read Task Priorities",
     description: "Allows reading organization and project task priorities.",
   },
   {
-    id: "priorities:write",
+    id: SCOPES.PRIORITIES_WRITE,
     name: "Manage Task Priorities",
     description: "Allows creating, updating and deleting task priorities.",
   },
   {
-    id: "users:read",
+    id: SCOPES.USERS_READ,
     name: "Read Users",
     description:
       "Allows searching and reading user profiles within the organization.",
   },
   {
-    id: "ai:chat",
+    id: SCOPES.AI_CHAT,
     name: "Use AI Chat",
     description: "Allows interacting with Weave AI chat and listing models.",
   },
   {
-    id: "ai:agents",
+    id: SCOPES.AI_AGENTS,
     name: "Manage AI Agents",
     description: "Allows reading and managing Weave AI agents.",
   },

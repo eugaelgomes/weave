@@ -129,7 +129,7 @@ class CreateNoteHandler {
             const buffer = Buffer.isBuffer(file.buffer)
               ? file.buffer
               : Buffer.from(file.buffer || "", "base64"); // if it came as base64 but chat controller uses multer so it's buffer
-              
+
             const result = await spacesService.uploadNoteFile(
               buffer,
               mimeType,

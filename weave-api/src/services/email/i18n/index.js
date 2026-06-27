@@ -4,9 +4,9 @@
 
 const { executeQuery } = require("@/database/connection");
 
-const ptBR = require("./locales/pt-BR");
-const enUS = require("./locales/en-US");
-const esES = require("./locales/es-ES");
+const ptBR = require("./locales/pt-br");
+const enUS = require("./locales/en-us");
+const esES = require("./locales/es-es");
 
 /** @typedef {"pt-BR"|"en-US"|"es-ES"} EmailLocale */
 
