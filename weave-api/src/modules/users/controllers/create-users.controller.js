@@ -1,6 +1,5 @@
 const spacesService = require("@/services/storage");
 const BaseController = require("./base.controller");
-const { validationResult } = require("express-validator");
 const CreateUsersService = require("@/services/users/create-users.service");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const {
@@ -27,13 +26,6 @@ class CreateUsersController extends BaseController {
    * @returns {Promise<void>}
    */
   async createUser(req, res, next) {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        errors: errors.array(),
-        message: "Some inputs cannot be null.",
-      });
-    }
 
     try {
       const {
