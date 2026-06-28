@@ -371,7 +371,8 @@ const FUNCTION_SCHEMAS = Object.freeze({
   },
   delegate_to_agent: {
     category: FunctionCategory.AGENTS,
-    description: "Delegate a sub-task to a specialized agent. Provide the agent ID and a detailed description of what they should do. Wait for their response.",
+    description:
+      "Delegate a sub-task to a specialized agent. Provide the agent ID and a detailed description of what they should do. Wait for their response.",
     name: "delegate_to_agent",
     parameters: {
       additionalProperties: false,
@@ -385,13 +386,17 @@ const FUNCTION_SCHEMAS = Object.freeze({
   },
   create_artifact: {
     category: FunctionCategory.SANDBOX,
-    description: "CRITICAL: You MUST use this tool EVERY TIME you generate a document, draft, prompt, report, code, or any structured content for the user. Do NOT output the artifact in the chat. Present it using this Sandbox tool. ALWAYS use 'blocks' for structured rich text formatting.",
+    description:
+      "CRITICAL: You MUST use this tool EVERY TIME you generate a document, draft, prompt, report, code, or any structured content for the user. Do NOT output the artifact in the chat. Present it using this Sandbox tool. ALWAYS use 'blocks' for structured rich text formatting.",
     name: "create_artifact",
     parameters: {
       additionalProperties: false,
       properties: {
         title: { type: "string", description: "Title of the document." },
-        type: { type: "string", description: "Type of the document, default to 'document'." },
+        type: {
+          type: "string",
+          description: "Type of the document, default to 'document'.",
+        },
         blocks: BLOCKS_SCHEMA,
       },
       required: ["title", "blocks"],
@@ -400,12 +405,16 @@ const FUNCTION_SCHEMAS = Object.freeze({
   },
   update_artifact: {
     category: FunctionCategory.SANDBOX,
-    description: "CRITICAL: You MUST use this tool to update an existing Artifact document, draft, or prompt instead of outputting the updated text in the chat. ALWAYS use 'blocks' for structured rich text formatting.",
+    description:
+      "CRITICAL: You MUST use this tool to update an existing Artifact document, draft, or prompt instead of outputting the updated text in the chat. ALWAYS use 'blocks' for structured rich text formatting.",
     name: "update_artifact",
     parameters: {
       additionalProperties: false,
       properties: {
-        artifactId: { type: "string", description: "The UUID of the artifact." },
+        artifactId: {
+          type: "string",
+          description: "The UUID of the artifact.",
+        },
         title: { type: "string", description: "Updated title." },
         blocks: BLOCKS_SCHEMA,
       },

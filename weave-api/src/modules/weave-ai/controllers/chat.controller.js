@@ -438,7 +438,7 @@ class ChatController {
           .json({ success: false, error: "Session ID required" });
       }
 
-      let shareToken = await chatRepository.generateShareToken(
+      const shareToken = await chatRepository.generateShareToken(
         sessionId,
         userId
       );

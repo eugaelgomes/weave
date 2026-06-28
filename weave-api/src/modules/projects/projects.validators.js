@@ -319,8 +319,6 @@ const validateGetProjectCollaborators = [
   },
 ];
 
-
-
 /** Query keys that enable list envelope + filtering for GET /projects/:id/stages */
 const PROJECT_STAGES_LIST_TRIGGER_KEYS = [
   "page",
@@ -361,13 +359,9 @@ const PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS = [
   "added_to",
 ];
 
-
-
 const validateProjectIdParam = [
   validate(schemas.projectIdParamSchema, "params"),
 ];
-
-
 
 const validateGetMyViewPref = [
   validate(schemas.projectIdParamSchema, "params"),

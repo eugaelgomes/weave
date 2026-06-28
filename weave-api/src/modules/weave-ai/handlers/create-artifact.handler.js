@@ -1,6 +1,6 @@
 /**
  * @module weave-ai/handlers/create-artifact.handler
- * @description Handler for the create_artifact tool. 
+ * @description Handler for the create_artifact tool.
  * Actually creates an artifact in the database.
  */
 const ArtifactsRepository = require("../../artifacts/repositories/artifacts.repository");

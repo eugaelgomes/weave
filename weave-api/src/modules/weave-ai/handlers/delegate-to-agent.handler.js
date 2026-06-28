@@ -1,6 +1,6 @@
 /**
  * @module weave-ai/handlers/delegate-to-agent.handler
- * @description Handler for the delegate_to_agent tool. Initiates a sub-session 
+ * @description Handler for the delegate_to_agent tool. Initiates a sub-session
  * using the agent delegation service.
  */
 const agentDelegationService = require("../services/agent-delegation.service");
@@ -19,7 +19,9 @@ class DelegateToAgentHandler {
     const { agentId, taskDescription } = args;
 
     if (!agentId || !taskDescription) {
-      throw new Error("Missing required arguments: agentId or taskDescription.");
+      throw new Error(
+        "Missing required arguments: agentId or taskDescription."
+      );
     }
 
     const execution = await agentDelegationService.executeDelegateToAgent(

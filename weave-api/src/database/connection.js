@@ -2,19 +2,19 @@ const { Pool } = require("pg");
 require("dotenv").config();
 
 const pool = new Pool({
-  host: process.env.DATABASE_HOST_URL,
-  port: parseInt(process.env.DATABASE_SERVICE_PORT, 10),
-  user: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD,
-  database: process.env.DATABASE_NAME,
-  max: 5,
-  idleTimeoutMillis: 10000,
-  connectionTimeoutMillis: 5000,
   allowExitOnIdle: true,
+  connectionTimeoutMillis: 5000,
+  database: process.env.DATABASE_NAME,
+  host: process.env.DATABASE_HOST_URL,
+  idleTimeoutMillis: 10000,
+  max: 5,
+  password: process.env.DATABASE_PASSWORD,
+  port: parseInt(process.env.DATABASE_SERVICE_PORT, 10),
   ssl: {
     rejectUnauthorized: false,
     //ca: process.env.SSL_CERTIFICATE,
   },
+  user: process.env.DATABASE_USERNAME,
 });
 
 const getConnection = async () => {
@@ -22,7 +22,6 @@ const getConnection = async () => {
     const client = await pool.connect();
     return client;
   } catch (error) {
-    console.error("Pool connection failed:", error.message);
     throw error;
   }
 };
@@ -69,9 +68,9 @@ const withTransaction = async (callback) => {
 };
 
 module.exports = {
-  pool,
-  getConnection,
   executeQuery,
+  getConnection,
+  pool,
   rowCount,
   withTransaction,
 };

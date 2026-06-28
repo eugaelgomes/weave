@@ -1412,8 +1412,6 @@ class ProjectsUpdateController extends ProjectsCoreController {
       this._handleError(error, res, next);
     }
   }
-
-
 }
 
 module.exports = new ProjectsUpdateController();

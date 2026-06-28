@@ -237,8 +237,8 @@ class SprintsRepository {
           END,
           updated_at = NOW()
       WHERE id = $1 AND deleted = false
-      RETURNING *
-    `;
+          RETURNING *
+            `;
 
     const result = await pool.query(query, [
       sprintId,

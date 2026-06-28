@@ -31,8 +31,6 @@ class MutateApiTokensController {
       next(fromUnknown(error));
     }
   }
-
-
 }
 
 module.exports = new MutateApiTokensController();

@@ -1,6 +1,6 @@
 /**
  * @module weave-ai/handlers/update-artifact.handler
- * @description Handler for the update_artifact tool. 
+ * @description Handler for the update_artifact tool.
  * Actually updates an artifact in the database.
  */
 const ArtifactsRepository = require("../../artifacts/repositories/artifacts.repository");
@@ -12,10 +12,14 @@ class UpdateArtifactHandler {
         throw new Error("artifactId is required");
       }
 
-      const artifact = await ArtifactsRepository.updateArtifact(args.artifactId, userId, {
-        title: args.title,
-        content: args.blocks,
-      });
+      const artifact = await ArtifactsRepository.updateArtifact(
+        args.artifactId,
+        userId,
+        {
+          title: args.title,
+          content: args.blocks,
+        }
+      );
 
       if (!artifact) {
         return {

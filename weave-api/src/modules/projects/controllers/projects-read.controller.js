@@ -569,7 +569,6 @@ class ProjectsReadController extends ProjectsCoreController {
       this._handleError(error, res, next);
     }
   }
-
 }
 
 module.exports = new ProjectsReadController();

@@ -8,6 +8,9 @@ router.use(verifyToken);
 
 router.post("/", artifactsController.createArtifact.bind(artifactsController));
 router.get("/:id", artifactsController.getArtifact.bind(artifactsController));
-router.patch("/:id", artifactsController.updateArtifact.bind(artifactsController));
+router.patch(
+  "/:id",
+  artifactsController.updateArtifact.bind(artifactsController)
+);
 
 module.exports = router;

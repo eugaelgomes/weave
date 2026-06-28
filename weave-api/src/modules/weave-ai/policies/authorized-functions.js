@@ -98,7 +98,7 @@ function isFunctionAuthorized({ access, functionName, schema, context }) {
 
   const ownershipRules = getOwnershipRules(functionName);
   const category = schema?.category;
-  
+
   if (category === FunctionCategory.AGENTS && context?.isSubAgent) {
     return false;
   }

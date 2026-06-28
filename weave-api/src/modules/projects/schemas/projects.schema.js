@@ -85,8 +85,6 @@ const getProjectCollaboratorsSchema = z.object({
   added_to: z.string().datetime().optional(),
 });
 
-
-
 const setMyViewPrefSchema = z.object({
   view: z.enum(["board", "list"], {
     required_error: "view must be board or list",
@@ -97,8 +95,6 @@ const projectIdParamSchema = z.object({
   id: z.string().uuid("id must be a valid UUID").optional(),
   projectId: z.string().uuid("projectId must be a valid UUID").optional(),
 });
-
-
 
 module.exports = {
   getProjectsSchema,

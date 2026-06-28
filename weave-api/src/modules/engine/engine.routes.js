@@ -83,7 +83,9 @@ router.get(
 router.put(
   "/:projectId/ai-report-config",
   requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
-  EngineReasoningsController.updateAiReportConfig.bind(EngineReasoningsController)
+  EngineReasoningsController.updateAiReportConfig.bind(
+    EngineReasoningsController
+  )
 );
 
 // ══════════════════════════════════════════════════════════════════════
@@ -111,14 +113,18 @@ router.get(
   highTrafficLimiter,
   validateReasoningParams,
   requireProjectPermission(PROJECT_PERMISSIONS.READ_PROJECT_CONTENT),
-  EngineReasoningsController.getReasoningActionItems.bind(EngineReasoningsController)
+  EngineReasoningsController.getReasoningActionItems.bind(
+    EngineReasoningsController
+  )
 );
 
 router.post(
   "/:projectId/reasonings/trigger",
   standardTrafficLimiter,
   requireProjectPermission(PROJECT_PERMISSIONS.MANAGE_PROJECT_LIFECYCLE),
-  EngineReasoningsController.triggerReasoningGeneration.bind(EngineReasoningsController)
+  EngineReasoningsController.triggerReasoningGeneration.bind(
+    EngineReasoningsController
+  )
 );
 
 router.post(
@@ -131,13 +137,17 @@ router.post(
 router.patch(
   "/:projectId/reasonings/:reasoningId/interaction",
   standardTrafficLimiter,
-  EngineReasoningsController.updateReasoningInteraction.bind(EngineReasoningsController)
+  EngineReasoningsController.updateReasoningInteraction.bind(
+    EngineReasoningsController
+  )
 );
 
 router.patch(
   "/:projectId/reasonings/:reasoningId/action-items/:itemId",
   standardTrafficLimiter,
-  EngineReasoningsController.updateReasoningActionItem.bind(EngineReasoningsController)
+  EngineReasoningsController.updateReasoningActionItem.bind(
+    EngineReasoningsController
+  )
 );
 
 module.exports = router;

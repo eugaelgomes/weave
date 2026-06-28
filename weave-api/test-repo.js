@@ -10,7 +10,13 @@ async function run() {
     const pagination = { limit: 6, offset: 0 };
     const sort = { field: "created_at", order: "desc" };
 
-    const res = await repo.listByProjectForMember(projectId, userId, filters, pagination, sort);
+    const res = await repo.listByProjectForMember(
+      projectId,
+      userId,
+      filters,
+      pagination,
+      sort
+    );
     console.log("SUCCESS:", res);
   } catch (err) {
     console.error("ERROR:", err.message);

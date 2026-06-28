@@ -1,6 +1,7 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
+import sqlQueryMultilineRule from "./eslint-rules/sql-query-multiline.mjs";
 
 /** Arquivos .js que o Babel trata como ESM (export) */
 const jsEsmModuleFiles = [
@@ -9,6 +10,14 @@ const jsEsmModuleFiles = [
   "src/modules/notes/controllers/pdf.js",
 ];
 
+const localPlugins = {
+  local: {
+    rules: {
+      "sql-query-multiline": sqlQueryMultilineRule,
+    },
+  },
+};
+
 export default tseslint.config(
   {
     ignores: ["dist/**", "node_modules/**"],
@@ -16,6 +25,7 @@ export default tseslint.config(
   {
     files: ["**/*.{js,mjs,cjs}"],
     ...pluginJs.configs.recommended,
+    plugins: localPlugins,
     languageOptions: {
       globals: {
         ...globals.node,
@@ -45,6 +55,13 @@ export default tseslint.config(
     },
   },
   {
+    files: ["src/modules/engine/**/*.{js,mjs,cjs,ts}"],
+    plugins: localPlugins,
+    rules: {
+      "local/sql-query-multiline": "error",
+    },
+  },
+  {
     files: [...jsEsmModuleFiles, "**/*.mjs"],
     languageOptions: {
       ecmaVersion: 2022,
@@ -68,6 +85,7 @@ export default tseslint.config(
       ...tseslint.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
     ],
+    plugins: localPlugins,
     languageOptions: {
       parserOptions: {
         projectService: true,

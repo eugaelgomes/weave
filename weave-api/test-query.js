@@ -1,5 +1,5 @@
-require('module-alias/register');
-const { pool } = require('./src/database/connection');
+require("module-alias/register");
+const { pool } = require("./src/database/connection");
 
 async function run() {
   try {
@@ -31,15 +31,23 @@ async function run() {
       ORDER BY r.created_at DESC
       LIMIT 10 OFFSET 0
     `;
-    const params = ['b3507864-b8e6-4f28-ae36-9c249c20e793', '54e54c2c-7b00-4454-867e-1dda5dcd49a6'];
+    const params = [
+      "b3507864-b8e6-4f28-ae36-9c249c20e793",
+      "54e54c2c-7b00-4454-867e-1dda5dcd49a6",
+    ];
     const res = await pool.query(query, params);
     console.log("Rows returned:", res.rows.length);
     if (res.rows.length === 0) {
       console.log("Checking project_members for this user:");
-      const pmRes = await pool.query(`SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2`, params);
+      const pmRes = await pool.query(
+        `SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2`,
+        params
+      );
       console.log("Membership:", pmRes.rows);
       console.log("Checking if reasoning exists at all:");
-      const rRes = await pool.query(`SELECT id, deleted, safety_blocked, recipient_scope, triggered_by FROM weave_engine_reasonings WHERE id = '8dd134b0-f22d-45fd-97d2-d0b6f2752dc8'`);
+      const rRes = await pool.query(
+        `SELECT id, deleted, safety_blocked, recipient_scope, triggered_by FROM weave_engine_reasonings WHERE id = '8dd134b0-f22d-45fd-97d2-d0b6f2752dc8'`
+      );
       console.log("Reasoning:", rRes.rows);
     }
   } catch (err) {

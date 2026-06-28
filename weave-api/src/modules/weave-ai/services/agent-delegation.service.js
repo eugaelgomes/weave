@@ -4,7 +4,7 @@
  * by delegating the task to the chat-orchestrator service in "sub-agent" mode.
  */
 const { randomUUID } = require("crypto");
-// We require it dynamically or lazily if there's a circular dependency, 
+// We require it dynamically or lazily if there's a circular dependency,
 // since chat-functions requires this, and this requires chat-orchestrator, which requires chat-functions.
 let chatOrchestratorService = null;
 

@@ -1,7 +1,10 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const reportConfigRepository = require("../repositories/report-config.repository");
 const sprintsRepository = require("../repositories/sprints.repository");
-const { buildListEnvelope, hasAnyQueryKey } = require("@/utils/http/list-query");
+const {
+  buildListEnvelope,
+  hasAnyQueryKey,
+} = require("@/utils/http/list-query");
 const { ENGINE_SPRINTS_LIST_TRIGGER_KEYS } = require("../engine.validators");
 
 class EngineSprintsController extends ProjectsCoreController {
@@ -152,11 +155,12 @@ class EngineSprintsController extends ProjectsCoreController {
 
       await this._validateProjectAccess(projectId, userId);
 
-      const { title, goal, start_date, end_date, workable_days, activate } = req.body;
+      const { title, goal, start_date, end_date, workable_days, activate } =
+        req.body;
 
       if (!start_date || !end_date) {
         return res.status(400).json({
-          error: "start_date e end_date são obrigatórios",
+          error: "start_date and end_date are required",
         });
       }
 
@@ -164,16 +168,17 @@ class EngineSprintsController extends ProjectsCoreController {
       const endDate = new Date(end_date);
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         return res.status(400).json({
-          error: "Datas inválidas. Use formato ISO (YYYY-MM-DD)",
+          error: "Invalid dates. Use ISO format (YYYY-MM-DD)",
         });
       }
       if (endDate < startDate) {
         return res.status(400).json({
-          error: "end_date deve ser posterior a start_date",
+          error: "end_date must be after start_date",
         });
       }
 
-      const sprintNumber = await sprintsRepository.getNextSprintNumber(projectId);
+      const sprintNumber =
+        await sprintsRepository.getNextSprintNumber(projectId);
 
       const sprint = await sprintsRepository.create({
         projectId,
@@ -204,7 +209,7 @@ class EngineSprintsController extends ProjectsCoreController {
       }
 
       res.status(201).json({
-        message: "Sprint criada com sucesso",
+        message: "Sprint created successfully",
         sprint,
       });
     } catch (error) {
@@ -230,12 +235,12 @@ class EngineSprintsController extends ProjectsCoreController {
       const sprint = await sprintsRepository.getById(sprintId);
       if (!sprint || sprint.project_id !== projectId) {
         return res.status(404).json({
-          error: "Sprint não encontrada",
+          error: "Sprint not found",
         });
       }
       if (sprint.status === "completed") {
         return res.status(400).json({
-          error: "Sprint já está concluída",
+          error: "Sprint is already completed",
         });
       }
 
@@ -258,7 +263,8 @@ class EngineSprintsController extends ProjectsCoreController {
           nextEnd.getDate() + (config.default_sprint_duration_days || 14) - 1
         );
 
-        const nextNumber = await sprintsRepository.getNextSprintNumber(projectId);
+        const nextNumber =
+          await sprintsRepository.getNextSprintNumber(projectId);
 
         nextSprint = await sprintsRepository.create({
           projectId,
@@ -285,7 +291,7 @@ class EngineSprintsController extends ProjectsCoreController {
       }
 
       res.status(200).json({
-        message: "Sprint concluída com sucesso",
+        message: "Sprint completed successfully",
         completed_sprint: completedSprint,
         next_sprint: nextSprint,
       });

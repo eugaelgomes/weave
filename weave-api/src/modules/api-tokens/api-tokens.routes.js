@@ -33,5 +33,4 @@ router.post(
   MutateApiTokensController.revokeToken.bind(MutateApiTokensController)
 );
 
-
 module.exports = router;

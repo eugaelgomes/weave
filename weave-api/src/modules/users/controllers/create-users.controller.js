@@ -26,7 +26,6 @@ class CreateUsersController extends BaseController {
    * @returns {Promise<void>}
    */
   async createUser(req, res, next) {
-
     try {
       const {
         name,
