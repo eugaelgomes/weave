@@ -61,6 +61,7 @@ import {
   shareChatSession,
 } from "@/app/_services/ai-agent-service/agent-service";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -177,7 +178,43 @@ function RenderContextIcon({
   );
 }
 
-export type ChatInterfaceVariant = "fullPage" | "widget";
+export type ChatInterfaceVariant = "fullPage" | "widget" | "engine";
+
+const ArtifactExecutionCard = ({ execution, onToggleSandbox }: { execution: any; onToggleSandbox?: () => void }) => {
+  return (
+    <div className="mb-2 mt-2 flex w-full max-w-sm flex-col gap-2 overflow-hidden rounded-lg border border-brand-primary-500/30 bg-brand-primary-50/50 p-3 shadow-sm dark:border-brand-primary-900/50 dark:bg-brand-primary-950/20">
+      <div className="flex items-center gap-2">
+        {execution.isRunning ? (
+          <div className="relative flex h-6 w-6 items-center justify-center">
+            <Loader2 className="absolute h-5 w-5 animate-spin text-brand-primary-500" />
+            <div className="h-2 w-2 rounded-full bg-brand-primary-500 animate-pulse"></div>
+          </div>
+        ) : execution.success ? (
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+            <CheckCircle2 className="h-3 w-3" />
+          </div>
+        ) : (
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+            <XCircle className="h-3 w-3" />
+          </div>
+        )}
+        <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+          {execution.isRunning ? "Elaborando documento..." : "Documento atualizado"}
+        </span>
+      </div>
+      
+      {!execution.isRunning && execution.success && onToggleSandbox && (
+        <button
+          onClick={onToggleSandbox}
+          className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-brand-primary-700 shadow-sm border border-neutral-200 transition hover:bg-neutral-50 dark:bg-neutral-900 dark:text-brand-primary-400 dark:border-neutral-800 dark:hover:bg-neutral-800"
+        >
+          <FileText className="h-3.5 w-3.5" />
+          Abrir Documento
+        </button>
+      )}
+    </div>
+  );
+};
 const ActionExecutionCard = ({ execution, orgId }: { execution: any; orgId: string }) => {
   const { locale } = useLanguage();
   const t =
@@ -296,10 +333,14 @@ export default function ChatInterface({
   chatId,
   variant = "fullPage",
   onClose,
+  onToggleSandbox,
+  isSandboxOpen,
 }: {
   chatId?: string;
   variant?: ChatInterfaceVariant;
   onClose?: () => void;
+  onToggleSandbox?: () => void;
+  isSandboxOpen?: boolean;
 } = {}) {
   const router = useRouter();
   const params = useParams();
@@ -407,10 +448,15 @@ export default function ChatInterface({
     if (chatId) return;
     if (!currentSession?.id || !isChatSessionId(currentSession.id)) return;
     const normalizedPathname = pathname.replace(/\/$/, "");
-    if (normalizedPathname !== `/${orgId}/weave-ai/chat`) return;
+    if (normalizedPathname !== `/${orgId}/weave-ai/chat` && normalizedPathname !== `/${orgId}/weave-ai/chat/reasonings/new`) return;
     if (messages.length === 0) return;
-    window.history.replaceState(null, "", `/${orgId}/weave-ai/chat/${currentSession.id}`);
-  }, [chatId, currentSession?.id, messages.length, pathname, orgId]);
+
+    const targetUrl = variant === "engine"
+      ? `/${orgId}/weave-ai/chat/reasonings/${currentSession.id}`
+      : `/${orgId}/weave-ai/chat/${currentSession.id}`;
+
+    window.history.replaceState(null, "", targetUrl);
+  }, [chatId, currentSession?.id, messages.length, pathname, orgId, variant]);
 
   const handleSendText = async (messageText: string) => {
     if (!messageText.trim() || isTyping || !canSendAiMessage) return;
@@ -433,6 +479,7 @@ export default function ChatInterface({
       allowEdit,
       allowWebSearch,
       agentId: selectedAgentId || undefined,
+      useCase: variant === "engine" ? "engine_compose" : undefined,
       context: {
         selectedContextItems: contextItems.map((item) => ({
           type: item.type,
@@ -640,15 +687,29 @@ export default function ChatInterface({
   }, [normalizedContextSearch]);
 
   return (
-    <div className="relative flex h-full flex-col bg-white dark:bg-[#1d1d1b]">
+    <div className={cn("relative flex h-full flex-col", variant === "engine" ? "bg-neutral-50 dark:bg-neutral-900" : "bg-white dark:bg-[#1d1d1b]")}>
       <div className="dark:border-surface-dark-border flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1">
         <div className="flex items-center gap-2">
           <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-            {variant === "widget" ? t.nav.weaveAi : chatHeaderTitle}
+            {variant === "engine" ? "Weave Engine - Compose" : variant === "widget" ? t.nav.weaveAi : chatHeaderTitle}
           </h1>
         </div>
 
         <div className="flex items-center gap-2">
+          {variant === "engine" && onToggleSandbox && (
+            <button
+              onClick={onToggleSandbox}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition",
+                isSandboxOpen
+                  ? "bg-brand-primary-100 text-brand-primary-700 dark:bg-brand-primary-900/30 dark:text-brand-primary-400"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700"
+              )}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Sandbox
+            </button>
+          )}
           {(!variant || variant === "fullPage") && chatId && messages?.length > 0 && (
             <button
               onClick={handleShareChat}
@@ -757,21 +818,30 @@ export default function ChatInterface({
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       ) : (
                         <div className="flex flex-col gap-2">
-                          <ActionExecutionGroup
-                            executions={
-                              Array.isArray(msg.functionExecution)
-                                ? msg.functionExecution.filter(
-                                    (exec: any) =>
-                                      ![
-                                        "get_user_profile",
-                                        "get_organization_details",
-                                        "get_brain_structure",
-                                      ].includes(exec.name)
-                                  )
-                                : []
-                            }
-                            orgId={orgId}
-                          />
+                          {(() => {
+                            const allExecutions = Array.isArray(msg.functionExecution)
+                              ? msg.functionExecution.filter(
+                                  (exec: any) =>
+                                    ![
+                                      "get_user_profile",
+                                      "get_organization_details",
+                                      "get_brain_structure",
+                                    ].includes(exec.name)
+                                )
+                              : [];
+                              
+                            const artifactExecutions = allExecutions.filter((e: any) => e.name === "update_reasoning_draft" || e.name === "create_reasoning");
+                            const regularExecutions = allExecutions.filter((e: any) => e.name !== "update_reasoning_draft" && e.name !== "create_reasoning");
+                            
+                            return (
+                              <>
+                                <ActionExecutionGroup executions={regularExecutions} orgId={orgId} />
+                                {artifactExecutions.map((exec: any, idx: number) => (
+                                  <ArtifactExecutionCard key={`art-${idx}`} execution={exec} onToggleSandbox={onToggleSandbox} />
+                                ))}
+                              </>
+                            );
+                          })()}
 
                           {reasoningText && (
                             <div className="mb-2 w-fit max-w-2xl min-w-[280px] rounded-xl border border-neutral-200/60 bg-white/40 shadow-sm backdrop-blur-md dark:border-neutral-800/60 dark:bg-[#252525]/40">

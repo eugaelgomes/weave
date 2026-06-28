@@ -5,6 +5,7 @@ import { Plus, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
+import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { ORG_PERMISSIONS, orgRoleHasPermission } from "@/app/_utils/org-permissions";
@@ -78,7 +79,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
       if (projectId) params.set("projectId", projectId);
       params.set("from", variant === "page" ? "engine" : "home");
       const qs = params.toString();
-      router.push(`/${orgId}/weave-engine/compose${qs ? `?${qs}` : ""}`);
+      router.push(`/${orgId}/weave-ai/chat/reasonings/new${qs ? `?${qs}` : ""}`);
     },
     [router, variant]
   );
@@ -261,7 +262,7 @@ export default function WeaveEngineDashboard({ variant = "home" }: WeaveEngineDa
               href={`/${orgId}/weave-engine`}
               className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium text-neutral-600 transition-all duration-200 hover:bg-neutral-50 hover:text-neutral-900 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
             >
-              <Eye className="h-3 w-3 text-neutral-400" />
+              <WeaveEngineIcon className="h-3 w-3" />
               {copy.viewAll}
             </Link>
           )}

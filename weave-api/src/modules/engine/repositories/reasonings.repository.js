@@ -183,10 +183,6 @@ class ReasoningsRepository {
         ri.is_read, ri.is_pinned, ri.is_dismissed, ri.feedback,
         ps.sprint_number, ps.title AS sprint_title
       FROM weave_engine_reasonings r
-      INNER JOIN project_members pm
-        ON pm.project_id = r.project_id
-        AND pm.user_id = $2
-        AND pm.deleted = false
       LEFT JOIN weave_engine_reasoning_interactions ri
         ON ri.reasoning_id = r.id
         AND ri.user_id = $2
@@ -302,10 +298,6 @@ class ReasoningsRepository {
         ps.sprint_number, ps.title AS sprint_title,
         COUNT(*) OVER() AS total_count
       FROM weave_engine_reasonings r
-      INNER JOIN project_members pm
-        ON pm.project_id = r.project_id
-        AND pm.user_id = $2::uuid
-        AND pm.deleted = false
       LEFT JOIN weave_engine_reasoning_interactions ri
         ON ri.reasoning_id = r.id
         AND ri.user_id = $2::uuid

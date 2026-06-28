@@ -36,7 +36,6 @@ import {
   CircleHelp,
   type LucideIcon,
 } from "lucide-react";
-import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
 import { ProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
 import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
 
@@ -438,12 +437,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
 
   const navigationItems: NavigationItem[] = [
     { path: `${orgPrefix}/home`, icon: Home, label: t.nav.home },
-    {
-      path: `${orgPrefix}/weave-engine`,
-      icon: WeaveEngineIcon,
-      label: t.nav.weaveEngine,
-      badge: unreadCount > 0 ? unreadCount : undefined,
-    },
     {
       path: `${orgPrefix}/weave-ai/chat`,
       icon: AiFredokaIcon,

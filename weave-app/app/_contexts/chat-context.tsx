@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import { useAuth } from "./auth-context";
 import {
   fetchAvailableModels,
@@ -62,8 +63,15 @@ function deriveSessionTitleFromMessages(messages: ChatMessage[]): string | null 
   return collapsed.length > 255 ? collapsed.slice(0, 255) : collapsed;
 }
 
-export function ChatProvider({ children }: { children: React.ReactNode }) {
+export interface ChatProviderProps {
+  children: React.ReactNode;
+  defaultUseCase?: string;
+  defaultContext?: Record<string, any>;
+}
+
+export const ChatProvider: React.FC<ChatProviderProps> = ({ children, defaultUseCase, defaultContext }) => {
   const { authenticated } = useAuth();
+  const params = useParams();
   /** Bumped on createNewSession and at the start of each loadSession / scoped loadChatHistory; stale async completions must not overwrite state. */
   const chatStateEpochRef = useRef(0);
   const [models, setModels] = useState<AIModel[]>([]);
@@ -74,6 +82,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [hasMoreHistory, setHasMoreHistory] = useState(true);
+
+  const defaultContextRef = useRef(defaultContext);
+  useEffect(() => {
+    defaultContextRef.current = defaultContext;
+  }, [defaultContext]);
 
   const chatHistoryRef = useRef<ChatSession[]>([]);
   const messagesRef = useRef<ChatMessage[]>([]);
@@ -156,6 +169,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const requestId = data.requestId || createRequestId();
       const optimisticMessageId = `user-${requestId}`;
 
+      const payload: SendMessageData = {
+        ...data,
+        useCase: defaultUseCase || data.useCase,
+        context: {
+          ...defaultContextRef.current,
+          ...data.context,
+        },
+      };
+
+      if (!payload.sessionId && currentSession) {
+        payload.sessionId = currentSession.id;
+      }
+
       try {
         setIsTyping(true);
         setError(null);
@@ -170,7 +196,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             allowEdit: data.allowEdit,
             errorMessage: null,
             payload: {
-              ...data,
+              ...payload,
               requestId,
             },
             requestId,
@@ -280,7 +306,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         const response = await sendChatMessage(
           {
-            ...data,
+            ...payload,
             requestId,
           },
           onChunk
