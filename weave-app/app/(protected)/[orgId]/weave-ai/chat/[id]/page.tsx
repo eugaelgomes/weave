@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ChatViewClient } from "@/app/(protected)/[orgId]/weave-ai/chat/_components/chat-view-client";
+import { ChatViewClient } from "@/app/_components/weave-ai/chat/chat-view-client";
 import { isChatSessionId } from "@/app/_utils/chat-session-id";
 
 export default async function ChatHistoryPage({

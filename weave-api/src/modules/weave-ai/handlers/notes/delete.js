@@ -7,7 +7,7 @@
  * - `../utils/chat-access.util`: To verify user permissions.
  */
 const notesRepository = require("@/modules/notes/notes.repository");
-const chatAccessUtil = require("../utils/chat-access.util");
+const chatAccessUtil = require("../../utils/chat-access.util");
 
 class DeleteNoteHandler {
   /**

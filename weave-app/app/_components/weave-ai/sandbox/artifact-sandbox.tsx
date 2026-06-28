@@ -5,8 +5,8 @@ import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useChat } from "@/app/_contexts/chat-context";
-import { engineSubmitButtonClass } from "@/app/(protected)/[orgId]/weave-engine/_components/engine-styles";
 import { cn } from "@/lib/utils";
+import { artifactsService } from "@/app/_services";
 
 const RichTextEditor = dynamic(
   () =>
@@ -43,9 +43,10 @@ export function ArtifactSandbox({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const targetId = artifactId || (reasoningId !== "new" ? reasoningId : null);
+
   // Load the initial artifact data from the backend
   useEffect(() => {
-    const targetId = artifactId || (reasoningId !== "new" ? reasoningId : null);
 
     async function loadArtifact() {
       if (!targetId) {
@@ -54,12 +55,10 @@ export function ArtifactSandbox({
       }
 
       try {
-        const response = await fetch(`/api/v1/artifacts/${targetId}`);
-        if (response.ok) {
-          const artifact = await response.json();
-          setTitle(artifact.title || initialTitle);
-          setBlocks(artifact.content || initialContent);
-        }
+        setIsLoading(true);
+        const artifact = await artifactsService.getArtifactById(targetId);
+        setTitle(artifact.title || initialTitle);
+        setBlocks(artifact.content || initialContent);
       } catch (error) {
         console.error("Failed to load artifact:", error);
       } finally {
@@ -67,7 +66,7 @@ export function ArtifactSandbox({
       }
     }
     loadArtifact();
-  }, [artifactId, reasoningId, initialTitle, initialContent]);
+  }, [artifactId, reasoningId]);
 
   // Sync content from the latest AI function calls
   useEffect(() => {
@@ -109,13 +108,13 @@ export function ArtifactSandbox({
   }, [title, blocks, onDraftChange]);
 
   const handleSave = async (updatedBlocks?: any[]) => {
+    if (!targetId) return;
     setIsSaving(true);
     try {
       const blocksToSave = updatedBlocks || blocks;
-      await fetch(`/api/v1/artifacts/${reasoningId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content: blocksToSave }),
+      await artifactsService.updateArtifact(targetId, {
+        title,
+        content: blocksToSave,
       });
     } catch (error) {
       console.error("Failed to save artifact:", error);
@@ -125,53 +124,43 @@ export function ArtifactSandbox({
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-neutral-200/80 bg-white shadow-2xl dark:border-neutral-800/80 dark:bg-[#18181a]">
-        {/* Sandbox Header */}
-        <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-100 px-5 py-3 dark:border-neutral-800/60">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Título do Reasoning..."
-            className="w-full bg-transparent text-[15px] font-semibold text-neutral-800 outline-none placeholder:text-neutral-300 dark:text-neutral-100 dark:placeholder:text-neutral-600"
-          />
-          <div className="flex items-center gap-2">
-            {isSaving && <span className="text-xs text-neutral-400">Salvando...</span>}
-            <button
-              onClick={() => handleSave()}
-              disabled={isSaving}
-              className={cn(
-                engineSubmitButtonClass,
-                "rounded-lg px-4 py-1.5 text-xs whitespace-nowrap"
-              )}
-            >
-              {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Salvar"}
-            </button>
-          </div>
-        </div>
+    <div className={cn("relative flex h-full flex-col border-l border-neutral-200 dark:border-surface-dark-border", "bg-white dark:bg-[#1d1d1b]")}>
+      {/* Sandbox Header */}
+      <div className="dark:border-surface-dark-border flex h-9 flex-shrink-0 items-center justify-between border-b border-neutral-200 px-3">
+        <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
+          {title || "Sandbox"}
+        </h1>
+        {isSaving && (
+          <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-neutral-400 uppercase">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-orange opacity-75"></span>
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-yellow"></span>
+            </span>
+            Salvando
+          </span>
+        )}
+      </div>
 
-        {/* Rich Text Editor Body */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto px-6 py-8">
-          <div className="mx-auto max-w-[700px]">
-            {isLoading ? (
-              <div className="flex h-32 items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
-              </div>
-            ) : (
-              <RichTextEditor
-                key={`sandbox-${artifactId || reasoningId}-${isLoading}`}
-                initialBlocks={blocks}
-                editable
-                placeholder="A IA e você construirão este documento..."
-                onChange={setBlocks}
-                onSave={handleSave}
-                autosave={true}
-                showSaveStatus={true}
-              />
-            )}
+      {/* Rich Text Editor Body */}
+      <div className="custom-scrollbar flex-1 overflow-y-auto p-2">
+        {isLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-brand-yellow" />
           </div>
-        </div>
+        ) : (
+          <div className="mx-auto max-w-[850px] pb-32">
+            <RichTextEditor
+              key={`sandbox-${artifactId || reasoningId}-${isLoading}`}
+              initialBlocks={blocks}
+              editable
+              placeholder="A IA e você construirão este documento..."
+              onChange={setBlocks}
+              onSave={handleSave}
+              autosave={true}
+              showSaveStatus={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

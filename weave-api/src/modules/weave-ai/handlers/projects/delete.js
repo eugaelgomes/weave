@@ -9,7 +9,7 @@
  */
 const projectsDeleteRepository = require("@/modules/projects/repositories/projects-delete.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
-const chatAccessUtil = require("../utils/chat-access.util");
+const chatAccessUtil = require("../../utils/chat-access.util");
 
 class DeleteProjectHandler {
   /**

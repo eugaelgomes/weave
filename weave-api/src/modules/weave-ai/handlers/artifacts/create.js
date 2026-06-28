@@ -3,7 +3,7 @@
  * @description Handler for the create_artifact tool.
  * Actually creates an artifact in the database.
  */
-const ArtifactsRepository = require("../../artifacts/repositories/artifacts.repository");
+const ArtifactsRepository = require("@/modules/artifacts/repositories/artifacts.repository");
 
 class CreateArtifactHandler {
   async execute({ args, name, userId, organizationId }) {

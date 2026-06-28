@@ -3,7 +3,7 @@
  * @description Handler for the update_artifact tool.
  * Actually updates an artifact in the database.
  */
-const ArtifactsRepository = require("../../artifacts/repositories/artifacts.repository");
+const ArtifactsRepository = require("@/modules/artifacts/repositories/artifacts.repository");
 
 class UpdateArtifactHandler {
   async execute({ args, name, userId }) {

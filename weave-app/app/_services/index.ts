@@ -143,6 +143,9 @@ export {
 // Backup Services
 export * from "./backup-service/backup-service";
 
+// Artifacts Services
+export * from "./artifacts-service";
+
 // Health Services
 export * from "./health-service/health-service";
 

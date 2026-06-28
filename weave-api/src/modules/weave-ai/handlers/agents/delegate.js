@@ -3,7 +3,7 @@
  * @description Handler for the delegate_to_agent tool. Initiates a sub-session
  * using the agent delegation service.
  */
-const agentDelegationService = require("../services/agent-delegation.service");
+const agentDelegationService = require("../../services/agent-delegation.service");
 
 class DelegateToAgentHandler {
   async execute({

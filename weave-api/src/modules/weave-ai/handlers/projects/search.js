@@ -9,9 +9,9 @@ const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
 const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
-const chatAccessUtil = require("../utils/chat-access.util");
-const chatFormatterUtil = require("../utils/chat-formatter.util");
-const { markdownToBlocks } = require("../utils/markdown-to-blocks.util");
+const chatAccessUtil = require("../../utils/chat-access.util");
+const chatFormatterUtil = require("../../utils/chat-formatter.util");
+const { markdownToBlocks } = require("../../utils/markdown-to-blocks.util");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
 const {
