@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import React, { useRef } from "react";
+import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import ChatInterface from "@/app/(protected)/[orgId]/weave-ai/_components/chat-interface";
 import { ChatProvider } from "@/app/_contexts/chat-context";
@@ -13,7 +13,21 @@ export default function ReasoningChatPage() {
   const isNew = reasoningId === "new";
   const chatId = isNew ? undefined : reasoningId;
   const draftStateRef = useRef<any>({});
-  const [isSandboxOpen, setIsSandboxOpen] = useState(false);
+  
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isSandboxOpen = searchParams.get("sandbox") === "1";
+
+  const toggleSandbox = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (isSandboxOpen) {
+      params.delete("sandbox");
+    } else {
+      params.set("sandbox", "1");
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const handleDraftChange = (state: any) => {
     draftStateRef.current = state;
@@ -32,13 +46,13 @@ export default function ReasoningChatPage() {
         <div
           className={cn(
             "h-full transition-all duration-300 ease-in-out",
-            isSandboxOpen ? "w-1/2 border-r border-neutral-200 dark:border-neutral-800" : "w-full"
+            isSandboxOpen ? "w-3/5" : "w-full"
           )}
         >
           <ChatInterface 
             variant="engine" 
             chatId={chatId} 
-            onToggleSandbox={() => setIsSandboxOpen((prev) => !prev)} 
+            onToggleSandbox={toggleSandbox} 
             isSandboxOpen={isSandboxOpen}
           />
         </div>
@@ -47,7 +61,7 @@ export default function ReasoningChatPage() {
         <div
           className={cn(
             "h-full transition-all duration-300 ease-in-out flex-shrink-0",
-            isSandboxOpen ? "w-1/2 translate-x-0 opacity-100" : "w-0 translate-x-[100%] opacity-0 overflow-hidden"
+            isSandboxOpen ? "w-2/5 translate-x-0 opacity-100" : "w-0 translate-x-[100%] opacity-0 overflow-hidden"
           )}
         >
           {isSandboxOpen && (

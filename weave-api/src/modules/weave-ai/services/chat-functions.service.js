@@ -73,6 +73,7 @@ class ChatFunctionsService {
       t,
       name,
       files,
+      toolCallId: functionCall?.id,
     });
   }
 

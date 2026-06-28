@@ -98,6 +98,11 @@ function isFunctionAuthorized({ access, functionName, schema, context }) {
 
   const ownershipRules = getOwnershipRules(functionName);
   const category = schema?.category;
+  
+  if (category === FunctionCategory.AGENTS && context?.isSubAgent) {
+    return false;
+  }
+
   const noteScoped =
     category === FunctionCategory.NOTES || category === FunctionCategory.BLOCKS;
   const projectScoped = category === FunctionCategory.PROJECTS;

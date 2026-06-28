@@ -189,6 +189,7 @@ class ChatOrchestratorService {
           files: filesMetadata,
           agentId: payload.agentId,
           useCase: payload.useCase,
+          parentToolCallId: payload.parentToolCallId,
         },
       });
     }
@@ -222,6 +223,7 @@ class ChatOrchestratorService {
           noteId: resolvedNoteIds.length > 0 ? resolvedNoteIds[0] : null,
           projectId:
             resolvedProjectIds.length > 0 ? resolvedProjectIds[0] : null,
+          isSubAgent: Boolean(payload.isSubAgent),
         },
         userId,
       });
@@ -255,6 +257,38 @@ class ChatOrchestratorService {
 
     let currentMessage = payload.message;
     const currentConversationHistory = [...conversationHistory];
+
+    if (!payload.isSubAgent) {
+      const fallbackSystemAgents = [
+        { id: "sys_researcher", name: "Researcher", description: "Expert in researching facts, summarizing articles, and deep data analysis." },
+        { id: "sys_writer", name: "Writer", description: "Expert in technical writing, document formatting, and proofreading." }
+      ];
+      
+      const agentsToList = payload.availableAgents?.length > 0 
+        ? payload.availableAgents 
+        : fallbackSystemAgents;
+
+      const agentsList = agentsToList
+        .map((a) => `- ${a.name} (ID: ${a.id}): ${a.description || ""}`)
+        .join("\n");
+      
+      const systemPrompt = `You act as a Multi-Agent Orchestrator. If the user's task is complex and could benefit from specialized agents, use the 'delegate_to_agent' tool.
+Available agents:
+${agentsList}`;
+      
+      currentConversationHistory.unshift({
+        role: "system",
+        content: systemPrompt,
+      });
+    }
+
+    if (payload.useCase === "engine_compose") {
+      currentConversationHistory.unshift({
+        role: "system",
+        content: "CRITICAL: You are in a Reasoning/Sandbox environment. ANY time you generate a draft, prompt, code, or document, you MUST use the 'create_artifact' or 'update_artifact' tools. Do NOT output the content as plain text in the chat.",
+      });
+    }
+
     let totalLatencyMs = 0;
 
     // Begin the ReAct (Reasoning and Acting) loop.
@@ -275,6 +309,7 @@ class ChatOrchestratorService {
             resourceAccess,
             useCase: payload.useCase,
             userLanguage,
+            isSubAgent: Boolean(payload.isSubAgent),
           },
           files:
             currentLoop === 0

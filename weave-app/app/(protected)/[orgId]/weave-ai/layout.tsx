@@ -3,7 +3,7 @@
 import React from "react";
 import { flushSync } from "react-dom";
 import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bot, Plus, Trash2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WeaveAIHeader } from "@/app/(protected)/_components/ui/headers/weave-ai-header";
@@ -189,8 +189,15 @@ function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
 }
 
 function WeaveAiLayoutContent({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  const isSandboxOpen = searchParams?.get("sandbox") === "1";
+
   return (
-    <ModuleLayout header={<WeaveAIHeader />} sidebarContent={<WeaveAiSidebar />}>
+    <ModuleLayout 
+      header={<WeaveAIHeader />} 
+      sidebarContent={<WeaveAiSidebar />}
+      hideSidebarOnDesktop={isSandboxOpen}
+    >
       <div className="custom-scrollbar flex h-full flex-1 flex-col overflow-auto text-neutral-900 dark:text-neutral-100">
         {children}
       </div>

@@ -24,6 +24,7 @@ const taskPrioritiesRoutes = require("@/modules/task-priorities/task-priorities.
 const weaveAiRoutes = require("@/modules/weave-ai/weave-ai.routes");
 const slackRoutes = require("@/modules/slack/slack.routes");
 const engineRoutes = require("@/modules/engine/engine.routes");
+const artifactsRoutes = require("@/modules/artifacts/artifacts.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -148,6 +149,7 @@ const routeRegistry = [
   { basePath: "/weave-ai", handler: weaveAiRoutes },
   { basePath: "/slack", handler: slackRoutes },
   { basePath: "/engine", handler: engineRoutes },
+  { basePath: "/artifacts", handler: artifactsRoutes },
 ];
 
 /**

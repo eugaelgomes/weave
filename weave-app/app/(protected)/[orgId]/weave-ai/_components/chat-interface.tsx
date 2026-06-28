@@ -749,9 +749,12 @@ export default function ChatInterface({
       <div
         ref={messagesContainerRef}
         onScroll={updateScrollButtons}
-        className="relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth p-2 pb-48 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent"
+        className={cn(
+          "relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth pb-48 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent",
+          isSandboxOpen ? "px-4 pt-2" : "p-2"
+        )}
       >
-        <div className="mx-auto w-full max-w-4xl space-y-4">
+        <div className={cn("mx-auto w-full space-y-4", isSandboxOpen ? "max-w-2xl px-2 sm:px-4" : "max-w-4xl")}>
           {messages
             ?.filter((msg: any) => {
               if (msg.role === "system" || msg.role === "tool") return false;
@@ -1463,16 +1466,20 @@ export default function ChatInterface({
       </div>
 
       <div
-        className={`pointer-events-none absolute right-0 left-0 z-10 px-4 transition-all duration-700 ease-in-out ${
+        className={cn(
+          "pointer-events-none absolute right-0 left-0 z-10 px-4 transition-all duration-700 ease-in-out",
           messages?.length === 0 && !loading
             ? "top-1/2 -translate-y-1/2 bg-transparent pb-0"
-            : "bottom-0 translate-y-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-10 pb-4 dark:from-[#1d1d1b] dark:via-[#1d1d1b]/95 dark:to-transparent"
-        }`}
+            : `bottom-0 translate-y-0 bg-gradient-to-t from-white via-white/95 to-transparent pt-10 dark:from-[#1d1d1b] dark:via-[#1d1d1b]/95 dark:to-transparent ${
+                isSandboxOpen ? "pb-2" : "pb-4"
+              }`
+        )}
       >
         <div
-          className={`pointer-events-auto mx-auto flex flex-col gap-2 transition-all duration-700 ease-in-out ${
-            messages?.length === 0 && !loading ? "max-w-2xl" : "max-w-4xl"
-          }`}
+          className={cn(
+            "pointer-events-auto mx-auto w-full px-2 transition-all duration-500 ease-in-out sm:px-4 flex flex-col gap-2",
+            messages?.length === 0 && !loading ? "max-w-2xl" : isSandboxOpen ? "max-w-2xl" : "max-w-4xl"
+          )}
         >
           {messages?.length === 0 && !loading && (
             <div className="animate-in fade-in flex flex-col items-center gap-4 pb-3 text-center duration-500">
