@@ -13,13 +13,18 @@ export default function ReasoningChatPage() {
   const isNew = reasoningId === "new";
   const chatId = isNew ? undefined : reasoningId;
   const draftStateRef = useRef<any>({});
-  
+  const [activeArtifactId, setActiveArtifactId] = React.useState<string | null>(null);
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isSandboxOpen = searchParams.get("sandbox") === "1";
 
-  const toggleSandbox = () => {
+  const toggleSandbox = (artifactId?: string) => {
+    if (artifactId) {
+      setActiveArtifactId(artifactId);
+    }
+
     const params = new URLSearchParams(searchParams.toString());
     if (isSandboxOpen) {
       params.delete("sandbox");
@@ -27,6 +32,18 @@ export default function ReasoningChatPage() {
       params.set("sandbox", "1");
     }
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const openSandboxForArtifact = (artifactId?: string) => {
+    if (artifactId) {
+      setActiveArtifactId(artifactId);
+    }
+
+    if (!isSandboxOpen) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("sandbox", "1");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
   };
 
   const handleDraftChange = (state: any) => {
@@ -49,10 +66,11 @@ export default function ReasoningChatPage() {
             isSandboxOpen ? "w-3/5" : "w-full"
           )}
         >
-          <ChatInterface 
-            variant="engine" 
-            chatId={chatId} 
-            onToggleSandbox={toggleSandbox} 
+          <ChatInterface
+            variant="engine"
+            chatId={chatId}
+            onToggleSandbox={toggleSandbox}
+            onOpenSandbox={openSandboxForArtifact}
             isSandboxOpen={isSandboxOpen}
           />
         </div>
@@ -60,13 +78,16 @@ export default function ReasoningChatPage() {
         {/* Right Pane: Sandbox */}
         <div
           className={cn(
-            "h-full transition-all duration-300 ease-in-out flex-shrink-0",
-            isSandboxOpen ? "w-2/5 translate-x-0 opacity-100" : "w-0 translate-x-[100%] opacity-0 overflow-hidden"
+            "h-full flex-shrink-0 transition-all duration-300 ease-in-out",
+            isSandboxOpen
+              ? "w-2/5 translate-x-0 opacity-100"
+              : "w-0 translate-x-[100%] overflow-hidden opacity-0"
           )}
         >
           {isSandboxOpen && (
             <ReasoningSandbox
               reasoningId={reasoningId}
+              artifactId={activeArtifactId || undefined}
               onDraftChange={handleDraftChange}
             />
           )}

@@ -266,15 +266,22 @@ class ProactiveQueueProcessor {
               text: `Your background proactive reasoning job '${job.title || jobType}' has failed to process.`,
               html: `<p>Your background proactive reasoning job <b>${job.title || jobType}</b> has failed to process.</p>`,
             };
-            await redis.lpush(getEmailQueueRedisKey(), JSON.stringify({
-              payload: emailPayload,
-              queuedAt: new Date().toISOString()
-            }));
-            logger.info("Sent failure notification email to user", { userId: job.triggeredBy });
+            await redis.lpush(
+              getEmailQueueRedisKey(),
+              JSON.stringify({
+                payload: emailPayload,
+                queuedAt: new Date().toISOString(),
+              })
+            );
+            logger.info("Sent failure notification email to user", {
+              userId: job.triggeredBy,
+            });
           }
         }
       } catch (dbErr) {
-        logger.error("Failed to fetch user or send failure email", { error: dbErr.message });
+        logger.error("Failed to fetch user or send failure email", {
+          error: dbErr.message,
+        });
       }
     }
   }

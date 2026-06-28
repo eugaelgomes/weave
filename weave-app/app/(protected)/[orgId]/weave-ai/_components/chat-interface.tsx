@@ -180,14 +180,20 @@ function RenderContextIcon({
 
 export type ChatInterfaceVariant = "fullPage" | "widget" | "engine";
 
-const ArtifactExecutionCard = ({ execution, onToggleSandbox }: { execution: any; onToggleSandbox?: () => void }) => {
+const ArtifactExecutionCard = ({
+  execution,
+  onOpenSandbox,
+}: {
+  execution: any;
+  onOpenSandbox?: (artifactId?: string) => void;
+}) => {
   return (
-    <div className="mb-2 mt-2 flex w-full max-w-sm flex-col gap-2 overflow-hidden rounded-lg border border-brand-primary-500/30 bg-brand-primary-50/50 p-3 shadow-sm dark:border-brand-primary-900/50 dark:bg-brand-primary-950/20">
+    <div className="border-brand-primary-500/30 bg-brand-primary-50/50 dark:border-brand-primary-900/50 dark:bg-brand-primary-950/20 mt-2 mb-2 flex w-full max-w-sm flex-col gap-2 overflow-hidden rounded-lg border p-3 shadow-sm">
       <div className="flex items-center gap-2">
         {execution.isRunning ? (
           <div className="relative flex h-6 w-6 items-center justify-center">
-            <Loader2 className="absolute h-5 w-5 animate-spin text-brand-primary-500" />
-            <div className="h-2 w-2 rounded-full bg-brand-primary-500 animate-pulse"></div>
+            <Loader2 className="text-brand-primary-500 absolute h-5 w-5 animate-spin" />
+            <div className="bg-brand-primary-500 h-2 w-2 animate-pulse rounded-full"></div>
           </div>
         ) : execution.success ? (
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
@@ -202,11 +208,11 @@ const ArtifactExecutionCard = ({ execution, onToggleSandbox }: { execution: any;
           {execution.isRunning ? "Elaborando documento..." : "Documento atualizado"}
         </span>
       </div>
-      
-      {!execution.isRunning && execution.success && onToggleSandbox && (
+
+      {!execution.isRunning && execution.success && onOpenSandbox && (
         <button
-          onClick={onToggleSandbox}
-          className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-brand-primary-700 shadow-sm border border-neutral-200 transition hover:bg-neutral-50 dark:bg-neutral-900 dark:text-brand-primary-400 dark:border-neutral-800 dark:hover:bg-neutral-800"
+          onClick={() => onOpenSandbox(execution.result?.artifactId || execution.result?.id)}
+          className="text-brand-primary-700 dark:text-brand-primary-400 mt-1 flex w-full items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium shadow-sm transition hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:bg-neutral-800"
         >
           <FileText className="h-3.5 w-3.5" />
           Abrir Documento
@@ -334,12 +340,14 @@ export default function ChatInterface({
   variant = "fullPage",
   onClose,
   onToggleSandbox,
+  onOpenSandbox,
   isSandboxOpen,
 }: {
   chatId?: string;
   variant?: ChatInterfaceVariant;
   onClose?: () => void;
   onToggleSandbox?: () => void;
+  onOpenSandbox?: (artifactId?: string) => void;
   isSandboxOpen?: boolean;
 } = {}) {
   const router = useRouter();
@@ -448,12 +456,17 @@ export default function ChatInterface({
     if (chatId) return;
     if (!currentSession?.id || !isChatSessionId(currentSession.id)) return;
     const normalizedPathname = pathname.replace(/\/$/, "");
-    if (normalizedPathname !== `/${orgId}/weave-ai/chat` && normalizedPathname !== `/${orgId}/weave-ai/chat/reasonings/new`) return;
+    if (
+      normalizedPathname !== `/${orgId}/weave-ai/chat` &&
+      normalizedPathname !== `/${orgId}/weave-ai/chat/reasonings/new`
+    )
+      return;
     if (messages.length === 0) return;
 
-    const targetUrl = variant === "engine"
-      ? `/${orgId}/weave-ai/chat/reasonings/${currentSession.id}`
-      : `/${orgId}/weave-ai/chat/${currentSession.id}`;
+    const targetUrl =
+      variant === "engine"
+        ? `/${orgId}/weave-ai/chat/reasonings/${currentSession.id}`
+        : `/${orgId}/weave-ai/chat/${currentSession.id}`;
 
     window.history.replaceState(null, "", targetUrl);
   }, [chatId, currentSession?.id, messages.length, pathname, orgId, variant]);
@@ -687,18 +700,27 @@ export default function ChatInterface({
   }, [normalizedContextSearch]);
 
   return (
-    <div className={cn("relative flex h-full flex-col", variant === "engine" ? "bg-neutral-50 dark:bg-neutral-900" : "bg-white dark:bg-[#1d1d1b]")}>
+    <div
+      className={cn(
+        "relative flex h-full flex-col",
+        variant === "engine" ? "bg-neutral-50 dark:bg-neutral-900" : "bg-white dark:bg-[#1d1d1b]"
+      )}
+    >
       <div className="dark:border-surface-dark-border flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1">
         <div className="flex items-center gap-2">
           <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-            {variant === "engine" ? "Weave Engine - Compose" : variant === "widget" ? t.nav.weaveAi : chatHeaderTitle}
+            {variant === "engine"
+              ? "Weave Engine - Compose"
+              : variant === "widget"
+                ? t.nav.weaveAi
+                : chatHeaderTitle}
           </h1>
         </div>
 
         <div className="flex items-center gap-2">
           {variant === "engine" && onToggleSandbox && (
             <button
-              onClick={onToggleSandbox}
+              onClick={() => onToggleSandbox()}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition",
                 isSandboxOpen
@@ -754,7 +776,12 @@ export default function ChatInterface({
           isSandboxOpen ? "px-4 pt-2" : "p-2"
         )}
       >
-        <div className={cn("mx-auto w-full space-y-4", isSandboxOpen ? "max-w-2xl px-2 sm:px-4" : "max-w-4xl")}>
+        <div
+          className={cn(
+            "mx-auto w-full space-y-4",
+            isSandboxOpen ? "max-w-2xl px-2 sm:px-4" : "max-w-4xl"
+          )}
+        >
           {messages
             ?.filter((msg: any) => {
               if (msg.role === "system" || msg.role === "tool") return false;
@@ -832,15 +859,34 @@ export default function ChatInterface({
                                     ].includes(exec.name)
                                 )
                               : [];
-                              
-                            const artifactExecutions = allExecutions.filter((e: any) => e.name === "update_reasoning_draft" || e.name === "create_reasoning");
-                            const regularExecutions = allExecutions.filter((e: any) => e.name !== "update_reasoning_draft" && e.name !== "create_reasoning");
-                            
+
+                            const artifactExecutions = allExecutions.filter(
+                              (e: any) =>
+                                e.name === "update_reasoning_draft" ||
+                                e.name === "create_reasoning" ||
+                                e.name === "create_artifact" ||
+                                e.name === "update_artifact"
+                            );
+                            const regularExecutions = allExecutions.filter(
+                              (e: any) =>
+                                e.name !== "update_reasoning_draft" &&
+                                e.name !== "create_reasoning" &&
+                                e.name !== "create_artifact" &&
+                                e.name !== "update_artifact"
+                            );
+
                             return (
                               <>
-                                <ActionExecutionGroup executions={regularExecutions} orgId={orgId} />
+                                <ActionExecutionGroup
+                                  executions={regularExecutions}
+                                  orgId={orgId}
+                                />
                                 {artifactExecutions.map((exec: any, idx: number) => (
-                                  <ArtifactExecutionCard key={`art-${idx}`} execution={exec} onToggleSandbox={onToggleSandbox} />
+                                  <ArtifactExecutionCard
+                                    key={`art-${idx}`}
+                                    execution={exec}
+                                    onOpenSandbox={onOpenSandbox}
+                                  />
                                 ))}
                               </>
                             );
@@ -1477,8 +1523,12 @@ export default function ChatInterface({
       >
         <div
           className={cn(
-            "pointer-events-auto mx-auto w-full px-2 transition-all duration-500 ease-in-out sm:px-4 flex flex-col gap-2",
-            messages?.length === 0 && !loading ? "max-w-2xl" : isSandboxOpen ? "max-w-2xl" : "max-w-4xl"
+            "pointer-events-auto mx-auto flex w-full flex-col gap-2 px-2 transition-all duration-500 ease-in-out sm:px-4",
+            messages?.length === 0 && !loading
+              ? "max-w-2xl"
+              : isSandboxOpen
+                ? "max-w-2xl"
+                : "max-w-4xl"
           )}
         >
           {messages?.length === 0 && !loading && (

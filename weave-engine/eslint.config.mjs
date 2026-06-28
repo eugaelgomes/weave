@@ -23,7 +23,11 @@ export default [
     rules: {
       "eol-last": ["error", "always"],
       "no-trailing-spaces": "error",
-      quotes: ["error", "double", { allowTemplateLiterals: true, avoidEscape: true }],
+      quotes: [
+        "error",
+        "double",
+        { allowTemplateLiterals: true, avoidEscape: true },
+      ],
       semi: ["error", "always"],
 
       eqeqeq: ["error", "always"],
