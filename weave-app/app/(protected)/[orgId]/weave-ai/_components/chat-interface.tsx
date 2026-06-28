@@ -178,7 +178,7 @@ function RenderContextIcon({
   );
 }
 
-export type ChatInterfaceVariant = "fullPage" | "widget" | "engine";
+export type ChatInterfaceVariant = "fullPage" | "widget";
 
 const ArtifactExecutionCard = ({
   execution,
@@ -464,12 +464,32 @@ export default function ChatInterface({
     if (messages.length === 0) return;
 
     const targetUrl =
-      variant === "engine"
-        ? `/${orgId}/weave-ai/chat/reasonings/${currentSession.id}`
+      variant === "widget"
+        ? `/${orgId}/weave-ai/chat/${currentSession.id}` // widget keeps its URL logic if needed
         : `/${orgId}/weave-ai/chat/${currentSession.id}`;
 
     window.history.replaceState(null, "", targetUrl);
   }, [chatId, currentSession?.id, messages.length, pathname, orgId, variant]);
+
+  useEffect(() => {
+    if (!messages || messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role === "assistant" && Array.isArray(lastMsg.functions)) {
+      const artifactCall = lastMsg.functions.find(
+        (f: any) => f.name === "create_artifact" || f.name === "update_artifact"
+      );
+      if (artifactCall && artifactCall.arguments) {
+        const executions = lastMsg.functionExecution || [];
+        const execMatch = executions.find((e: any) => e.name === artifactCall.name);
+        if (execMatch && !execMatch.isRunning && execMatch.success) {
+          const artifactId = execMatch.result?.id || execMatch.result?.artifactId;
+          if (artifactId) {
+             onOpenSandbox?.(artifactId);
+          }
+        }
+      }
+    }
+  }, [messages, onOpenSandbox]);
 
   const handleSendText = async (messageText: string) => {
     if (!messageText.trim() || isTyping || !canSendAiMessage) return;
@@ -492,7 +512,7 @@ export default function ChatInterface({
       allowEdit,
       allowWebSearch,
       agentId: selectedAgentId || undefined,
-      useCase: variant === "engine" ? "engine_compose" : undefined,
+      useCase: undefined,
       context: {
         selectedContextItems: contextItems.map((item) => ({
           type: item.type,
@@ -703,33 +723,26 @@ export default function ChatInterface({
     <div
       className={cn(
         "relative flex h-full flex-col",
-        variant === "engine" ? "bg-neutral-50 dark:bg-neutral-900" : "bg-white dark:bg-[#1d1d1b]"
+        "bg-white dark:bg-[#1d1d1b]"
       )}
     >
       <div className="dark:border-surface-dark-border flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-2 py-1">
         <div className="flex items-center gap-2">
           <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-            {variant === "engine"
-              ? "Weave Engine - Compose"
-              : variant === "widget"
-                ? t.nav.weaveAi
-                : chatHeaderTitle}
+            {variant === "widget"
+              ? t.nav.weaveAi
+              : chatHeaderTitle}
           </h1>
         </div>
 
         <div className="flex items-center gap-2">
-          {variant === "engine" && onToggleSandbox && (
+          {onToggleSandbox && isSandboxOpen && (
             <button
               onClick={() => onToggleSandbox()}
-              className={cn(
-                "flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition",
-                isSandboxOpen
-                  ? "bg-brand-primary-100 text-brand-primary-700 dark:bg-brand-primary-900/30 dark:text-brand-primary-400"
-                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700"
-              )}
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition bg-brand-primary-100 text-brand-primary-700 dark:bg-brand-primary-900/30 dark:text-brand-primary-400"
             >
               <FileText className="h-3.5 w-3.5" />
-              Sandbox
+              Fechar Sandbox
             </button>
           )}
           {(!variant || variant === "fullPage") && chatId && messages?.length > 0 && (

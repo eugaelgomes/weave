@@ -1,5 +1,5 @@
-import ChatInterface from "@/app/(protected)/[orgId]/weave-ai/_components/chat-interface";
+import { ChatViewClient } from "@/app/(protected)/[orgId]/weave-ai/chat/_components/chat-view-client";
 
 export default function NewChatPage() {
-  return <ChatInterface />;
+  return <ChatViewClient />;
 }

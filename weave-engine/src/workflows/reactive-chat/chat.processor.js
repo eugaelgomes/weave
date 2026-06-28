@@ -493,6 +493,35 @@ class LlmQueueProcessor {
             )
             .join("\n  ");
 
+    let orchestratorPrompt = "";
+    if (!payload.isSubAgent && !payload.context?.isSubAgent) {
+      const fallbackSystemAgents = [
+        {
+          id: "sys_researcher",
+          name: "Researcher",
+          description:
+            "Expert in researching facts, summarizing articles, and deep data analysis.",
+        },
+        {
+          id: "sys_writer",
+          name: "Writer",
+          description:
+            "Expert in technical writing, document formatting, and proofreading.",
+        },
+      ];
+
+      const agentsToList =
+        payload.availableAgents?.length > 0
+          ? payload.availableAgents
+          : fallbackSystemAgents;
+
+      const agentsList = agentsToList
+        .map((a) => `- ${a.name} (ID: ${a.id}): ${a.description || ""}`)
+        .join("\n");
+
+      orchestratorPrompt = `\n\n[Multi-Agent Orchestrator]\nYou act as a Multi-Agent Orchestrator. If the user's task is complex and could benefit from specialized agents, use the 'delegate_to_agent' tool.\nAvailable agents:\n${agentsList}`;
+    }
+
     return `${baseMessage}${composeOverlay}
 
 [Context (v2)]
@@ -516,7 +545,7 @@ ${
 - Never return empty. Must use structured function call if db action needed.`
     : ""
 }
-Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`;
+Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}${orchestratorPrompt}`;
   }
 
   /**

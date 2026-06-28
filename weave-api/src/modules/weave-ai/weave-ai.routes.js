@@ -1,9 +1,25 @@
 const express = require("express");
-const multer = require("multer");
-const path = require("path");
 
-const aiController = require("./controllers/chat.controller");
-const agentController = require("./controllers/agents.controller");
+const { chat } = require("./controllers/chat/chat.controller");
+const { getChatHistory } = require("./controllers/chat/get-chat-history.controller");
+const { deleteChatSession } = require("./controllers/chat/delete-chat-session.controller");
+const { getAvailableModels } = require("./controllers/chat/get-available-models.controller");
+const { submitFeedback } = require("./controllers/chat/submit-feedback.controller");
+const { shareChatSession } = require("./controllers/chat/share-chat-session.controller");
+const { getSharedChatPreview } = require("./controllers/chat/get-shared-chat-preview.controller");
+const { forkSharedChat } = require("./controllers/chat/fork-shared-chat.controller");
+
+const { getUserAgents } = require("./controllers/agent/get-user-agents.controller");
+const { getProvidersAndModels } = require("./controllers/agent/get-providers-and-models.controller");
+const { getAgentById } = require("./controllers/agent/get-agent-by-id.controller");
+const { createUserAgent } = require("./controllers/agent/create-user-agent.controller");
+const { updateAgent } = require("./controllers/agent/update-agent.controller");
+const { deleteAgent } = require("./controllers/agent/delete-agent.controller");
+const { shareAgent } = require("./controllers/agent/share-agent.controller");
+const { assignToProject } = require("./controllers/agent/assign-to-project.controller");
+const { unassignFromProject } = require("./controllers/agent/unassign-from-project.controller");
+const { toggleActive } = require("./controllers/agent/toggle-active.controller");
+const { duplicateAgent } = require("./controllers/agent/duplicate-agent.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
@@ -16,157 +32,20 @@ const {
   shareAgentSchema,
   assignToProjectSchema,
   toggleActiveSchema,
+  chatPayloadSchema,
+  submitFeedbackSchema,
+  getChatHistorySchema,
 } = require("./schemas/weave-ai.schema");
 const {
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
 const { strictLimiter } = require("@/middlewares/security/request-limiters");
-const { ERROR_CODES } = require("@/errors/codes");
+const {
+  handleChatFilesUpload,
+  knowledgeUpload,
+} = require("./utils/chat-upload.util");
 
 const router = express.Router();
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-  },
-});
-
-const CHAT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
-const CHAT_DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
-
-const CHAT_ALLOWED_FILE_RULES = {
-  ".csv": {
-    label: "CSV",
-    maxSizeBytes: CHAT_DOCUMENT_MAX_SIZE_BYTES,
-    mimeTypes: ["text/csv", "application/csv", "text/plain"],
-  },
-  ".jpg": {
-    label: "JPG",
-    maxSizeBytes: CHAT_IMAGE_MAX_SIZE_BYTES,
-    mimeTypes: ["image/jpeg"],
-  },
-  ".jpeg": {
-    label: "JPG",
-    maxSizeBytes: CHAT_IMAGE_MAX_SIZE_BYTES,
-    mimeTypes: ["image/jpeg"],
-  },
-  ".pdf": {
-    label: "PDF",
-    maxSizeBytes: CHAT_DOCUMENT_MAX_SIZE_BYTES,
-    mimeTypes: ["application/pdf"],
-  },
-  ".png": {
-    label: "PNG",
-    maxSizeBytes: CHAT_IMAGE_MAX_SIZE_BYTES,
-    mimeTypes: ["image/png"],
-  },
-  ".xls": {
-    label: "XLS",
-    maxSizeBytes: CHAT_DOCUMENT_MAX_SIZE_BYTES,
-    mimeTypes: [
-      "application/vnd.ms-excel",
-      "application/octet-stream",
-      "application/excel",
-    ],
-  },
-};
-
-const chatUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: CHAT_DOCUMENT_MAX_SIZE_BYTES,
-  },
-  fileFilter: (req, file, callback) => {
-    const extension = path.extname(file.originalname || "").toLowerCase();
-    const allowedRule = CHAT_ALLOWED_FILE_RULES[extension];
-
-    if (!allowedRule) {
-      return callback(
-        new Error(
-          `File "${file.originalname}" rejected: invalid format. Allowed formats: PNG, JPG, PDF, CSV, XLS.`
-        )
-      );
-    }
-
-    if (
-      Array.isArray(allowedRule.mimeTypes) &&
-      allowedRule.mimeTypes.length > 0 &&
-      file.mimetype &&
-      !allowedRule.mimeTypes.includes(file.mimetype)
-    ) {
-      return callback(
-        new Error(
-          `File "${file.originalname}" rejected: invalid MIME type for ${allowedRule.label}.`
-        )
-      );
-    }
-
-    return callback(null, true);
-  },
-}).array("files", 10);
-
-/**
- * Validates chat upload constraints by file category.
- *
- * @param {import("express").Request} req
- * @param {import("express").Response} res
- * @param {import("express").NextFunction} next
- * @returns {void}
- */
-function handleChatFilesUpload(req, res, next) {
-  chatUpload(req, res, (error) => {
-    if (error) {
-      if (
-        error instanceof multer.MulterError &&
-        error.code === "LIMIT_FILE_SIZE"
-      ) {
-        return res.status(400).json({
-          success: false,
-          code: ERROR_CODES.FILE_TOO_LARGE,
-          error:
-            "Attached file exceeds the allowed size (5MB for images, 10MB for documents).",
-        });
-      }
-
-      return res.status(400).json({
-        success: false,
-        code: ERROR_CODES.INVALID_FILE_TYPE,
-        error: "Failed to validate attached files.",
-      });
-    }
-
-    const files = Array.isArray(req.files) ? req.files : [];
-    for (const file of files) {
-      const extension = path.extname(file.originalname || "").toLowerCase();
-      const allowedRule = CHAT_ALLOWED_FILE_RULES[extension];
-      if (!allowedRule) {
-        return res.status(400).json({
-          success: false,
-          code: ERROR_CODES.INVALID_FILE_TYPE,
-          error: `File "${file.originalname}" rejected: invalid format.`,
-        });
-      }
-
-      if (
-        typeof file.size === "number" &&
-        file.size > allowedRule.maxSizeBytes
-      ) {
-        const maxSizeMb = allowedRule.maxSizeBytes / (1024 * 1024);
-        return res.status(400).json({
-          success: false,
-          code: ERROR_CODES.FILE_TOO_LARGE,
-          error: `File "${file.originalname}" rejected: maximum size for ${allowedRule.label} is ${maxSizeMb}MB.`,
-        });
-      }
-    }
-
-    next();
-  });
-}
-
-const knowledgeUpload = upload.array("knowledge_files", 5);
-const bind = (controller, method) => controller[method].bind(controller);
 
 const requireManageWeaveAi = requireOrgPermission(
   ORG_PERMISSIONS.MANAGE_WEAVE_AI
@@ -185,48 +64,58 @@ router.use((req, res, next) => {
 });
 
 // Chat endpoints
-router.post("/chat", handleChatFilesUpload, bind(aiController, "chat"));
-router.get("/chat/history", bind(aiController, "getChatHistory"));
-router.delete("/chat/:sessionId", bind(aiController, "deleteChatSession"));
+router.post(
+  "/chat",
+  handleChatFilesUpload,
+  validate(chatPayloadSchema, "body"),
+  chat
+);
+router.get(
+  "/chat/history",
+  validate(getChatHistorySchema, "query"),
+  getChatHistory
+);
+router.delete("/chat/:sessionId", deleteChatSession);
 router.post(
   "/chat/messages/:messageId/feedback",
-  bind(aiController, "submitFeedback")
+  validate(submitFeedbackSchema, "body"),
+  submitFeedback
 );
-router.post("/chat/:sessionId/share", bind(aiController, "shareChatSession"));
-router.get("/chat/share/:token", bind(aiController, "getSharedChatPreview"));
-router.post("/chat/share/:token/fork", bind(aiController, "forkSharedChat"));
+router.post("/chat/:sessionId/share", shareChatSession);
+router.get("/chat/share/:token", getSharedChatPreview);
+router.post("/chat/share/:token/fork", forkSharedChat);
 
-router.get("/models", bind(aiController, "getAvailableModels"));
+router.get("/models", getAvailableModels);
 
 // Agent management endpoints
-router.get("/agents", bind(agentController, "getUserAgents"));
-router.get("/agents/providers", bind(agentController, "getProvidersAndModels"));
+router.get("/agents", getUserAgents);
+router.get("/agents/providers", getProvidersAndModels);
 
-router.get("/agents/:id", bind(agentController, "getAgentById"));
+router.get("/agents/:id", getAgentById);
 router.post(
   "/agents",
   requireManageWeaveAi,
   knowledgeUpload,
   validate(createUserAgentSchema, "body"),
-  bind(agentController, "createUserAgent")
+  createUserAgent
 );
 router.put(
   "/agents/:id",
   requireManageWeaveAi,
   knowledgeUpload,
   validate(updateAgentSchema, "body"),
-  bind(agentController, "updateAgent")
+  updateAgent
 );
 router.delete(
   "/agents/:id",
   requireManageWeaveAi,
-  bind(agentController, "deleteAgent")
+  deleteAgent
 );
 router.post(
   "/agents/:id/share",
   requireManageWeaveAi,
   validate(shareAgentSchema, "body"),
-  bind(agentController, "shareAgent")
+  shareAgent
 );
 
 // Agent ↔ Project binding
@@ -234,12 +123,12 @@ router.put(
   "/agents/:id/project",
   requireManageWeaveAi,
   validate(assignToProjectSchema, "body"),
-  bind(agentController, "assignToProject")
+  assignToProject
 );
 router.delete(
   "/agents/:id/project",
   requireManageWeaveAi,
-  bind(agentController, "unassignFromProject")
+  unassignFromProject
 );
 
 // Agent lifecycle
@@ -247,12 +136,12 @@ router.patch(
   "/agents/:id/active",
   requireManageWeaveAi,
   validate(toggleActiveSchema, "body"),
-  bind(agentController, "toggleActive")
+  toggleActive
 );
 router.post(
   "/agents/:id/duplicate",
   requireManageWeaveAi,
-  bind(agentController, "duplicateAgent")
+  duplicateAgent
 );
 
 module.exports = router;

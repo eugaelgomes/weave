@@ -1,0 +1,295 @@
+const { v5: uuidv5 } = require("uuid");
+const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
+const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const chatFormatterUtil = require("../utils/chat-formatter.util");
+const chatEngineService = require("./chat-engine.service");
+const chatFunctionsService = require("./chat-functions.service");
+const { getLocalChatI18n } = require("../utils/weave-ai-i18n.util");
+
+class ChatLoopService {
+  async executeReActLoop({
+    userId,
+    payload,
+    organizationId,
+    requestId,
+    files,
+    userLanguage,
+    onChunk,
+    contextData,
+  }) {
+    const {
+      sessionId,
+      selectedAgent,
+      authorizedFunctions,
+      capabilityRules,
+      resourceAccess,
+      conversationHistory,
+      resolvedNoteIds,
+      resolvedProjectIds,
+      usageRecord,
+    } = contextData;
+
+    const chatI18n = getLocalChatI18n(userLanguage);
+    let currentLoop = 0;
+    const MAX_LOOPS = 5;
+
+    let finalAssistantText = "";
+    let responseFunctions = [];
+    let functionExecution = [];
+    let engineActions = [];
+    let messageStatus = "ok";
+    let providerUsed = null;
+    const tokenUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+    const messageMetadata = {
+      citations: [],
+      functionExecution: [],
+      functions: [],
+      providerUsed: null,
+      requestId,
+    };
+
+    let currentMessage = payload.message;
+    const currentConversationHistory = [...conversationHistory];
+    let totalLatencyMs = 0;
+
+    while (currentLoop < MAX_LOOPS) {
+      const engineResponse = await chatEngineService.requestEngineChat(
+        {
+          agent: selectedAgent,
+          availableAgents: payload.availableAgents,
+          isSubAgent: payload.isSubAgent,
+          allowEdit: payload.allowEdit,
+          allowWebSearch: payload.allowWebSearch,
+          context: {
+            capabilityRules,
+            clientContext: payload.context,
+            noteBlocksContract: chatFormatterUtil.buildNoteBlocksContract(),
+            noteDocumentContract: chatFormatterUtil.buildNoteBlocksContract(),
+            organizationId,
+            resourceAccess,
+            useCase: payload.useCase,
+            userLanguage,
+            isSubAgent: Boolean(payload.isSubAgent),
+          },
+          files:
+            currentLoop === 0
+              ? chatFormatterUtil.buildEngineFilesPayload(files)
+              : [],
+          functions: authorizedFunctions,
+          message: currentMessage,
+          model: chatFormatterUtil.resolveModelForEngine(payload.model),
+          noteIds: resolvedNoteIds,
+          organizationId,
+          projectIds: resolvedProjectIds,
+          conversationHistory: currentConversationHistory,
+          sessionId,
+          user_id: userId,
+          userId,
+          ...(organizationId ? { org_id: organizationId } : {}),
+          userLanguage,
+        },
+        requestId,
+        onChunk
+      );
+
+      totalLatencyMs += engineResponse?.latencyMs || 0;
+      const enginePayload = engineResponse?.data || {};
+
+      const engineExecutedActions = Array.isArray(enginePayload?.executedActions)
+        ? enginePayload.executedActions
+        : [];
+      if (engineExecutedActions.length > 0) {
+        engineActions = [...engineActions, ...engineExecutedActions];
+      }
+
+      const assistantText =
+        enginePayload?.data?.response ||
+        enginePayload?.data?.text ||
+        enginePayload?.data?.content ||
+        "";
+      const currentFunctions = Array.isArray(enginePayload?.functions)
+        ? enginePayload.functions
+        : [];
+
+      providerUsed = enginePayload?.providerUsed || providerUsed;
+      const currentTokenUsage = chatFormatterUtil.extractTokenUsage(enginePayload);
+      tokenUsage.inputTokens += currentTokenUsage.inputTokens || 0;
+      tokenUsage.outputTokens += currentTokenUsage.outputTokens || 0;
+      tokenUsage.totalTokens += currentTokenUsage.totalTokens || 0;
+
+      if (Array.isArray(enginePayload?.data?.citations)) {
+        messageMetadata.citations = [
+          ...messageMetadata.citations,
+          ...enginePayload.data.citations,
+        ];
+      }
+
+      if (currentFunctions.length > 0) {
+        messageStatus = "function_call";
+        const currentExecutions = await chatFunctionsService.executeFunctionCalls(
+          userId,
+          currentFunctions,
+          organizationId,
+          userLanguage,
+          onChunk,
+          files
+        );
+        functionExecution = [...functionExecution, ...currentExecutions];
+        responseFunctions = [...responseFunctions, ...currentFunctions];
+
+        if (assistantText) {
+          finalAssistantText += (finalAssistantText ? "\n\n" : "") + assistantText;
+        }
+
+        await chatRepository.saveMessageIdempotent({
+          sessionId,
+          userId,
+          organizationId,
+          role: "assistant",
+          content: assistantText || null,
+          model: `${payload.model.name}:${payload.model.version}`,
+          requestId: uuidv5(`call_${currentLoop}`, requestId),
+          provider: providerUsed,
+          status: "function_call",
+          latencyMs: engineResponse?.latencyMs || null,
+          inputTokens: currentTokenUsage.inputTokens,
+          outputTokens: currentTokenUsage.outputTokens,
+          totalTokens: currentTokenUsage.totalTokens,
+          agentId: payload.agentId,
+          allowEdit: payload.allowEdit,
+          toolCalls: currentFunctions,
+          metadata: {
+            citations: enginePayload?.data?.citations || [],
+            providerUsed,
+          },
+        });
+
+        for (let i = 0; i < currentExecutions.length; i++) {
+          const exec = currentExecutions[i];
+          const fn = currentFunctions[i];
+          const tId = fn.id || `call_${currentLoop}_${i}`;
+          const execContent =
+            typeof exec.result === "string"
+              ? exec.result
+              : JSON.stringify(exec.result || exec.error || exec);
+
+          await chatRepository.saveMessageIdempotent({
+            sessionId,
+            userId,
+            organizationId,
+            role: "tool",
+            content: execContent,
+            model: `${payload.model.name}:${payload.model.version}`,
+            requestId: uuidv5(`tool_${currentLoop}_${i}`, requestId),
+            provider: providerUsed,
+            status: exec.success ? "ok" : "error",
+            errorCode: exec.success ? null : "TOOL_EXECUTION_FAILED",
+            errorMessage: exec.success ? null : String(exec.error),
+            agentId: payload.agentId,
+            allowEdit: payload.allowEdit,
+            toolCallId: tId,
+          });
+        }
+
+        currentConversationHistory.push({ role: "user", content: currentMessage });
+        currentConversationHistory.push({
+          role: "assistant",
+          content: assistantText || chatI18n.callingFunctions,
+        });
+
+        currentMessage = chatI18n.functionResults(
+          JSON.stringify(currentExecutions, null, 2)
+        );
+        currentLoop++;
+      } else {
+        if (assistantText) {
+          finalAssistantText += (finalAssistantText ? "\n\n" : "") + assistantText;
+        } else if (!finalAssistantText) {
+          finalAssistantText =
+            functionExecution.length > 0
+              ? chatI18n.successFallback
+              : responseFunctions.length > 0
+                ? chatI18n.functionUnderstoodFallback
+                : chatI18n.noContentFallback;
+        }
+        break;
+      }
+    }
+
+    if (engineActions.length > 0) {
+      messageMetadata.engineActions = engineActions;
+      for (const action of engineActions) {
+        functionExecution.push({
+          name: action.name,
+          success: !action.result?.error,
+          result: action.result,
+          source: "engine",
+        });
+      }
+    }
+
+    messageMetadata.functionExecution = functionExecution;
+    messageMetadata.functions = responseFunctions;
+    messageMetadata.providerUsed = providerUsed;
+
+    await chatRepository.saveMessageIdempotent({
+      sessionId,
+      userId,
+      organizationId,
+      role: "assistant",
+      content: finalAssistantText,
+      model: `${payload.model.name}:${payload.model.version}`,
+      requestId,
+      provider: providerUsed,
+      status: messageStatus,
+      latencyMs: totalLatencyMs || null,
+      inputTokens: tokenUsage.inputTokens,
+      outputTokens: tokenUsage.outputTokens,
+      totalTokens: tokenUsage.totalTokens,
+      agentId: payload.agentId,
+      allowEdit: payload.allowEdit,
+      metadata: messageMetadata,
+    });
+
+    if (usageRecord?.id) {
+      PlanUsageManager.consumeAiMessage(
+        usageRecord.id,
+        tokenUsage.totalTokens || 0
+      ).catch((err) => {
+        console.error("[weave-ai/chat] failed to enqueue AI usage consumption", {
+          usageId: usageRecord.id,
+          error: err?.message || String(err),
+        });
+      });
+    }
+
+    const sanitizedFunctionExecution = functionExecution.map((exec) => {
+      let sanitizedResult = exec.result;
+      if (sanitizedResult) {
+        const jsonStr = JSON.stringify(sanitizedResult);
+        if (jsonStr.length > 3000) {
+          sanitizedResult = Array.isArray(sanitizedResult)
+            ? [...sanitizedResult.slice(0, 3), { _warning: "Additional results truncated for UI performance." }]
+            : { _warning: "Result payload too large, truncated for UI rendering." };
+        }
+      }
+      return { ...exec, result: sanitizedResult };
+    });
+
+    return {
+      sessionId,
+      response: {
+        role: "assistant",
+        content: finalAssistantText,
+        citations: messageMetadata.citations,
+        functionExecution: sanitizedFunctionExecution,
+        functions: responseFunctions,
+        model: payload.model,
+        provider: providerUsed,
+        metadata: { ...messageMetadata, functionExecution: sanitizedFunctionExecution },
+      },
+    };
+  }
+}
+
+module.exports = new ChatLoopService();

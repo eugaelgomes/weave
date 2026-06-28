@@ -21,7 +21,7 @@ const RichTextEditor = dynamic(
   }
 );
 
-export type ReasoningSandboxProps = {
+export type ArtifactSandboxProps = {
   reasoningId: string;
   artifactId?: string;
   initialTitle?: string;
@@ -29,13 +29,13 @@ export type ReasoningSandboxProps = {
   onDraftChange?: (state: any) => void;
 };
 
-export function ReasoningSandbox({
+export function ArtifactSandbox({
   reasoningId,
   artifactId,
   initialTitle = "Novo Rascunho",
   initialContent = [],
   onDraftChange,
-}: ReasoningSandboxProps) {
+}: ArtifactSandboxProps) {
   const { t } = useLanguage();
   const { messages } = useChat();
   const [title, setTitle] = useState(initialTitle);

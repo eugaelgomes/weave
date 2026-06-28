@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import ChatInterface from "@/app/(protected)/[orgId]/weave-ai/_components/chat-interface";
+import { ChatViewClient } from "@/app/(protected)/[orgId]/weave-ai/chat/_components/chat-view-client";
 import { isChatSessionId } from "@/app/_utils/chat-session-id";
 
 export default async function ChatHistoryPage({
@@ -15,5 +15,5 @@ export default async function ChatHistoryPage({
     redirect(`/${orgId}/weave-ai/chat`);
   }
 
-  return <ChatInterface chatId={id} />;
+  return <ChatViewClient chatId={id} />;
 }
