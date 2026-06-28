@@ -18,6 +18,22 @@ class ProjectsCoreController extends ProjectsBaseController {
   }
 
   /**
+   * Transforms filters for echoing back in the pagination envelope
+   * @param {Record<string, unknown>} filters
+   * @returns {Record<string, unknown>}
+   */
+  _echoFilters(filters) {
+    const out = { ...filters };
+    for (const key of Object.keys(out)) {
+      const v = out[key];
+      if (v instanceof Date) {
+        out[key] = v.toISOString();
+      }
+    }
+    return out;
+  }
+
+  /**
    * Valida e sanitiza properties do projeto
    * @param {Object} properties - Properties a serem validadas
    * @returns {Object} - Properties validadas

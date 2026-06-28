@@ -17,21 +17,6 @@ const {
 
 class ProjectsReadController extends ProjectsCoreController {
   /**
-   * @param {Record<string, unknown>} filters
-   * @returns {Record<string, unknown>}
-   */
-  _echoFilters(filters) {
-    const out = { ...filters };
-    for (const key of Object.keys(out)) {
-      const v = out[key];
-      if (v instanceof Date) {
-        out[key] = v.toISOString();
-      }
-    }
-    return out;
-  }
-
-  /**
    * Loads project row with aggregates (owner, org, collaborators, notes) for read handlers.
    *
    * @param {string} projectId

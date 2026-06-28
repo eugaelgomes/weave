@@ -88,7 +88,7 @@ class EngineReasoningsController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const project = await this._loadProjectForRead(projectId, userId);
+      const project = await this._validateProjectAccess(projectId, userId);
       const id = project.id;
 
       const config = await reportConfigRepository.getByProjectId(id);
@@ -233,7 +233,7 @@ class EngineReasoningsController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const project = await this._loadProjectForRead(projectId, userId);
+      const project = await this._validateProjectAccess(projectId, userId);
       const id = project.id;
 
       const wantsEnvelope = hasAnyQueryKey(
