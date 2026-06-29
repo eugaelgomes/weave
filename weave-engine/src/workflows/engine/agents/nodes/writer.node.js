@@ -3,9 +3,9 @@
  */
 const {
   callAIProvider,
-} = require("../../../../ai-core/providers/llm-provider.client");
+} = require("../../../../modules/providers/llm-provider.client");
 const { getWriterPrompt } = require("../prompts/writer.prompt");
-const { logger } = require("../../../../infrastructure/logger");
+const { logger } = require("../../../../services/logger");
 
 async function writerNode(state) {
   logger.info("Writer node running");

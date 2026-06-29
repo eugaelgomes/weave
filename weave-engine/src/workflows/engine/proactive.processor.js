@@ -12,16 +12,13 @@
  * - `weave-engine/src/index.js`: Instantiated at startup to begin background processing.
  */
 const { z } = require("zod");
-const redis = require("../../infrastructure/cache/redis.client");
-const { logger } = require("../../infrastructure/logger");
+const redis = require("../../services/cache/redis.client");
+const { logger } = require("../../services/logger");
 const {
   callAIProvider,
-} = require("../../ai-core/providers/llm-provider.client");
-const {
-  getEngineProactiveTaskQueueRedisKey,
-  getEmailQueueRedisKey,
-} = require("../../infrastructure/cache/redis-queue-keys");
-const { pool } = require("../../infrastructure/database/postgres.client");
+} = require("../../modules/providers/llm-provider.client");
+const { REDIS_QUEUES } = require("../../services/cache/redis-queues");
+const { pool } = require("../../services/database/postgres.client");
 
 const RESPONSE_TTL_SECONDS = 60;
 const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;
@@ -58,7 +55,7 @@ const safetyEvaluationSchema = z.object({
 class ProactiveQueueProcessor {
   constructor() {
     this.isRunning = false;
-    this.queueName = getEngineProactiveTaskQueueRedisKey();
+    this.queueName = REDIS_QUEUES.ENGINE_PROACTIVE_TASKS.key;
   }
 
   /**
@@ -267,7 +264,7 @@ class ProactiveQueueProcessor {
               html: `<p>Your background proactive reasoning job <b>${job.title || jobType}</b> has failed to process.</p>`,
             };
             await redis.lpush(
-              getEmailQueueRedisKey(),
+              REDIS_QUEUES.EMAIL.key,
               JSON.stringify({
                 payload: emailPayload,
                 queuedAt: new Date().toISOString(),

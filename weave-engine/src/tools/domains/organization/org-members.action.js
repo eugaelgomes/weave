@@ -2,7 +2,7 @@
  * @module weave-engine/modules/core/tools/actions/org-members.action
  * @description Implementation logic for the org-members.action AI tool.
  */
-const { pool } = require("../../../infrastructure/database/postgres.client");
+const { pool } = require("../../../services/database/postgres.client");
 
 /**
  * Lists all active members of the user's organization.

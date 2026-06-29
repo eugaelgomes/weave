@@ -3,13 +3,13 @@
  */
 const {
   callAIProvider,
-} = require("../../../../ai-core/providers/llm-provider.client");
+} = require("../../../../modules/providers/llm-provider.client");
 const { getResearcherPrompt } = require("../prompts/researcher.prompt");
 const {
   getInternalToolDefinitions,
   executeInternalTool,
 } = require("../../../../tools/tool-dispatcher");
-const { logger } = require("../../../../infrastructure/logger");
+const { logger } = require("../../../../services/logger");
 
 async function researcherNode(state) {
   logger.info("Researcher node running");

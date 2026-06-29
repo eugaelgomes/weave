@@ -1,11 +1,11 @@
-jest.mock("../infrastructure/cache/redis.client", () => ({
+jest.mock("../services/cache/redis.client", () => ({
   blpop: jest.fn(),
   expire: jest.fn(),
   lpush: jest.fn(),
   rpush: jest.fn().mockResolvedValue(1),
 }));
 
-jest.mock("../infrastructure/logger", () => ({
+jest.mock("../services/logger", () => ({
   logger: {
     error: jest.fn(),
     info: jest.fn(),
@@ -13,7 +13,7 @@ jest.mock("../infrastructure/logger", () => ({
   },
 }));
 
-const chatProcessor = require("../workflows/reactive-chat/chat.processor");
+const chatProcessor = require("../workflows/chat/chat.processor");
 
 describe("chat.processor envelope validation", () => {
   it("parses a valid job with defaults", () => {

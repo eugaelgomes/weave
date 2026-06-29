@@ -2,7 +2,7 @@
  * @module weave-engine/modules/core/tools/actions/org-areas.action
  * @description Implementation logic for the org-areas.action AI tool.
  */
-const { pool } = require("../../../infrastructure/database/postgres.client");
+const { pool } = require("../../../services/database/postgres.client");
 
 /**
  * Lists all active areas of the user's organization.

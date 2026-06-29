@@ -5,7 +5,7 @@
 const {
   StateGraph,
   END,
-} = require("../../../ai-core/orchestration/multi-agent");
+} = require("../../../modules/orchestration/multi-agent");
 const { orchestratorNode } = require("./nodes/orchestrator.node");
 const { researcherNode } = require("./nodes/researcher.node");
 const { analystNode } = require("./nodes/analyst.node");

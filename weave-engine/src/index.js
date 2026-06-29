@@ -1,18 +1,18 @@
 require("./instrument");
 const { validateEnv, env } = require("./config/enviroments");
-const { logger } = require("./infrastructure/logger");
+const { logger } = require("./services/logger");
 const {
   registerShutdownHandler,
   setupGracefulShutdown,
-} = require("./infrastructure/graceful-shutdown");
-const redis = require("./infrastructure/cache/redis.client");
+} = require("./services/graceful-shutdown");
+const redis = require("./services/cache/redis.client");
 const {
   closeDatabase,
   connectDatabase,
-} = require("./infrastructure/database/postgres.client");
-const llmQueueProcessor = require("./workflows/reactive-chat/chat.processor");
+} = require("./services/database/postgres.client");
+const llmQueueProcessor = require("./workflows/chat/chat.processor");
 
-const proactiveQueueProcessor = require("./workflows/proactive-jobs/proactive.processor");
+const proactiveQueueProcessor = require("./workflows/engine/proactive.processor");
 
 async function bootstrap() {
   logger.info("weave-engine starting", { env: env.NODE_ENV });

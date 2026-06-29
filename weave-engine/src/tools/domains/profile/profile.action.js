@@ -2,7 +2,7 @@
  * @module weave-engine/modules/core/tools/actions/profile.action
  * @description Implementation logic for the profile.action AI tool.
  */
-const { pool } = require("../../../infrastructure/database/postgres.client");
+const { pool } = require("../../../services/database/postgres.client");
 
 /**
  * Fetches user profile data from the database.

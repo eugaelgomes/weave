@@ -2,7 +2,7 @@
  * @module weave-engine/modules/core/tools/actions/note.action
  * @description Implementation logic for the note.action AI tool.
  */
-const { pool } = require("../../../infrastructure/database/postgres.client");
+const { pool } = require("../../../services/database/postgres.client");
 
 /**
  * Fetches the header/metadata of a note accessible by the user.

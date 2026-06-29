@@ -3,9 +3,9 @@
  */
 const {
   callAIProvider,
-} = require("../../../../ai-core/providers/llm-provider.client");
+} = require("../../../../modules/providers/llm-provider.client");
 const { getOrchestratorPrompt } = require("../prompts/orchestrator.prompt");
-const { logger } = require("../../../../infrastructure/logger");
+const { logger } = require("../../../../services/logger");
 
 async function orchestratorNode(state) {
   logger.info("Orchestrator node running", { iterations: state.iterations });

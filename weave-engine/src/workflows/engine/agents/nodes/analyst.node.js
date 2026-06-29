@@ -3,9 +3,9 @@
  */
 const {
   callAIProvider,
-} = require("../../../../ai-core/providers/llm-provider.client");
+} = require("../../../../modules/providers/llm-provider.client");
 const { getAnalystPrompt } = require("../prompts/analyst.prompt");
-const { logger } = require("../../../../infrastructure/logger");
+const { logger } = require("../../../../services/logger");
 
 async function analystNode(state) {
   logger.info("Analyst node running");

@@ -2,7 +2,7 @@
  * @module weave-engine/modules/core/tools/actions/project.action
  * @description Implementation logic for the project.action AI tool.
  */
-const { pool } = require("../../../infrastructure/database/postgres.client");
+const { pool } = require("../../../services/database/postgres.client");
 
 /**
  * Fetches user active projects from the database.

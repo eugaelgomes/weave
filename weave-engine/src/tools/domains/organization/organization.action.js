@@ -2,7 +2,7 @@
  * @module weave-engine/modules/core/tools/actions/organization.action
  * @description Implementation logic for the organization.action AI tool.
  */
-const { pool } = require("../../../infrastructure/database/postgres.client");
+const { pool } = require("../../../services/database/postgres.client");
 
 /**
  * Fetches organization details from the database.

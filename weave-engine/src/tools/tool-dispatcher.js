@@ -8,7 +8,7 @@
  * - `./schemas/*`: The JSON schemas defining the tool parameters.
  */
 
-const { logger } = require("../infrastructure/logger");
+const { logger } = require("../services/logger");
 
 const { searchWeb, readUrl } = require("./domains/web/web-browser.action");
 const {

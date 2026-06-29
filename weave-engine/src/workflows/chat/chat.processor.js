@@ -13,25 +13,23 @@
  */
 /* eslint-disable sort-keys */
 const { z } = require("zod");
-const redis = require("../../infrastructure/cache/redis.client");
-const {
-  getEngineLlmRequestQueueRedisKey,
-} = require("../../infrastructure/cache/redis-queue-keys");
-const { logger } = require("../../infrastructure/logger");
+const redis = require("../../services/cache/redis.client");
+const { REDIS_QUEUES } = require("../../services/cache/redis-queues");
+const { logger } = require("../../services/logger");
 const {
   buildChatSystemMessage,
-} = require("../../ai-core/prompts/agent-prompts");
+} = require("../../modules/prompts/agent-prompts");
 const {
   buildEntityContext,
-} = require("../../ai-core/context/entity-context.loader");
+} = require("../../modules/context/entity-context.loader");
 const {
   executeAgenticTask,
   generateSmartResponse,
   processThinkingPhase,
-} = require("../../ai-core/orchestration/reasoning.engine");
+} = require("../../modules/orchestration/reasoning.engine");
 const {
   callAIProvider,
-} = require("../../ai-core/providers/llm-provider.client");
+} = require("../../modules/providers/llm-provider.client");
 const {
   isEngineComposeSurface,
   buildEngineComposePromptOverlay,
@@ -58,9 +56,7 @@ const ENGINE_JOB_MAX_RETRIES = Number.parseInt(
   process.env.WEAVE_ENGINE_JOB_MAX_RETRIES || "2",
   10
 );
-const ENGINE_DEAD_LETTER_QUEUE_KEY =
-  process.env.REDIS_ENGINE_LLM_DEAD_LETTER_QUEUE_KEY ||
-  "weave:engine:llm:dead-letter";
+const ENGINE_DEAD_LETTER_QUEUE_KEY = REDIS_QUEUES.ENGINE_DEAD_LETTER.key;
 
 const jobEnvelopeSchema = z
   .object({
@@ -107,7 +103,7 @@ function resolveOrganizationId(payload = {}, context = {}) {
 class LlmQueueProcessor {
   constructor() {
     this.isRunning = false;
-    this.queueName = getEngineLlmRequestQueueRedisKey();
+    this.queueName = REDIS_QUEUES.ENGINE_LLM_REQUESTS.key;
   }
 
   /**
