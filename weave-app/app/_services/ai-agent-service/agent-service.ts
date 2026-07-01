@@ -38,6 +38,8 @@ export interface ChatMessage {
   created_at?: string;
   model?: string;
   sessionId?: string;
+  tool_calls?: unknown | null;
+  tool_call_id?: string | string[] | null;
   citations?: unknown[];
   functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
   functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
@@ -160,6 +162,8 @@ type RawChatMessage = {
   created_at?: string;
   model?: string;
   session_id?: string;
+  tool_calls?: unknown | null;
+  tool_call_id?: string | string[] | null;
   metadata?: Record<string, any>;
 };
 
@@ -180,6 +184,8 @@ function normalizeChatMessage(message: RawChatMessage): ChatMessage {
     created_at: message.created_at,
     model: message.model,
     sessionId: message.session_id,
+    tool_calls: message.tool_calls,
+    tool_call_id: message.tool_call_id,
     citations: message.metadata?.citations || [],
     functions: message.metadata?.functions || [],
     functionExecution: message.metadata?.functionExecution || [],
@@ -431,7 +437,7 @@ export async function fetchChatHistory(
     const data = ChatHistoryMessagesSchema.parse(raw);
     return data.messages
       .filter(
-        (m: z.infer<typeof RawChatMessageSchema>) => m.role === "user" || m.role === "assistant"
+        (m: z.infer<typeof RawChatMessageSchema>) => m.role === "user" || m.role === "assistant" || m.role === "tool"
       )
       .map((m: z.infer<typeof RawChatMessageSchema>) => normalizeChatMessage(m as RawChatMessage));
   }

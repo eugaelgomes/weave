@@ -1,5 +1,5 @@
 const Sentry = require("@sentry/node");
-const { env } = require("../config/enviroments");
+const { env } = require("../enviroments");
 
 const LOG_LEVELS = {
   debug: 0,

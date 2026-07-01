@@ -131,6 +131,7 @@ class LlmQueueProcessor {
         }
 
         const [, rawPayload] = result;
+        logger.info("Engine picked up a queue job", { queueName: this.queueName });
         const parsedJob = this.parseRawJob(rawPayload);
         if (!parsedJob) {
           continue;
@@ -628,10 +629,13 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}$
     return rawHistory
       .slice(-CHAT_HISTORY_MAX_MESSAGES)
       .map((entry) => {
-        const role = entry?.role === "assistant" ? "assistant" : "user";
+        const role = entry?.role === "tool" ? "tool" : entry?.role === "assistant" ? "assistant" : "user";
         const rawContent =
           typeof entry?.content === "string" ? entry.content.trim() : "";
-        if (!rawContent) {
+          
+        const hasTools = entry?.tool_calls != null || entry?.tool_call_id != null || role === "tool";
+        
+        if (!rawContent && !hasTools) {
           return null;
         }
 
@@ -644,6 +648,8 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}$
           content,
           model: typeof entry?.model === "string" ? entry.model : null,
           role,
+          ...(entry?.tool_calls ? { tool_calls: entry.tool_calls } : {}),
+          ...(entry?.tool_call_id ? { tool_call_id: entry.tool_call_id } : {}),
         };
       })
       .filter(Boolean);

@@ -75,6 +75,8 @@ export const RawChatMessageSchema = z.object({
   created_at: z.string().optional(),
   model: z.string().optional(),
   session_id: z.string().optional(),
+  tool_calls: z.unknown().nullable().optional(),
+  tool_call_id: z.union([z.string(), z.array(z.string())]).nullable().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 

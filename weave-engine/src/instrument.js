@@ -1,6 +1,6 @@
 const Sentry = require("@sentry/node");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
-const { env } = require("./config/enviroments");
+const { env } = require("./enviroments");
 
 if (env.isProduction && process.env.SENTRY_DSN) {
   Sentry.init({

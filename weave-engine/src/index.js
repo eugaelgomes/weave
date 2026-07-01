@@ -1,5 +1,5 @@
 require("./instrument");
-const { validateEnv, env } = require("./config/enviroments");
+const { validateEnv, env } = require("./enviroments");
 const { logger } = require("./services/logger");
 const {
   registerShutdownHandler,
