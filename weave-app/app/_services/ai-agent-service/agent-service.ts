@@ -41,6 +41,9 @@ export interface ChatMessage {
   tool_calls?: unknown | null;
   tool_call_id?: string | string[] | null;
   citations?: unknown[];
+  functions?: any[] | null;
+  functionExecution?: any[] | null;
+  metadata?: Record<string, any>;
 }
 
 export interface ChatSession {

@@ -59,6 +59,7 @@ export const RawChatMessageSchema = z.object({
   model: z.string().optional(),
   session_id: z.string().optional(),
   tool_calls: z.unknown().nullable().optional(),
+  functions: z.array(z.unknown()).nullable().optional(),
   tool_call_id: z
     .union([z.string(), z.array(z.string())])
     .nullable()
