@@ -455,8 +455,6 @@ export const postProjectCollaborator = async (
   return PostCollaboratorResponseSchema.parse(raw);
 };
 
-
-
 export const fetchProjectStages = async (projectId: string): Promise<ProjectStage[]> => {
   const endpoint = `${API_ENDPOINTS.PROJECTS_BY_ID(projectId)}/stages`;
   const response = await apiClient.get(endpoint);

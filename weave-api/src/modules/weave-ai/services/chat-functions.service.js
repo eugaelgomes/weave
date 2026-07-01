@@ -99,9 +99,10 @@ class ChatFunctionsService {
     for (const functionCall of functionCalls) {
       if (onChunk) {
         onChunk({
-          type: "action_state",
+          type: "tool_call_start",
+          id: functionCall?.id,
           name: functionCall?.name,
-          status: "running",
+          arguments: functionCall?.arguments,
         });
       }
       try {
@@ -115,10 +116,9 @@ class ChatFunctionsService {
         results.push(execution);
         if (onChunk) {
           onChunk({
-            type: "action_state",
-            name: functionCall?.name,
-            status: "completed",
-            success: execution.success,
+            type: "tool_call_result",
+            id: functionCall?.id,
+            result: execution.result || execution,
           });
         }
       } catch (error) {
@@ -133,10 +133,9 @@ class ChatFunctionsService {
         });
         if (onChunk) {
           onChunk({
-            type: "action_state",
-            name: functionCall?.name,
-            status: "completed",
-            success: false,
+            type: "tool_call_result",
+            id: functionCall?.id,
+            result: { error: error?.message || String(error) },
           });
         }
       }

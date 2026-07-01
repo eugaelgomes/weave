@@ -11,6 +11,8 @@ import {
   FolderKanban,
   FileText,
   ChevronDown,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { type AIModel } from "@/app/_contexts/chat-context";
@@ -20,6 +22,7 @@ import { cn } from "@/lib/utils";
 // Assume ModelIcon and AgentIcon are imported or defined here for brevity
 // (You might want to extract these to shared components as well)
 import { ModelIcon, AgentIcon } from "../../shared/chat-icons";
+import { RenderContextIcon } from "../../shared/chat-context-icon";
 
 export interface ChatInputProps {
   input: string;
@@ -27,6 +30,7 @@ export interface ChatInputProps {
   handleSend: () => void;
   canSendAiMessage: boolean;
   loading: boolean;
+  isTyping?: boolean;
   messagesLength: number;
   isSandboxOpen: boolean;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -34,20 +38,22 @@ export interface ChatInputProps {
   handleFilesSelected: (files: FileList | null) => void;
   selectedFiles: File[];
   handleRemoveFile: (file: File) => void;
-  contextItems: { id: string; type: "note" | "project"; title: string }[];
+  contextItems: {
+    id: string;
+    type: "note" | "project";
+    title: string;
+    icon?: any;
+    color?: string;
+  }[];
   handleRemoveContext: (type: "note" | "project", id: string) => void;
-  
+
   // Options state
   showOptionsMenu: boolean;
   setShowOptionsMenu: Dispatch<SetStateAction<boolean>>;
-  allowEdit: boolean;
-  setAllowEdit: Dispatch<SetStateAction<boolean>>;
   allowWebSearch: boolean;
   setAllowWebSearch: Dispatch<SetStateAction<boolean>>;
 
   // Context Menu state
-  showContextMenu: boolean;
-  setShowContextMenu: Dispatch<SetStateAction<boolean>>;
   contextSearch: string;
   setContextSearch: Dispatch<SetStateAction<string>>;
   filteredNotes: any[];
@@ -56,7 +62,13 @@ export interface ChatInputProps {
   setNoteContextLimit: Dispatch<SetStateAction<number>>;
   projectContextLimit: number;
   setProjectContextLimit: Dispatch<SetStateAction<number>>;
-  handleAddContext: (type: "note" | "project", id: string, title: string) => void;
+  handleAddContext: (
+    type: "note" | "project",
+    id: string,
+    title: string,
+    icon?: any,
+    color?: string
+  ) => void;
 
   // Model Menu State
   isModelMenuOpen: boolean;
@@ -83,6 +95,17 @@ export interface ChatInputProps {
 
 export function ChatInput(props: ChatInputProps) {
   const { t } = useLanguage();
+  const [isFocused, setIsFocused] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const isInputActive = props.canSendAiMessage && (isFocused || props.input.trim() !== "");
+  const isTextBig = props.input.split("\n").length > 3 || props.input.length > 150;
+
+  React.useEffect(() => {
+    if (props.textareaRef.current) {
+      props.textareaRef.current.style.height = "auto";
+      props.textareaRef.current.style.height = props.textareaRef.current.scrollHeight + "px";
+    }
+  }, [props.input, isExpanded, props.textareaRef]);
 
   return (
     <div
@@ -164,11 +187,11 @@ export function ChatInput(props: ChatInputProps) {
                 key={`${item.type}-${item.id}`}
                 className="border-brand-navy/30 bg-brand-beige text-brand-navy dark:border-brand-beige/20 dark:bg-brand-navy/30 dark:text-brand-beige flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px]"
               >
-                {item.type === "note" ? (
-                  <FileText className="h-2.5 w-2.5" />
-                ) : (
-                  <FolderKanban className="h-2.5 w-2.5" />
-                )}
+                <RenderContextIcon
+                  icon={item.icon}
+                  color={item.color}
+                  fallback={item.type === "note" ? FileText : FolderKanban}
+                />
                 <span className="font-medium">{item.title}</span>
                 <button
                   onClick={() => props.handleRemoveContext(item.type, item.id)}
@@ -184,7 +207,7 @@ export function ChatInput(props: ChatInputProps) {
         </div>
 
         <div
-          className={`focus-within:ring-neutral-400/10 dark:focus-within:ring-neutral-500/10 relative flex flex-col gap-1 rounded-2xl bg-white/70 p-2 backdrop-blur-lg transition-all duration-700 focus-within:ring-1 dark:bg-[#252525]/70 ${
+          className={`relative flex flex-col gap-1 rounded-2xl bg-white/70 p-2 backdrop-blur-lg transition-all duration-700 focus-within:ring-1 focus-within:ring-neutral-400/10 dark:bg-[#252525]/70 dark:focus-within:ring-neutral-500/10 ${
             props.messagesLength === 0 && !props.loading
               ? "shadow-2xl shadow-black/5 dark:shadow-black/40"
               : "shadow-lg shadow-black/5 dark:shadow-black/20"
@@ -206,6 +229,27 @@ export function ChatInput(props: ChatInputProps) {
             />
           </div>
 
+          {props.isTyping && (
+            <div className="flex items-center px-2 pt-1 pb-2 select-none">
+              <style>{`
+                @keyframes letter-glow {
+                  0%, 100% { opacity: 0.3; }
+                  50% { opacity: 1; }
+                }
+                .animate-thinking-letter { display: inline-block; animation: letter-glow 1.5s ease-in-out infinite; }
+              `}</style>
+              {(t.weaveAi?.thinking || "Pensando...").split("").map((char: string, idx: number) => (
+                <span
+                  key={idx}
+                  className="animate-thinking-letter text-[11px] font-semibold text-neutral-500 dark:text-neutral-400"
+                  style={{ animationDelay: `${idx * 0.1}s` }}
+                >
+                  {char === " " ? "\u00A0" : char}
+                </span>
+              ))}
+            </div>
+          )}
+
           <input
             ref={props.fileInputRef}
             type="file"
@@ -218,25 +262,50 @@ export function ChatInput(props: ChatInputProps) {
             }}
           />
 
-          <textarea
-            ref={props.textareaRef}
-            rows={1}
-            value={props.input}
-            onChange={(e) => props.setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                props.handleSend();
+          <div className={cn("relative", props.isTyping ? "hidden" : "block")}>
+            <textarea
+              ref={props.textareaRef}
+              rows={1}
+              value={props.input}
+              onChange={(e) => props.setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  props.handleSend();
+                }
+              }}
+              disabled={!props.canSendAiMessage}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder={
+                props.isTyping
+                  ? ""
+                  : props.canSendAiMessage
+                    ? "Como posso te ajudar?"
+                    : (t.weaveAi.limitReached ?? "Monthly AI message limit reached")
               }
-            }}
-            disabled={!props.canSendAiMessage}
-            placeholder={
-              props.canSendAiMessage
-                ? t.weaveAi.inputPlaceholder
-                : (t.weaveAi.limitReached ?? "Monthly AI message limit reached")
-            }
-            className="max-h-32 min-h-[56px] w-full resize-none bg-transparent px-1 py-2 text-sm outline-none placeholder:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-100 dark:placeholder:text-neutral-500"
-          />
+              className={cn(
+                "w-full resize-none bg-transparent pr-8 pl-1 text-sm transition-all duration-200 outline-none placeholder:text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-100 dark:placeholder:text-neutral-500",
+                isExpanded ? "max-h-[60vh]" : "max-h-32",
+                isInputActive ? "min-h-[56px] py-2" : "min-h-[32px] py-1"
+              )}
+            />
+            {(isTextBig || isExpanded) && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                title={isExpanded ? "Recolher campo" : "Expandir campo"}
+                aria-label={isExpanded ? "Recolher campo" : "Expandir campo"}
+                className="hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige absolute top-1 right-1 z-10 flex h-7 w-7 items-center justify-center rounded text-neutral-400 transition-all duration-200 hover:scale-105 active:scale-95"
+              >
+                {isExpanded ? (
+                  <Minimize2 className="h-3.5 w-3.5" />
+                ) : (
+                  <Maximize2 className="h-3.5 w-3.5" />
+                )}
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-1">
@@ -244,7 +313,7 @@ export function ChatInput(props: ChatInputProps) {
                 onClick={() => props.fileInputRef.current?.click()}
                 title={t.weaveAi.attachFiles}
                 aria-label={t.weaveAi.attachFiles}
-                className="transition-all duration-200 active:scale-95 hover:scale-105 hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 w-8 items-center justify-center rounded-full text-neutral-400"
+                className="hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 <Paperclip className="h-4 w-4" />
               </button>
@@ -255,42 +324,20 @@ export function ChatInput(props: ChatInputProps) {
                   onClick={() => props.setShowOptionsMenu(!props.showOptionsMenu)}
                   title="Opções"
                   aria-label="Opções"
-                  className="transition-all duration-200 active:scale-95 hover:scale-105 hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 w-8 items-center justify-center rounded-full text-neutral-400"
+                  className="hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition-all duration-200 hover:scale-105 active:scale-95"
                 >
                   <Settings2 className="h-4 w-4" />
                 </button>
-
                 {props.showOptionsMenu && (
                   <>
                     <div
                       className="fixed inset-0 z-10"
                       onClick={() => props.setShowOptionsMenu(false)}
                     />
-                    <div className="dark:border-surface-dark-border absolute bottom-full left-0 z-20 mb-2 w-48 overflow-hidden rounded border border-neutral-200 bg-white p-1 shadow-lg dark:bg-[#1d1d1b]">
-                      <button
-                        onClick={() => {
-                          props.setAllowEdit(!props.allowEdit);
-                          props.setShowOptionsMenu(false);
-                        }}
-                        className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs transition-colors"
-                      >
-                        <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
-                          {props.allowEdit ? (
-                            <Unlock className="text-brand-yellow h-3.5 w-3.5" />
-                          ) : (
-                            <Lock className="h-3.5 w-3.5" />
-                          )}
-                          <span>{t.weaveAi.allowEdit}</span>
-                        </div>
-                        {props.allowEdit && (
-                          <div className="bg-brand-yellow h-1.5 w-1.5 rounded-full"></div>
-                        )}
-                      </button>
-
+                    <div className="dark:border-surface-dark-border absolute bottom-full left-0 z-20 mb-2 w-60 overflow-hidden rounded border border-neutral-200 bg-white p-1 shadow-lg dark:bg-[#1d1d1b]">
                       <button
                         onClick={() => {
                           props.setAllowWebSearch(!props.allowWebSearch);
-                          props.setShowOptionsMenu(false);
                         }}
                         className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs transition-colors"
                       >
@@ -304,28 +351,9 @@ export function ChatInput(props: ChatInputProps) {
                           <div className="bg-brand-yellow h-1.5 w-1.5 rounded-full"></div>
                         )}
                       </button>
-                    </div>
-                  </>
-                )}
-              </div>
 
-              <div className="relative">
-                <button
-                  onClick={() => props.setShowContextMenu(!props.showContextMenu)}
-                  title={t.weaveAi.indexContext}
-                  aria-label={t.weaveAi.indexContext}
-                  className="transition-all duration-200 active:scale-95 hover:scale-105 hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 w-8 items-center justify-center rounded-full text-neutral-400"
-                >
-                  <NotebookPen className="h-4 w-4" />
-                </button>
+                      <div className="my-1 border-t border-neutral-100 dark:border-neutral-800" />
 
-                {props.showContextMenu && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => props.setShowContextMenu(false)}
-                    />
-                    <div className="dark:border-surface-dark-border absolute bottom-full left-0 z-20 mb-2 w-56 overflow-hidden rounded border border-neutral-200 bg-white shadow-lg dark:bg-[#1d1d1b]">
                       <div className="dark:border-surface-dark-border border-b border-neutral-100 p-1">
                         <input
                           value={props.contextSearch}
@@ -335,16 +363,29 @@ export function ChatInput(props: ChatInputProps) {
                         />
                       </div>
                       <div className="max-h-48 overflow-y-auto p-1">
-                        <div className="px-1.5 py-1 text-[9px] font-bold text-neutral-400">
+                        <div className="flex items-center gap-1.5 px-1.5 py-1 text-[9px] font-bold tracking-wider text-neutral-400 uppercase">
+                          <FileText className="h-3 w-3" />
                           {t.weaveAi.tasks}
                         </div>
                         {props.filteredNotes.slice(0, props.noteContextLimit).map((note: any) => (
                           <button
                             key={note.id}
-                            onClick={() => props.handleAddContext("note", note.id, note.title)}
+                            onClick={() =>
+                              props.handleAddContext(
+                                "note",
+                                note.id,
+                                note.title,
+                                note.icon,
+                                note.color
+                              )
+                            }
                             className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs"
                           >
-                            <FileText className="text-brand-orange h-3 w-3" />
+                            <RenderContextIcon
+                              icon={note.icon}
+                              color={note.color}
+                              fallback={FileText}
+                            />
                             <span className="truncate">{note.title}</span>
                           </button>
                         ))}
@@ -358,19 +399,34 @@ export function ChatInput(props: ChatInputProps) {
                           </button>
                         )}
 
-                        <div className="dark:border-surface-dark-border mt-1 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold text-neutral-400">
+                        <div className="dark:border-surface-dark-border mt-1 flex items-center gap-1.5 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold tracking-wider text-neutral-400 uppercase">
+                          <FolderKanban className="h-3 w-3" />
                           {t.weaveAi.projects}
                         </div>
-                        {props.filteredProjects.slice(0, props.projectContextLimit).map((project: any) => (
-                          <button
-                            key={project.id}
-                            onClick={() => props.handleAddContext("project", project.id, project.title)}
-                            className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs"
-                          >
-                            <FolderKanban className="text-brand-navy dark:text-brand-yellow h-3 w-3" />
-                            <span className="truncate">{project.title}</span>
-                          </button>
-                        ))}
+                        {props.filteredProjects
+                          .slice(0, props.projectContextLimit)
+                          .map((project: any) => (
+                            <button
+                              key={project.id}
+                              onClick={() =>
+                                props.handleAddContext(
+                                  "project",
+                                  project.id,
+                                  project.title,
+                                  project.icon,
+                                  project.color
+                                )
+                              }
+                              className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs"
+                            >
+                              <RenderContextIcon
+                                icon={project.icon}
+                                color={project.color}
+                                fallback={FolderKanban}
+                              />
+                              <span className="truncate">{project.title}</span>
+                            </button>
+                          ))}
                         {props.filteredProjects.length > props.projectContextLimit && (
                           <button
                             type="button"
@@ -389,7 +445,7 @@ export function ChatInput(props: ChatInputProps) {
               <div className="relative ml-1">
                 <button
                   onClick={() => props.setIsModelMenuOpen((v) => !v)}
-                  className="transition-all duration-200 active:scale-95 hover:scale-105 hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-7 items-center gap-1 rounded-full bg-transparent px-2 py-0.5 text-[10px] font-medium text-neutral-600 dark:text-neutral-400"
+                  className="hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-7 items-center gap-1 rounded-full bg-transparent px-2 py-0.5 text-[10px] font-medium text-neutral-600 transition-all duration-200 hover:scale-105 active:scale-95 dark:text-neutral-400"
                 >
                   <ModelIcon
                     model={props.selectedModel}
@@ -442,7 +498,7 @@ export function ChatInput(props: ChatInputProps) {
               <div className="relative ml-1">
                 <button
                   onClick={() => props.setIsAgentMenuOpen((prev) => !prev)}
-                  className="transition-all duration-200 active:scale-95 hover:scale-105 hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-7 items-center gap-1 rounded-full bg-transparent px-2 py-0.5 text-[10px] font-medium text-neutral-600 dark:text-neutral-400"
+                  className="hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-7 items-center gap-1 rounded-full bg-transparent px-2 py-0.5 text-[10px] font-medium text-neutral-600 transition-all duration-200 hover:scale-105 active:scale-95 dark:text-neutral-400"
                 >
                   <AgentIcon
                     agent={props.selectedAgent}
@@ -508,7 +564,7 @@ export function ChatInput(props: ChatInputProps) {
               disabled={!props.input.trim() || !props.canSendAiMessage}
               title="Enviar mensagem"
               aria-label="Enviar mensagem"
-              className="bg-neutral-300 dark:bg-neutral-600 dark:text-neutral-200 hover:bg-neutral-400 dark:hover:bg-neutral-500 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95 hover:scale-105 disabled:scale-100 disabled:opacity-30 disabled:pointer-events-none"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-300 transition-all duration-200 hover:scale-105 hover:bg-neutral-400 active:scale-95 disabled:pointer-events-none disabled:scale-100 disabled:opacity-30 dark:bg-neutral-600 dark:text-neutral-200 dark:hover:bg-neutral-500"
             >
               <Send className="ml-0.5 h-4 w-4" />
             </button>

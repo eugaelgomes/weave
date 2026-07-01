@@ -10,11 +10,9 @@ export function ChatViewClient({ chatId }: { chatId?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
-  const [isSandboxOpen, setIsSandboxOpen] = useState(
-    searchParams.get("sandbox") === "1"
-  );
-  
+
+  const [isSandboxOpen, setIsSandboxOpen] = useState(searchParams.get("sandbox") === "1");
+
   const [activeArtifactId, setActiveArtifactId] = useState<string | null>(
     searchParams.get("artifactId") || null
   );

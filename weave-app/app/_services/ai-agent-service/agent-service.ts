@@ -41,10 +41,6 @@ export interface ChatMessage {
   tool_calls?: unknown | null;
   tool_call_id?: string | string[] | null;
   citations?: unknown[];
-  functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
-  functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
-  provider?: string;
-  metadata?: Record<string, any>;
 }
 
 export interface ChatSession {
@@ -75,8 +71,6 @@ export interface SendMessageResult {
   sessionId: string;
   model?: ChatModelSelection;
   provider?: string;
-  functions?: Array<{ name: string; arguments?: Record<string, unknown> }>;
-  functionExecution?: Array<{ name: string; success: boolean; result?: unknown }>;
   citations?: unknown[];
 }
 
@@ -187,9 +181,6 @@ function normalizeChatMessage(message: RawChatMessage): ChatMessage {
     tool_calls: message.tool_calls,
     tool_call_id: message.tool_call_id,
     citations: message.metadata?.citations || [],
-    functions: message.metadata?.functions || [],
-    functionExecution: message.metadata?.functionExecution || [],
-    provider: message.metadata?.providerUsed || undefined,
     metadata: message.metadata,
   };
 }
@@ -303,15 +294,13 @@ async function processChatResponse(
     timestamp: new Date(),
     sessionId: result.sessionId,
     citations: result.response?.citations || [],
-    functions: result.response?.functions || [],
-    functionExecution: result.response?.functionExecution || [],
-    provider: result.response?.provider || undefined,
     metadata: {
+      content: result.response?.content,
       citations: result.response?.citations || [],
-      functions: result.response?.functions || [],
-      functionExecution: result.response?.functionExecution || [],
-      provider: result.response?.provider || null,
-      ...(result.response?.metadata || {}),
+      model:
+        typeof result.response?.model === "string"
+          ? result.response.model
+          : result.response?.model?.name,
     },
   };
 
@@ -323,8 +312,6 @@ async function processChatResponse(
       : undefined,
     provider: result.response?.provider || undefined,
     citations: result.response?.citations || [],
-    functions: result.response?.functions || [],
-    functionExecution: result.response?.functionExecution || [],
   };
 }
 
@@ -437,7 +424,8 @@ export async function fetchChatHistory(
     const data = ChatHistoryMessagesSchema.parse(raw);
     return data.messages
       .filter(
-        (m: z.infer<typeof RawChatMessageSchema>) => m.role === "user" || m.role === "assistant" || m.role === "tool"
+        (m: z.infer<typeof RawChatMessageSchema>) =>
+          m.role === "user" || m.role === "assistant" || m.role === "tool"
       )
       .map((m: z.infer<typeof RawChatMessageSchema>) => normalizeChatMessage(m as RawChatMessage));
   }

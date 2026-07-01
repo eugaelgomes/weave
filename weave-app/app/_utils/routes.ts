@@ -41,7 +41,8 @@ export const routes = {
     base: (orgId: string) => `/${orgId}/weave-engine`,
     compose: (orgId: string) => `/${orgId}/weave-ai/chat/reasonings/new`,
     composeInsight: (orgId: string) => `/${orgId}/weave-ai/chat/reasonings/new?intent=insight`,
-    composeInstructions: (orgId: string) => `/${orgId}/weave-ai/chat/reasonings/new?intent=instructions`,
+    composeInstructions: (orgId: string) =>
+      `/${orgId}/weave-ai/chat/reasonings/new?intent=instructions`,
   },
 
   weaveFlow: {

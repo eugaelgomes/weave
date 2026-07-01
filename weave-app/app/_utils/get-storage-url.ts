@@ -36,7 +36,23 @@ const getStorageUrl = (path: string): string => {
     return path.startsWith("/") ? path : `/${normalizedPath}`;
   }
 
-  return `${base}/${normalizedPath}`;
+  let result = `${base}/${normalizedPath}`;
+
+  // Se a URL final não tiver protocolo e não começar com barra, assumimos que é um host/CDN absoluto faltando protocolo
+  if (!/^https?:\/\//i.test(result) && !result.startsWith("/")) {
+    // Para localhost ou IPs locais, forçamos http, para o resto https
+    if (
+      result.startsWith("localhost") ||
+      result.startsWith("127.0.0.1") ||
+      result.startsWith("minio")
+    ) {
+      result = `http://${result}`;
+    } else {
+      result = `https://${result}`;
+    }
+  }
+
+  return result;
 };
 
 export default getStorageUrl;

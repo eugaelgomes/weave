@@ -680,7 +680,8 @@ const ptBR = {
     incorrectPassword: "Senha incorreta.",
     passwordError: "Senha incorreta ou ocorreu um erro.",
     confirmPasswordTitle: "Confirme sua senha",
-    confirmPasswordDesc: "Para sua segurança, por favor insira sua senha para gerar um novo Token de API.",
+    confirmPasswordDesc:
+      "Para sua segurança, por favor insira sua senha para gerar um novo Token de API.",
     passwordPlaceholder: "Sua senha...",
     createTokenError: "Erro ao criar token.",
     managementTitle: "Gerenciamento",
@@ -720,10 +721,11 @@ const ptBR = {
     noTokens: "Nenhum token encontrado",
     revokeModalTitle: "Revogar este token?",
     deleteModalTitle: "Excluir permanentemente?",
-    revokeModalDesc: "Aplicações usando este token perderão acesso imediatamente. Esta ação não pode ser desfeita.",
+    revokeModalDesc:
+      "Aplicações usando este token perderão acesso imediatamente. Esta ação não pode ser desfeita.",
     deleteModalDesc: "O registro deste token será apagado do sistema.",
     revokeBtn: "Revogar",
-    deleteBtn: "Excluir"
+    deleteBtn: "Excluir",
   },
   plansSettings: {
     description: "Detalhes do seu plano, limites e consumo atual.",

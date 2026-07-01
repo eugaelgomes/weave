@@ -22,9 +22,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { routes } from "@/app/_utils/routes";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import { cn } from "@/lib/utils";
 
 import { RenderContextIcon } from "../../shared/chat-context-icon";
-import { ActionExecutionGroup, ArtifactExecutionCard } from "./chat-execution-cards";
+import { ToolCallGroup } from "./chat-execution-cards";
 
 export interface ChatMessageItemProps {
   msg: any;
@@ -49,6 +50,8 @@ export interface ChatMessageItemProps {
   notesOverview: any;
   projectsOverview: any;
   formatMessageDateTime: (date: any) => string;
+  allMessages?: any[];
+  isStreaming?: boolean;
 }
 
 export function ChatMessageItem(props: ChatMessageItemProps) {
@@ -75,10 +78,18 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
     notesOverview,
     projectsOverview,
     formatMessageDateTime,
+    allMessages = [],
   } = props;
+
+  if (msg.role === "tool") return null;
 
   return (
     <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"} mb-6`}>
+      <style>{`
+        .chat-avatar-img + .chat-dummy-link .chat-dummy-icon {
+          display: none !important;
+        }
+      `}</style>
       <div
         className={`flex flex-col ${
           isUser ? "max-w-[75%] items-end" : "w-full max-w-[calc(100%-3rem)] items-start"
@@ -92,48 +103,120 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
           }`}
         >
           {isUser ? (
-            <p className="whitespace-pre-wrap">{msg.content}</p>
+            <div className="flex flex-col gap-2">
+              {hasAttachments && (
+                <div className="mb-1 flex flex-wrap gap-2">
+                  {attachedFiles.map((f: any, idx: number) => {
+                    let fileUrl = undefined;
+                    const rawUrl = f.url || f.path || f.public_url;
+                    if (rawUrl) {
+                      fileUrl = getStorageUrl(rawUrl);
+                    } else if (typeof window !== "undefined" && f instanceof File) {
+                      fileUrl = URL.createObjectURL(f);
+                    }
+                    const FileWrapper = fileUrl ? "a" : "div";
+                    const fileProps = fileUrl
+                      ? {
+                          href: fileUrl,
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }
+                      : {};
+
+                    return (
+                      <FileWrapper
+                        key={`file-${idx}`}
+                        {...fileProps}
+                        className={cn(
+                          "flex h-16 w-16 flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200/50 bg-white/50 p-2 text-center text-[10px] font-medium text-neutral-600 shadow-sm dark:border-neutral-700/50 dark:bg-black/20 dark:text-neutral-300",
+                          fileUrl
+                            ? "cursor-pointer transition-colors hover:bg-white dark:hover:bg-black/40"
+                            : ""
+                        )}
+                        title={f.originalName || f.name || "Arquivo"}
+                      >
+                        <Paperclip className="h-4 w-4 shrink-0 opacity-70" />
+                        <span className="w-full truncate leading-tight">
+                          {f.originalName || f.name || "Arquivo"}
+                        </span>
+                      </FileWrapper>
+                    );
+                  })}
+                  {attachedNoteIds.map((noteId: string, idx: number) => {
+                    const note = Array.isArray(notesOverview)
+                      ? notesOverview.find((n: any) => n.id === noteId)
+                      : null;
+                    const href = routes.notes.details(orgId, (note as any)?.public_id || noteId);
+                    const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
+                    return (
+                      <Link
+                        href={href}
+                        key={`note-${idx}`}
+                        title={note?.title || "Nota"}
+                        className="flex h-16 w-16 flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200/50 bg-white/50 p-2 text-center text-[10px] font-medium text-neutral-600 shadow-sm transition-colors hover:bg-white dark:border-neutral-700/50 dark:bg-black/20 dark:text-neutral-300 dark:hover:bg-black/40"
+                      >
+                        <span className="flex h-4 w-4 shrink-0 items-center justify-center opacity-70">
+                          <RenderContextIcon
+                            icon={noteIcon}
+                            fallback={FileText}
+                            color={note?.priority_color}
+                          />
+                        </span>
+                        <span className="w-full truncate leading-tight">
+                          {note?.title || "Nota"}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                  {attachedProjectIds.map((projectId: string, idx: number) => {
+                    const project = Array.isArray(projectsOverview)
+                      ? projectsOverview.find((p: any) => p.id === projectId)
+                      : null;
+                    const href = routes.projects.board(
+                      orgId,
+                      (project as any)?.public_id || projectId
+                    );
+                    const projectIcon =
+                      (project as any)?.icon || (project as any)?.properties?.icon;
+                    return (
+                      <Link
+                        href={href}
+                        key={`proj-${idx}`}
+                        title={project?.title || "Projeto"}
+                        className="flex h-16 w-16 flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200/50 bg-white/50 p-2 text-center text-[10px] font-medium text-neutral-600 shadow-sm transition-colors hover:bg-white dark:border-neutral-700/50 dark:bg-black/20 dark:text-neutral-300 dark:hover:bg-black/40"
+                      >
+                        <span className="flex h-4 w-4 shrink-0 items-center justify-center opacity-70">
+                          <RenderContextIcon
+                            icon={projectIcon}
+                            fallback={FolderKanban}
+                            color={project?.color}
+                          />
+                        </span>
+                        <span className="w-full truncate leading-tight">
+                          {project?.title || "Projeto"}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+              {msg.content && <p className="whitespace-pre-wrap">{msg.content}</p>}
+            </div>
           ) : (
             <div className="flex flex-col gap-2">
               {(() => {
-                const allExecutions = Array.isArray(msg.functionExecution)
-                  ? msg.functionExecution.filter(
-                      (exec: any) =>
-                        ![
-                          "get_user_profile",
-                          "get_organization_details",
-                          "get_brain_structure",
-                        ].includes(exec.name)
-                    )
-                  : [];
-
-                const artifactExecutions = allExecutions.filter(
-                  (e: any) =>
-                    e.name === "update_reasoning_draft" ||
-                    e.name === "create_reasoning" ||
-                    e.name === "create_artifact" ||
-                    e.name === "update_artifact"
-                );
-                const regularExecutions = allExecutions.filter(
-                  (e: any) =>
-                    e.name !== "update_reasoning_draft" &&
-                    e.name !== "create_reasoning" &&
-                    e.name !== "create_artifact" &&
-                    e.name !== "update_artifact"
-                );
-
-                return (
-                  <>
-                    <ActionExecutionGroup executions={regularExecutions} orgId={orgId} />
-                    {artifactExecutions.map((exec: any, idx: number) => (
-                      <ArtifactExecutionCard
-                        key={`art-${idx}`}
-                        execution={exec}
-                        onOpenSandbox={onOpenSandbox}
-                      />
-                    ))}
-                  </>
-                );
+                const toolCalls = Array.isArray(msg.tool_calls) ? msg.tool_calls : [];
+                if (toolCalls.length > 0) {
+                  return (
+                    <ToolCallGroup
+                      toolCalls={toolCalls}
+                      allMessages={allMessages}
+                      orgId={orgId}
+                      onOpenSandbox={onOpenSandbox}
+                    />
+                  );
+                }
+                return null;
               })()}
 
               {reasoningText && (
@@ -154,7 +237,20 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
               )}
 
               {mainContent && (
-                <div className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-blockquote:border-l-brand-yellow prose-blockquote:bg-neutral-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-table:border-collapse prose-table:border prose-table:border-neutral-200 prose-th:bg-neutral-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-tr:border-b dark:prose-blockquote:bg-neutral-800/50 dark:prose-table:border-neutral-800 dark:prose-th:bg-neutral-900/50 max-w-none [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:ml-5 [&_ol]:list-decimal [&_p]:mb-4 [&_ul]:mb-4 [&_ul]:ml-5 [&_ul]:list-disc">
+                <div
+                  className="prose prose-neutral prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed prose-blockquote:border-l-brand-yellow prose-blockquote:bg-neutral-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-table:border-collapse prose-table:border prose-table:border-neutral-200 prose-th:bg-neutral-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 prose-tr:border-b dark:prose-blockquote:bg-neutral-800/50 dark:prose-table:border-neutral-800 dark:prose-th:bg-neutral-900/50 max-w-none [&_li]:mb-1 [&_ol]:mb-4 [&_ol]:ml-5 [&_ol]:list-decimal [&_p]:mb-4 [&_ul]:mb-4 [&_ul]:ml-5 [&_ul]:list-disc"
+                  style={
+                    props.isStreaming
+                      ? {
+                          maskImage:
+                            "linear-gradient(to bottom, black 0%, black calc(100% - 36px), transparent 100%)",
+                          WebkitMaskImage:
+                            "linear-gradient(to bottom, black 0%, black calc(100% - 36px), transparent 100%)",
+                          paddingBottom: "12px",
+                        }
+                      : undefined
+                  }
+                >
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeRaw, rehypeHighlight]}
@@ -310,6 +406,24 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                           {...props}
                         />
                       ),
+                      img: ({ node, src, ...props }: any) => {
+                        const resolvedSrc = src
+                          ? getStorageUrl(decodeURIComponent(src))
+                          : undefined;
+                        const isAvatar = src && src.includes("avatar");
+                        return (
+                          <img
+                            src={resolvedSrc}
+                            className={cn(
+                              "inline-block align-middle",
+                              isAvatar
+                                ? "chat-avatar-img mr-1 h-4 w-4 rounded-full object-cover"
+                                : "max-w-full rounded-md object-contain"
+                            )}
+                            {...props}
+                          />
+                        );
+                      },
                       a: ({ node, ...props }: any) => {
                         const href = props.href || "";
                         const isProjectLink = href.includes("/projects/");
@@ -347,7 +461,7 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                         if (isProjectLink || isNoteLink) {
                           const segments = href.split("/").filter(Boolean);
                           const lastSegment = segments[segments.length - 1] || "";
-                          const entityId = lastSegment.split("?")[0] || "";
+                          const entityId = lastSegment.split("?")[0].split("#")[0] || "";
 
                           if (isProjectLink && entityId) {
                             const project = Array.isArray(projectsOverview)
@@ -414,6 +528,21 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                               </Link>
                             );
                           }
+                        }
+
+                        const isDummyLink = href === "#" || href.endsWith("#");
+                        if (isDummyLink) {
+                          return (
+                            <span
+                              className="chat-dummy-link text-brand-navy dark:text-brand-yellow inline-flex items-center gap-1 font-medium"
+                              title="User"
+                            >
+                              <span className="chat-dummy-icon flex translate-y-[1px] items-center justify-center">
+                                <User className="h-3.5 w-3.5 shrink-0" />
+                              </span>
+                              <span>{props.children}</span>
+                            </span>
+                          );
                         }
 
                         return (
@@ -484,7 +613,9 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
             </div>
           )}
 
-          <div className={`mt-1.5 flex flex-col gap-1.5 pt-1 ${isUser ? "items-end" : "items-start"}`}>
+          <div
+            className={`mt-1.5 flex flex-col gap-1.5 pt-1 ${isUser ? "items-end" : "items-start"}`}
+          >
             <div
               className={`flex items-center gap-3 opacity-40 transition-opacity hover:opacity-100 ${
                 isUser ? "flex-row-reverse" : "flex-row"
@@ -560,7 +691,9 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
             </div>
 
             {!isUser && feedbackState[msg.id]?.showComment && (
-              <div className={`animate-in fade-in slide-in-from-top-1 w-full max-w-[200px] text-left duration-200`}>
+              <div
+                className={`animate-in fade-in slide-in-from-top-1 w-full max-w-[200px] text-left duration-200`}
+              >
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -596,60 +729,6 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
             )}
           </div>
         </div>
-
-        {isUser && hasAttachments && (
-          <div className="mt-1 flex flex-wrap justify-end gap-1">
-            {attachedFiles.map((f: any, idx: number) => (
-              <div
-                key={`file-${idx}`}
-                className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-              >
-                <Paperclip className="h-2.5 w-2.5" />
-                <span className="max-w-[150px] truncate">
-                  {f.originalName || f.name || "Arquivo"}
-                </span>
-              </div>
-            ))}
-            {attachedNoteIds.map((noteId: string, idx: number) => {
-              const note = Array.isArray(notesOverview)
-                ? notesOverview.find((n: any) => n.id === noteId)
-                : null;
-              const href = routes.notes.details(orgId, (note as any)?.public_id || noteId);
-              const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
-              return (
-                <Link
-                  href={href}
-                  key={`note-${idx}`}
-                  className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
-                >
-                  <RenderContextIcon icon={noteIcon} fallback={FileText} color={note?.priority_color} />
-                  <span className="max-w-[150px] truncate underline-offset-2 hover:underline">
-                    {note?.title || "Nota"}
-                  </span>
-                </Link>
-              );
-            })}
-            {attachedProjectIds.map((projectId: string, idx: number) => {
-              const project = Array.isArray(projectsOverview)
-                ? projectsOverview.find((p: any) => p.id === projectId)
-                : null;
-              const href = routes.projects.board(orgId, (project as any)?.public_id || projectId);
-              const projectIcon = (project as any)?.icon || (project as any)?.properties?.icon;
-              return (
-                <Link
-                  href={href}
-                  key={`proj-${idx}`}
-                  className="flex items-center gap-1 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[9px] font-medium text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
-                >
-                  <RenderContextIcon icon={projectIcon} fallback={FolderKanban} color={project?.color} />
-                  <span className="max-w-[150px] truncate underline-offset-2 hover:underline">
-                    {project?.title || "Projeto"}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );

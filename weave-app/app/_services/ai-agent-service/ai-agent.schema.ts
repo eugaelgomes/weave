@@ -34,23 +34,6 @@ const assistantPayloadSchema = z
     role: z.literal("assistant"),
     content: z.string().nullable().optional(),
     citations: z.array(z.unknown()).optional(),
-    functions: z
-      .array(
-        z.object({
-          name: z.string(),
-          arguments: z.record(z.string(), z.unknown()).optional(),
-        })
-      )
-      .optional(),
-    functionExecution: z
-      .array(
-        z.object({
-          name: z.string(),
-          success: z.boolean(),
-          result: z.unknown().optional(),
-        })
-      )
-      .optional(),
     model: z
       .object({
         name: z.string(),
@@ -76,7 +59,10 @@ export const RawChatMessageSchema = z.object({
   model: z.string().optional(),
   session_id: z.string().optional(),
   tool_calls: z.unknown().nullable().optional(),
-  tool_call_id: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+  tool_call_id: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 

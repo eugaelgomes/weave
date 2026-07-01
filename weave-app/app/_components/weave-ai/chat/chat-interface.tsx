@@ -115,7 +115,7 @@ export default function ChatInterface({
   const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [input, setInput] = useState("");
-  const [allowEdit, setAllowEdit] = useState(true);
+  const allowEdit = true;
   const [allowWebSearch, setAllowWebSearch] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextSearch, setContextSearch] = useState("");
@@ -124,9 +124,9 @@ export default function ChatInterface({
   const [fileError, setFileError] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [contextItems, setContextItems] = useState<{ type: "note" | "project"; id: string; title: string }[]>(
-    []
-  );
+  const [contextItems, setContextItems] = useState<
+    { type: "note" | "project"; id: string; title: string; icon?: any; color?: string }[]
+  >([]);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -194,8 +194,8 @@ export default function ChatInterface({
     if (messages.length === 0) return;
 
     const targetUrl = `/${orgId}/weave-ai/chat/${currentSession.id}/`;
-    window.history.replaceState(null, "", targetUrl);
-  }, [chatId, currentSession?.id, messages.length, pathname, orgId, variant]);
+    router.replace(targetUrl, { scroll: false });
+  }, [chatId, currentSession?.id, messages.length, pathname, orgId, variant, router]);
 
   const autoOpenedArtifactRef = useRef<string | null>(null);
 
@@ -212,8 +212,8 @@ export default function ChatInterface({
         if (execMatch && !execMatch.isRunning && execMatch.success) {
           const artifactId = execMatch.result?.id || execMatch.result?.artifactId;
           if (artifactId && autoOpenedArtifactRef.current !== artifactId) {
-             autoOpenedArtifactRef.current = artifactId;
-             onOpenSandbox?.(artifactId);
+            autoOpenedArtifactRef.current = artifactId;
+            onOpenSandbox?.(artifactId);
           }
         }
       }
@@ -224,7 +224,9 @@ export default function ChatInterface({
     if (!messageText.trim() || isTyping || !canSendAiMessage) return;
 
     const noteIds = contextItems.filter((item) => item.type === "note").map((item) => item.id);
-    const projectIds = contextItems.filter((item) => item.type === "project").map((item) => item.id);
+    const projectIds = contextItems
+      .filter((item) => item.type === "project")
+      .map((item) => item.id);
     const rawSessionId = currentSession?.id || chatId;
     const sessionId = isChatSessionId(rawSessionId) ? rawSessionId : undefined;
 
@@ -262,11 +264,16 @@ export default function ChatInterface({
     await handleSendText(message);
   };
 
-  const handleAddContext = (type: "note" | "project", id: string, title: string) => {
+  const handleAddContext = (
+    type: "note" | "project",
+    id: string,
+    title: string,
+    icon?: any,
+    color?: string
+  ) => {
     if (!contextItems.find((item) => item.id === id)) {
-      setContextItems((prev) => [...prev, { type, id, title }]);
+      setContextItems((prev) => [...prev, { type, id, title, icon, color }]);
     }
-    setShowContextMenu(false);
   };
 
   const handleRemoveContext = (type: "note" | "project", id: string) => {
@@ -301,7 +308,14 @@ export default function ChatInterface({
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const distanceToBottom = scrollHeight - (scrollTop + clientHeight);
+
+    // Auto-scroll Se estiver perto do fim ou se forem as primeiras mensagens da tela
+    if (distanceToBottom < 120 || messages.length <= 2) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, isTyping]);
 
   const updateScrollButtons = () => {
@@ -397,15 +411,19 @@ export default function ChatInterface({
     const source = Array.isArray(notesOverview) ? notesOverview : [];
     if (!normalizedContextSearch) return source;
     return source.filter((note: any) =>
-      String(note?.title || "").toLowerCase().includes(normalizedContextSearch)
+      String(note?.title || "")
+        .toLowerCase()
+        .includes(normalizedContextSearch)
     );
   }, [normalizedContextSearch, notesOverview]);
-  
+
   const filteredProjects = useMemo(() => {
     const source = Array.isArray(projectsOverview) ? projectsOverview : [];
     if (!normalizedContextSearch) return source;
     return source.filter((project: any) =>
-      String(project?.title || "").toLowerCase().includes(normalizedContextSearch)
+      String(project?.title || "")
+        .toLowerCase()
+        .includes(normalizedContextSearch)
     );
   }, [normalizedContextSearch, projectsOverview]);
 
@@ -415,7 +433,7 @@ export default function ChatInterface({
   }, [normalizedContextSearch]);
 
   const filteredMessages = messages?.filter((msg: any) => {
-    if (msg.role === "system" || msg.role === "tool") return false;
+    if (msg.role === "system") return false;
     if (
       msg.role === "assistant" &&
       !msg.content?.trim() &&
@@ -438,7 +456,7 @@ export default function ChatInterface({
           {onToggleSandbox && isSandboxOpen && (
             <button
               onClick={() => onToggleSandbox()}
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition bg-brand-primary-100 text-brand-primary-700 dark:bg-brand-primary-900/30 dark:text-brand-primary-400"
+              className="bg-brand-primary-100 text-brand-primary-700 dark:bg-brand-primary-900/30 dark:text-brand-primary-400 flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition"
             >
               <FileText className="h-3.5 w-3.5" />
               Fechar Sandbox
@@ -450,7 +468,11 @@ export default function ChatInterface({
               disabled={isSharing}
               className="flex items-center gap-1.5 rounded-md text-[10px] font-medium text-neutral-500 transition hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
             >
-              {isSharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
+              {isSharing ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Share2 className="h-3 w-3" />
+              )}
               {locale === "en-US" ? "Share" : "Compartilhar"}
             </button>
           )}
@@ -481,7 +503,7 @@ export default function ChatInterface({
         onScroll={updateScrollButtons}
         className={cn(
           "relative flex-1 flex-shrink-0 overflow-y-auto scroll-smooth pb-28 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-yellow-400 [&::-webkit-scrollbar-track]:bg-transparent",
-          isSandboxOpen ? "px-4 pt-2" : "p-2  pb-28"
+          isSandboxOpen ? "px-4 pt-2" : "p-2 pb-28"
         )}
       >
         <div
@@ -490,7 +512,7 @@ export default function ChatInterface({
             isSandboxOpen ? "max-w-xl px-2 sm:px-4" : "max-w-3xl"
           )}
         >
-          {filteredMessages?.map((msg: any) => {
+          {filteredMessages?.map((msg: any, index: number) => {
             const isUser = msg.role === "user";
             const messageStatus = msg?.metadata?.status;
             const isFailedUserMessage = isUser && messageStatus === "failed";
@@ -501,10 +523,16 @@ export default function ChatInterface({
                 : [];
 
             const attachedFiles = Array.isArray(msg?.metadata?.files) ? msg.metadata.files : [];
-            const attachedNoteIds = Array.isArray(msg?.metadata?.noteIds) ? msg.metadata.noteIds : [];
-            const attachedProjectIds = Array.isArray(msg?.metadata?.projectIds) ? msg.metadata.projectIds : [];
+            const attachedNoteIds = Array.isArray(msg?.metadata?.noteIds)
+              ? msg.metadata.noteIds
+              : [];
+            const attachedProjectIds = Array.isArray(msg?.metadata?.projectIds)
+              ? msg.metadata.projectIds
+              : [];
             const hasAttachments =
-              attachedFiles.length > 0 || attachedNoteIds.length > 0 || attachedProjectIds.length > 0;
+              attachedFiles.length > 0 ||
+              attachedNoteIds.length > 0 ||
+              attachedProjectIds.length > 0;
 
             let mainContent = msg.content || "";
             let reasoningText = null;
@@ -516,10 +544,14 @@ export default function ChatInterface({
               }
             }
 
+            const isStreaming = index === filteredMessages.length - 1 && !isUser && isTyping;
+
             return (
               <ChatMessageItem
                 key={msg.id}
                 msg={msg}
+                isStreaming={isStreaming}
+                allMessages={messages}
                 orgId={orgId}
                 isUser={isUser}
                 isFailedUserMessage={isFailedUserMessage}
@@ -536,7 +568,9 @@ export default function ChatInterface({
                 setFeedbackState={setFeedbackState}
                 handleFeedbackSubmit={async (messageId, rating, comment) => {
                   try {
-                    const { submitMessageFeedback } = await import("@/app/_services/ai-agent-service/agent-service");
+                    const { submitMessageFeedback } = await import(
+                      "@/app/_services/ai-agent-service/agent-service"
+                    );
                     await submitMessageFeedback(messageId, rating, comment);
                     setFeedbackState((prev) => ({
                       ...prev,
@@ -557,31 +591,6 @@ export default function ChatInterface({
             );
           })}
 
-          {isTyping && (
-            <div className="flex gap-2">
-              <div className="flex items-center px-4 py-2.5">
-                <div className="flex items-center select-none">
-                  <style>{`
-                    @keyframes letter-glow {
-                      0%, 100% { opacity: 0.15; filter: drop-shadow(0 0 0px rgba(255, 213, 0, 0)); }
-                      35%, 85% { opacity: 1; filter: drop-shadow(0 0 2px rgba(255, 213, 0, 0.6)); }
-                    }
-                    .animate-thinking-letter { display: inline-block; animation: letter-glow 2s ease-in-out infinite; }
-                  `}</style>
-                  {(t.weaveAi.thinking || "Thinking...").split("").map((char: string, idx: number) => (
-                    <span
-                      key={idx}
-                      className="animate-thinking-letter text-brand-yellow text-xs font-bold tracking-wider"
-                      style={{ animationDelay: `${idx * 0.08}s` }}
-                    >
-                      {char === " " ? "\\u00A0" : char}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
@@ -599,6 +608,7 @@ export default function ChatInterface({
         handleSend={handleSend}
         canSendAiMessage={canSendAiMessage}
         loading={loading}
+        isTyping={isTyping}
         messagesLength={messages?.length || 0}
         isSandboxOpen={isSandboxOpen || false}
         fileInputRef={fileInputRef}
@@ -610,12 +620,8 @@ export default function ChatInterface({
         handleRemoveContext={handleRemoveContext}
         showOptionsMenu={showOptionsMenu}
         setShowOptionsMenu={setShowOptionsMenu}
-        allowEdit={allowEdit}
-        setAllowEdit={setAllowEdit}
         allowWebSearch={allowWebSearch}
         setAllowWebSearch={setAllowWebSearch}
-        showContextMenu={showContextMenu}
-        setShowContextMenu={setShowContextMenu}
         contextSearch={contextSearch}
         setContextSearch={setContextSearch}
         filteredNotes={filteredNotes}

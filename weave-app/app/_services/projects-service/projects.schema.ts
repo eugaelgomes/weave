@@ -212,8 +212,6 @@ export const MessageOnlySchema = z.object({
   message: z.string(),
 });
 
-
-
 export const ProjectViewPreferenceSchema = z.object({
   view: z.enum(["board", "list"]),
 });
@@ -270,8 +268,6 @@ export const PostCollaboratorResponseSchema = z
     collaborators: z.array(z.unknown()).optional(),
   })
   .passthrough();
-
-
 
 /** DELETE/void-style JSON acknowledgements (may be `{}`). */
 export const AckSchema = z.record(z.string(), z.unknown());

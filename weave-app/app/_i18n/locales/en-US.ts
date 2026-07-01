@@ -682,7 +682,8 @@ const enUS: TranslationKeys = {
     incorrectPassword: "Incorrect password.",
     passwordError: "Incorrect password or an error occurred.",
     confirmPasswordTitle: "Confirm your password",
-    confirmPasswordDesc: "For your security, please enter your password to generate a new API Token.",
+    confirmPasswordDesc:
+      "For your security, please enter your password to generate a new API Token.",
     passwordPlaceholder: "Your password...",
     createTokenError: "Error creating token.",
     managementTitle: "Management",
@@ -722,10 +723,11 @@ const enUS: TranslationKeys = {
     noTokens: "No tokens found",
     revokeModalTitle: "Revoke this token?",
     deleteModalTitle: "Delete permanently?",
-    revokeModalDesc: "Applications using this token will lose access immediately. This action cannot be undone.",
+    revokeModalDesc:
+      "Applications using this token will lose access immediately. This action cannot be undone.",
     deleteModalDesc: "This token's record will be deleted from the system.",
     revokeBtn: "Revoke",
-    deleteBtn: "Delete"
+    deleteBtn: "Delete",
   },
   plansSettings: {
     description: "Details of your plan, limits and current usage.",

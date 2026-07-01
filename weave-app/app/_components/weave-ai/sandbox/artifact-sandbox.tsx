@@ -47,7 +47,6 @@ export function ArtifactSandbox({
 
   // Load the initial artifact data from the backend
   useEffect(() => {
-
     async function loadArtifact() {
       if (!targetId) {
         setIsLoading(false);
@@ -124,7 +123,12 @@ export function ArtifactSandbox({
   };
 
   return (
-    <div className={cn("relative flex h-full flex-col border-l border-neutral-200 dark:border-surface-dark-border", "bg-white dark:bg-[#1d1d1b]")}>
+    <div
+      className={cn(
+        "dark:border-surface-dark-border relative flex h-full flex-col border-l border-neutral-200",
+        "bg-white dark:bg-[#1d1d1b]"
+      )}
+    >
       {/* Sandbox Header */}
       <div className="dark:border-surface-dark-border flex h-9 flex-shrink-0 items-center justify-between border-b border-neutral-200 px-3">
         <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -133,8 +137,8 @@ export function ArtifactSandbox({
         {isSaving && (
           <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-neutral-400 uppercase">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-orange opacity-75"></span>
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-yellow"></span>
+              <span className="bg-brand-orange absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
+              <span className="bg-brand-yellow relative inline-flex h-1.5 w-1.5 rounded-full"></span>
             </span>
             Salvando
           </span>
@@ -145,7 +149,7 @@ export function ArtifactSandbox({
       <div className="custom-scrollbar flex-1 overflow-y-auto p-2">
         {isLoading ? (
           <div className="flex h-40 items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-brand-yellow" />
+            <Loader2 className="text-brand-yellow h-6 w-6 animate-spin" />
           </div>
         ) : (
           <div className="mx-auto max-w-[850px] pb-32">

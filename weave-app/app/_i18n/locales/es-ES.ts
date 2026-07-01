@@ -684,7 +684,8 @@ const esES: TranslationKeys = {
     incorrectPassword: "Contraseña incorrecta.",
     passwordError: "Contraseña incorrecta o ocurrió un error.",
     confirmPasswordTitle: "Confirma tu contraseña",
-    confirmPasswordDesc: "Por tu seguridad, introduce tu contraseña para generar un nuevo Token de API.",
+    confirmPasswordDesc:
+      "Por tu seguridad, introduce tu contraseña para generar un nuevo Token de API.",
     passwordPlaceholder: "Tu contraseña...",
     createTokenError: "Error al crear el token.",
     managementTitle: "Gestión",
@@ -724,10 +725,11 @@ const esES: TranslationKeys = {
     noTokens: "Ningún token encontrado",
     revokeModalTitle: "¿Revocar este token?",
     deleteModalTitle: "¿Eliminar permanentemente?",
-    revokeModalDesc: "Las aplicaciones que usen este token perderán el acceso inmediatamente. Esta acción no se puede deshacer.",
+    revokeModalDesc:
+      "Las aplicaciones que usen este token perderán el acceso inmediatamente. Esta acción no se puede deshacer.",
     deleteModalDesc: "El registro de este token será borrado del sistema.",
     revokeBtn: "Revocar",
-    deleteBtn: "Eliminar"
+    deleteBtn: "Eliminar",
   },
   plansSettings: {
     description: "Detalles de tu plan, límites y consumo actual.",

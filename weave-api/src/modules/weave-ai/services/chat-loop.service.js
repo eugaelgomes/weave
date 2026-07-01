@@ -107,8 +107,8 @@ class ChatLoopService {
         enginePayload?.data?.text ||
         enginePayload?.data?.content ||
         "";
-      const currentFunctions = Array.isArray(enginePayload?.functions)
-        ? enginePayload.functions
+      const currentFunctions = Array.isArray(enginePayload?.toolCalls)
+        ? enginePayload.toolCalls
         : [];
 
       providerUsed = enginePayload?.providerUsed || providerUsed;

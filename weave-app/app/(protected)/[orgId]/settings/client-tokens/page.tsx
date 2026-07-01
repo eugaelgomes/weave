@@ -146,8 +146,7 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
 
 export function SettingsApiTokens() {
   const { t } = useLanguage();
-  const { apiTokens, scopesInfo, loadingTokens, generateApiToken, revokeToken } =
-    useApiTokens();
+  const { apiTokens, scopesInfo, loadingTokens, generateApiToken, revokeToken } = useApiTokens();
   const { organization } = useOrganization();
 
   // Estados de UI
@@ -163,9 +162,7 @@ export function SettingsApiTokens() {
   const [expiresAt, setExpiresAt] = useState<string>("");
   const blogUrl = process.env.NEXT_PUBLIC_BLOG_URL || "https://discover.weavenotes.app";
 
-  const [actionModal, setActionModal] = useState<{ id: string; type: "revoke" } | null>(
-    null
-  );
+  const [actionModal, setActionModal] = useState<{ id: string; type: "revoke" } | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   // Base classes para manter padronizado com o User Data
@@ -273,7 +270,7 @@ export function SettingsApiTokens() {
             className="dark:border-surface-dark-border-strong space-y-4 rounded-md border border-neutral-100 bg-neutral-50/50 p-2 dark:bg-[#1d1d1b]/30"
           >
             <div className="mb-2">
-              <h4 className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-neutral-500  dark:text-neutral-400">
+              <h4 className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-neutral-500 dark:text-neutral-400">
                 {t.clientTokens.newTokenTitle}
               </h4>
             </div>
@@ -384,7 +381,7 @@ export function SettingsApiTokens() {
       {/* Listagem de Tokens em Tabela Simples */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-[10px] font-bold tracking-widest text-neutral-400  dark:text-neutral-500">
+          <h4 className="text-[10px] font-bold tracking-widest text-neutral-400 dark:text-neutral-500">
             {t.clientTokens.listTitle}
           </h4>
           {!isCreating && !generatedToken && (
@@ -400,9 +397,7 @@ export function SettingsApiTokens() {
         {loadingTokens ? (
           <div className="flex items-center gap-2 py-6 text-neutral-400">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-[10px] font-bold tracking-widest ">
-              {t.common.loading}
-            </span>
+            <span className="text-[10px] font-bold tracking-widest">{t.common.loading}</span>
           </div>
         ) : apiTokens.length > 0 ? (
           <div className="dark:border-surface-dark-border overflow-hidden rounded-md border border-neutral-200">
@@ -410,25 +405,25 @@ export function SettingsApiTokens() {
               <table className="w-full text-left text-[11px]">
                 <thead className="dark:border-surface-dark-border border-b border-neutral-200 bg-neutral-50 text-neutral-500 dark:bg-[#1d1d1b]/50">
                   <tr>
-                    <th className="px-4 py-2.5 font-bold tracking-widest ">
+                    <th className="px-4 py-2.5 font-bold tracking-widest">
                       {t.clientTokens.tableColName}
                     </th>
-                    <th className="px-4 py-2.5 font-bold tracking-widest ">
+                    <th className="px-4 py-2.5 font-bold tracking-widest">
                       {t.clientTokens.tableColPrefix}
                     </th>
-                    <th className="px-4 py-2.5 font-bold tracking-widest ">
+                    <th className="px-4 py-2.5 font-bold tracking-widest">
                       {t.clientTokens.tableColScopes}
                     </th>
-                    <th className="px-4 py-2.5 font-bold tracking-widest ">
+                    <th className="px-4 py-2.5 font-bold tracking-widest">
                       {t.clientTokens.tableColCreated}
                     </th>
-                    <th className="px-4 py-2.5 font-bold tracking-widest ">
+                    <th className="px-4 py-2.5 font-bold tracking-widest">
                       {t.clientTokens.tableColExpires}
                     </th>
-                    <th className="px-4 py-2.5 font-bold tracking-widest ">
+                    <th className="px-4 py-2.5 font-bold tracking-widest">
                       {t.clientTokens.tableColRevoked}
                     </th>
-                    <th className="px-4 py-2.5 text-right font-bold tracking-widest ">
+                    <th className="px-4 py-2.5 text-right font-bold tracking-widest">
                       {t.clientTokens.tableColActions}
                     </th>
                   </tr>
@@ -456,7 +451,7 @@ export function SettingsApiTokens() {
                               {token.name}
                             </span>
                             {token.revoked_at && (
-                              <span className="rounded bg-neutral-200 px-1 py-0.5 text-[8px] font-black tracking-wider text-neutral-500  dark:bg-neutral-800">
+                              <span className="rounded bg-neutral-200 px-1 py-0.5 text-[8px] font-black tracking-wider text-neutral-500 dark:bg-neutral-800">
                                 {t.clientTokens.revokedToken}
                               </span>
                             )}
@@ -480,9 +475,7 @@ export function SettingsApiTokens() {
                           ))}
                         </div>
                       </td>
-                      <td className="px-4 py-2 text-neutral-500">
-                        {formatDate(token.created_at)}
-                      </td>
+                      <td className="px-4 py-2 text-neutral-500">{formatDate(token.created_at)}</td>
                       <td className="px-4 py-2 text-neutral-500">
                         {token.expires_at
                           ? new Date(token.expires_at).toLocaleDateString()
@@ -502,7 +495,6 @@ export function SettingsApiTokens() {
                               <ShieldOff size={14} />
                             </button>
                           )}
-
                         </div>
                       </td>
                     </tr>
@@ -514,7 +506,7 @@ export function SettingsApiTokens() {
         ) : (
           <div className="dark:border-surface-dark-border flex flex-col items-center justify-center rounded-md border border-dashed border-neutral-200 py-8 text-center">
             <KeyRound size={20} className="mb-2 text-neutral-300 dark:text-neutral-700" />
-            <p className="text-[11px] font-bold tracking-widest text-neutral-400 ">
+            <p className="text-[11px] font-bold tracking-widest text-neutral-400">
               {t.clientTokens.noTokens}
             </p>
           </div>

@@ -14,7 +14,7 @@ export const ChatScrollButtons = ({
   scrollToBottom: () => void;
 }) => {
   const { t } = useLanguage();
-  
+
   if (!showScrollTopButton && !showScrollBottomButton) return null;
 
   return (

@@ -107,7 +107,57 @@ class ChatContextService {
       rawConversationHistory
     );
 
-    const filesMetadata = chatFormatterUtil.buildFilesMetadata(files);
+    // Upload attached files to Digital Ocean Spaces and build metadata with URLs/keys
+    const filesMetadata = [];
+    if (Array.isArray(files) && files.length > 0) {
+      const spacesService = require("@/services/storage");
+      const { v4: uuidv4 } = require("uuid");
+      for (const file of files) {
+        try {
+          const ext = spacesService.getFileExtensionFromMimeType(file.mimetype);
+          const safeOriginalName = file.originalname
+            ? file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_")
+            : `file${ext}`;
+          const uniqueFileName = `${uuidv4()}_${safeOriginalName}`;
+          const folderPath = spacesService.buildKey("chat", String(userId), String(sessionId), "files");
+          
+          const uploadResult = await spacesService.uploadImage(
+            file.buffer,
+            file.mimetype || "application/octet-stream",
+            userId,
+            uniqueFileName,
+            folderPath
+          );
+
+          if (uploadResult && uploadResult.success) {
+            filesMetadata.push({
+              originalName: file.originalname,
+              mimeType: file.mimetype,
+              size: file.size,
+              key: uploadResult.key,
+              url: uploadResult.url,
+              path: uploadResult.key,
+            });
+          } else {
+            filesMetadata.push({
+              originalName: file.originalname,
+              mimeType: file.mimetype,
+              size: file.size,
+            });
+          }
+        } catch (uploadError) {
+          console.error("Failed to upload chat file attachment:", uploadError);
+          filesMetadata.push({
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: file.size,
+          });
+        }
+      }
+    } else {
+      // Fallback if empty array or undefined
+      filesMetadata.push(...chatFormatterUtil.buildFilesMetadata(files));
+    }
     const existingMessagesForRequest =
       await chatRepository.getMessagesByRequestId(sessionId, userId, requestId);
     const existingAssistantMessage = existingMessagesForRequest.find(

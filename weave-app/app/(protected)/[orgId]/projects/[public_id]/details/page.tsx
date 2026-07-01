@@ -145,7 +145,6 @@ export default function ProjectDetailsPage() {
       setStages(stagesData);
       setProjectTags(tagsData);
       setTaskPriorities(prioritiesData);
-
     } catch (error) {
       console.error("Erro ao carregar detalhes do projeto:", error);
     } finally {
@@ -1056,7 +1055,6 @@ export default function ProjectDetailsPage() {
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );

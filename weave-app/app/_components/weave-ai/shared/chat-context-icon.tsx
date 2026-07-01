@@ -23,7 +23,7 @@ export function RenderContextIcon({
   if (resolved?.kind === "image") {
     return (
       <span
-        className="relative h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-neutral-200/80 dark:border-neutral-700/80"
+        className="relative h-3.5 w-3.5 shrink-0 overflow-hidden rounded-md border border-neutral-200/80 dark:border-neutral-700/80"
         aria-hidden
       >
         <img src={resolved.url} alt="" className="h-full w-full object-cover" />

@@ -422,7 +422,7 @@ class LlmQueueProcessor {
           }),
         ]);
 
-        const functions =
+        const toolCalls =
           data?.type === "function_call"
             ? data.toolCalls || (data.functionCall ? [data.functionCall] : [])
             : [];
@@ -437,7 +437,7 @@ class LlmQueueProcessor {
             usage: data?.usage || null,
           },
           executedActions: executedActions || [],
-          functions,
+          toolCalls,
           providerUsed,
         };
       }
@@ -632,9 +632,9 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}$
         const role = entry?.role === "tool" ? "tool" : entry?.role === "assistant" ? "assistant" : "user";
         const rawContent =
           typeof entry?.content === "string" ? entry.content.trim() : "";
-          
-        const hasTools = entry?.tool_calls != null || entry?.tool_call_id != null || role === "tool";
-        
+
+        const hasTools = (entry?.tool_calls !== null && entry?.tool_calls !== undefined) || (entry?.tool_call_id !== null && entry?.tool_call_id !== undefined) || role === "tool";
+
         if (!rawContent && !hasTools) {
           return null;
         }

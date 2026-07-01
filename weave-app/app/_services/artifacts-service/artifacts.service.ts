@@ -18,7 +18,10 @@ export const artifactsService = {
     return await handleResponse<Artifact>(response);
   },
 
-  updateArtifact: async (id: string, updates: { title?: string; content?: any[] }): Promise<Artifact> => {
+  updateArtifact: async (
+    id: string,
+    updates: { title?: string; content?: any[] }
+  ): Promise<Artifact> => {
     const response = await apiClient.patch(`/artifacts/${id}`, updates);
     return await handleResponse<Artifact>(response);
   },

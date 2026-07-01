@@ -69,7 +69,11 @@ export interface ChatProviderProps {
   defaultContext?: Record<string, any>;
 }
 
-export const ChatProvider: React.FC<ChatProviderProps> = ({ children, defaultUseCase, defaultContext }) => {
+export const ChatProvider: React.FC<ChatProviderProps> = ({
+  children,
+  defaultUseCase,
+  defaultContext,
+}) => {
   const { authenticated } = useAuth();
   const params = useParams();
   /** Bumped on createNewSession and at the start of each loadSession / scoped loadChatHistory; stale async completions must not overwrite state. */
@@ -236,31 +240,18 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children, defaultUse
           setMessages((prev: ChatMessage[]) => {
             const existingIndex = prev.findIndex((m) => m.id === optimisticAssistantMessageId);
 
-            if (typeof chunk === "object" && chunk !== null && chunk.type === "action_state") {
-              const newFuncExec = {
-                name: chunk.name,
-                success: chunk.success || false,
-                isRunning: chunk.status === "running",
+            if (typeof chunk === "object" && chunk !== null && chunk.type === "tool_call_start") {
+              const newToolCall = {
+                id: chunk.id || `call_${Date.now()}`,
+                function: { name: chunk.name, arguments: chunk.arguments || "{}" },
+                type: "function",
               };
-
               if (existingIndex >= 0) {
                 const next = [...prev];
                 const msg = { ...next[existingIndex] };
-                const fExec = msg.functionExecution ? [...msg.functionExecution] : [];
-
-                if (chunk.status === "running") {
-                  fExec.push(newFuncExec);
-                } else {
-                  const fIdx = fExec.findIndex(
-                    (f) => f.name === chunk.name && (f as any).isRunning
-                  );
-                  if (fIdx >= 0) {
-                    fExec[fIdx] = newFuncExec;
-                  } else {
-                    fExec.push(newFuncExec);
-                  }
-                }
-                msg.functionExecution = fExec;
+                msg.tool_calls = msg.tool_calls
+                  ? [...(msg.tool_calls as any[]), newToolCall]
+                  : [newToolCall];
                 next[existingIndex] = msg;
                 return next;
               } else {
@@ -274,10 +265,34 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children, defaultUse
                     model: data.model.version
                       ? `${data.model.name}:${data.model.version}`
                       : data.model.name,
-                    functionExecution: [newFuncExec],
+                    tool_calls: [newToolCall],
                   },
                 ];
               }
+            } else if (
+              typeof chunk === "object" &&
+              chunk !== null &&
+              chunk.type === "tool_call_result"
+            ) {
+              const toolMsg: ChatMessage = {
+                id: `tool-${chunk.id || Date.now()}`,
+                role: "tool",
+                content:
+                  typeof chunk.result === "string"
+                    ? chunk.result
+                    : JSON.stringify(chunk.result || ""),
+                timestamp: new Date(),
+                tool_call_id: chunk.id,
+              };
+              const existingToolIdx = prev.findIndex(
+                (m) => m.role === "tool" && m.tool_call_id === chunk.id
+              );
+              if (existingToolIdx >= 0) {
+                const next = [...prev];
+                next[existingToolIdx] = toolMsg;
+                return next;
+              }
+              return [...prev, toolMsg];
             } else if (typeof chunk === "string") {
               if (existingIndex >= 0) {
                 const next = [...prev];
@@ -516,7 +531,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children, defaultUse
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
-}
+};
 
 export function useChat() {
   const context = useContext(ChatContext);

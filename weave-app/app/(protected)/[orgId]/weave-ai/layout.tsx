@@ -193,8 +193,8 @@ function WeaveAiLayoutContent({ children }: { children: React.ReactNode }) {
   const isSandboxOpen = searchParams?.get("sandbox") === "1";
 
   return (
-    <ModuleLayout 
-      header={<WeaveAIHeader />} 
+    <ModuleLayout
+      header={<WeaveAIHeader />}
       sidebarContent={<WeaveAiSidebar />}
       hideSidebarOnDesktop={isSandboxOpen}
     >

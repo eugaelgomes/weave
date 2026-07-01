@@ -38,5 +38,3 @@ export const revokeApiToken = async (id: string): Promise<void> => {
   const response = await apiClient.post(API_ENDPOINTS.API_TOKENS_REVOKE(id), {});
   await handleResponse<unknown>(response);
 };
-
-
