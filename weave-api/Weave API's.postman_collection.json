@@ -2543,7 +2543,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"token_teste\",\n    \"orgnanizationId\": \"a5a01a32-0b9c-43f5-9d25-eb844469807b\",\n    \"scopes\": [\"notes:read\"],\n    \"experis_at\": \"2027-06-01 00:00:00\"\n}",
+              "raw": "{\n    \"name\": \"token_teste\",\n    \"organizationId\": \"a5a01a32-0b9c-43f5-9d25-eb844469807b\",\n    \"scopes\": [\"notes:read\"],\n    \"expiresAt\": \"2027-06-01T00:00:00Z\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2551,11 +2551,14 @@
               }
             },
             "url": {
-              "raw": "{{rota_base}}/v1/api-tokens/create-token",
-              "protocol": "http",
-              "host": ["{{rota_base}}"],
-              "port": "8080",
-              "path": ["v1", "api-tokens", "create-token"]
+              "raw": "{{rota_base}}/api-tokens/create-token",
+              "host": [
+                "{{rota_base}}"
+              ],
+              "path": [
+                "api-tokens",
+                "create-token"
+              ]
             }
           },
           "response": []
@@ -2566,26 +2569,57 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{rota_base}}/v1/api-tokens/scopes",
-              "protocol": "http",
-              "host": ["{{rota_base}}"],
-              "port": "8080",
-              "path": ["v1", "api-tokens", "scopes"]
+              "raw": "{{rota_base}}/api-tokens/scopes",
+              "host": [
+                "{{rota_base}}"
+              ],
+              "path": [
+                "api-tokens",
+                "scopes"
+              ]
             }
           },
           "response": []
         },
         {
-          "name": "New Request",
+          "name": "Get Tokens",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{rota_base}}/v1/api-tokens/get-tokens",
-              "protocol": "http",
-              "host": ["{{rota_base}}"],
-              "port": "8080",
-              "path": ["v1", "api-tokens", "get-tokens"]
+              "raw": "{{rota_base}}/api-tokens/get-tokens",
+              "host": [
+                "{{rota_base}}"
+              ],
+              "path": [
+                "api-tokens",
+                "get-tokens"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{rota_base}}/api-tokens/:id/revoke",
+              "host": [
+                "{{rota_base}}"
+              ],
+              "path": [
+                "api-tokens",
+                ":id",
+                "revoke"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
             }
           },
           "response": []
