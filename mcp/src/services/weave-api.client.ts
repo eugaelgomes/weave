@@ -5,7 +5,7 @@ export const weaveApiClient = axios.create({
   baseURL: env.WEAVE_API_URL,
   headers: {
     "Content-Type": "application/json",
-    "X-Internal-Token": env.INTERNAL_API_TOKEN,
+    Authorization: `Bearer ${env.INTERNAL_API_TOKEN}`,
   },
 });
 

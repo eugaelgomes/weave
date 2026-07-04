@@ -6,25 +6,49 @@ export const notesResources: McpResourceDefinition = {
     {
       uriTemplate: "weave://notes/{noteId}",
       name: "Individual Note",
-      description: "Complete content of a specific note",
-      mimeType: "text/markdown"
+      description: "Complete JSON representation of a specific note, including its structured blocks and properties",
+      mimeType: "application/json"
+    },
+    {
+      uriTemplate: "weave://notes/{noteId}/blocks",
+      name: "Note Blocks",
+      description: "JSON array of the structured blocks for a specific note",
+      mimeType: "application/json"
     }
   ],
   readHandler: async (uri: string) => {
-    const match = uri.match(/^weave:\/\/notes\/([^/]+)$/);
-    if (!match) return null;
-    
-    const noteId = match[1];
-    const response = await weaveApiClient.get(`/notes/${noteId}`);
-    
-    return {
-      contents: [
-        {
-          uri,
-          mimeType: "text/markdown",
-          text: `# ${response.data.title}\n\n${response.data.content}`
-        }
-      ]
-    };
+    const noteMatch = uri.match(/^weave:\/\/notes\/([^/]+)$/);
+    if (noteMatch) {
+      const noteId = noteMatch[1];
+      const response = await weaveApiClient.get(`/notes/${noteId}`);
+      
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "application/json",
+            text: JSON.stringify(response.data, null, 2)
+          }
+        ]
+      };
+    }
+
+    const blocksMatch = uri.match(/^weave:\/\/notes\/([^/]+)\/blocks$/);
+    if (blocksMatch) {
+      const noteId = blocksMatch[1];
+      const response = await weaveApiClient.get(`/notes/${noteId}`);
+      
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "application/json",
+            text: JSON.stringify(response.data.blocks || [], null, 2)
+          }
+        ]
+      };
+    }
+
+    return null;
   }
 };
