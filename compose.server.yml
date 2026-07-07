@@ -23,6 +23,13 @@ services:
     environment:
       - NODE_ENV=production
       - DOPPLER_CONFIG=prd
+      - NODE_OPTIONS=--max-old-space-size=768
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
     networks:
       - app-network
 

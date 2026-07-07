@@ -1,3 +1,7 @@
 apis.weavenotes.app {
 	reverse_proxy server:8080
 }
+
+mcp.theweave.tech {
+	reverse_proxy mcp:8083
+}
