@@ -1,7 +1,7 @@
 import { McpResourceDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 
-export const projectResources: McpResourceDefinition = {
+export const createProjectResources = (apiClient: AxiosInstance): McpResourceDefinition => ({
   templates: [
     {
       uriTemplate: "weave://projects/{projectId}",
@@ -25,7 +25,7 @@ export const projectResources: McpResourceDefinition = {
   readHandler: async (uri: string) => {
     let match = uri.match(/^weave:\/\/projects\/([^/]+)$/);
     if (match) {
-      const response = await weaveApiClient.get(`/projects/${match[1]}`);
+      const response = await apiClient.get(`/projects/${match[1]}`);
       return {
         contents: [{ uri, mimeType: "application/json", text: JSON.stringify(response.data, null, 2) }],
       };
@@ -33,7 +33,7 @@ export const projectResources: McpResourceDefinition = {
 
     match = uri.match(/^weave:\/\/projects\/([^/]+)\/stages$/);
     if (match) {
-      const response = await weaveApiClient.get(`/projects/${match[1]}/stages`);
+      const response = await apiClient.get(`/projects/${match[1]}/stages`);
       return {
         contents: [{ uri, mimeType: "application/json", text: JSON.stringify(response.data, null, 2) }],
       };
@@ -41,7 +41,7 @@ export const projectResources: McpResourceDefinition = {
 
     match = uri.match(/^weave:\/\/projects\/([^/]+)\/tasks$/);
     if (match) {
-      const response = await weaveApiClient.get(`/projects/${match[1]}/notes`);
+      const response = await apiClient.get(`/projects/${match[1]}/notes`);
       return {
         contents: [{ uri, mimeType: "application/json", text: JSON.stringify(response.data, null, 2) }],
       };
@@ -49,4 +49,4 @@ export const projectResources: McpResourceDefinition = {
 
     return null;
   }
-};
+});

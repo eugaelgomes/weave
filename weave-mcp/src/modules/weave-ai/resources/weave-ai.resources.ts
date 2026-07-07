@@ -1,7 +1,7 @@
 import { McpResourceDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 
-export const weaveAiResources: McpResourceDefinition = {
+export const createWeaveAiResources = (apiClient: AxiosInstance): McpResourceDefinition => ({
   templates: [
     {
       uriTemplate: "weave://ai/agents",
@@ -18,17 +18,17 @@ export const weaveAiResources: McpResourceDefinition = {
   ],
   readHandler: async (uri: string) => {
     if (uri === "weave://ai/agents") {
-      const response = await weaveApiClient.get("/weave-ai/agents");
+      const response = await apiClient.get("/weave-ai/agents");
       return {
         contents: [{ uri, mimeType: "application/json", text: JSON.stringify(response.data, null, 2) }],
       };
     }
     if (uri === "weave://ai/models") {
-      const response = await weaveApiClient.get("/weave-ai/models");
+      const response = await apiClient.get("/weave-ai/models");
       return {
         contents: [{ uri, mimeType: "application/json", text: JSON.stringify(response.data, null, 2) }],
       };
     }
     return null;
   }
-};
+});

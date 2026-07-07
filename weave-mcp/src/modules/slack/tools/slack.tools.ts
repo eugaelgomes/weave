@@ -1,5 +1,5 @@
 import { McpToolDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import {
   setDefaultChannelSchema,
   getSlackStatusSchema,
@@ -8,14 +8,14 @@ import {
 } from "../schemas/slack.schema";
 import { z } from "zod";
 
-export const slackTools: Record<string, McpToolDefinition<any>> = {
+export const createSlackTools = (apiClient: AxiosInstance): Record<string, McpToolDefinition<any>> => ({
   get_slack_status: {
     name: "get_slack_status",
     description: "Get Slack integration status",
     schema: getSlackStatusSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.get("/slack/integrations");
+        const response = await apiClient.get("/slack/integrations");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -28,7 +28,7 @@ export const slackTools: Record<string, McpToolDefinition<any>> = {
     schema: setDefaultChannelSchema,
     handler: async (args: z.infer<typeof setDefaultChannelSchema>) => {
       try {
-        const response = await weaveApiClient.put("/slack/integrations/default-channel", args);
+        const response = await apiClient.put("/slack/integrations/default-channel", args);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -41,7 +41,7 @@ export const slackTools: Record<string, McpToolDefinition<any>> = {
     schema: disconnectSlackSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.delete("/slack/integrations");
+        const response = await apiClient.delete("/slack/integrations");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -54,11 +54,11 @@ export const slackTools: Record<string, McpToolDefinition<any>> = {
     schema: getSlackInstallUrlSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.get("/slack/install");
+        const response = await apiClient.get("/slack/install");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
       }
     },
   },
-};
+});

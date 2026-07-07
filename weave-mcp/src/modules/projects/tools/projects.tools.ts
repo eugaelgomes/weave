@@ -1,5 +1,5 @@
 import { McpToolDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import {
   listProjectsSchema,
   getProjectSchema,
@@ -16,14 +16,14 @@ import {
 } from "../schemas/projects.schema";
 import { z } from "zod";
 
-export const projectTools: Record<string, McpToolDefinition<any>> = {
+export const createProjectTools = (apiClient: AxiosInstance): Record<string, McpToolDefinition<any>> => ({
   list_projects: {
     name: "list_projects",
     description: "List all projects in the workspace",
     schema: listProjectsSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.get("/projects");
+        const response = await apiClient.get("/projects");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -36,7 +36,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     schema: getProjectSchema,
     handler: async (args: z.infer<typeof getProjectSchema>) => {
       try {
-        const response = await weaveApiClient.get(`/projects/${args.projectId}`);
+        const response = await apiClient.get(`/projects/${args.projectId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -49,7 +49,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     schema: createProjectSchema,
     handler: async (args: z.infer<typeof createProjectSchema>) => {
       try {
-        const response = await weaveApiClient.post("/projects", args);
+        const response = await apiClient.post("/projects", args);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -63,7 +63,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof updateProjectSchema>) => {
       try {
         const { projectId, ...payload } = args;
-        const response = await weaveApiClient.patch(`/projects/${projectId}`, payload);
+        const response = await apiClient.patch(`/projects/${projectId}`, payload);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -76,7 +76,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteProjectSchema,
     handler: async (args: z.infer<typeof deleteProjectSchema>) => {
       try {
-        const response = await weaveApiClient.delete(`/projects/${args.projectId}`);
+        const response = await apiClient.delete(`/projects/${args.projectId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -89,7 +89,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     schema: getProjectStatsSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.get("/projects/stats");
+        const response = await apiClient.get("/projects/stats");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -102,7 +102,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     schema: listProjectStagesSchema,
     handler: async (args: z.infer<typeof listProjectStagesSchema>) => {
       try {
-        const response = await weaveApiClient.get(`/projects/${args.projectId}/stages`);
+        const response = await apiClient.get(`/projects/${args.projectId}/stages`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -116,7 +116,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof updateProjectStageSchema>) => {
       try {
         const { projectId, stageId, ...payload } = args;
-        const response = await weaveApiClient.patch(`/projects/${projectId}/stages/${stageId}`, payload);
+        const response = await apiClient.patch(`/projects/${projectId}/stages/${stageId}`, payload);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -129,7 +129,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteProjectStageSchema,
     handler: async (args: z.infer<typeof deleteProjectStageSchema>) => {
       try {
-        const response = await weaveApiClient.delete(`/projects/${args.projectId}/stages/${args.stageId}`);
+        const response = await apiClient.delete(`/projects/${args.projectId}/stages/${args.stageId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -142,7 +142,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     schema: getProjectNotesSchema,
     handler: async (args: z.infer<typeof getProjectNotesSchema>) => {
       try {
-        const response = await weaveApiClient.get(`/projects/${args.projectId}/notes`);
+        const response = await apiClient.get(`/projects/${args.projectId}/notes`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -156,7 +156,7 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof updateNoteStageSchema>) => {
       try {
         const { projectId, noteId, stageId } = args;
-        const response = await weaveApiClient.put(`/projects/${projectId}/notes/${noteId}/stage`, { stageId });
+        const response = await apiClient.put(`/projects/${projectId}/notes/${noteId}/stage`, { stageId });
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -170,11 +170,11 @@ export const projectTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof createTaskInStageSchema>) => {
       try {
         const { projectId, stageId, ...payload } = args;
-        const response = await weaveApiClient.post(`/projects/${projectId}/stages/${stageId}/tasks`, payload);
+        const response = await apiClient.post(`/projects/${projectId}/stages/${stageId}/tasks`, payload);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
       }
     },
   },
-};
+});

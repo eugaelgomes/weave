@@ -1,5 +1,5 @@
 import { McpToolDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import {
   chatSchema,
   getChatHistorySchema,
@@ -17,14 +17,14 @@ import {
 } from "../schemas/weave-ai.schema";
 import { z } from "zod";
 
-export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
+export const createWeaveAiTools = (apiClient: AxiosInstance): Record<string, McpToolDefinition<any>> => ({
   list_ai_models: {
     name: "list_ai_models",
     description: "List available AI models",
     schema: listAiModelsSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.get("/weave-ai/models");
+        const response = await apiClient.get("/weave-ai/models");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -37,7 +37,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: chatSchema,
     handler: async (args: z.infer<typeof chatSchema>) => {
       try {
-        const response = await weaveApiClient.post("/weave-ai/chat", args);
+        const response = await apiClient.post("/weave-ai/chat", args);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -50,7 +50,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: getChatHistorySchema,
     handler: async (args: z.infer<typeof getChatHistorySchema>) => {
       try {
-        const response = await weaveApiClient.get("/weave-ai/chat/history", { params: args });
+        const response = await apiClient.get("/weave-ai/chat/history", { params: args });
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -63,7 +63,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteChatSessionSchema,
     handler: async (args: z.infer<typeof deleteChatSessionSchema>) => {
       try {
-        const response = await weaveApiClient.delete(`/weave-ai/chat/${args.sessionId}`);
+        const response = await apiClient.delete(`/weave-ai/chat/${args.sessionId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -76,7 +76,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: listAgentsSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.get("/weave-ai/agents");
+        const response = await apiClient.get("/weave-ai/agents");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -89,7 +89,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: getAgentSchema,
     handler: async (args: z.infer<typeof getAgentSchema>) => {
       try {
-        const response = await weaveApiClient.get(`/weave-ai/agents/${args.id}`);
+        const response = await apiClient.get(`/weave-ai/agents/${args.id}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -102,7 +102,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: createAgentSchema,
     handler: async (args: z.infer<typeof createAgentSchema>) => {
       try {
-        const response = await weaveApiClient.post("/weave-ai/agents", args);
+        const response = await apiClient.post("/weave-ai/agents", args);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -116,7 +116,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof updateAgentSchema>) => {
       try {
         const { id, ...payload } = args;
-        const response = await weaveApiClient.put(`/weave-ai/agents/${id}`, payload);
+        const response = await apiClient.put(`/weave-ai/agents/${id}`, payload);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -129,7 +129,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteAgentSchema,
     handler: async (args: z.infer<typeof deleteAgentSchema>) => {
       try {
-        const response = await weaveApiClient.delete(`/weave-ai/agents/${args.id}`);
+        const response = await apiClient.delete(`/weave-ai/agents/${args.id}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -143,7 +143,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof assignAgentToProjectSchema>) => {
       try {
         const { id, projectId } = args;
-        const response = await weaveApiClient.put(`/weave-ai/agents/${id}/project`, { projectId });
+        const response = await apiClient.put(`/weave-ai/agents/${id}/project`, { projectId });
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -156,7 +156,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: unassignAgentFromProjectSchema,
     handler: async (args: z.infer<typeof unassignAgentFromProjectSchema>) => {
       try {
-        const response = await weaveApiClient.delete(`/weave-ai/agents/${args.id}/project`);
+        const response = await apiClient.delete(`/weave-ai/agents/${args.id}/project`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -170,7 +170,7 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof toggleAgentActiveSchema>) => {
       try {
         const { id, isActive } = args;
-        const response = await weaveApiClient.patch(`/weave-ai/agents/${id}/active`, { isActive });
+        const response = await apiClient.patch(`/weave-ai/agents/${id}/active`, { isActive });
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -183,11 +183,11 @@ export const weaveAiTools: Record<string, McpToolDefinition<any>> = {
     schema: duplicateAgentSchema,
     handler: async (args: z.infer<typeof duplicateAgentSchema>) => {
       try {
-        const response = await weaveApiClient.post(`/weave-ai/agents/${args.id}/duplicate`);
+        const response = await apiClient.post(`/weave-ai/agents/${args.id}/duplicate`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
       }
     },
   },
-};
+});

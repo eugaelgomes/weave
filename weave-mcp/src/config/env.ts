@@ -6,6 +6,9 @@ const envSchema = z.object({
   MCP_PORT: z.coerce.number().default(3000),
   WEAVE_API_URL: z.string().url().default("http://localhost:8080/api/v1"),
   INTERNAL_API_TOKEN: z.string().min(1, "INTERNAL_API_TOKEN is required"),
+  MCP_AUTH_TOKEN: z.string().optional(),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000), // 1 minute
+  RATE_LIMIT_MAX: z.coerce.number().default(60), // 60 requests per minute
 });
 
 const parsed = envSchema.safeParse(process.env);

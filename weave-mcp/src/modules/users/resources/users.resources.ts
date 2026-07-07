@@ -1,7 +1,7 @@
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import { McpResourceDefinition } from "../../../types/mcp";
 
-export const usersResources: McpResourceDefinition = {
+export const createUsersResources = (apiClient: AxiosInstance): McpResourceDefinition => ({
   templates: [
     {
       uriTemplate: "weave://users/me",
@@ -13,7 +13,7 @@ export const usersResources: McpResourceDefinition = {
   readHandler: async (uri: string) => {
     if (uri !== "weave://users/me") return null;
     
-    const response = await weaveApiClient.get("/users/me");
+    const response = await apiClient.get("/users/me");
     
     return {
       contents: [
@@ -25,4 +25,4 @@ export const usersResources: McpResourceDefinition = {
       ]
     };
   }
-};
+});

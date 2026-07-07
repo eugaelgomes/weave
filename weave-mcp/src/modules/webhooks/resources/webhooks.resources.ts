@@ -1,7 +1,7 @@
 import { McpResourceDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 
-export const webhookResources: McpResourceDefinition = {
+export const createWebhookResources = (apiClient: AxiosInstance): McpResourceDefinition => ({
   templates: [
     {
       uriTemplate: "weave://integrations/google/status",
@@ -12,11 +12,11 @@ export const webhookResources: McpResourceDefinition = {
   ],
   readHandler: async (uri: string) => {
     if (uri === "weave://integrations/google/status") {
-      const response = await weaveApiClient.get("/webhooks/google/calendar/status");
+      const response = await apiClient.get("/webhooks/google/calendar/status");
       return {
         contents: [{ uri, mimeType: "application/json", text: JSON.stringify(response.data, null, 2) }],
       };
     }
     return null;
   }
-};
+});

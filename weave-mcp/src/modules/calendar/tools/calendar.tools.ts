@@ -1,5 +1,5 @@
 import { McpToolDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import {
   listEventsSchema,
   getEventSchema,
@@ -13,14 +13,14 @@ import {
 } from "../schemas/calendar.schema";
 import { z } from "zod";
 
-export const calendarTools: Record<string, McpToolDefinition<any>> = {
+export const createCalendarTools = (apiClient: AxiosInstance): Record<string, McpToolDefinition<any>> => ({
   list_calendar_events: {
     name: "list_calendar_events",
     description: "List calendar events",
     schema: listEventsSchema,
     handler: async (args: z.infer<typeof listEventsSchema>) => {
       try {
-        const response = await weaveApiClient.get("/calendar-events", { params: args });
+        const response = await apiClient.get("/calendar-events", { params: args });
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -33,7 +33,7 @@ export const calendarTools: Record<string, McpToolDefinition<any>> = {
     schema: getEventSchema,
     handler: async (args: z.infer<typeof getEventSchema>) => {
       try {
-        const response = await weaveApiClient.get(`/calendar-events/${args.eventId}`);
+        const response = await apiClient.get(`/calendar-events/${args.eventId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -46,7 +46,7 @@ export const calendarTools: Record<string, McpToolDefinition<any>> = {
     schema: createEventSchema,
     handler: async (args: z.infer<typeof createEventSchema>) => {
       try {
-        const response = await weaveApiClient.post("/calendar-events", args);
+        const response = await apiClient.post("/calendar-events", args);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -60,7 +60,7 @@ export const calendarTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof updateEventSchema>) => {
       try {
         const { eventId, ...payload } = args;
-        const response = await weaveApiClient.patch(`/calendar-events/${eventId}`, payload);
+        const response = await apiClient.patch(`/calendar-events/${eventId}`, payload);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -73,7 +73,7 @@ export const calendarTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteEventSchema,
     handler: async (args: z.infer<typeof deleteEventSchema>) => {
       try {
-        const response = await weaveApiClient.delete(`/calendar-events/${args.eventId}`);
+        const response = await apiClient.delete(`/calendar-events/${args.eventId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -86,7 +86,7 @@ export const calendarTools: Record<string, McpToolDefinition<any>> = {
     schema: listEventInvitesSchema,
     handler: async (args: z.infer<typeof listEventInvitesSchema>) => {
       try {
-        const response = await weaveApiClient.get(`/calendar-events/${args.eventId}/invites`);
+        const response = await apiClient.get(`/calendar-events/${args.eventId}/invites`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -100,7 +100,7 @@ export const calendarTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof createEventInviteSchema>) => {
       try {
         const { eventId, ...payload } = args;
-        const response = await weaveApiClient.post(`/calendar-events/${eventId}/invites`, payload);
+        const response = await apiClient.post(`/calendar-events/${eventId}/invites`, payload);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -113,7 +113,7 @@ export const calendarTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteEventInviteSchema,
     handler: async (args: z.infer<typeof deleteEventInviteSchema>) => {
       try {
-        const response = await weaveApiClient.delete(`/calendar-events/${args.eventId}/invites/${args.inviteId}`);
+        const response = await apiClient.delete(`/calendar-events/${args.eventId}/invites/${args.inviteId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -126,11 +126,11 @@ export const calendarTools: Record<string, McpToolDefinition<any>> = {
     schema: checkFreeBusySchema,
     handler: async (args: z.infer<typeof checkFreeBusySchema>) => {
       try {
-        const response = await weaveApiClient.post("/calendar-events/google/freebusy", args);
+        const response = await apiClient.post("/calendar-events/google/freebusy", args);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
       }
     },
   },
-};
+});

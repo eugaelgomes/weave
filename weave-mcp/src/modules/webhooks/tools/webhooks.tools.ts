@@ -1,19 +1,19 @@
 import { McpToolDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import {
   getGoogleAuthUrlSchema,
   getGoogleCalendarStatusSchema,
   disconnectGoogleCalendarSchema,
 } from "../schemas/webhooks.schema";
 
-export const webhookTools: Record<string, McpToolDefinition<any>> = {
+export const createWebhookTools = (apiClient: AxiosInstance): Record<string, McpToolDefinition<any>> => ({
   get_google_auth_url: {
     name: "get_google_auth_url",
     description: "Get Google Calendar authentication URL",
     schema: getGoogleAuthUrlSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.get("/webhooks/google/auth");
+        const response = await apiClient.get("/webhooks/google/auth");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -26,7 +26,7 @@ export const webhookTools: Record<string, McpToolDefinition<any>> = {
     schema: getGoogleCalendarStatusSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.get("/webhooks/google/calendar/status");
+        const response = await apiClient.get("/webhooks/google/calendar/status");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -39,11 +39,11 @@ export const webhookTools: Record<string, McpToolDefinition<any>> = {
     schema: disconnectGoogleCalendarSchema,
     handler: async () => {
       try {
-        const response = await weaveApiClient.delete("/webhooks/google/calendar/disconnect");
+        const response = await apiClient.delete("/webhooks/google/calendar/disconnect");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
       }
     },
   },
-};
+});

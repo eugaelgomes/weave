@@ -1,0 +1,9 @@
+# Weave AI Project - AI Agent Instructions
+
+When writing code or generating responses for this project, you must strictly follow these instructions:
+
+1. **Language & Tone**: All code comments, explanations, and documentation MUST be written in English. Maintain a highly technical and professional tone.
+2. **JSDoc Mandatory**: Every exported function, class, interface, type, and significant variable MUST include comprehensive JSDoc comments explaining its purpose, parameters, return types, and potential side effects.
+3. **No Index Files**: NEVER create or use `index.ts` or `index.js` files (barrel files). Always use explicit file imports and naming (e.g., import from `./modules/registry.ts` instead of `./modules`).
+
+*Note: These rules apply to the entire workspace.*

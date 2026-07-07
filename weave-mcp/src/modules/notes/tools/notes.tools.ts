@@ -1,4 +1,4 @@
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import { McpToolDefinition } from "../../../types/mcp";
 import {
   listNotesSchema,
@@ -35,7 +35,13 @@ import {
   RemoveNoteCollaboratorInput
 } from "../schemas/notes.schema";
 
-export const notesTools: Record<string, McpToolDefinition<any>> = {
+/**
+ * Creates the Notes tools registry bound to a specific API client instance.
+ *
+ * @param {AxiosInstance} apiClient - The Axios client scoped to the current session.
+ * @returns {Record<string, McpToolDefinition<any>>} The notes tools definition map.
+ */
+export const createNotesTools = (apiClient: AxiosInstance): Record<string, McpToolDefinition<any>> => ({
   // --- Notes Operations ---
   list_notes: {
     name: "list_notes",
@@ -43,7 +49,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: listNotesSchema,
     handler: async (args: ListNotesInput) => {
       try {
-        const response = await weaveApiClient.get("/notes", { params: args });
+        const response = await apiClient.get("/notes", { params: args });
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error listing notes: ${error.message}` }] };
@@ -56,7 +62,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: getNoteSchema,
     handler: async (args: GetNoteInput) => {
       try {
-        const response = await weaveApiClient.get(`/notes/${args.noteId}`);
+        const response = await apiClient.get(`/notes/${args.noteId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error getting note: ${error.message}` }] };
@@ -69,7 +75,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: createNoteToolSchema,
     handler: async (args: CreateNoteToolInput) => {
       try {
-        const response = await weaveApiClient.post("/notes", args);
+        const response = await apiClient.post("/notes", args);
         return { content: [{ type: "text", text: `Note "${response.data.title}" successfully created! ID: ${response.data.id}` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error creating note: ${error.message}` }] };
@@ -82,7 +88,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: createCompleteNoteSchema,
     handler: async (args: CreateCompleteNoteInput) => {
       try {
-        const response = await weaveApiClient.post("/notes/complete", args);
+        const response = await apiClient.post("/notes/complete", args);
         return { content: [{ type: "text", text: `Complete note "${response.data.title}" successfully created! ID: ${response.data.id}` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error creating complete note: ${error.message}` }] };
@@ -96,7 +102,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: UpdateNoteInput) => {
       try {
         const { noteId, ...payload } = args;
-        const response = await weaveApiClient.put(`/notes/${noteId}`, payload);
+        const response = await apiClient.put(`/notes/${noteId}`, payload);
         return { content: [{ type: "text", text: `Note ${noteId} successfully updated!` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error updating note: ${error.message}` }] };
@@ -109,7 +115,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteNoteSchema,
     handler: async (args: DeleteNoteInput) => {
       try {
-        await weaveApiClient.delete(`/notes/${args.noteId}`);
+        await apiClient.delete(`/notes/${args.noteId}`);
         return { content: [{ type: "text", text: `Note ${args.noteId} successfully deleted.` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error deleting note: ${error.message}` }] };
@@ -122,7 +128,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: getNotesStatsSchema,
     handler: async (args: GetNotesStatsInput) => {
       try {
-        const response = await weaveApiClient.get("/notes/stats");
+        const response = await apiClient.get("/notes/stats");
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error getting notes stats: ${error.message}` }] };
@@ -137,7 +143,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: listNoteBlocksSchema,
     handler: async (args: ListNoteBlocksInput) => {
       try {
-        const response = await weaveApiClient.get(`/notes/${args.noteId}/blocks`);
+        const response = await apiClient.get(`/notes/${args.noteId}/blocks`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error listing note blocks: ${error.message}` }] };
@@ -151,7 +157,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: CreateNoteBlockInput) => {
       try {
         const { noteId, ...payload } = args;
-        const response = await weaveApiClient.post(`/notes/${noteId}/blocks`, payload);
+        const response = await apiClient.post(`/notes/${noteId}/blocks`, payload);
         return { content: [{ type: "text", text: `Block successfully created! ID: ${response.data.id}` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error creating note block: ${error.message}` }] };
@@ -165,7 +171,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: UpdateNoteBlockInput) => {
       try {
         const { noteId, blockId, ...payload } = args;
-        const response = await weaveApiClient.patch(`/notes/${noteId}/blocks/${blockId}`, payload);
+        const response = await apiClient.patch(`/notes/${noteId}/blocks/${blockId}`, payload);
         return { content: [{ type: "text", text: `Block ${blockId} successfully updated!` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error updating note block: ${error.message}` }] };
@@ -178,7 +184,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteNoteBlockSchema,
     handler: async (args: DeleteNoteBlockInput) => {
       try {
-        await weaveApiClient.delete(`/notes/${args.noteId}/blocks/${args.blockId}`);
+        await apiClient.delete(`/notes/${args.noteId}/blocks/${args.blockId}`);
         return { content: [{ type: "text", text: `Block ${args.blockId} successfully deleted.` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error deleting note block: ${error.message}` }] };
@@ -192,7 +198,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: ReorderNoteBlocksInput) => {
       try {
         const { noteId, ...payload } = args;
-        const response = await weaveApiClient.post(`/notes/${noteId}/blocks/reorder`, payload);
+        const response = await apiClient.post(`/notes/${noteId}/blocks/reorder`, payload);
         return { content: [{ type: "text", text: `Blocks successfully reordered!` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error reordering note blocks: ${error.message}` }] };
@@ -206,7 +212,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: PutSyncNoteBlocksInput) => {
       try {
         const { noteId, ...payload } = args;
-        const response = await weaveApiClient.put(`/notes/${noteId}/blocks`, payload);
+        const response = await apiClient.put(`/notes/${noteId}/blocks`, payload);
         return { content: [{ type: "text", text: `Blocks successfully synced!` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error syncing note blocks: ${error.message}` }] };
@@ -221,7 +227,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: getNoteCollaboratorsSchema,
     handler: async (args: GetNoteCollaboratorsInput) => {
       try {
-        const response = await weaveApiClient.get(`/notes/${args.noteId}/collaborators`);
+        const response = await apiClient.get(`/notes/${args.noteId}/collaborators`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error getting note collaborators: ${error.message}` }] };
@@ -235,7 +241,7 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: AddNoteCollaboratorInput) => {
       try {
         const { noteId, ...payload } = args;
-        const response = await weaveApiClient.post(`/notes/${noteId}/collaborators`, payload);
+        const response = await apiClient.post(`/notes/${noteId}/collaborators`, payload);
         return { content: [{ type: "text", text: `Collaborator successfully added to note ${noteId}!` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error adding note collaborator: ${error.message}` }] };
@@ -248,11 +254,11 @@ export const notesTools: Record<string, McpToolDefinition<any>> = {
     schema: removeNoteCollaboratorSchema,
     handler: async (args: RemoveNoteCollaboratorInput) => {
       try {
-        await weaveApiClient.delete(`/notes/${args.noteId}/collaborators/${args.collaboratorId}`);
+        await apiClient.delete(`/notes/${args.noteId}/collaborators/${args.collaboratorId}`);
         return { content: [{ type: "text", text: `Collaborator successfully removed from note ${args.noteId}.` }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error removing note collaborator: ${error.message}` }] };
       }
     }
   }
-};
+});

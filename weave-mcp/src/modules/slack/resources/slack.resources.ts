@@ -1,7 +1,7 @@
 import { McpResourceDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 
-export const slackResources: McpResourceDefinition = {
+export const createSlackResources = (apiClient: AxiosInstance): McpResourceDefinition => ({
   templates: [
     {
       uriTemplate: "weave://slack/status",
@@ -12,11 +12,11 @@ export const slackResources: McpResourceDefinition = {
   ],
   readHandler: async (uri: string) => {
     if (uri === "weave://slack/status") {
-      const response = await weaveApiClient.get("/slack/integrations");
+      const response = await apiClient.get("/slack/integrations");
       return {
         contents: [{ uri, mimeType: "application/json", text: JSON.stringify(response.data, null, 2) }],
       };
     }
     return null;
   }
-};
+});

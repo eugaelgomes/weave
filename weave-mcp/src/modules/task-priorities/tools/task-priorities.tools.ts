@@ -1,5 +1,5 @@
 import { McpToolDefinition } from "../../../types/mcp";
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import {
   listTaskPrioritiesSchema,
   createTaskPrioritySchema,
@@ -8,14 +8,14 @@ import {
 } from "../schemas/task-priorities.schema";
 import { z } from "zod";
 
-export const taskPriorityTools: Record<string, McpToolDefinition<any>> = {
+export const createTaskPriorityTools = (apiClient: AxiosInstance): Record<string, McpToolDefinition<any>> => ({
   list_task_priorities: {
     name: "list_task_priorities",
     description: "List all task priorities for a specific project",
     schema: listTaskPrioritiesSchema,
     handler: async (args: z.infer<typeof listTaskPrioritiesSchema>) => {
       try {
-        const response = await weaveApiClient.get(`/task-priorities/${args.projectId}/task-priorities`);
+        const response = await apiClient.get(`/task-priorities/${args.projectId}/task-priorities`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -29,7 +29,7 @@ export const taskPriorityTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof createTaskPrioritySchema>) => {
       try {
         const { projectId, ...payload } = args;
-        const response = await weaveApiClient.post(`/task-priorities/${projectId}/create-priority`, payload);
+        const response = await apiClient.post(`/task-priorities/${projectId}/create-priority`, payload);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -43,7 +43,7 @@ export const taskPriorityTools: Record<string, McpToolDefinition<any>> = {
     handler: async (args: z.infer<typeof updateTaskPrioritySchema>) => {
       try {
         const { projectId, priorityId, ...payload } = args;
-        const response = await weaveApiClient.patch(`/task-priorities/${projectId}/task-priorities/${priorityId}`, payload);
+        const response = await apiClient.patch(`/task-priorities/${projectId}/task-priorities/${priorityId}`, payload);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
@@ -56,11 +56,11 @@ export const taskPriorityTools: Record<string, McpToolDefinition<any>> = {
     schema: deleteTaskPrioritySchema,
     handler: async (args: z.infer<typeof deleteTaskPrioritySchema>) => {
       try {
-        const response = await weaveApiClient.delete(`/task-priorities/${args.projectId}/task-priorities/${args.priorityId}`);
+        const response = await apiClient.delete(`/task-priorities/${args.projectId}/task-priorities/${args.priorityId}`);
         return { content: [{ type: "text", text: JSON.stringify(response.data, null, 2) }] };
       } catch (error: any) {
         return { isError: true, content: [{ type: "text", text: `Error: ${error.message}` }] };
       }
     },
   },
-};
+});

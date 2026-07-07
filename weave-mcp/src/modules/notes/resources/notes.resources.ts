@@ -1,7 +1,7 @@
-import { weaveApiClient } from "../../../services/weave-api.client";
+import { AxiosInstance } from "axios";
 import { McpResourceDefinition } from "../../../types/mcp";
 
-export const notesResources: McpResourceDefinition = {
+export const createNotesResources = (apiClient: AxiosInstance): McpResourceDefinition => ({
   templates: [
     {
       uriTemplate: "weave://notes/{noteId}",
@@ -20,7 +20,7 @@ export const notesResources: McpResourceDefinition = {
     const noteMatch = uri.match(/^weave:\/\/notes\/([^/]+)$/);
     if (noteMatch) {
       const noteId = noteMatch[1];
-      const response = await weaveApiClient.get(`/notes/${noteId}`);
+      const response = await apiClient.get(`/notes/${noteId}`);
       
       return {
         contents: [
@@ -36,7 +36,7 @@ export const notesResources: McpResourceDefinition = {
     const blocksMatch = uri.match(/^weave:\/\/notes\/([^/]+)\/blocks$/);
     if (blocksMatch) {
       const noteId = blocksMatch[1];
-      const response = await weaveApiClient.get(`/notes/${noteId}`);
+      const response = await apiClient.get(`/notes/${noteId}`);
       
       return {
         contents: [
@@ -51,4 +51,4 @@ export const notesResources: McpResourceDefinition = {
 
     return null;
   }
-};
+});
