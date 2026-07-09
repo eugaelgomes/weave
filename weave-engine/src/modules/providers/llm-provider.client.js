@@ -673,7 +673,7 @@ function resolveModelName(modelName) {
     return resolveDefaultModelName();
   }
   if (normalizedModelName === "openai") {
-    return "gpt-5.4-mini";
+    return "gpt-5.4";
   }
   if (normalizedModelName === "gemini") {
     return "gemini-3.5-flash";

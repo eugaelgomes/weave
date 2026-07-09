@@ -87,7 +87,7 @@ const updateProfileSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one number.")
     .optional()
     .or(z.literal("")),
-  theme_mode: z.enum(["light", "dark", "system"]).optional(),
+  theme_mode: z.enum(["light", "dark", "system", "LIGHT", "DARK", "SYSTEM"]).optional(),
   birth_date: z
     .string()
     .datetime()

@@ -151,7 +151,7 @@ export default function ChatInterface({
 
   useEffect(() => {
     if (models.length > 0 && !selectedModel) {
-      setSelectedModel(models.find((m) => m.id === "gpt-5.4-mini") || models[0]);
+      setSelectedModel(models.find((m) => m.id === "gpt-5.4") || models[0]);
     }
   }, [models, selectedModel]);
 
@@ -255,6 +255,11 @@ export default function ChatInterface({
 
     setSelectedFiles([]);
     setFileError(null);
+
+    const defaultModel = models.find((m) => m.id === "gpt-5.4") || models[0];
+    if (defaultModel && selectedModel?.id !== defaultModel.id) {
+      setSelectedModel(defaultModel);
+    }
   };
 
   const handleSend = async () => {
