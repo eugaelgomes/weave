@@ -1,5 +1,5 @@
 /**
- * @module weave-engine/modules/core/orchestration/engines/react.engine
+ * @module weave-engine/modules/weave-ai-chat/engines/react.engine
  * @description Implements the core ReAct (Reasoning and Acting) autonomous loop.
  * This engine iteratively calls the LLM, executes local internal tools, and feeds the results back
  * until a final text answer is reached or an external API tool is requested.

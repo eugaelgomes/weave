@@ -5,8 +5,8 @@
  *
  * Dependencies:
  * - `../../services/redis.client`: For queue interactions (blpop, lpush, rpush).
- * - `../core/orchestration/reasoning.engine`: Core agentic loop logic.
- * - `../core/providers/llm-provider.client`: Fallback basic LLM calls.
+ * - `./reasoning.engine`: Core agentic loop logic.
+ * - `../services/llm/llm-provider.client`: Fallback basic LLM calls.
  *
  * Used by:
  * - `weave-engine/src/index.js`: Instantiated at startup to begin background processing.
@@ -18,7 +18,7 @@ const { REDIS_QUEUES } = require("../../services/cache/redis-queues");
 const { logger } = require("../../services/logger");
 const {
   buildChatSystemMessage,
-} = require("../../core/prompts/agent-prompts");
+} = require("./prompts/agent-prompts");
 const {
   buildEntityContext,
 } = require("../../utils/entity-context.loader");
@@ -26,7 +26,7 @@ const {
   executeAgenticTask,
   generateSmartResponse,
   processThinkingPhase,
-} = require("../../core/orchestration/reasoning.engine");
+} = require("./reasoning.engine");
 const {
   callAIProvider,
 } = require("../../services/llm/llm-provider.client");

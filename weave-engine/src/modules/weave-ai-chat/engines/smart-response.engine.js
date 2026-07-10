@@ -1,5 +1,5 @@
 /**
- * @module weave-engine/modules/core/orchestration/engines/smart-response.engine
+ * @module weave-engine/modules/weave-ai-chat/engines/smart-response.engine
  * @description Generates natural language summaries of technical tool execution results.
  *
  * Dependencies:

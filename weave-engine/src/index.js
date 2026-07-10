@@ -21,8 +21,12 @@ async function bootstrap() {
   logger.info("Environment validated");
 
   await connectDatabase();
-  await llmQueueProcessor.start();
-  await proactiveQueueProcessor.start();
+  llmQueueProcessor.start().catch((err) => {
+    logger.error("LLM processor loop failed fatally", { error: err.message });
+  });
+  proactiveQueueProcessor.start().catch((err) => {
+    logger.error("Proactive processor loop failed fatally", { error: err.message });
+  });
 
   registerShutdownHandler("llm-queue-processor", async () => {
     llmQueueProcessor.stop();

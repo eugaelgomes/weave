@@ -3,7 +3,7 @@
  */
 const {
   callAIProvider,
-} = require("../../../../core/llm/llm-provider.client");
+} = require("../../../../services/llm/llm-provider.client");
 const { getWriterPrompt } = require("../prompts/writer.prompt");
 const { logger } = require("../../../../services/logger");
 
@@ -17,7 +17,7 @@ async function writerNode(state) {
       model: state.jobContext.model || null,
       prompt,
       systemMessage: state.systemMessage || "You are the Writer. Format outputs strictly in Markdown.",
-      options: { 
+      options: {
         allowEdit: false,
         messages: state.conversationHistory || [],
       },

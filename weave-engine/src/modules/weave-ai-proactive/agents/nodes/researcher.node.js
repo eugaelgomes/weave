@@ -3,7 +3,7 @@
  */
 const {
   executeAgenticTask,
-} = require("../../../../core/orchestration/reasoning.engine");
+} = require("../../../weave-ai-chat/reasoning.engine");
 const { getResearcherPrompt } = require("../prompts/researcher.prompt");
 const { logger } = require("../../../../services/logger");
 
@@ -33,7 +33,7 @@ async function researcherNode(state) {
     });
 
     const collectedData = [...(state.collectedData || [])];
-    
+
     if (executedActions && executedActions.length > 0) {
       executedActions.forEach(action => {
          collectedData.push({
@@ -43,7 +43,7 @@ async function researcherNode(state) {
          });
       });
     }
-    
+
     // Also store any text conclusion the researcher arrived at
     const text = data?.text || data?.content;
     if (text) {

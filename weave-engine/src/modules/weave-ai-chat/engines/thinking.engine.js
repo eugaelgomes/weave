@@ -1,13 +1,13 @@
 /**
- * @module weave-engine/modules/core/orchestration/engines/thinking.engine
+ * @module weave-engine/modules/weave-ai-chat/engines/thinking.engine
  * @description Evaluates user prompts to optionally generate long-form content
  * ahead of the main ReAct loop execution.
  *
  * Dependencies:
- * - `../../prompts/agent-prompts`: For system prompt construction.
- * - `../../providers/llm-provider.client`: To execute the thinking generation.
+ * - `../prompts/agent-prompts`: For system prompt construction.
+ * - `../../../services/llm/llm-provider.client`: To execute the thinking generation.
  */
-const { buildEngineSystemMessage } = require("../../prompts/agent-prompts");
+const { buildEngineSystemMessage } = require("../prompts/agent-prompts");
 const { callAIProvider } = require("../../../services/llm/llm-provider.client");
 
 const CONTENT_GENERATION_KEYWORDS =

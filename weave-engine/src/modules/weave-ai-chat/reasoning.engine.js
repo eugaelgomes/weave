@@ -1,5 +1,5 @@
 /**
- * @module weave-engine/modules/core/orchestration/reasoning.engine
+ * @module weave-engine/modules/weave-ai-chat/reasoning.engine
  * @description Facade exporting the primary AI reasoning engines.
  *
  * Dependencies:

@@ -3,7 +3,7 @@
  */
 const {
   callAIProvider,
-} = require("../../../../core/llm/llm-provider.client");
+} = require("../../../../services/llm/llm-provider.client");
 const { getOrchestratorPrompt } = require("../prompts/orchestrator.prompt");
 const { logger } = require("../../../../services/logger");
 

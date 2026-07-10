@@ -13,7 +13,7 @@ jest.mock("../services/logger", () => ({
   },
 }));
 
-const chatProcessor = require("../workflows/chat/chat.processor");
+const chatProcessor = require("../modules/weave-ai-chat/chat.processor");
 
 describe("chat.processor envelope validation", () => {
   it("parses a valid job with defaults", () => {
