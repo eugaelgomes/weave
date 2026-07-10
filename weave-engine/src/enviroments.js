@@ -68,7 +68,7 @@ function validateEnv() {
   const result = envSchema.safeParse(process.env);
   if (!result.success) {
     throw new Error(
-      `Environment validation failed: ${result.error.errors
+      `Environment validation failed: ${result.error.issues
         .map((e) => e.message)
         .join(", ")}`
     );

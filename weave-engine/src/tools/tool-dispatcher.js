@@ -10,85 +10,87 @@
 
 const { logger } = require("../services/logger");
 
-const { searchWeb, readUrl } = require("./domains/web/web-browser.action");
+const { searchWeb, readUrl } = require("./web/web-browser.action");
 const {
   schemas: webBrowserSchemas,
   zodSchemas: webBrowserZodSchemas,
-} = require("./domains/web/web-browser.schema");
+} = require("./web/web-browser.schema");
 
-const { searchMyNotes } = require("./domains/web/search.action");
+const { searchMyNotes } = require("./web/search.action");
 const {
   schemas: searchSchemas,
   zodSchemas: searchZodSchemas,
-} = require("./domains/web/search.schema");
+} = require("./web/search.schema");
 
-const { getUserProfile } = require("./domains/profile/profile.action");
+const { getUserProfile } = require("./profile/profile.action");
 const {
   schemas: profileSchemas,
   zodSchemas: profileZodSchemas,
-} = require("./domains/profile/profile.schema");
+} = require("./profile/profile.schema");
 
 const {
   listMyProjects,
   getProjectDetails,
-} = require("./domains/projects/project.action");
+} = require("./projects/project.action");
 const {
   schemas: projectSchemas,
   zodSchemas: projectZodSchemas,
-} = require("./domains/projects/project.schema");
+} = require("./projects/project.schema");
 
 const {
   getOrganizationDetails,
-} = require("./domains/organization/organization.action");
+} = require("./organization/organization.action");
 const {
   schemas: organizationSchemas,
   zodSchemas: organizationZodSchemas,
-} = require("./domains/organization/organization.schema");
+} = require("./organization/organization.schema");
 
-const { consultBrain } = require("./domains/brain/brain.action");
+const { consultBrain } = require("./brain/brain.action");
 const {
   schemas: brainSchemas,
   zodSchemas: brainZodSchemas,
-} = require("./domains/brain/brain.schema");
+} = require("./brain/brain.schema");
 
 const {
   listOrgMembers,
   getOrgMember,
-} = require("./domains/organization/org-members.action");
+} = require("./organization/org-members.action");
 const {
   schemas: orgMembersSchemas,
   zodSchemas: orgMembersZodSchemas,
-} = require("./domains/organization/org-members.schema");
+} = require("./organization/org-members.schema");
 
 const {
   listOrgAreas,
   getOrgArea,
-} = require("./domains/organization/org-areas.action");
+} = require("./organization/org-areas.action");
 const {
   schemas: orgAreasSchemas,
   zodSchemas: orgAreasZodSchemas,
-} = require("./domains/organization/org-areas.schema");
+} = require("./organization/org-areas.schema");
 
 const {
   getNoteDetails,
   readNoteContent,
   listMyNotes,
-} = require("./domains/notes/note.action");
+} = require("./notes/note.action");
 const {
   schemas: noteSchemas,
   zodSchemas: noteZodSchemas,
-} = require("./domains/notes/note.schema");
+} = require("./notes/note.schema");
 
 const {
   listNoteComments,
   createNoteComment,
   updateNoteComment,
   deleteNoteComment,
-} = require("./domains/notes/note-comments.action");
+} = require("./notes/note-comments.action");
 const {
   schemas: noteCommentsSchemas,
   zodSchemas: noteCommentsZodSchemas,
-} = require("./domains/notes/note-comments.schema");
+} = require("./notes/note-comments.schema");
+
+
 
 const INTERNAL_TOOLS = {
   web_search: searchWeb,
@@ -114,6 +116,7 @@ const INTERNAL_TOOLS = {
   create_note_comment: createNoteComment,
   update_note_comment: updateNoteComment,
   delete_note_comment: deleteNoteComment,
+
 };
 
 const internalToolSchemas = [
@@ -127,6 +130,7 @@ const internalToolSchemas = [
   ...orgAreasSchemas,
   ...noteSchemas,
   ...noteCommentsSchemas,
+
 ];
 
 const ALL_ZOD_SCHEMAS = {
@@ -140,6 +144,7 @@ const ALL_ZOD_SCHEMAS = {
   ...orgAreasZodSchemas,
   ...noteZodSchemas,
   ...noteCommentsZodSchemas,
+
 };
 
 /**
@@ -207,6 +212,7 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
       "create_note_comment",
       "update_note_comment",
       "delete_note_comment",
+
     ];
     if (TOOLS_NEEDING_CONTEXT.includes(functionName)) {
       if (executionContext.userId)
@@ -248,6 +254,7 @@ function getInternalToolDefinitions(
         ...orgAreasSchemas,
         ...noteSchemas,
         ...noteCommentsSchemas,
+
       ];
 
   if (!executionContext.organizationId) {

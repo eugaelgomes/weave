@@ -10,9 +10,9 @@ const {
   closeDatabase,
   connectDatabase,
 } = require("./services/database/postgres.client");
-const llmQueueProcessor = require("./workflows/chat/chat.processor");
+const llmQueueProcessor = require("./modules/weave-ai-chat/chat.processor");
 
-const proactiveQueueProcessor = require("./workflows/engine/proactive.processor");
+const proactiveQueueProcessor = require("./modules/weave-ai-proactive/proactive.processor");
 
 async function bootstrap() {
   logger.info("weave-engine starting", { env: env.NODE_ENV });

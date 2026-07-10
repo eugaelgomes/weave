@@ -5,6 +5,7 @@
 
 const {
   getEngineLlmRequestQueueRedisKey,
+  getEngineSubagentRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
   getEngineProactiveTaskQueueRedisKey,
   getEngineProactiveResponseQueueRedisKey,
@@ -16,6 +17,11 @@ const REDIS_QUEUES = {
     name: "engine-llm-requests",
     key: getEngineLlmRequestQueueRedisKey(),
     description: "Queue for processing real-time LLM chat requests",
+  },
+  ENGINE_SUBAGENT_REQUESTS: {
+    name: "engine-subagent-requests",
+    key: getEngineSubagentRequestQueueRedisKey(),
+    description: "Queue for processing recursive sub-agent requests",
   },
   ENGINE_LLM_RESPONSES: {
     name: "engine-llm-responses",
