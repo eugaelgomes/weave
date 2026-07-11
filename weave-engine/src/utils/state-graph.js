@@ -3,7 +3,7 @@
  * @description A lightweight, in-memory state graph execution engine.
  * Allows defining a graph of nodes (functions) and edges (transitions) to orchestrate complex multi-step AI workflows.
  */
-const { logger } = require("../../../../services/logger");
+const { logger } = require("../services/logger");
 
 const END = "__END__";
 

@@ -1,5 +1,7 @@
 /**
  * @module weave-engine/modules/weave-ai-chat/engines/react.engine
+ * @deprecated This engine is being replaced by the new StateGraph-based multi-agent orchestration
+ *             located in `../agents/chat.graph.js`. Do not use for new implementations.
  * @description Implements the core ReAct (Reasoning and Acting) autonomous loop.
  * This engine iteratively calls the LLM, executes local internal tools, and feeds the results back
  * until a final text answer is reached or an external API tool is requested.

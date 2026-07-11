@@ -10,9 +10,7 @@ const {
   closeDatabase,
   connectDatabase,
 } = require("./services/database/postgres.client");
-const llmQueueProcessor = require("./modules/weave-ai-chat/chat.processor");
-
-const proactiveQueueProcessor = require("./modules/weave-ai-proactive/proactive.processor");
+const queueRouter = require("./router/index");
 
 async function bootstrap() {
   logger.info("weave-engine starting", { env: env.NODE_ENV });
@@ -21,18 +19,12 @@ async function bootstrap() {
   logger.info("Environment validated");
 
   await connectDatabase();
-  llmQueueProcessor.start().catch((err) => {
-    logger.error("LLM processor loop failed fatally", { error: err.message });
-  });
-  proactiveQueueProcessor.start().catch((err) => {
-    logger.error("Proactive processor loop failed fatally", { error: err.message });
+  queueRouter.start().catch((err) => {
+    logger.error("QueueRouter loop failed fatally", { error: err.message });
   });
 
-  registerShutdownHandler("llm-queue-processor", async () => {
-    llmQueueProcessor.stop();
-  });
-  registerShutdownHandler("proactive-queue-processor", async () => {
-    proactiveQueueProcessor.stop();
+  registerShutdownHandler("queue-router", async () => {
+    queueRouter.stop();
   });
   registerShutdownHandler("redis", async () => {
     await redis.quit();

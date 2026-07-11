@@ -18,7 +18,7 @@ const { REDIS_QUEUES } = require("../../services/cache/redis-queues");
 const { logger } = require("../../services/logger");
 const {
   buildChatSystemMessage,
-} = require("./prompts/agent-prompts");
+} = require("./agents/prompts/agent-prompts");
 const {
   buildEntityContext,
 } = require("../../utils/entity-context.loader");
@@ -26,14 +26,15 @@ const {
   executeAgenticTask,
   generateSmartResponse,
   processThinkingPhase,
-} = require("./reasoning.engine");
+} = require("./engines/reasoning.engine");
+const { buildChatGraph } = require("./agents/chat.graph");
 const {
   callAIProvider,
 } = require("../../services/llm/llm-provider.client");
 const {
   isEngineComposeSurface,
   buildEngineComposePromptOverlay,
-} = require("./compose-prompt");
+} = require("./utils/compose-prompt");
 
 const RESPONSE_TTL_SECONDS = 60;
 const CHAT_HISTORY_MAX_MESSAGES = Number.parseInt(
@@ -50,6 +51,10 @@ const CHAT_HISTORY_MAX_TOTAL_CHARS = Number.parseInt(
 );
 const ENGINE_CHAT_TASK_TIMEOUT_MS = Number.parseInt(
   process.env.WEAVE_ENGINE_CHAT_TASK_TIMEOUT_MS || "65000",
+  10
+);
+const MAX_GRAPH_ITERATIONS = Number.parseInt(
+  process.env.WEAVE_ENGINE_MAX_REACT_ITERATIONS || "4",
   10
 );
 const ENGINE_JOB_MAX_RETRIES = Number.parseInt(
@@ -106,80 +111,27 @@ class LlmQueueProcessor {
     this.queueName = REDIS_QUEUES.ENGINE_LLM_REQUESTS.key;
   }
 
-  /**
-   * Starts the continuous Redis blocking pop loop to fetch and process jobs.
-   * Runs indefinitely until stopped.
-   *
-   * @returns {Promise<void>}
-   */
-  async start() {
-    if (this.isRunning) {
-      return;
-    }
 
-    this.isRunning = true;
-    logger.info("Engine LLM processor started", { queueName: this.queueName });
-
-    while (this.isRunning) {
-      try {
-        // Block for 5 seconds waiting for a new job.
-        // This prevents CPU spin-waiting while keeping response latency low.
-        const result = await redis.blpop(this.queueName, 5);
-
-        if (!result) {
-          continue;
-        }
-
-        const [, rawPayload] = result;
-        logger.info("Engine picked up a queue job", { queueName: this.queueName });
-        const parsedJob = this.parseRawJob(rawPayload);
-        if (!parsedJob) {
-          continue;
-        }
-        await this.processJob(parsedJob);
-      } catch (error) {
-        logger.error("Engine LLM processor loop failed", {
-          error: error.message,
-        });
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
-  }
 
   /**
    * Parses the raw JSON job payload and normalizes required fields like attempts and taskType.
-   * Pushes to dead-letter queue if parsing fails.
+   * Throws an error if parsing or validation fails.
    *
    * @param {string} rawPayload - Stringified JSON from the Redis queue.
-   * @returns {object|null} The parsed job object or null if invalid.
+   * @returns {object} The parsed job object.
+   * @throws {Error} If parsing or schema validation fails.
    */
   parseRawJob(rawPayload) {
     let parsedJob;
     try {
       parsedJob = JSON.parse(rawPayload);
     } catch (error) {
-      logger.error("Engine LLM job parse failed", {
-        error: error.message,
-      });
-      this.pushDeadLetter({
-        errorCode: "ENGINE_JOB_PARSE_FAILED",
-        errorMessage: error.message,
-        rawPayload,
-      }).catch(() => {});
-      return null;
+      throw new Error(`Invalid JSON payload: ${error.message}`);
     }
 
     const validation = jobEnvelopeSchema.safeParse(parsedJob);
     if (!validation.success) {
-      logger.warn("Engine LLM job discarded: invalid envelope", {
-        issues: validation.error.issues,
-      });
-      this.pushDeadLetter({
-        errorCode: "ENGINE_JOB_INVALID_ENVELOPE",
-        errorMessage: "Invalid job envelope",
-        job: parsedJob,
-      }).catch(() => {});
-      return null;
+      throw new Error(`Invalid envelope schema: ${JSON.stringify(validation.error.issues)}`);
     }
 
     return validation.data;
@@ -376,67 +328,79 @@ class LlmQueueProcessor {
           payload.conversationHistory
         );
 
-        const {
-          data,
-          providerUsed,
-          executedActions = [],
-        } = await Promise.race([
-          executeAgenticTask({
-            allowEdit: Boolean(payload.allowEdit),
-            allowWebSearch: Boolean(payload.allowWebSearch),
-            files: Array.isArray(payload.files) ? payload.files : [],
-            functions: Array.isArray(payload.functions)
-              ? payload.functions
-              : [],
-            message: payload.message || "",
+        const initialState = {
+          messages: [{ role: "user", content: payload.message || "" }],
+          jobContext: { 
             model: payload.model || null,
-            systemMessage,
-            conversationHistory,
-            executionContext: {
-              userId: payload.userId || null,
-              organizationId:
-                payload.organizationId ||
-                payload.context?.organizationId ||
-                payload.context?.organization_id ||
-                null,
-              language:
-                payload.userLanguage ||
-                payload.context?.userLanguage ||
-                "en-US",
-              onChunk: (chunk) => {
-                if (requestId && redis) {
-                  redis
-                    .publish(`stream:${requestId}`, JSON.stringify({ chunk }))
-                    .catch(() => {});
-                }
-              },
+            systemMessage: systemMessage
+          },
+          options: { 
+            allowEdit: Boolean(payload.allowEdit), 
+            allowWebSearch: Boolean(payload.allowWebSearch) 
+          },
+          executionContext: {
+            userId: payload.userId || null,
+            organizationId:
+              payload.organizationId ||
+              payload.context?.organizationId ||
+              payload.context?.organization_id ||
+              null,
+            language:
+              payload.userLanguage ||
+              payload.context?.userLanguage ||
+              "en-US",
+            onChunk: (chunk) => {
+              if (requestId && redis) {
+                redis
+                  .publish(`stream:${requestId}`, JSON.stringify({ chunk }))
+                  .catch(() => {});
+              }
             },
-          }),
+            maxDurationMs: ENGINE_CHAT_TASK_TIMEOUT_MS,
+          },
+          executedActions: [],
+          availableAgents: payload.availableAgents || [],
+        };
+
+        if (conversationHistory.length > 0) {
+          initialState.messages = [...conversationHistory, ...initialState.messages];
+        }
+
+        const graph = buildChatGraph();
+
+        const finalState = await Promise.race([
+          graph.run(initialState, { maxIterations: MAX_GRAPH_ITERATIONS }),
           new Promise((_, reject) => {
             // Safety timeout to prevent permanently stalled agent loops from hanging the queue worker
             setTimeout(() => {
               const timeoutError = new Error("Engine chat task timeout");
               timeoutError.code = "ENGINE_CHAT_TASK_TIMEOUT";
               reject(timeoutError);
-            }, ENGINE_CHAT_TASK_TIMEOUT_MS + 2000); // Give the inner agentic loop time to exit gracefully
+            }, ENGINE_CHAT_TASK_TIMEOUT_MS + 2000); // Give the inner loop time to exit gracefully
           }),
         ]);
 
-        const toolCalls =
-          data?.type === "function_call"
-            ? data.toolCalls || (data.functionCall ? [data.functionCall] : [])
-            : [];
+        const providerUsed = finalState.providerUsed || null;
+        const executedActions = finalState.executedActions || [];
+        
+        let toolCalls = [];
+        if (finalState.externalToolCalls) {
+          toolCalls = finalState.externalToolCalls;
+        }
+
+        const finalMessage = finalState.finalResponse || "";
+
 
         return {
           data: {
-            citations: data?.citations || [],
-            content: data?.content || null,
-            response: data?.text || data?.content || null,
-            text: data?.text || null,
-            executedActions: executedActions || [],
-            usage: data?.usage || null,
+            citations: [],
+            content: finalMessage,
+            response: finalMessage,
+            text: finalMessage,
+            executedActions: executedActions,
+            usage: null,
           },
-          executedActions: executedActions || [],
+          executedActions: executedActions,
           toolCalls,
           providerUsed,
         };
@@ -490,35 +454,6 @@ class LlmQueueProcessor {
             )
             .join("\n  ");
 
-    let orchestratorPrompt = "";
-    if (!payload.isSubAgent && !payload.context?.isSubAgent) {
-      const fallbackSystemAgents = [
-        {
-          id: "sys_researcher",
-          name: "Researcher",
-          description:
-            "Expert in researching facts, summarizing articles, and deep data analysis.",
-        },
-        {
-          id: "sys_writer",
-          name: "Writer",
-          description:
-            "Expert in technical writing, document formatting, and proofreading.",
-        },
-      ];
-
-      const agentsToList =
-        payload.availableAgents?.length > 0
-          ? payload.availableAgents
-          : fallbackSystemAgents;
-
-      const agentsList = agentsToList
-        .map((a) => `- ${a.name} (ID: ${a.id}): ${a.description || ""}`)
-        .join("\n");
-
-      orchestratorPrompt = `\n\n[Multi-Agent Orchestrator]\nYou act as a Multi-Agent Orchestrator. If the user's task is complex and could benefit from specialized agents, use the 'delegate_to_agent' tool.\nAvailable agents:\n${agentsList}`;
-    }
-
     return `${baseMessage}${composeOverlay}
 
 [Context (v2)]
@@ -542,7 +477,7 @@ ${
 - Never return empty. Must use structured function call if db action needed.`
     : ""
 }
-Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}${orchestratorPrompt}`;
+Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`;
   }
 
   /**

@@ -238,24 +238,8 @@ async function executeInternalTool(functionName, args, executionContext = {}) {
  * @param {object} [executionContext={}] - Workspace context.
  * @returns {Array<object>} An array of OpenAI-compatible function schemas.
  */
-function getInternalToolDefinitions(
-  allowWebSearch = true,
-  executionContext = {}
-) {
-  let schemas = allowWebSearch
-    ? internalToolSchemas
-    : [
-        ...searchSchemas,
-        ...profileSchemas,
-        ...projectSchemas,
-        ...organizationSchemas,
-        ...brainSchemas,
-        ...orgMembersSchemas,
-        ...orgAreasSchemas,
-        ...noteSchemas,
-        ...noteCommentsSchemas,
-
-      ];
+function getInternalToolDefinitions(executionContext = {}) {
+  let schemas = [...internalToolSchemas];
 
   if (!executionContext.organizationId) {
     const orgTools = [

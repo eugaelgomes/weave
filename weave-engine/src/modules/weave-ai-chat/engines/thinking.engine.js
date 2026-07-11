@@ -7,7 +7,7 @@
  * - `../prompts/agent-prompts`: For system prompt construction.
  * - `../../../services/llm/llm-provider.client`: To execute the thinking generation.
  */
-const { buildEngineSystemMessage } = require("../prompts/agent-prompts");
+const { buildEngineSystemMessage } = require("../agents/prompts/agent-prompts");
 const { callAIProvider } = require("../../../services/llm/llm-provider.client");
 
 const CONTENT_GENERATION_KEYWORDS =
