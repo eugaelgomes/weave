@@ -20,27 +20,27 @@ const { z } = require("zod");
 
 const ProviderResponseSchema = z
   .object({
-    type: z.enum(["text", "function_call"]),
-    text: z.string().nullable(),
     functionCall: z
       .object({
-        name: z.string(),
         arguments: z.record(z.any()),
+        name: z.string(),
       })
       .nullable(),
+    text: z.string().nullable(),
+    toolCallId: z.string().optional(),
     toolCalls: z
       .array(
         z
           .object({
-            id: z.string(),
-            name: z.string(),
             arguments: z.record(z.any()),
             extra_content: z.string().optional(),
+            id: z.string(),
+            name: z.string(),
           })
           .passthrough()
       )
       .optional(),
-    toolCallId: z.string().optional(),
+    type: z.enum(["text", "function_call"]),
     usage: z
       .object({
         inputTokens: z.number(),
@@ -151,30 +151,6 @@ function createProviderError(code, message) {
   return error;
 }
 
-/**
- * @template T
- * @param {Promise<T>} promise
- * @param {number} timeoutMs
- * @param {string} code
- * @returns {Promise<T>}
- */
-async function withTimeout(promise, timeoutMs, code) {
-  let timeoutId;
-  const timeoutPromise = new Promise((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(
-        createProviderError(code, `Provider timeout after ${timeoutMs}ms`)
-      );
-    }, timeoutMs);
-  });
-
-  try {
-    return await Promise.race([promise, timeoutPromise]);
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
 async function callGenericApi(
   prompt,
   systemMessage,
@@ -259,7 +235,7 @@ async function callGenericApi(
           type: "text",
         });
         continue;
-      } catch (err) {
+      } catch {
         // Fallback to ignore
       }
     }
@@ -293,12 +269,12 @@ async function callGenericApi(
 
       if (msg.role === "assistant" && msg.tool_calls) {
         cleanMsg.tool_calls = msg.tool_calls.map((tc) => ({
+          function: {
+            arguments: tc.function.arguments,
+            name: tc.function.name,
+          },
           id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}`,
           type: "function",
-          function: {
-            name: tc.function.name,
-            arguments: tc.function.arguments,
-          },
           ...(tc.extra_content ? { extra_content: tc.extra_content } : {}),
         }));
       }
@@ -344,14 +320,17 @@ async function callGenericApi(
   }
 
   if (options.allowEdit && options.functions) {
-    payload.tools = options.functions.map((fn) => ({
-      function: {
-        description: fn.description,
-        name: fn.name,
-        parameters: fn.parameters,
-      },
-      type: "function",
-    }));
+    payload.tools = options.functions.map((fn) => {
+      const fnDef = fn.function || fn;
+      return {
+        function: {
+          description: fnDef.description,
+          name: fnDef.name,
+          parameters: fnDef.parameters,
+        },
+        type: "function",
+      };
+    });
     payload.tool_choice = options.forceToolUse ? "required" : "auto";
   }
 
@@ -421,9 +400,9 @@ async function callGenericApi(
 
                 if (!finalToolCalls[tcIndex]) {
                   finalToolCalls[tcIndex] = {
+                    function: { arguments: "", name: "" },
                     id: tc.id,
                     type: "function",
-                    function: { name: "", arguments: "" },
                   };
                 }
                 // Handle cases where ID comes in later chunks
@@ -434,9 +413,6 @@ async function callGenericApi(
                   finalToolCalls[tcIndex].extra_content = tc.extra_content;
                 }
                 if (tc.function?.name) {
-                  console.log(
-                    `[STREAM DEBUG] Chunk name: "${tc.function.name}", Current name: "${finalToolCalls[tcIndex].function.name}"`
-                  );
                   if (
                     tc.function.name === finalToolCalls[tcIndex].function.name
                   ) {
@@ -488,14 +464,14 @@ async function callGenericApi(
         if (!str) return {};
         try {
           return JSON.parse(str);
-        } catch (e) {
+        } catch {
           // Attempt to fix duplicate strings from bad Gemini deltas e.g. "{}{}"
           try {
             if (str.includes("}{")) {
               const fixed = str.split("}{")[0] + "}";
               return JSON.parse(fixed);
             }
-          } catch (err2) {}
+          } catch {}
           return {};
         }
       };
@@ -506,19 +482,19 @@ async function callGenericApi(
           arguments: safeParse(toolCall.function.arguments),
           name: toolCall.function.name,
         },
+        text: null,
+        toolCallId: toolCall.id,
         toolCalls: finalToolCalls.map((tc) => {
           const mapped = {
+            arguments: safeParse(tc.function.arguments),
             id: tc.id,
             name: tc.function.name,
-            arguments: safeParse(tc.function.arguments),
           };
           if (tc.extra_content) {
             mapped.extra_content = tc.extra_content;
           }
           return mapped;
         }),
-        text: null,
-        toolCallId: toolCall.id,
         type: "function_call",
         usage: finalUsage
           ? {
@@ -566,7 +542,7 @@ async function callGenericApi(
       if (!str) return {};
       try {
         return JSON.parse(str);
-      } catch (e) {
+      } catch {
         return {};
       }
     };
@@ -576,19 +552,19 @@ async function callGenericApi(
         arguments: safeParse(toolCall.function.arguments),
         name: toolCall.function.name,
       },
+      text: null,
+      toolCallId: toolCall.id,
       toolCalls: message.tool_calls.map((tc) => {
         const mapped = {
+          arguments: safeParse(tc.function.arguments),
           id: tc.id,
           name: tc.function.name,
-          arguments: safeParse(tc.function.arguments),
         };
         if (tc.extra_content) {
           mapped.extra_content = tc.extra_content;
         }
         return mapped;
-      }),
-      text: null,
-      toolCallId: toolCall.id, // For backwards compatibility
+      }), // For backwards compatibility
       type: "function_call",
       usage,
     });

@@ -46,7 +46,7 @@ async function listOrgMembers(args) {
       [args.organizationId]
     );
 
-    return { members: rows, count: rows.length };
+    return { count: rows.length, members: rows };
   } catch (error) {
     return {
       error: "Database error fetching org members: " + error.message,
@@ -106,6 +106,6 @@ async function getOrgMember(args) {
 }
 
 module.exports = {
-  listOrgMembers,
   getOrgMember,
+  listOrgMembers,
 };

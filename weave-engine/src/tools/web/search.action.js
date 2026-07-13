@@ -69,13 +69,13 @@ async function searchMyNotes({ query, userId }) {
 
     // Gerar o vetor da pergunta usando o provedor configurado
     const response = await fetch(endpointUrl, {
-      method: "POST",
-      headers,
       body: JSON.stringify({
-        model: embeddingModel,
-        input: query,
         dimensions: 1536,
+        input: query,
+        model: embeddingModel,
       }),
+      headers,
+      method: "POST",
     });
 
     if (!response.ok) {

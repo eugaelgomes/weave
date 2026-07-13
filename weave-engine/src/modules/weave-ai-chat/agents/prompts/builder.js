@@ -5,6 +5,38 @@ const {
   summarizeDocument,
 } = require("./utils");
 
+const {
+  projectsSprintsCapability,
+} = require("./capabilities/projects-sprints");
+const { notesTasksCapability } = require("./capabilities/notes-tasks");
+const {
+  organizationAdminCapability,
+} = require("./capabilities/organization-admin");
+const { ecosystemCapability } = require("./capabilities/ecosystem");
+const {
+  sandboxArtifactsCapability,
+} = require("./capabilities/sandbox-artifacts");
+
+/**
+ * Appends the capabilities playbook to the prompt.
+ * @param {string} basePrompt
+ * @param {Object} context
+ * @returns {string}
+ */
+function appendCapabilities(basePrompt, _context) {
+  let prompt = basePrompt;
+  prompt += `\n\n### CAPABILITIES PLAYBOOK\nYou have access to several tools. Use them according to the guidelines below:\n`;
+  prompt += `\n${projectsSprintsCapability}\n`;
+  prompt += `\n${notesTasksCapability}\n`;
+  prompt += `\n${ecosystemCapability}\n`;
+  prompt += `\n${sandboxArtifactsCapability}\n`;
+
+  // Organization and Admin capabilities
+  prompt += `\n${organizationAdminCapability}\n`;
+
+  return prompt;
+}
+
 /**
  * Appends standard context like Clock, User, Org, and Locale to the prompt.
  * @param {string} basePrompt
@@ -62,6 +94,61 @@ function appendOrganizationContext(basePrompt, context) {
     context.organizationMembers.forEach((member) => {
       prompt += `\n- ${member.name || "Unknown"} (${member.email || "no-email"}) | role: ${member.role}`;
     });
+  }
+
+  return prompt;
+}
+
+/**
+ * Appends the proactive workspace panorama containing sprints, integrations, and health.
+ * @param {string} basePrompt
+ * @param {Object} context
+ * @returns {string}
+ */
+function appendWorkspacePanorama(basePrompt, context) {
+  let prompt = basePrompt;
+
+  if (context.workspacePanorama) {
+    prompt += `\n\n[WORKSPACE PANORAMA]:\n`;
+
+    const hasSprints =
+      context.workspacePanorama.activeSprints &&
+      context.workspacePanorama.activeSprints.length > 0;
+    const projectCount = Array.isArray(context.indexedProjects)
+      ? context.indexedProjects.length
+      : 0;
+
+    if (!hasSprints && projectCount === 0) {
+      prompt += `WORKSPACE HEALTH REPORT: [EMPTY WORKSPACE]. The user has 0 projects and 0 active sprints. This is a brand new or inactive workspace. Act as a proactive guide to help them get started by creating a project and organizing their first tasks. `;
+    } else {
+      prompt += `WORKSPACE HEALTH REPORT: `;
+      if (hasSprints) {
+        const sprintDetails = context.workspacePanorama.activeSprints
+          .map((s) => `"${s.title}" (ending ${s.end_date})`)
+          .join(", ");
+        prompt += `You are managing ${context.workspacePanorama.activeSprints.length} active sprint(s): ${sprintDetails}. `;
+      } else {
+        prompt += `There are currently NO active sprints. `;
+      }
+    }
+
+    if (context.workspacePanorama.integrations) {
+      const slack = context.workspacePanorama.integrations.slack
+        ? "enabled"
+        : "disabled";
+      const webhooks = context.workspacePanorama.integrations.webhooks || 0;
+      prompt += `Integrations: Slack is ${slack}, ${webhooks} active webhook(s). `;
+    }
+
+    if (context.workspacePanorama.subscription) {
+      const plan = context.workspacePanorama.subscription.plan_name || "Free";
+      const status = context.workspacePanorama.subscription.status || "active";
+      prompt += `Subscription: ${plan} plan (${status}). `;
+    }
+
+    if (context.workspacePanorama.usage) {
+      prompt += `Usage: ${context.workspacePanorama.usage.active_members} active member(s).`;
+    }
   }
 
   return prompt;
@@ -189,6 +276,8 @@ function buildChatSystemMessage(additionalContext = {}) {
 
   prompt = appendStandardContext(prompt, additionalContext);
   prompt = appendOrganizationContext(prompt, additionalContext);
+  prompt = appendCapabilities(prompt, additionalContext);
+  prompt = appendWorkspacePanorama(prompt, additionalContext);
   prompt = appendProjectsContext(
     prompt,
     additionalContext.indexedProjects,
@@ -221,6 +310,8 @@ function buildEngineSystemMessage(additionalContext = {}) {
 
   prompt = appendStandardContext(prompt, additionalContext);
   prompt = appendOrganizationContext(prompt, additionalContext);
+  prompt = appendCapabilities(prompt, additionalContext);
+  prompt = appendWorkspacePanorama(prompt, additionalContext);
   prompt = appendProjectsContext(
     prompt,
     additionalContext.indexedProjects,
@@ -243,11 +334,15 @@ function buildEngineSystemMessage(additionalContext = {}) {
 }
 
 module.exports = {
+  appendNotesContext,
+
+  appendOrganizationContext,
+
+  appendProjectsContext,
+  // alias for backwards compatibility
+  appendStandardContext,
+  appendWorkspacePanorama,
   buildChatSystemMessage,
   buildEngineSystemMessage,
-  buildSystemMessage: buildChatSystemMessage, // alias for backwards compatibility
-  appendStandardContext,
-  appendOrganizationContext,
-  appendProjectsContext,
-  appendNotesContext,
+  buildSystemMessage: buildChatSystemMessage,
 };

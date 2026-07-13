@@ -674,7 +674,7 @@ export function CalendarPreview({
                         evt.stopPropagation();
                         setViewEventModal(event.data);
                       }}
-                      className={`absolute z-20 cursor-pointer overflow-hidden rounded-md border-l-4 px-1.5 py-1 transition-all hover:z-30 hover:shadow-lg ${colors.bg} ${colors.border} ${colors.hover}`}
+                      className={`absolute z-20 cursor-pointer overflow-hidden rounded-md px-1.5 py-1 transition-all hover:z-30 hover:shadow-lg ${colors.bg}  ${colors.hover}`}
                       style={{
                         top: `${top}px`,
                         height: `${height}px`,
@@ -756,7 +756,7 @@ export function CalendarPreview({
 
     const colorMap = {
       calendar: {
-        bg: "bg-blue-100 dark:bg-blue-900/30",
+        bg: "bg-blue-500 dark:bg-blue-900",
         border: "border-blue-500",
         hover: "hover:bg-blue-200 dark:hover:bg-blue-900/50",
         text: "text-blue-800 dark:text-blue-200",

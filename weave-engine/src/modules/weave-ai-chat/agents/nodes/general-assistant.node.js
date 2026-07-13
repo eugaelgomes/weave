@@ -1,9 +1,13 @@
 /**
  * @module weave-engine/modules/weave-ai-chat/agents/nodes/general-assistant.node
  */
-const { callAIProvider } = require("../../../../services/llm/llm-provider.client");
+const {
+  callAIProvider,
+} = require("../../../../services/llm/llm-provider.client");
 const { logger } = require("../../../../services/logger");
-const { getInternalToolDefinitions } = require("../../../../tools/tool-dispatcher");
+const {
+  getInternalToolDefinitions,
+} = require("../../../../tools/tool-dispatcher");
 
 const GENERAL_ASSISTANT_SYSTEM_PROMPT = `
 You are the General Assistant Agent for Weave. 
@@ -13,12 +17,12 @@ Answer the user's questions clearly, accurately, and politely.
 
 async function generalAssistantNode(state) {
   logger.info("General Assistant node running");
-  
+
   if (state.executionContext && state.executionContext.onChunk) {
     state.executionContext.onChunk({
-      type: "action_state",
       name: "general_assistant",
       status: "running",
+      type: "action_state",
     });
   }
 
@@ -28,13 +32,16 @@ async function generalAssistantNode(state) {
   try {
     const { data, provider } = await callAIProvider({
       model: state.jobContext?.model || null,
-      prompt: "",
-      systemMessage: (state.jobContext?.systemMessage || "") + "\n\n" + GENERAL_ASSISTANT_SYSTEM_PROMPT,
-      options: { 
+      options: {
         allowEdit: state.options?.allowEdit ?? false,
+        functions: allTools,
         messages: state.messages || [],
-        functions: allTools
       },
+      prompt: "",
+      systemMessage:
+        (state.jobContext?.systemMessage || "") +
+        "\n\n" +
+        GENERAL_ASSISTANT_SYSTEM_PROMPT,
     });
 
     const stateUpdate = {
@@ -44,45 +51,46 @@ async function generalAssistantNode(state) {
     if (data.type === "function_call" && data.toolCalls) {
       const toolCallsArray = data.toolCalls.map((tc, idx) => {
         return {
-          id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}_${idx}`,
-          function: {
-            name: tc.name,
-            arguments: JSON.stringify(tc.arguments),
-          },
-          rawArgs: tc.arguments,
           extra_content: tc.extra_content,
+          function: {
+            arguments: JSON.stringify(tc.arguments),
+            name: tc.name,
+          },
+          id:
+            tc.id ||
+            `call_${Math.random().toString(36).substring(2, 11)}_${idx}`,
+          rawArgs: tc.arguments,
         };
       });
 
       const assistantMessage = {
-        role: "assistant",
         content: null,
         rawParts: data.rawParts,
+        role: "assistant",
         tool_calls: toolCallsArray.map((t) => ({
-          id: t.id,
           function: t.function,
+          id: t.id,
           ...(t.extra_content ? { extra_content: t.extra_content } : {}),
         })),
       };
 
       stateUpdate.messages = [...(state.messages || []), assistantMessage];
       stateUpdate.pendingToolCalls = toolCallsArray;
-      
     } else {
       const finalMsg = data.text || data.content || data;
       const assistantMessage = {
-        role: "assistant",
         content: finalMsg,
+        role: "assistant",
       };
       stateUpdate.messages = [...(state.messages || []), assistantMessage];
       stateUpdate.finalResponse = finalMsg;
-      
+
       if (state.executionContext && state.executionContext.onChunk) {
         state.executionContext.onChunk({
-          type: "action_state",
           name: "general_assistant",
           status: "completed",
           success: true,
+          type: "action_state",
         });
       }
     }

@@ -45,10 +45,10 @@ Instructions:
 
   try {
     const { data } = await callAIProvider({
+      model,
       options: {
         allowEdit: false,
       },
-      model,
       prompt: summaryPrompt,
       systemMessage,
     });

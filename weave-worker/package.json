@@ -38,6 +38,7 @@
     "@sentry/node": "^10.53.1",
     "@sentry/profiling-node": "^10.53.1",
     "dotenv": "^16.6.1",
+    "googleapis": "^173.0.0",
     "ioredis": "^5.10.1",
     "pdfkit": "^0.17.2",
     "pg": "^8.16.3",

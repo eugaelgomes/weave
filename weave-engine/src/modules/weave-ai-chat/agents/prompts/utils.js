@@ -113,8 +113,8 @@ function formatServerTime(date = new Date()) {
  * @returns {string}
  */
 function formatRole(role) {
-  if (role === "PROJECT_MANAGER") return "Gerente";
-  if (role === "PROJECT_MEMBER") return "Membro";
+  if (role === "PROJECT_MANAGER") return "Manager";
+  if (role === "PROJECT_MEMBER") return "Member";
   return role || "Unknown";
 }
 

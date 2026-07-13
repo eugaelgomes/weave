@@ -23,7 +23,6 @@ const pool = new Pool({
       : {
           rejectUnauthorized: false,
         },
-  options: "-c default_transaction_read_only=on",
 });
 
 pool.on("error", (error) => {
@@ -39,7 +38,7 @@ async function connectDatabase() {
   const client = await pool.connect();
   try {
     await client.query("SELECT 1");
-    logger.info("Engine database connection ready (read-only)");
+    logger.info("Engine database connection ready");
   } finally {
     client.release();
   }

@@ -66,7 +66,7 @@ export const InternalCalendarEventSchema = z.object({
   sync_status: SyncStatusSchema,
   etag: z.string().nullable().optional(),
   created_at: z.string(),
-  updated_at: z.string(),
+  updated_at: z.string().nullable().optional(),
   deleted: z.boolean(),
   deleted_at: z.string().nullable().optional(),
 });
@@ -103,7 +103,7 @@ export const InternalCalendarEventInviteSchema = z.object({
   status: InviteStatusSchema,
   external_guest_id: z.string().nullable().optional(),
   created_at: z.string(),
-  updated_at: z.string(),
+  updated_at: z.string().nullable().optional(),
   deleted: z.boolean(),
   deleted_at: z.string().nullable().optional(),
 });

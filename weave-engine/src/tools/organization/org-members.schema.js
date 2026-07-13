@@ -12,22 +12,22 @@ const getOrgMemberZodSchema = z.object({
 
 const schemas = [
   {
-    name: "list_org_members",
     description:
       "Lists all active members of the organization the user belongs to. Returns each member's user ID, name, username, email, avatar, role (SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST), and status. (Important: Translate any enum values returned by the database to the user's language.)",
+    name: "list_org_members",
     parameters: listOrgMembersZodSchema.toJSONSchema(),
   },
   {
-    name: "get_org_member",
     description:
       "Fetches detailed information about a specific organization member by their user ID. Returns the member's role, status, name, username, email, and avatar URL. (Important: Translate any enum values returned by the database to the user's language.)",
+    name: "get_org_member",
     parameters: getOrgMemberZodSchema.toJSONSchema(),
   },
 ];
 
 const zodSchemas = {
-  list_org_members: listOrgMembersZodSchema,
   get_org_member: getOrgMemberZodSchema,
+  list_org_members: listOrgMembersZodSchema,
 };
 
 module.exports = { schemas, zodSchemas };

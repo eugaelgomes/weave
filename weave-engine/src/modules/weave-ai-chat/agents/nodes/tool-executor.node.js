@@ -2,7 +2,10 @@
  * @module weave-engine/modules/weave-ai-chat/agents/nodes/tool-executor.node
  */
 const { logger } = require("../../../../services/logger");
-const { isInternalTool, executeInternalTool } = require("../../../../tools/tool-dispatcher");
+const {
+  isInternalTool,
+  executeInternalTool,
+} = require("../../../../tools/tool-dispatcher");
 
 /**
  * Intelligently truncates a tool output to prevent breaking JSON structures when sending it back to the LLM.
@@ -51,17 +54,23 @@ function truncateToolOutput(output, maxLength) {
 
 async function toolExecutorNode(state) {
   logger.info("Tool Executor node running");
-  
+
   if (!state.pendingToolCalls || state.pendingToolCalls.length === 0) {
     return { errors: ["No pending tool calls to execute."] };
   }
 
-  const executedActions = state.executedActions ? [...state.executedActions] : [];
+  const executedActions = state.executedActions
+    ? [...state.executedActions]
+    : [];
   const newMessages = [];
-  
+
   // Extract external tool calls (if any)
-  const internalCalls = state.pendingToolCalls.filter((t) => isInternalTool(t.function.name));
-  const externalCalls = state.pendingToolCalls.filter((t) => !isInternalTool(t.function.name));
+  const internalCalls = state.pendingToolCalls.filter((t) =>
+    isInternalTool(t.function.name)
+  );
+  const externalCalls = state.pendingToolCalls.filter(
+    (t) => !isInternalTool(t.function.name)
+  );
 
   if (internalCalls.length > 0 && externalCalls.length === 0) {
     // Execute all internal tools in parallel to minimize latency overhead
@@ -73,9 +82,9 @@ async function toolExecutorNode(state) {
         // Optional: send chunk to UI
         if (state.executionContext && state.executionContext.onChunk) {
           state.executionContext.onChunk({
-            type: "action_state",
             name: fnName,
             status: "running",
+            type: "action_state",
           });
         }
 
@@ -87,23 +96,23 @@ async function toolExecutorNode(state) {
 
         if (state.executionContext && state.executionContext.onChunk) {
           state.executionContext.onChunk({
-            type: "action_state",
             name: fnName,
             status: "completed",
             success: !result.error,
+            type: "action_state",
           });
         }
 
         executedActions.push({
-          name: fnName,
           arguments: fnArgs,
+          name: fnName,
           result: result.error || "success",
         });
 
         return {
-          toolCallId: tc.id,
           name: fnName,
           result,
+          toolCallId: tc.id,
         };
       })
     );
@@ -111,28 +120,35 @@ async function toolExecutorNode(state) {
     results.forEach((r) => {
       const truncated = truncateToolOutput(r.result, 15000);
       newMessages.push({
+        content: truncated,
+        name: r.name,
         role: "tool",
         tool_call_id: r.toolCallId,
-        name: r.name,
-        content: truncated,
       });
     });
-    
+
     return {
-      messages: [...(state.messages || []), ...newMessages],
-      pendingToolCalls: [], // Clear pending calls
+      // Clear pending calls
       executedActions,
+
+      messages: [...(state.messages || []), ...newMessages],
+      pendingToolCalls: [],
     };
   } else if (externalCalls.length > 0) {
-    // External tools (MCP tools) currently exit the loop to be returned to the client 
+    // External tools (MCP tools) currently exit the loop to be returned to the client
     // or handled externally (not fully implemented in old loop but we mimic standard behaviour)
-    logger.warn("External tool calls are not supported by the internal tool executor yet.");
-    
+    logger.warn(
+      "External tool calls are not supported by the internal tool executor yet."
+    );
+
     return {
-      finalResponse: null, // End the graph and let caller handle external calls
-      pendingToolCalls: [],
       // We pass the external calls back in the state if needed
-      externalToolCalls: externalCalls
+      externalToolCalls: externalCalls,
+
+      finalResponse: null,
+
+      // End the graph and let caller handle external calls
+      pendingToolCalls: [],
     };
   }
 

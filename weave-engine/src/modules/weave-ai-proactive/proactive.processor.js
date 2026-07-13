@@ -14,9 +14,7 @@
 const { z } = require("zod");
 const redis = require("../../services/cache/redis.client");
 const { logger } = require("../../services/logger");
-const {
-  callAIProvider,
-} = require("../../services/llm/llm-provider.client");
+const { callAIProvider } = require("../../services/llm/llm-provider.client");
 const safetyEngine = require("./engines/safety.engine");
 const { extractText } = require("./utils/parsers");
 const { REDIS_QUEUES } = require("../../services/cache/redis-queues");
@@ -26,24 +24,24 @@ const RESPONSE_TTL_SECONDS = 60;
 
 const proactiveJobSchema = z
   .object({
-    type: z.string().optional(),
-    prompt: z.string().optional(),
-    systemMessage: z.string().optional(),
-    model: z.string().optional(),
-    options: z.object({}).passthrough().optional(),
-    responseQueueKey: z.string().optional(),
-    payload: z.union([z.string(), z.object({}).passthrough()]).optional(),
-    projectId: z.string().optional(),
-    sprintId: z.string().optional(),
-    reasoningType: z.string().optional(),
-    title: z.string().optional(),
-    reportConfigId: z.string().optional(),
-    organizationId: z.string().optional(),
-    triggeredBy: z.string().optional(),
-    recipientScope: z.string().optional(),
     customRecipients: z.array(z.string()).optional(),
     expiresAt: z.string().optional(),
     inputContext: z.object({}).passthrough().optional(),
+    model: z.string().optional(),
+    options: z.object({}).passthrough().optional(),
+    organizationId: z.string().optional(),
+    payload: z.union([z.string(), z.object({}).passthrough()]).optional(),
+    projectId: z.string().optional(),
+    prompt: z.string().optional(),
+    reasoningType: z.string().optional(),
+    recipientScope: z.string().optional(),
+    reportConfigId: z.string().optional(),
+    responseQueueKey: z.string().optional(),
+    sprintId: z.string().optional(),
+    systemMessage: z.string().optional(),
+    title: z.string().optional(),
+    triggeredBy: z.string().optional(),
+    type: z.string().optional(),
   })
   .passthrough();
 
@@ -71,7 +69,9 @@ class ProactiveQueueProcessor {
 
     const validation = proactiveJobSchema.safeParse(parsedJob);
     if (!validation.success) {
-      throw new Error(`Invalid envelope schema: ${JSON.stringify(validation.error.issues)}`);
+      throw new Error(
+        `Invalid envelope schema: ${JSON.stringify(validation.error.issues)}`
+      );
     }
 
     return validation.data;
@@ -129,7 +129,10 @@ class ProactiveQueueProcessor {
         raw: finalState,
       };
 
-      const safetyCheck = await safetyEngine.runSafetyRecheck(job, initialResult);
+      const safetyCheck = await safetyEngine.runSafetyRecheck(
+        job,
+        initialResult
+      );
       const safePolicyResult = safetyEngine.applySafetyPolicy(
         initialResult,
         safetyCheck
@@ -232,10 +235,10 @@ class ProactiveQueueProcessor {
           const user = userRes.rows[0];
           if (!user.deleted_at) {
             const emailPayload = {
-              to: user.email,
+              html: `<p>Your background proactive reasoning job <b>${job.title || jobType}</b> has failed to process.</p>`,
               subject: "Proactive Reasoning Job Failed",
               text: `Your background proactive reasoning job '${job.title || jobType}' has failed to process.`,
-              html: `<p>Your background proactive reasoning job <b>${job.title || jobType}</b> has failed to process.</p>`,
+              to: user.email,
             };
             await redis.lpush(
               REDIS_QUEUES.EMAIL.key,
@@ -299,8 +302,6 @@ class ProactiveQueueProcessor {
       raw: data,
     };
   }
-
-
 
   stop() {
     this.isRunning = false;

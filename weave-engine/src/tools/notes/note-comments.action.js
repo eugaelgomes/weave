@@ -11,13 +11,13 @@ const { pool } = require("../../services/database/postgres.client");
  */
 function wrapTextAsDoc(text) {
   return {
-    type: "doc",
     content: [
       {
+        content: [{ text: String(text), type: "text" }],
         type: "paragraph",
-        content: [{ type: "text", text: String(text) }],
       },
     ],
+    type: "doc",
   };
 }
 
@@ -277,8 +277,8 @@ async function deleteNoteComment(args) {
     }
 
     return {
-      message: "Comment deleted successfully.",
       commentId: args.commentId,
+      message: "Comment deleted successfully.",
     };
   } catch (error) {
     return {
@@ -288,8 +288,8 @@ async function deleteNoteComment(args) {
 }
 
 module.exports = {
-  listNoteComments,
   createNoteComment,
-  updateNoteComment,
   deleteNoteComment,
+  listNoteComments,
+  updateNoteComment,
 };

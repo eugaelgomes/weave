@@ -3,7 +3,7 @@
  */
 const {
   executeAgenticTask,
-} = require("../../../weave-ai-chat/reasoning.engine");
+} = require("../../../weave-ai-chat/engines/reasoning.engine");
 const { getResearcherPrompt } = require("../prompts/researcher.prompt");
 const { logger } = require("../../../../services/logger");
 
@@ -13,46 +13,49 @@ async function researcherNode(state) {
   const systemMessage = getResearcherPrompt(state);
 
   const executionContext = {
-    userId: state.jobContext.triggeredBy || "system",
-    organizationId: state.jobContext.organizationId || null,
     language: state.jobContext.language || "en-US",
     onChunk: state.jobContext.onChunk,
+    organizationId: state.jobContext.organizationId || null,
+    userId: state.jobContext.triggeredBy || "system",
   };
 
   try {
     const { data, providerUsed, executedActions } = await executeAgenticTask({
       allowEdit: false, // Force readonly for research
       allowWebSearch: state.jobContext.allowWebSearch,
+      conversationHistory: state.conversationHistory || [],
+      executionContext,
       files: state.jobContext.files,
       functions: state.jobContext.functions,
       message: state.message,
       model: state.jobContext.model,
       systemMessage,
-      conversationHistory: state.conversationHistory || [],
-      executionContext,
     });
 
     const collectedData = [...(state.collectedData || [])];
 
     if (executedActions && executedActions.length > 0) {
-      executedActions.forEach(action => {
-         collectedData.push({
-           source: action.name,
-           query: action.args,
-           result: action.result,
-         });
+      executedActions.forEach((action) => {
+        collectedData.push({
+          query: action.args,
+          result: action.result,
+          source: action.name,
+        });
       });
     }
 
     // Also store any text conclusion the researcher arrived at
     const text = data?.text || data?.content;
     if (text) {
-      collectedData.push({ source: "Researcher Conclusion", result: text });
+      collectedData.push({ result: text, source: "Researcher Conclusion" });
     }
 
     return {
       collectedData,
-      executedActions: [...(state.executedActions || []), ...(executedActions || [])],
+      executedActions: [
+        ...(state.executedActions || []),
+        ...(executedActions || []),
+      ],
       providerUsed: providerUsed || state.providerUsed,
     };
   } catch (error) {

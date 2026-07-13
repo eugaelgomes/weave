@@ -17,11 +17,11 @@ async function searchWeb({ query }) {
 
   try {
     const response = await axios.get("https://html.duckduckgo.com/html/", {
-      params: { q: query },
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       },
+      params: { q: query },
       timeout: 10000,
     });
 
@@ -44,8 +44,8 @@ async function searchWeb({ query }) {
       const snippet = match[2].replace(/<[^>]+>/g, "").replace(/&quot;/g, '"');
 
       results.push({
-        url: decodedUrl,
         snippet,
+        url: decodedUrl,
       });
       count++;
     }
@@ -163,6 +163,6 @@ async function readUrl({ url }) {
 }
 
 module.exports = {
-  searchWeb,
   readUrl,
+  searchWeb,
 };

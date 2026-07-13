@@ -1,8 +1,6 @@
 const { z } = require("zod");
 const { logger } = require("../../../services/logger");
-const {
-  callAIProvider,
-} = require("../../../services/llm/llm-provider.client");
+const { callAIProvider } = require("../../../services/llm/llm-provider.client");
 const { extractText, safeJsonParse } = require("../utils/parsers");
 
 const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;

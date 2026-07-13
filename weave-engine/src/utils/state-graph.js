@@ -99,8 +99,8 @@ class StateGraph {
       }
 
       logger.debug("StateGraph executing node", {
-        node: currentNode,
         iterations,
+        node: currentNode,
       });
       const action = this.nodes.get(currentNode);
 
@@ -149,14 +149,14 @@ class StateGraph {
     }
 
     logger.info("StateGraph run completed", {
-      iterations,
       endNode: currentNode,
+      iterations,
     });
     return currentState;
   }
 }
 
 module.exports = {
-  StateGraph,
   END,
+  StateGraph,
 };

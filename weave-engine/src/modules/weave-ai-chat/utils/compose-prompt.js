@@ -83,8 +83,8 @@ function buildEngineComposePromptOverlay(context = {}) {
 }
 
 module.exports = {
-  ENGINE_COMPOSE_PROMPT,
-  resolveComposeContext,
-  isEngineComposeSurface,
   buildEngineComposePromptOverlay,
+  ENGINE_COMPOSE_PROMPT,
+  isEngineComposeSurface,
+  resolveComposeContext,
 };

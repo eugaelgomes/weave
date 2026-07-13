@@ -15,9 +15,9 @@ async function analystNode(state) {
   try {
     const { data, provider } = await callAIProvider({
       model: state.jobContext.model || null,
+      options: { allowEdit: false },
       prompt,
       systemMessage: "You are the Analyst. You do deep reasoning.",
-      options: { allowEdit: false },
     });
 
     const resultText = data.text || data.content || data;

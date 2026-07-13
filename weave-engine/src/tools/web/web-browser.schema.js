@@ -14,20 +14,20 @@ const readUrlZodSchema = z.object({
 
 const schemas = [
   {
-    name: "web_search",
     description: "Searches the web for current information and facts.",
+    name: "web_search",
     parameters: webSearchZodSchema.toJSONSchema(),
   },
   {
-    name: "read_url",
     description: "Reads the textual content of a specified webpage URL.",
+    name: "read_url",
     parameters: readUrlZodSchema.toJSONSchema(),
   },
 ];
 
 const zodSchemas = {
-  web_search: webSearchZodSchema,
   read_url: readUrlZodSchema,
+  web_search: webSearchZodSchema,
 };
 
 module.exports = { schemas, zodSchemas };

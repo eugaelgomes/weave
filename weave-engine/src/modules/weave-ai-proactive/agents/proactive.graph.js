@@ -2,10 +2,7 @@
  * @module weave-engine/modules/weave-engine/proactive-agents/proactive.graph
  * @description Compiles the proactive multi-agent StateGraph.
  */
-const {
-  StateGraph,
-  END,
-} = require("../../../utils/state-graph");
+const { StateGraph, END } = require("../../../utils/state-graph");
 const { orchestratorNode } = require("./nodes/orchestrator.node");
 const { researcherNode } = require("./nodes/researcher.node");
 const { analystNode } = require("./nodes/analyst.node");

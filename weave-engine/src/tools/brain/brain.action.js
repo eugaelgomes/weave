@@ -17,8 +17,8 @@ async function consultBrain() {
 
     if (mdFiles.length === 0) {
       return {
-        success: true,
         brain_content: "No brain files found.",
+        success: true,
       };
     }
 
@@ -30,13 +30,13 @@ async function consultBrain() {
     }
 
     return {
-      success: true,
       brain_content: allContent.trim(),
+      success: true,
     };
   } catch (error) {
     return {
-      success: false,
       error: `Failed to read agent brain: ${error.message}`,
+      success: false,
     };
   }
 }

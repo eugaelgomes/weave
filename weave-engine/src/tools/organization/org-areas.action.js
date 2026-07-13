@@ -114,6 +114,6 @@ async function getOrgArea(args) {
 }
 
 module.exports = {
-  listOrgAreas,
   getOrgArea,
+  listOrgAreas,
 };

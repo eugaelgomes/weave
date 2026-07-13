@@ -15,10 +15,10 @@ async function orchestratorNode(state) {
   try {
     const { data, provider } = await callAIProvider({
       model: state.jobContext.model || null,
+      options: { allowEdit: false },
       prompt,
       systemMessage:
         "You are a JSON-only decision engine. Always return valid JSON.",
-      options: { allowEdit: false },
     });
 
     let resultText = data.text || data.content || data;
@@ -45,7 +45,7 @@ async function orchestratorNode(state) {
   } catch (error) {
     logger.error("Orchestrator node error", { error: error.message });
     // Default fallback to writer if it fails to decide
-    return { nextNode: "writer", errors: [error.message] };
+    return { errors: [error.message], nextNode: "writer" };
   }
 }
 

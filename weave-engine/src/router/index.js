@@ -40,14 +40,14 @@ class QueueRouter {
           parsedJob = processor.parseRawJob(rawPayload);
         } catch (error) {
           logger.error("Failed to parse queue job", {
-            queueName,
             error: error.message,
+            queueName,
           });
           await this.pushDeadLetter({
             errorCode: "ENGINE_JOB_PARSE_FAILED",
             errorMessage: error.message,
-            rawPayload,
             queueName,
+            rawPayload,
           });
           continue;
         }
@@ -70,7 +70,9 @@ class QueueRouter {
         })
       );
     } catch (error) {
-      logger.error("Failed to push to dead letter queue", { error: error.message });
+      logger.error("Failed to push to dead letter queue", {
+        error: error.message,
+      });
     }
   }
 

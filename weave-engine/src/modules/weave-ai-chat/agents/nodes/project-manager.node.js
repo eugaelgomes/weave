@@ -1,9 +1,13 @@
 /**
  * @module weave-engine/modules/weave-ai-chat/agents/nodes/project-manager.node
  */
-const { callAIProvider } = require("../../../../services/llm/llm-provider.client");
+const {
+  callAIProvider,
+} = require("../../../../services/llm/llm-provider.client");
 const { logger } = require("../../../../services/logger");
-const { getInternalToolDefinitions } = require("../../../../tools/tool-dispatcher");
+const {
+  getInternalToolDefinitions,
+} = require("../../../../tools/tool-dispatcher");
 
 const PROJECT_MANAGER_SYSTEM_PROMPT = `
 You are the Project Management Expert Agent for Weave. 
@@ -14,12 +18,12 @@ Use your internal tools to gather data or modify notes/comments to answer the us
 
 async function projectManagerNode(state) {
   logger.info("Project Manager node running");
-  
+
   if (state.executionContext && state.executionContext.onChunk) {
     state.executionContext.onChunk({
-      type: "action_state",
       name: "project_manager",
       status: "running",
+      type: "action_state",
     });
   }
 
@@ -29,13 +33,16 @@ async function projectManagerNode(state) {
   try {
     const { data, provider } = await callAIProvider({
       model: state.jobContext?.model || null,
-      prompt: "",
-      systemMessage: (state.jobContext?.systemMessage || "") + "\n\n" + PROJECT_MANAGER_SYSTEM_PROMPT,
-      options: { 
+      options: {
         allowEdit: state.options?.allowEdit ?? false,
+        functions: allTools,
         messages: state.messages || [],
-        functions: allTools
       },
+      prompt: "",
+      systemMessage:
+        (state.jobContext?.systemMessage || "") +
+        "\n\n" +
+        PROJECT_MANAGER_SYSTEM_PROMPT,
     });
 
     const stateUpdate = {
@@ -45,45 +52,46 @@ async function projectManagerNode(state) {
     if (data.type === "function_call" && data.toolCalls) {
       const toolCallsArray = data.toolCalls.map((tc, idx) => {
         return {
-          id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}_${idx}`,
-          function: {
-            name: tc.name,
-            arguments: JSON.stringify(tc.arguments),
-          },
-          rawArgs: tc.arguments,
           extra_content: tc.extra_content,
+          function: {
+            arguments: JSON.stringify(tc.arguments),
+            name: tc.name,
+          },
+          id:
+            tc.id ||
+            `call_${Math.random().toString(36).substring(2, 11)}_${idx}`,
+          rawArgs: tc.arguments,
         };
       });
 
       const assistantMessage = {
-        role: "assistant",
         content: null,
         rawParts: data.rawParts,
+        role: "assistant",
         tool_calls: toolCallsArray.map((t) => ({
-          id: t.id,
           function: t.function,
+          id: t.id,
           ...(t.extra_content ? { extra_content: t.extra_content } : {}),
         })),
       };
 
       stateUpdate.messages = [...(state.messages || []), assistantMessage];
       stateUpdate.pendingToolCalls = toolCallsArray;
-      
     } else {
       const finalMsg = data.text || data.content || data;
       const assistantMessage = {
-        role: "assistant",
         content: finalMsg,
+        role: "assistant",
       };
       stateUpdate.messages = [...(state.messages || []), assistantMessage];
       stateUpdate.finalResponse = finalMsg;
-      
+
       if (state.executionContext && state.executionContext.onChunk) {
         state.executionContext.onChunk({
-          type: "action_state",
           name: "project_manager",
           status: "completed",
           success: true,
+          type: "action_state",
         });
       }
     }

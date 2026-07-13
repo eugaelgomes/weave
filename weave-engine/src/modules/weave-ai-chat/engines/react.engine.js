@@ -121,15 +121,16 @@ async function executeAgenticTask({
 
   // Add the initial user message to history immediately so it persists across ReAct loops
   currentOptions.messages.push({
-    role: "user",
     content: message,
+    role: "user",
   });
 
   let currentPrompt = ""; // The message is now in messages history, no need for prompt
   let providerUsed = null;
   const failureCounts = {};
 
-  const maxDurationMs = executionContext.maxDurationMs || MAX_AGENTIC_DURATION_MS;
+  const maxDurationMs =
+    executionContext.maxDurationMs || MAX_AGENTIC_DURATION_MS;
 
   // Primary ReAct While Loop
   // Continues until MAX_REACT_ITERATIONS is hit, time limit expires, or a final answer is returned.
@@ -142,17 +143,17 @@ async function executeAgenticTask({
         ? "Atingi o limite de tempo interno da ferramenta e precisei parar o raciocínio. Fique à vontade para me pedir para continuar!"
         : "I hit the internal time limit for this task and had to stop early. Feel free to ask me to continue!";
       return {
-        data: { type: "text", text: msg, content: msg },
-        providerUsed,
+        data: { content: msg, text: msg, type: "text" },
         executedActions,
+        providerUsed,
       };
     }
 
     iterations++;
 
     const { data, provider } = await callAIProvider({
-      options: currentOptions,
       model,
+      options: currentOptions,
       prompt: currentPrompt,
       systemMessage,
     });
@@ -163,26 +164,26 @@ async function executeAgenticTask({
     if (data.type === "function_call" && data.toolCalls) {
       const toolCallsArray = data.toolCalls.map((tc, idx) => {
         return {
+          extra_content: tc.extra_content,
+          function: {
+            arguments: JSON.stringify(tc.arguments),
+            name: tc.name,
+          },
           id:
             tc.id ||
             `call_${Math.random().toString(36).substring(2, 11)}_${idx}`,
-          function: {
-            name: tc.name,
-            arguments: JSON.stringify(tc.arguments),
-          },
           rawArgs: tc.arguments,
-          extra_content: tc.extra_content,
         };
       });
 
       // Add assistant tool_call message to history
       currentOptions.messages.push({
-        role: "assistant",
         content: null,
         rawParts: data.rawParts,
+        role: "assistant",
         tool_calls: toolCallsArray.map((t) => ({
-          id: t.id,
           function: t.function,
+          id: t.id,
           ...(t.extra_content ? { extra_content: t.extra_content } : {}),
         })),
       });
@@ -202,9 +203,9 @@ async function executeAgenticTask({
             const fnArgs = tc.rawArgs;
             if (executionContext.onChunk) {
               executionContext.onChunk({
-                type: "action_state",
                 name: fnName,
                 status: "running",
+                type: "action_state",
               });
             }
             try {
@@ -215,26 +216,26 @@ async function executeAgenticTask({
               );
               if (executionContext.onChunk) {
                 executionContext.onChunk({
-                  type: "action_state",
                   name: fnName,
                   status: "completed",
                   success: true,
+                  type: "action_state",
                 });
               }
-              return { tc, result, error: null };
+              return { error: null, result, tc };
             } catch (err) {
               if (executionContext.onChunk) {
                 executionContext.onChunk({
-                  type: "action_state",
                   name: fnName,
                   status: "completed",
                   success: false,
+                  type: "action_state",
                 });
               }
               return {
-                tc,
-                result: null,
                 error: err.message || "Tool execution failed",
+                result: null,
+                tc,
               };
             }
           })
@@ -258,15 +259,15 @@ async function executeAgenticTask({
 
           const output = error ? { error } : result;
 
-          executedActions.push({ name: fnName, args: fnArgs, result: output });
+          executedActions.push({ args: fnArgs, name: fnName, result: output });
 
           const contentStr = truncateToolOutput(output, 12000);
 
           currentOptions.messages.push({
-            role: "tool",
-            name: fnName,
-            tool_call_id: tc.id,
             content: contentStr,
+            name: fnName,
+            role: "tool",
+            tool_call_id: tc.id,
           });
         }
 
@@ -276,9 +277,9 @@ async function executeAgenticTask({
             (failingToolName || "") +
             " e não consegui concluir a tarefa. Por favor, reformule o pedido ou tente novamente mais tarde.";
           return {
-            data: { type: "text", text: msg, content: msg },
-            providerUsed,
+            data: { content: msg, text: msg, type: "text" },
             executedActions,
+            providerUsed,
           };
         }
 
@@ -287,9 +288,9 @@ async function executeAgenticTask({
         // If there is ANY external tool, we return to API to execute them.
         return {
           data,
+          executedActions,
           functions: data.toolCalls,
           providerUsed,
-          executedActions,
         };
       }
     } else if (data.type === "function_call" && data.functionCall) {
@@ -302,16 +303,16 @@ async function executeAgenticTask({
 
       // Add assistant tool_call message to history
       currentOptions.messages.push({
-        role: "assistant",
         content: null,
         rawParts: data.rawParts,
+        role: "assistant",
         tool_calls: [
           {
-            id: toolCallId,
             function: {
-              name: fnName,
               arguments: JSON.stringify(fnArgs),
+              name: fnName,
             },
+            id: toolCallId,
           },
         ],
       });
@@ -319,9 +320,9 @@ async function executeAgenticTask({
       if (isInternalTool(fnName)) {
         if (executionContext.onChunk) {
           executionContext.onChunk({
-            type: "action_state",
             name: fnName,
             status: "running",
+            type: "action_state",
           });
         }
         // Execute internally and loop
@@ -331,20 +332,20 @@ async function executeAgenticTask({
           result = await executeInternalTool(fnName, fnArgs, executionContext);
           if (executionContext.onChunk) {
             executionContext.onChunk({
-              type: "action_state",
               name: fnName,
               status: "completed",
               success: true,
+              type: "action_state",
             });
           }
         } catch (err) {
           error = err.message || "Tool execution failed";
           if (executionContext.onChunk) {
             executionContext.onChunk({
-              type: "action_state",
               name: fnName,
               status: "completed",
               success: false,
+              type: "action_state",
             });
           }
         }
@@ -358,23 +359,23 @@ async function executeAgenticTask({
               fnName +
               " e não consegui concluir a tarefa. Por favor, tente de novo mais tarde.";
             return {
-              data: { type: "text", text: msg, content: msg },
-              providerUsed,
+              data: { content: msg, text: msg, type: "text" },
               executedActions,
+              providerUsed,
             };
           }
         }
 
         const output = error ? { error } : result;
-        executedActions.push({ name: fnName, args: fnArgs, result: output });
+        executedActions.push({ args: fnArgs, name: fnName, result: output });
 
         const contentStr = truncateToolOutput(output, 12000);
 
         currentOptions.messages.push({
-          role: "tool",
-          name: fnName,
-          tool_call_id: toolCallId,
           content: contentStr,
+          name: fnName,
+          role: "tool",
+          tool_call_id: toolCallId,
         });
 
         continue;
@@ -382,15 +383,15 @@ async function executeAgenticTask({
         // External tool: Return to API to be executed
         return {
           data,
+          executedActions,
           functions: [
             {
+              arguments: fnArgs,
               id: toolCallId,
               name: fnName,
-              arguments: fnArgs,
             },
           ],
           providerUsed,
-          executedActions,
         };
       }
     }
@@ -402,8 +403,8 @@ async function executeAgenticTask({
         resolvedInternalTools:
           executedActions.length > 0 ? executedActions : undefined,
       },
-      providerUsed,
       executedActions,
+      providerUsed,
     };
   }
 
@@ -417,14 +418,14 @@ async function executeAgenticTask({
 
   return {
     data: {
-      type: "text",
-      text: fallbackMsg,
       content: fallbackMsg,
       resolvedInternalTools:
         executedActions.length > 0 ? executedActions : undefined,
+      text: fallbackMsg,
+      type: "text",
     },
-    providerUsed,
     executedActions,
+    providerUsed,
   };
 }
 

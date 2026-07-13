@@ -51,7 +51,7 @@ function compactText(content) {
 }
 
 module.exports = {
+  compactText,
   extractText,
   safeJsonParse,
-  compactText,
 };

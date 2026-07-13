@@ -18,7 +18,7 @@ const routeFromOrchestrator = (state) => {
   if (state.activeAgent === "contextualizer") return "contextualizer";
   if (state.activeAgent === "project_manager") return "project_manager";
   if (state.activeAgent === "general_assistant") return "general_assistant";
-  
+
   // If the active agent is something else, it's a dynamic agent
   return "dynamic_agent";
 };
@@ -26,7 +26,7 @@ const routeFromOrchestrator = (state) => {
 // Conditional routing function from agents
 const routeFromAgent = (state) => {
   if (state.errors && state.errors.length > 0) return END;
-  
+
   // If the agent requested a tool call that hasn't been executed yet
   if (state.pendingToolCalls && state.pendingToolCalls.length > 0) {
     return "tool_executor";
@@ -49,7 +49,7 @@ const routeFromToolExecutor = (state) => {
   if (state.activeAgent === "contextualizer") return "contextualizer";
   if (state.activeAgent === "project_manager") return "project_manager";
   if (state.activeAgent === "general_assistant") return "general_assistant";
-  
+
   return "dynamic_agent";
 };
 
@@ -72,12 +72,12 @@ function buildChatGraph() {
 
   // 3. Define Edges (Transitions)
   graph.addConditionalEdge("orchestrator", routeFromOrchestrator);
-  
+
   graph.addConditionalEdge("contextualizer", routeFromAgent);
   graph.addConditionalEdge("project_manager", routeFromAgent);
   graph.addConditionalEdge("general_assistant", routeFromAgent);
   graph.addConditionalEdge("dynamic_agent", routeFromAgent);
-  
+
   graph.addConditionalEdge("tool_executor", routeFromToolExecutor);
 
   return graph.compile();

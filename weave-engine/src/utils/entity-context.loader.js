@@ -443,15 +443,15 @@ async function buildEntityContext(payload = {}) {
   return {
     indexedNotes,
     indexedProjects,
-    organizationMembers,
     organizationInfo,
+    organizationMembers,
   };
 }
 
 module.exports = {
   buildEntityContext,
-  loadOrganizationMembers,
   loadOrganizationInfo,
+  loadOrganizationMembers,
   normalizeOptionalUuid,
   normalizeUuidList,
   resolveNoteIdsFromPayload,

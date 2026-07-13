@@ -55,7 +55,8 @@ class CalendarEventsRepository {
         outlook_calendar_id,
         last_synced_at,
         sync_status,
-        etag
+        etag,
+        updated_at
       )
       VALUES (
         $1::uuid,
@@ -76,7 +77,8 @@ class CalendarEventsRepository {
         $16,
         $17::timestamptz,
         $18::sync_status,
-        $19
+        $19,
+        NOW()
       )
       RETURNING
         id::text,

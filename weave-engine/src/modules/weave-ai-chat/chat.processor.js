@@ -11,26 +11,19 @@
  * Used by:
  * - `weave-engine/src/index.js`: Instantiated at startup to begin background processing.
  */
-/* eslint-disable sort-keys */
+
 const { z } = require("zod");
 const redis = require("../../services/cache/redis.client");
 const { REDIS_QUEUES } = require("../../services/cache/redis-queues");
 const { logger } = require("../../services/logger");
+const { buildChatSystemMessage } = require("./agents/prompts/agent-prompts");
+const { buildEntityContext } = require("../../utils/entity-context.loader");
 const {
-  buildChatSystemMessage,
-} = require("./agents/prompts/agent-prompts");
-const {
-  buildEntityContext,
-} = require("../../utils/entity-context.loader");
-const {
-  executeAgenticTask,
   generateSmartResponse,
   processThinkingPhase,
 } = require("./engines/reasoning.engine");
 const { buildChatGraph } = require("./agents/chat.graph");
-const {
-  callAIProvider,
-} = require("../../services/llm/llm-provider.client");
+const { callAIProvider } = require("../../services/llm/llm-provider.client");
 const {
   isEngineComposeSurface,
   buildEngineComposePromptOverlay,
@@ -54,30 +47,30 @@ const ENGINE_CHAT_TASK_TIMEOUT_MS = Number.parseInt(
   10
 );
 const MAX_GRAPH_ITERATIONS = Number.parseInt(
-  process.env.WEAVE_ENGINE_MAX_REACT_ITERATIONS || "4",
+  process.env.WEAVE_ENGINE_MAX_REACT_ITERATIONS || "8",
   10
 );
 const ENGINE_JOB_MAX_RETRIES = Number.parseInt(
-  process.env.WEAVE_ENGINE_JOB_MAX_RETRIES || "2",
+  process.env.WEAVE_ENGINE_JOB_MAX_RETRIES || "4",
   10
 );
 const ENGINE_DEAD_LETTER_QUEUE_KEY = REDIS_QUEUES.ENGINE_DEAD_LETTER.key;
 
 const jobEnvelopeSchema = z
   .object({
-    responseQueueKey: z.string().trim().min(1),
-    payload: z.object({}).passthrough(),
     attempts: z.number().int().nonnegative().catch(0).default(0),
     createdAt: z
       .string()
       .catch(() => new Date().toISOString())
       .default(() => new Date().toISOString()),
+    payload: z.object({}).passthrough(),
     requestId: z
       .string()
       .trim()
       .catch(null)
       .default(null)
       .transform((v) => (v === "" ? null : v)),
+    responseQueueKey: z.string().trim().min(1),
     taskType: z
       .string()
       .trim()
@@ -111,8 +104,6 @@ class LlmQueueProcessor {
     this.queueName = REDIS_QUEUES.ENGINE_LLM_REQUESTS.key;
   }
 
-
-
   /**
    * Parses the raw JSON job payload and normalizes required fields like attempts and taskType.
    * Throws an error if parsing or validation fails.
@@ -131,7 +122,9 @@ class LlmQueueProcessor {
 
     const validation = jobEnvelopeSchema.safeParse(parsedJob);
     if (!validation.success) {
-      throw new Error(`Invalid envelope schema: ${JSON.stringify(validation.error.issues)}`);
+      throw new Error(
+        `Invalid envelope schema: ${JSON.stringify(validation.error.issues)}`
+      );
     }
 
     return validation.data;
@@ -280,9 +273,9 @@ class LlmQueueProcessor {
         );
         const entityContext = await buildEntityContext({
           noteIds: payload.noteIds || additionalContext.noteIds,
+          organizationId,
           projectIds: payload.projectIds || additionalContext.projectIds,
           userId: payload.userId || additionalContext.userId,
-          organizationId,
         });
 
         return {
@@ -290,8 +283,8 @@ class LlmQueueProcessor {
             ...additionalContext,
             indexedNotes: entityContext.indexedNotes,
             indexedProjects: entityContext.indexedProjects,
-            organizationMembers: entityContext.organizationMembers,
             organizationInfo: entityContext.organizationInfo,
+            organizationMembers: entityContext.organizationMembers,
             userLanguage:
               payload.userLanguage || additionalContext.userLanguage,
           }),
@@ -329,26 +322,12 @@ class LlmQueueProcessor {
         );
 
         const initialState = {
-          messages: [{ role: "user", content: payload.message || "" }],
-          jobContext: { 
-            model: payload.model || null,
-            systemMessage: systemMessage
-          },
-          options: { 
-            allowEdit: Boolean(payload.allowEdit), 
-            allowWebSearch: Boolean(payload.allowWebSearch) 
-          },
+          availableAgents: payload.availableAgents || [],
+          executedActions: [],
           executionContext: {
-            userId: payload.userId || null,
-            organizationId:
-              payload.organizationId ||
-              payload.context?.organizationId ||
-              payload.context?.organization_id ||
-              null,
             language:
-              payload.userLanguage ||
-              payload.context?.userLanguage ||
-              "en-US",
+              payload.userLanguage || payload.context?.userLanguage || "en-US",
+            maxDurationMs: ENGINE_CHAT_TASK_TIMEOUT_MS,
             onChunk: (chunk) => {
               if (requestId && redis) {
                 redis
@@ -356,14 +335,29 @@ class LlmQueueProcessor {
                   .catch(() => {});
               }
             },
-            maxDurationMs: ENGINE_CHAT_TASK_TIMEOUT_MS,
+            organizationId:
+              payload.organizationId ||
+              payload.context?.organizationId ||
+              payload.context?.organization_id ||
+              null,
+            userId: payload.userId || null,
           },
-          executedActions: [],
-          availableAgents: payload.availableAgents || [],
+          jobContext: {
+            model: payload.model || null,
+            systemMessage: systemMessage,
+          },
+          messages: [{ content: payload.message || "", role: "user" }],
+          options: {
+            allowEdit: Boolean(payload.allowEdit),
+            allowWebSearch: Boolean(payload.allowWebSearch),
+          },
         };
 
         if (conversationHistory.length > 0) {
-          initialState.messages = [...conversationHistory, ...initialState.messages];
+          initialState.messages = [
+            ...conversationHistory,
+            ...initialState.messages,
+          ];
         }
 
         const graph = buildChatGraph();
@@ -382,7 +376,7 @@ class LlmQueueProcessor {
 
         const providerUsed = finalState.providerUsed || null;
         const executedActions = finalState.executedActions || [];
-        
+
         let toolCalls = [];
         if (finalState.externalToolCalls) {
           toolCalls = finalState.externalToolCalls;
@@ -390,19 +384,18 @@ class LlmQueueProcessor {
 
         const finalMessage = finalState.finalResponse || "";
 
-
         return {
           data: {
             citations: [],
             content: finalMessage,
+            executedActions: executedActions,
             response: finalMessage,
             text: finalMessage,
-            executedActions: executedActions,
             usage: null,
           },
           executedActions: executedActions,
-          toolCalls,
           providerUsed,
+          toolCalls,
         };
       }
     }
@@ -420,19 +413,19 @@ class LlmQueueProcessor {
     );
     const entityContext = await buildEntityContext({
       noteIds,
+      organizationId,
       projectIds,
       userId: payload.userId,
-      organizationId,
     });
 
     const baseMessage = buildChatSystemMessage({
       ...payload.context,
-      projectIds,
-      noteIds,
       indexedNotes: entityContext.indexedNotes,
       indexedProjects: entityContext.indexedProjects,
-      organizationMembers: entityContext.organizationMembers,
+      noteIds,
       organizationInfo: entityContext.organizationInfo,
+      organizationMembers: entityContext.organizationMembers,
+      projectIds,
       userLanguage: payload.userLanguage || payload.context?.userLanguage,
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
@@ -564,11 +557,19 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
     return rawHistory
       .slice(-CHAT_HISTORY_MAX_MESSAGES)
       .map((entry) => {
-        const role = entry?.role === "tool" ? "tool" : entry?.role === "assistant" ? "assistant" : "user";
+        const role =
+          entry?.role === "tool"
+            ? "tool"
+            : entry?.role === "assistant"
+              ? "assistant"
+              : "user";
         const rawContent =
           typeof entry?.content === "string" ? entry.content.trim() : "";
 
-        const hasTools = (entry?.tool_calls !== null && entry?.tool_calls !== undefined) || (entry?.tool_call_id !== null && entry?.tool_call_id !== undefined) || role === "tool";
+        const hasTools =
+          (entry?.tool_calls !== null && entry?.tool_calls !== undefined) ||
+          (entry?.tool_call_id !== null && entry?.tool_call_id !== undefined) ||
+          role === "tool";
 
         if (!rawContent && !hasTools) {
           return null;

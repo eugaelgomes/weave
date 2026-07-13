@@ -1,5 +1,6 @@
 const DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY = "weave:engine:llm:requests";
-const DEFAULT_ENGINE_SUBAGENT_REQUEST_QUEUE_KEY = "weave:engine:subagents:requests";
+const DEFAULT_ENGINE_SUBAGENT_REQUEST_QUEUE_KEY =
+  "weave:engine:subagents:requests";
 const DEFAULT_ENGINE_LLM_RESPONSE_PREFIX = "weave:engine:llm:responses";
 const DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY = "queue:engine-proactive-tasks";
 const DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY =
@@ -78,14 +79,14 @@ function getEmailQueueRedisKey() {
 
 module.exports = {
   DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY,
-  DEFAULT_ENGINE_SUBAGENT_REQUEST_QUEUE_KEY,
   DEFAULT_ENGINE_LLM_RESPONSE_PREFIX,
   DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY,
   DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY,
+  DEFAULT_ENGINE_SUBAGENT_REQUEST_QUEUE_KEY,
+  getEmailQueueRedisKey,
   getEngineLlmRequestQueueRedisKey,
-  getEngineSubagentRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
   getEngineProactiveResponseQueueRedisKey,
   getEngineProactiveTaskQueueRedisKey,
-  getEmailQueueRedisKey,
+  getEngineSubagentRequestQueueRedisKey,
 };

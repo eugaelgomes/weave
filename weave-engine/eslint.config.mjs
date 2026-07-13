@@ -1,6 +1,7 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import pluginN from "eslint-plugin-n";
+import sortKeysFix from "eslint-plugin-sort-keys-fix";
 
 export default [
   {
@@ -11,6 +12,7 @@ export default [
     ...pluginJs.configs.recommended,
     plugins: {
       n: pluginN,
+      "sort-keys-fix": sortKeysFix,
     },
     languageOptions: {
       globals: {
@@ -31,13 +33,17 @@ export default [
       semi: ["error", "always"],
 
       eqeqeq: ["error", "always"],
-      "no-console": "warn",
+      // "no-console": "warn",
       "no-duplicate-imports": "error",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "no-var": "error",
       "prefer-const": "warn",
 
-      "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
+      "sort-keys-fix/sort-keys-fix": [
+        "warn",
+        "asc",
+        { caseSensitive: false, natural: true },
+      ],
 
       // Node/CommonJS Import Checks
       "n/no-missing-require": "error",

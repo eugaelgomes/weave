@@ -41,10 +41,10 @@ async function processThinkingPhase({
 
   try {
     const { data } = await callAIProvider({
+      model,
       options: {
         allowEdit: false,
       },
-      model,
       prompt: message,
       systemMessage: generationSystemMessage,
     });

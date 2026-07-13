@@ -15,12 +15,14 @@ async function writerNode(state) {
   try {
     const { data, provider } = await callAIProvider({
       model: state.jobContext.model || null,
-      prompt,
-      systemMessage: state.systemMessage || "You are the Writer. Format outputs strictly in Markdown.",
       options: {
         allowEdit: false,
         messages: state.conversationHistory || [],
       },
+      prompt,
+      systemMessage:
+        state.systemMessage ||
+        "You are the Writer. Format outputs strictly in Markdown.",
     });
 
     const resultText = data.text || data.content || data;

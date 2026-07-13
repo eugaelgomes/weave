@@ -8,22 +8,25 @@ const builder = require("./builder");
 const utils = require("./utils");
 
 module.exports = {
-  // Export functions from builder
-  buildSystemMessage: builder.buildSystemMessage,
-  buildChatSystemMessage: builder.buildChatSystemMessage,
-  buildEngineSystemMessage: builder.buildEngineSystemMessage,
-
   // Export static prompts and persona
   basePersonality: persona.basePersonality,
 
-  chatSystemPrompt: persona.chatSystemPrompt,
-  engineSystemPrompt: persona.engineSystemPrompt,
-
   // Backwards compatibility
   behaviorInstructions: persona.behaviorInstructions,
-  defaultSystemPrompt: persona.defaultSystemPrompt,
-  systemContext: persona.systemContext,
 
+  buildChatSystemMessage: builder.buildChatSystemMessage,
+
+  buildEngineSystemMessage: builder.buildEngineSystemMessage,
+
+  // Export functions from builder
+  buildSystemMessage: builder.buildSystemMessage,
+
+  chatSystemPrompt: persona.chatSystemPrompt,
+
+  defaultSystemPrompt: persona.defaultSystemPrompt,
+  engineSystemPrompt: persona.engineSystemPrompt,
   // Export utilities that might be needed outside
   summarizeDocument: utils.summarizeDocument,
+
+  systemContext: persona.systemContext,
 };

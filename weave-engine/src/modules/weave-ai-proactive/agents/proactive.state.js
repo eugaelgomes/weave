@@ -10,19 +10,21 @@
  */
 function createInitialState(jobContext) {
   return {
-    // Input
-    jobContext: jobContext || {},
+    analysisResult: "",
 
     // Intermediate state
     collectedData: [],
-    analysisResult: "",
+
+    errors: [],
 
     // Output
     finalOutput: "",
 
     // Engine metadata
     iterations: 0,
-    errors: [],
+
+    // Input
+    jobContext: jobContext || {},
     nextNode: "orchestrator", // Used for routing
     providerUsed: null,
   };

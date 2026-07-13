@@ -3,7 +3,6 @@ const { z } = require("zod");
 
 const envSchema = z
   .object({
-    REDIS_URL: z.string().min(1),
     DATABASE_HOST_URL: z.string().optional(),
     DATABASE_NAME: z.string().optional(),
     DATABASE_PASSWORD: z.string().optional(),
@@ -15,6 +14,7 @@ const envSchema = z
     OPENAI_API_KEY: z.string().optional(),
     REDIS_ENGINE_LLM_REQUEST_QUEUE_KEY: z.string().optional(),
     REDIS_ENGINE_LLM_RESPONSE_PREFIX: z.string().optional(),
+    REDIS_URL: z.string().min(1),
   })
   .refine(
     (data) => {
