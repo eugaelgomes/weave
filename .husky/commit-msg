@@ -1,5 +1,14 @@
 #!/bin/sh
 
+echo "Husky commit-msg hook started"
+echo "Current directory (root hook run): $(pwd)"
+echo "Argument \$1: $1"
+echo "Arguments list: $@"
+
 # Go to API directory and run commitlint using the commit message file from the root
 cd weave-api
+echo "Directory after cd: $(pwd)"
+echo "Target path: ../$1"
+ls -la "../$1" 2>&1
+
 npx --no -- commitlint --edit "../$1"
