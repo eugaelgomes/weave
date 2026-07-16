@@ -19,12 +19,12 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
       const { name, color, level } = req.body;
 
       const priority = await TaskPrioritiesRepository.createPriority({
-        projectId: project_id || null,
-        orgId: org_id || null,
-        name,
         color,
-        level,
         createdBy: userId,
+        level,
+        name,
+        orgId: org_id || null,
+        projectId: project_id || null,
       });
       res.status(201).json(priority);
     } catch (error) {
@@ -43,8 +43,8 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
     try {
       const { project_id, org_id } = req.params;
       const priorities = await TaskPrioritiesRepository.getPriorities({
-        projectId: project_id || null,
         orgId: org_id || null,
+        projectId: project_id || null,
       });
       res.status(200).json(priorities);
     } catch (error) {
@@ -67,9 +67,9 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
       const priority = await TaskPrioritiesRepository.updatePriority(
         priority_id,
         {
-          projectId: project_id || null,
           orgId: org_id || null,
-          updates: { name, color, level },
+          projectId: project_id || null,
+          updates: { color, level, name },
         }
       );
       if (!priority) {
@@ -99,9 +99,9 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
       const priority = await TaskPrioritiesRepository.deletePriority(
         priority_id,
         {
-          projectId: project_id || null,
-          orgId: org_id || null,
           deletedBy: userId,
+          orgId: org_id || null,
+          projectId: project_id || null,
         }
       );
       if (!priority) {

@@ -10,9 +10,9 @@ export const PROJECT_STATUS = Object.freeze({
 });
 
 export const PROJECT_FIELDS = Object.freeze({
-  TITLE_MAX_LENGTH: 100,
-  DESCRIPTION_MAX_LENGTH: 500,
   ALLOWED_PRIORITIES: ["low", "medium", "high", "critical"],
+  DESCRIPTION_MAX_LENGTH: 500,
+  TITLE_MAX_LENGTH: 100,
 });
 
 // --- NOTES (enum `public.notes_status` no PostgreSQL) ---
@@ -23,31 +23,31 @@ export const NOTE_STATUS = Object.freeze({
 });
 
 export const NOTE_TYPES = Object.freeze({
-  TEXT: "text",
   CHECKLIST: "checklist",
   CODE_SNIPPET: "code-snippet",
+  TEXT: "text",
 });
 
 // --- BLOCKS (Conteúdo dentro das notas) ---
 export const BLOCK_TYPES = Object.freeze({
-  TEXT: "text",
-  PARAGRAPH: "paragraph",
+  CODE: "code",
+  DIVIDER: "divider",
   HEADING: "heading",
   HEADING_1: "h1",
   HEADING_2: "h2",
   HEADING_3: "h3",
-  TODO: "todo",
+  IMAGE: "image",
   LIST: "list",
   PAGE: "page",
-  CODE: "code",
+  PARAGRAPH: "paragraph",
   QUOTE: "quote",
-  IMAGE: "image",
-  DIVIDER: "divider",
+  TEXT: "text",
+  TODO: "todo",
 });
 
 export const BLOCK_CONFIG = Object.freeze({
-  MAX_DEPTH: 3,
   ALLOW_HTML: false,
+  MAX_DEPTH: 3,
 });
 
 // --- COLORS ---

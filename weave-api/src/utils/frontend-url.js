@@ -22,6 +22,6 @@ function buildAuthInviteUrl(inviteId, frontendUrl) {
 }
 
 module.exports = {
-  normalizeFrontendBase,
   buildAuthInviteUrl,
+  normalizeFrontendBase,
 };

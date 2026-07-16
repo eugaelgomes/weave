@@ -13,7 +13,6 @@ const engineRpcRedis = new Redis(
 );
 
 engineRpcRedis.on("error", (error) => {
-  // eslint-disable-next-line no-console -- engine RPC infra diagnostics
   console.error("[RedisEngineRpc] Error:", error);
 });
 

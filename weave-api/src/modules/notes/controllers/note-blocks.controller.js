@@ -115,12 +115,12 @@ class NoteBlocksController extends NotesBaseController {
       await this._validateNoteAccessLightweight(noteId, userId);
 
       const block = await this.notesRepository.insertNoteBlock(noteId, userId, {
-        type: req.body?.type,
+        done: req.body?.done,
         parent_id: req.body?.parent_id ?? req.body?.parentId,
         position: req.body?.position,
         properties: req.body?.properties,
         text: req.body?.text,
-        done: req.body?.done,
+        type: req.body?.type,
       });
       return res.status(201).json(block);
     } catch (error) {
@@ -160,11 +160,11 @@ class NoteBlocksController extends NotesBaseController {
           userId,
         });
         return res.status(409).json({
-          code: "BLOCK_CONFLICT",
-          error: "Edit conflict on block",
           blockId,
-          expectedVersion,
+          code: "BLOCK_CONFLICT",
           currentVersion: Number(existing.version),
+          error: "Edit conflict on block",
+          expectedVersion,
           serverBlock: existing,
         });
       }
@@ -172,11 +172,11 @@ class NoteBlocksController extends NotesBaseController {
       const updated = await this.notesRepository.updateNoteBlock(
         blockId,
         {
-          type: req.body?.type,
-          position: req.body?.position,
-          text: req.body?.text,
           done: req.body?.done,
+          position: req.body?.position,
           properties: req.body?.properties,
+          text: req.body?.text,
+          type: req.body?.type,
         },
         expectedVersion
       );
@@ -191,11 +191,11 @@ class NoteBlocksController extends NotesBaseController {
             userId,
           });
           return res.status(409).json({
-            code: "BLOCK_CONFLICT",
-            error: "Edit conflict on block",
             blockId,
-            expectedVersion,
+            code: "BLOCK_CONFLICT",
             currentVersion: Number(latest.version),
+            error: "Edit conflict on block",
+            expectedVersion,
             serverBlock: latest,
           });
         }
@@ -338,14 +338,14 @@ class NoteBlocksController extends NotesBaseController {
           });
           return res.status(409).json({
             code: "NOTE_CONFLICT",
-            error: "Edit conflict detected",
-            noteId,
+            conflictFields: ["blocks"],
             currentRevision:
               latestNote?.revision === undefined ||
               latestNote?.revision === null
                 ? null
                 : Number(latestNote.revision),
-            conflictFields: ["blocks"],
+            error: "Edit conflict detected",
+            noteId,
           });
         }
         nextRevision = Number(noteResult.rows[0]?.revision || baseRevision);

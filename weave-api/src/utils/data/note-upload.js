@@ -79,19 +79,17 @@ const ALLOWED_FILE_TYPES = [
  * Upload de anexos para comentários em notas (mesmos MIMEs que `files` na atualização de nota).
  */
 const commentFilesUpload = multer({
-  storage,
-  limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (req, file, cb) => {
     if (!ALLOWED_FILE_TYPES.includes(file.mimetype)) {
       return cb(new Error("Formato de arquivo não permitido."), false);
     }
     cb(null, true);
   },
+  limits: { fileSize: MAX_FILE_SIZE },
+  storage,
 });
 
 const noteUpdateUpload = multer({
-  storage,
-  limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (req, file, cb) => {
     if (file.fieldname === "icon" || file.fieldname === "banner") {
       if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
@@ -120,6 +118,8 @@ const noteUpdateUpload = multer({
     }
     cb(null, true);
   },
+  limits: { fileSize: MAX_FILE_SIZE },
+  storage,
 });
 
 module.exports = { commentFilesUpload, noteUpdateUpload };

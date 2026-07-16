@@ -23,18 +23,18 @@ class BackupExportController extends BackupBaseController {
 
       if (!this._validateUserId(userId)) {
         return res.status(400).json({
-          status: "Bad Request",
           error: "Invalid user ID",
           message: "The user ID format is invalid",
+          status: "Bad Request",
         });
       }
 
       const userPlan = await PlansRepository.getUserWithPlan(userId);
       if (!userPlan || !userPlan.plan_id) {
         return res.status(403).json({
-          status: "Forbidden",
           error: "Plan not found",
           message: "You must have an active plan to request backups",
+          status: "Forbidden",
         });
       }
 
@@ -63,17 +63,17 @@ class BackupExportController extends BackupBaseController {
         );
 
         return res.status(406).json({
-          status: "Too Many Requests",
-          message: `You have reached the limit of ${limit} backup(s) per month for your ${planDetails.name} plan`,
           details: {
             current_usage: currentUsage,
             monthly_limit: limit,
-            plan_name: planDetails.name,
             period_end: PlanUsageManager.getNestedValue(
               usageRecord.usage_details,
               USAGE_PATHS.MONTHLY.PERIOD_END
             ),
+            plan_name: planDetails.name,
           },
+          message: `You have reached the limit of ${limit} backup(s) per month for your ${planDetails.name} plan`,
+          status: "Too Many Requests",
         });
       }
 
@@ -86,23 +86,23 @@ class BackupExportController extends BackupBaseController {
 
       if (activeJob) {
         return res.status(409).json({
-          status: "Conflict",
+          details: {
+            backup_status: activeJob.status,
+            job_id: activeJob.id,
+            progress: activeJob.progress,
+          },
           error: "Backup already in progress",
           message:
             "Please wait for the current backup to complete before requesting another",
-          details: {
-            job_id: activeJob.id,
-            backup_status: activeJob.status,
-            progress: activeJob.progress,
-          },
+          status: "Conflict",
         });
       }
 
       const user = await SearchUsersRepository.getUserById(userId);
       if (!user)
         return res.status(404).json({
-          status: "Not Found",
           error: "User not found",
+          status: "Not Found",
         });
 
       const job = await backupJobsRepository.createJob(
@@ -110,8 +110,8 @@ class BackupExportController extends BackupBaseController {
         userId,
         {
           email: user.email,
-          username: user.name || user.username,
           requestedAt: new Date().toISOString(),
+          username: user.name || user.username,
         }
       );
 
@@ -130,21 +130,21 @@ class BackupExportController extends BackupBaseController {
       );
 
       res.status(202).json({
-        status: "OK",
+        details: {
+          backup_status: "pending",
+          created_at: job.createdAt,
+          estimated_time: "2-5 minutes",
+          usage: {
+            backups_limit: monthlyLimit,
+            backups_used: updatedUsage,
+            remaining: monthlyLimit - updatedUsage,
+          },
+          user_email: user.email,
+        },
         job_id: job.id,
         message:
           "Backup requested successfully! You will receive an email when it is ready.",
-        details: {
-          backup_status: "pending",
-          estimated_time: "2-5 minutes",
-          user_email: user.email,
-          created_at: job.createdAt,
-          usage: {
-            backups_used: updatedUsage,
-            backups_limit: monthlyLimit,
-            remaining: monthlyLimit - updatedUsage,
-          },
-        },
+        status: "OK",
       });
     } catch (error) {
       this._handleError(error, res, next);

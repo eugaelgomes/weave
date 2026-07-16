@@ -16,7 +16,7 @@ const ALLOWED_HOSTNAMES = allowedOrigins
       // replace * with a placeholder to make it a valid URL for parsing
       const sanitized = url.replace("*.", "wildcard-placeholder.");
       return new URL(sanitized).hostname.replace("wildcard-placeholder.", "");
-    } catch (e) {
+    } catch {
       return null;
     }
   })
@@ -98,7 +98,7 @@ function detectSameSitePolicy() {
   const hasCrossSite = [...originDomains].some((d) => d && d !== apiDomain);
 
   if (hasCrossSite) {
-    console.log(
+    console.info(
       `[Cookie SameSite] Cross-site detected (origins include domains besides "${apiDomain}"). Using SameSite=None.`
     );
     return "none";

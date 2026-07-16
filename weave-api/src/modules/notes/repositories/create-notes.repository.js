@@ -6,12 +6,12 @@ const {
 } = require("../../../services/queue/queue-controller");
 
 const DEFAULT_NOTE_PROPERTIES = {
-  icon: { path: "", name: "", type: "" },
-  urls: [],
+  banner: { name: "", path: "", type: "" },
   color: "",
   files: [],
-  banner: { path: "", name: "", type: "" },
+  icon: { name: "", path: "", type: "" },
   relations: [],
+  urls: [],
 };
 
 /**
@@ -26,7 +26,7 @@ class CreateNotesRepository extends BaseRepository {
     status = NOTE_STATUS.VISIBLE,
     projectId = null,
     priorityId = null,
-    assignedTo = null
+    _assignedTo = null
   ) {
     const query = `
       INSERT INTO notes (
@@ -73,7 +73,7 @@ class CreateNotesRepository extends BaseRepository {
     title,
     description,
     tags = [],
-    initialBlockContent = "",
+    _initialBlockContent = "",
     status = NOTE_STATUS.VISIBLE,
     projectId = null
   ) {
@@ -125,12 +125,12 @@ class CreateNotesRepository extends BaseRepository {
     ]);
     const createdNote = results[0];
 
-    console.log("[CreateNotesRepository] Note created", {
+    console.info("[CreateNotesRepository] Note created", {
       noteId: createdNote?.note_id,
     });
 
     if (createdNote) {
-      console.log(
+      console.info(
         "[CreateNotesRepository] Enqueueing embedding job for",
         createdNote.note_id
       );

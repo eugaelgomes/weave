@@ -7,30 +7,30 @@ class CalendarEventsRepository {
     }
 
     return {
-      id: row.id,
-      organization_id: row.organization_id,
-      creator_id: row.creator_id,
-      title: row.title,
-      description: row.description,
-      location: row.location,
-      start_time: row.start_time,
-      end_time: row.end_time,
-      is_all_day: row.is_all_day,
-      note_id: row.note_id,
-      project_id: row.project_id,
-      is_from_note: row.is_from_note,
-      is_from_project: row.is_from_project,
-      google_event_id: row.google_event_id,
-      google_calendar_id: row.google_calendar_id,
-      outlook_event_id: row.outlook_event_id,
-      outlook_calendar_id: row.outlook_calendar_id,
-      last_synced_at: row.last_synced_at,
-      sync_status: row.sync_status,
-      etag: row.etag,
       created_at: row.created_at,
-      updated_at: row.updated_at,
+      creator_id: row.creator_id,
       deleted: row.deleted,
       deleted_at: row.deleted_at,
+      description: row.description,
+      end_time: row.end_time,
+      etag: row.etag,
+      google_calendar_id: row.google_calendar_id,
+      google_event_id: row.google_event_id,
+      id: row.id,
+      is_all_day: row.is_all_day,
+      is_from_note: row.is_from_note,
+      is_from_project: row.is_from_project,
+      last_synced_at: row.last_synced_at,
+      location: row.location,
+      note_id: row.note_id,
+      organization_id: row.organization_id,
+      outlook_calendar_id: row.outlook_calendar_id,
+      outlook_event_id: row.outlook_event_id,
+      project_id: row.project_id,
+      start_time: row.start_time,
+      sync_status: row.sync_status,
+      title: row.title,
+      updated_at: row.updated_at,
     };
   }
 
@@ -236,7 +236,7 @@ class CalendarEventsRepository {
     const entries = Object.entries(fields);
 
     if (!entries.length) {
-      return this.getEventById({ eventId, creatorId, includeDeleted: false });
+      return this.getEventById({ creatorId, eventId, includeDeleted: false });
     }
 
     const setFragments = [];

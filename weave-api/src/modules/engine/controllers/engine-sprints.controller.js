@@ -102,12 +102,12 @@ class EngineSprintsController extends ProjectsCoreController {
         return res.status(200).json(
           buildListEnvelope({
             data: rows,
-            page: pagination.page,
-            limit: pagination.limit,
-            total,
-            sort,
             filters: this._echoFilters(filters),
             legacyKey: "sprints",
+            limit: pagination.limit,
+            page: pagination.page,
+            sort,
+            total,
           })
         );
       }
@@ -181,13 +181,13 @@ class EngineSprintsController extends ProjectsCoreController {
         await sprintsRepository.getNextSprintNumber(projectId);
 
       const sprint = await sprintsRepository.create({
+        endDate: end_date,
+        goal: goal || null,
         projectId,
         sprintNumber,
-        title: title || `Sprint ${sprintNumber}`,
-        goal: goal || null,
-        status: activate ? "active" : "planned",
         startDate: start_date,
-        endDate: end_date,
+        status: activate ? "active" : "planned",
+        title: title || `Sprint ${sprintNumber}`,
         workableDays: workable_days || [1, 2, 3, 4, 5],
       });
 
@@ -197,8 +197,8 @@ class EngineSprintsController extends ProjectsCoreController {
         if (config) {
           const nextAt = this._calculateNextReportAt({
             ...config,
-            current_sprint_start: start_date,
             current_sprint_end: end_date,
+            current_sprint_start: start_date,
             sprint_workable_days: workable_days || [1, 2, 3, 4, 5],
           });
           await reportConfigRepository.updateSchedulerState(config.id, {
@@ -245,8 +245,8 @@ class EngineSprintsController extends ProjectsCoreController {
       }
 
       const completedSprint = await sprintsRepository.complete(sprintId, {
-        summary,
         metrics,
+        summary,
       });
 
       // Check if auto_create_next_sprint is enabled
@@ -267,20 +267,20 @@ class EngineSprintsController extends ProjectsCoreController {
           await sprintsRepository.getNextSprintNumber(projectId);
 
         nextSprint = await sprintsRepository.create({
+          endDate: nextEnd.toISOString().split("T")[0],
           projectId,
           sprintNumber: nextNumber,
-          title: `Sprint ${nextNumber}`,
-          status: "active",
           startDate: nextStart.toISOString().split("T")[0],
-          endDate: nextEnd.toISOString().split("T")[0],
+          status: "active",
+          title: `Sprint ${nextNumber}`,
           workableDays: config.default_workable_days || [1, 2, 3, 4, 5],
         });
 
         // Update config to point to new sprint
         const nextAt = this._calculateNextReportAt({
           ...config,
-          current_sprint_start: nextSprint.start_date,
           current_sprint_end: nextSprint.end_date,
+          current_sprint_start: nextSprint.start_date,
           sprint_workable_days: nextSprint.workable_days,
         });
 
@@ -291,8 +291,8 @@ class EngineSprintsController extends ProjectsCoreController {
       }
 
       res.status(200).json({
-        message: "Sprint completed successfully",
         completed_sprint: completedSprint,
+        message: "Sprint completed successfully",
         next_sprint: nextSprint,
       });
     } catch (error) {

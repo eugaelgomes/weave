@@ -14,7 +14,7 @@ class LogoutController {
    */
   async logout(req, res) {
     try {
-      console.log(
+      console.info(
         `[Logout] Destroying session for user (Request hostname: ${req.hostname})`
       );
 
@@ -35,9 +35,9 @@ class LogoutController {
 
       const clearOptions = {
         httpOnly: true,
-        secure,
-        sameSite,
         path: "/",
+        sameSite,
+        secure,
       };
 
       if (domain) {

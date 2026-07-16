@@ -16,37 +16,37 @@ async function delete_account_notification(nome, email, username) {
 
   try {
     const { html, text } = buildMailTemplate({
-      locale,
-      preheader: t(locale, "deleteMessage.preheader"),
-      title: t(locale, "deleteMessage.title"),
-      subtitle: t(locale, "deleteMessage.subtitle"),
-      greeting: `${displayName},`,
-      introLines: [t(locale, "deleteMessage.intro")],
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
           <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "deleteMessage.bodyUser"))}:</strong> ${escapeHtml(username)}</p>
           <p style="margin: 0; font-size: 13px; color: #6B7280;">${escapeHtml(t(locale, "deleteMessage.bodyDetail"))}</p>
         </div>
       `,
-      outroLines: [t(locale, "deleteMessage.outro")],
       footerNote: t(locale, "deleteMessage.footer"),
+      greeting: `${displayName},`,
+      introLines: [t(locale, "deleteMessage.intro")],
+      locale,
+      outroLines: [t(locale, "deleteMessage.outro")],
+      preheader: t(locale, "deleteMessage.preheader"),
+      subtitle: t(locale, "deleteMessage.subtitle"),
+      title: t(locale, "deleteMessage.title"),
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
-      to: email,
+      html,
       subject: t(locale, "deleteMessage.subject"),
       text,
-      html,
+      to: email,
     });
 
     return { success: true };
   } catch (error) {
     console.error("Delete account email failed:", error);
     return {
-      success: false,
       error:
         error.message || "Failed to send delete account notification email.",
+      success: false,
     };
   }
 }

@@ -90,6 +90,6 @@ async function resolveProjectIdsToUuids(identifiers) {
 module.exports = {
   isPublicProjectId,
   isUuidProjectId,
-  resolveProjectIdToUuid,
   resolveProjectIdsToUuids,
+  resolveProjectIdToUuid,
 };

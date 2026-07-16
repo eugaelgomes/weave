@@ -102,9 +102,9 @@ class GoogleCalendarController extends WebhooksBaseController {
     req.socket.setKeepAlive(true);
 
     res.writeHead(200, {
-      "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       Connection: "keep-alive",
+      "Content-Type": "text/event-stream",
       "X-Accel-Buffering": "no",
     });
 
@@ -254,15 +254,15 @@ class GoogleCalendarController extends WebhooksBaseController {
       if (isUnauthorized) {
         return res.status(200).json({
           connected: false,
-          events: [],
           error: "Token expirado, reconecte o Google Calendar",
+          events: [],
         });
       }
       console.error("[Google Calendar] getCalendarEvents:", error?.message);
       return res.status(200).json({
         connected: tokensLinked,
-        events: [],
         error: "Falha ao buscar eventos do Google Calendar",
+        events: [],
       });
     }
   }
@@ -323,8 +323,8 @@ class GoogleCalendarController extends WebhooksBaseController {
       await GoogleOauthTokensRepository.clearGoogleTokens(userId);
 
       res.json({
-        success: true,
         message: "Google Calendar desconectado com sucesso",
+        success: true,
       });
     } catch (error) {
       console.error("[Google Calendar Disconnect]", error);

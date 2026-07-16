@@ -11,8 +11,8 @@ class EventInvitesController {
 
       // Ensure the event exists and the user has access to it.
       const event = await calendarEventsRepository.getEventById({
-        eventId,
         creatorId,
+        eventId,
       });
 
       if (!event) {
@@ -22,12 +22,12 @@ class EventInvitesController {
       }
 
       const newInvite = await eventInvitesRepository.createInvite({
-        eventId,
         email,
+        eventId,
+        externalGuestId: externalGuestId || null,
         role: role || "REQUIRED",
         status: status || "PENDING",
         userId: userId || null,
-        externalGuestId: externalGuestId || null,
       });
 
       return res.status(201).json(newInvite);
@@ -49,8 +49,8 @@ class EventInvitesController {
 
       // Verify user access first
       const event = await calendarEventsRepository.getEventById({
-        eventId,
         creatorId,
+        eventId,
       });
 
       if (!event) {
@@ -72,8 +72,8 @@ class EventInvitesController {
 
       // Ensure event exists
       const event = await calendarEventsRepository.getEventById({
-        eventId,
         creatorId,
+        eventId,
       });
 
       if (!event) {
@@ -105,8 +105,8 @@ class EventInvitesController {
 
       // verify event
       const event = await calendarEventsRepository.getEventById({
-        eventId,
         creatorId,
+        eventId,
       });
 
       if (!event) {

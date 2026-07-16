@@ -4,41 +4,53 @@
  */
 
 const ORG_ROLES = Object.freeze({
-  SUPER_ADMIN: "SUPER_ADMIN",
   ADMIN: "ADMIN",
   BILLING_MANAGER: "BILLING_MANAGER",
-  MEMBER: "MEMBER",
   GUEST: "GUEST",
+  MEMBER: "MEMBER",
+  SUPER_ADMIN: "SUPER_ADMIN",
 });
 
 /** Atomic permissions (sensitive actions). */
 const ORG_PERMISSIONS = Object.freeze({
   /** View/edit/manage any project with org_id = active organization (admin / super_admin) */
   ACCESS_ALL_ORG_PROJECTS: "access_all_org_projects",
-  /** View organization members directory */
-  VIEW_MEMBER_DIRECTORY: "view_member_directory",
-  /** Invite/remove members and change roles */
-  MANAGE_MEMBERS: "manage_members",
+
   /** Area structure; super_admin (DB role), aligned with area managers in controller */
   MANAGE_AREAS: "manage_areas",
+
   /** Change organization plan / billing (when self-service endpoint exists) */
   MANAGE_BILLING_PLANS: "manage_billing_plans",
-  /** Define global organization integrations */
-  MANAGE_GLOBAL_INTEGRATIONS: "manage_global_integrations",
+
   /** Logo, banner, name, description, unique_name, properties/branding */
   MANAGE_BRAND: "manage_brand",
+
   /** Custom domains, DNS verification, SSO */
   MANAGE_DOMAINS: "manage_domains",
+
+  /** Define global organization integrations */
+  MANAGE_GLOBAL_INTEGRATIONS: "manage_global_integrations",
+
+  /** Invite/remove members and change roles */
+  MANAGE_MEMBERS: "manage_members",
+
   /** Terminate / restore the organization (org account) */
   MANAGE_ORG_LIFECYCLE: "manage_org_lifecycle",
+
   /** Project CRUD, project collaborators, associated notes */
   MANAGE_PROJECTS: "manage_projects",
+
   /** Project or organization level tags */
   MANAGE_TAGS: "manage_tags",
+
   /** Task priorities (project or organization) */
   MANAGE_TASK_PRIORITIES: "manage_task_priorities",
+
   /** Weave AI agents, sharing, knowledge (excludes chat consumption) */
   MANAGE_WEAVE_AI: "manage_weave_ai",
+
+  /** View organization members directory */
+  VIEW_MEMBER_DIRECTORY: "view_member_directory",
 });
 
 /** Map role → permissions. `super_admin` everything; `admin` daily management; `billing_manager` financial only. */
@@ -90,9 +102,9 @@ function orgRoleHasPermission(role, permission) {
 }
 
 module.exports = {
-  ORG_ROLES,
-  ORG_PERMISSIONS,
-  PERMISSIONS_BY_ROLE,
   getPermissionsForRole,
+  ORG_PERMISSIONS,
+  ORG_ROLES,
   orgRoleHasPermission,
+  PERMISSIONS_BY_ROLE,
 };

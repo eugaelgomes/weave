@@ -1,22 +1,8 @@
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 
 const isValidUUID = (value) => {
   return !!value && UUID_REGEX.test(value);
-};
-
-/**
- * UUID or 12-char public id (notes/projects).
- *
- * @param {unknown} value
- * @returns {boolean}
- */
-const isValidPublicOrUuid = (value) => {
-  if (!value || typeof value !== "string") return false;
-  const trimmed = value.trim();
-  if (UUID_REGEX.test(trimmed)) return true;
-  return trimmed.length === 12 && !trimmed.includes("-");
 };
 
 const parseDate = (value) => {
@@ -299,12 +285,12 @@ const normalizeUpdateFields = (body) => {
 };
 
 module.exports = {
-  isValidUUID,
-  parseDate,
+  buildGoogleEventBody,
   extractBoolean,
-  parseSyncStatus,
+  isValidUUID,
   normalizeAttendees,
   normalizeCreatePayload,
-  buildGoogleEventBody,
   normalizeUpdateFields,
+  parseDate,
+  parseSyncStatus,
 };

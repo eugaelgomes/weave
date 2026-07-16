@@ -25,6 +25,7 @@ const inviteMemberSchema = z.object({
       (email) => !hasPlusAliasInLocalPart(email),
       "Email addresses using a plus (+) alias in the local part are not allowed."
     ),
+  name: z.string().trim().min(1, "Name is required"),
   role: z
     .enum(validRoles, {
       errorMap: () => ({
@@ -34,9 +35,8 @@ const inviteMemberSchema = z.object({
     })
     .optional()
     .default("MEMBER"),
-  name: z.string().trim().min(1, "Name is required"),
-  username: z.string().trim().optional(),
   target_areas: z.array(targetAreaSchema).optional().default([]),
+  username: z.string().trim().optional(),
 });
 
 /**
@@ -52,13 +52,13 @@ const inviteMembersBulkSchema = z.object({
  * Validates the request body for accepting an invite.
  */
 const acceptInviteSchema = z.object({
-  token: z.string().min(1, "Token is required"),
   name: z.string().trim().optional(),
-  username: z.string().trim().optional(),
   password: z
     .string()
     .min(6, "Password must be at least 6 characters")
     .optional(),
+  token: z.string().min(1, "Token is required"),
+  username: z.string().trim().optional(),
 });
 
 /**
@@ -71,8 +71,8 @@ const updateMemberRoleSchema = z.object({
 });
 
 module.exports = {
-  inviteMemberSchema,
-  inviteMembersBulkSchema,
   acceptInviteSchema,
+  inviteMembersBulkSchema,
+  inviteMemberSchema,
   updateMemberRoleSchema,
 };

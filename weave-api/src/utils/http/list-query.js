@@ -128,7 +128,7 @@ function parsePagination(page, limit, opts = {}) {
   l = Math.min(l, maxLimit);
 
   const offset = (p - 1) * l;
-  return { page: p, limit: l, offset };
+  return { limit: l, offset, page: p };
 }
 
 /**
@@ -157,20 +157,20 @@ function buildListEnvelope({
 
   return {
     data,
+    filters_applied: filters,
     [legacyKey]: data,
     pagination: {
-      page,
+      has_next: hasNext,
       limit,
+      next_cursor: null,
+      page,
       total: Number(total),
       total_pages: totalPages,
-      has_next: hasNext,
-      next_cursor: null,
     },
     sort: {
       field: sort.field,
       order: sort.order,
     },
-    filters_applied: filters,
   };
 }
 

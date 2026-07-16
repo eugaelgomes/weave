@@ -62,10 +62,10 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
 
       if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
         return sendPlanLimitExceeded(res, {
-          resource: "project_collaborators",
-          limit_key: "limits.max_collaborators_per_project",
           error: "Limite de colaboradores atingido",
+          limit_key: "limits.max_collaborators_per_project",
           message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
+          resource: "project_collaborators",
         });
       }
 
@@ -115,8 +115,8 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
       }
 
       res.status(201).json({
-        message: "Colaborador adicionado com sucesso",
         collaborators: result[0].collaborators,
+        message: "Colaborador adicionado com sucesso",
       });
     } catch (error) {
       this._handleError(error, res, next);

@@ -28,7 +28,7 @@ class AgentDelegationService {
     agentId,
     taskDescription,
     parentToolCallId,
-    files = []
+    _files = []
   ) {
     if (!chatOrchestratorService) {
       chatOrchestratorService = require("./chat-orchestrator.service");
@@ -40,38 +40,51 @@ class AgentDelegationService {
     try {
       // Initiate a sub-agent session by calling the orchestrator
       const result = await chatOrchestratorService.orchestrateChat({
-        userId,
+        files: [],
+        onChunk: null,
         organizationId,
-        requestId: subRequestId,
-        userLanguage,
-        files: [], // Do not forward raw file buffers by default to save bandwidth, unless requested. We can pass files if needed.
+        // Do not forward raw file buffers by default to save bandwidth, unless requested. We can pass files if needed.
         payload: {
-          sessionId: subSessionId,
           agentId: agentId,
-          message: taskDescription,
-          isSubAgent: true,
-          parentToolCallId, // To be tracked in the session's metadata
-          model: { name: "default", version: "latest" }, // The engine or orchestrator will resolve the appropriate model
-          allowEdit: false, // Prevent destructive edits directly from sub-agents by default
+          // The engine or orchestrator will resolve the appropriate model
+          allowEdit: false,
+
+          // Prevent destructive edits directly from sub-agents by default
           allowWebSearch: true,
+
           context: {},
+
+          isSubAgent: true,
+
+          message: taskDescription,
+
+          // To be tracked in the session's metadata
+          model: { name: "default", version: "latest" },
+
+          parentToolCallId,
+          sessionId: subSessionId,
         },
-        onChunk: null, // We do not stream the sub-agent's inner monologue directly to the UI
+
+        requestId: subRequestId,
+
+        userId,
+
+        userLanguage, // We do not stream the sub-agent's inner monologue directly to the UI
       });
 
       return {
-        success: true,
         result: {
+          agentId: agentId,
           finalAnswer: result.response.content,
           subSessionId: result.sessionId,
-          agentId: agentId,
         },
+        success: true,
       };
     } catch (error) {
       console.error("[weave-ai/agent-delegation] Delegation failed:", error);
       return {
-        success: false,
         error: error.message || "Failed to execute sub-agent delegation.",
+        success: false,
       };
     }
   }

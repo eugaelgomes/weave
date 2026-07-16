@@ -71,13 +71,13 @@ class OrganizationsController extends OrganizationsBaseController {
       );
 
       const newArea = await this.areasRepository.createArea({
+        areaName: defaultName,
+        createdBy,
+        description: `Main area for organization ${organization.org_name}`,
         organizationId: organization.id,
         parentAreaId: null,
-        areaName: defaultName,
-        slug: uniqueSlug || `${slugBase}-${organization.id}`,
-        description: `Main area for organization ${organization.org_name}`,
         properties: { system: true },
-        createdBy,
+        slug: uniqueSlug || `${slugBase}-${organization.id}`,
       });
 
       await this.areasRepository.addAreaMember(
@@ -107,8 +107,8 @@ class OrganizationsController extends OrganizationsBaseController {
       const existingOrg = await this._getUserOrganization(userId);
       if (existingOrg) {
         return res.status(400).json({
-          success: false,
           error: "User already has an organization. Use PUT to update it.",
+          success: false,
         });
       }
 
@@ -155,10 +155,10 @@ class OrganizationsController extends OrganizationsBaseController {
       await this._createDefaultOrganizationArea(newOrganization, userId);
 
       res.status(201).json({
+        data: newOrganization,
+        message: "Organization created successfully",
         status: "OK",
         success: true,
-        message: "Organization created successfully",
-        data: newOrganization,
       });
     } catch (error) {
       console.error("Error creating organization:", error);
@@ -180,46 +180,46 @@ class OrganizationsController extends OrganizationsBaseController {
       const organization = await this._getUserOrganization(userId);
       if (!organization) {
         return res.status(404).json({
-          success: false,
           error: "Organization not found",
           message: "User does not have an organization yet",
+          success: false,
         });
       }
 
       const formattedOrganization = {
         created_at: organization.created_at,
-        updated_at: organization.updated_at,
+        deleted: organization.deleted,
         identity: {
-          id: organization.id,
-          user_id: organization.user_id,
-          org_name: organization.org_name,
-          unique_name: organization.unique_name,
-          logo_url: organization.logo_url,
           banner_url: organization.banner_url,
           description: organization.description,
+          id: organization.id,
+          logo_url: organization.logo_url,
           member_role: organization.member_role ?? null,
+          org_name: organization.org_name,
+          unique_name: organization.unique_name,
+          user_id: organization.user_id,
         },
-        settings: organization.settings || {},
         owners: [
           {
+            avatar_url: organization.avatar_url,
+            email: organization.email,
             id: organization.user_id,
             name: organization.name,
             username: organization.username,
-            email: organization.email,
-            avatar_url: organization.avatar_url,
           },
         ],
-        deleted: organization.deleted,
+        settings: organization.settings || {},
+        updated_at: organization.updated_at,
       };
 
       res
         .status(200)
-        .json({ status: "OK", organization_data: formattedOrganization });
+        .json({ organization_data: formattedOrganization, status: "OK" });
     } catch (error) {
       console.error("Error getting organization:", error);
       res
         .status(500)
-        .json({ success: false, error: "Error getting organization" });
+        .json({ error: "Error getting organization", success: false });
     }
   }
 
@@ -247,7 +247,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const P = this._orgPermissions;
@@ -306,17 +306,17 @@ class OrganizationsController extends OrganizationsBaseController {
 
       if (!updatedOrg) {
         return res.status(403).json({
-          success: false,
-          error: "Insufficient permissions to update organization",
           code: "ORG_FORBIDDEN",
+          error: "Insufficient permissions to update organization",
+          success: false,
         });
       }
 
       res.status(200).json({
+        data: updatedOrg,
+        message: "Organization updated successfully",
         status: "OK",
         success: true,
-        message: "Organization updated successfully",
-        data: updatedOrg,
       });
     } catch (error) {
       console.error("Error updating organization:", error);
@@ -341,14 +341,14 @@ class OrganizationsController extends OrganizationsBaseController {
   async updateOrganizationProperties(req, res) {
     try {
       return res.status(410).json({
-        success: false,
         error:
           "Organization properties column has been removed. Use organization settings fields instead.",
-      });
-    } catch (error) {
-      return res.status(500).json({
         success: false,
+      });
+    } catch {
+      return res.status(500).json({
         error: "Error handling deprecated properties endpoint",
+        success: false,
       });
     }
   }
@@ -368,7 +368,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (
@@ -394,23 +394,23 @@ class OrganizationsController extends OrganizationsBaseController {
 
       if (!deletedOrg) {
         return res.status(403).json({
-          success: false,
-          error: "Insufficient permissions to delete organization",
           code: "ORG_FORBIDDEN",
+          error: "Insufficient permissions to delete organization",
+          success: false,
         });
       }
 
       res.status(200).json({
+        data: deletedOrg,
+        message: "Organization deleted successfully",
         status: "OK",
         success: true,
-        message: "Organization deleted successfully",
-        data: deletedOrg,
       });
     } catch (error) {
       console.error("Error deleting organization:", error);
       res
         .status(500)
-        .json({ success: false, error: "Error deleting organization" });
+        .json({ error: "Error deleting organization", success: false });
     }
   }
 
@@ -431,8 +431,8 @@ class OrganizationsController extends OrganizationsBaseController {
 
       if (!organization) {
         return res.status(404).json({
-          success: false,
           error: "No deleted organization found",
+          success: false,
         });
       }
 
@@ -468,23 +468,23 @@ class OrganizationsController extends OrganizationsBaseController {
 
       if (!restoredOrg) {
         return res.status(403).json({
-          success: false,
-          error: "Insufficient permissions to restore organization",
           code: "ORG_FORBIDDEN",
+          error: "Insufficient permissions to restore organization",
+          success: false,
         });
       }
 
       res.status(200).json({
+        data: restoredOrg,
+        message: "Organization restored successfully",
         status: "OK",
         success: true,
-        message: "Organization restored successfully",
-        data: restoredOrg,
       });
     } catch (error) {
       console.error("Error restoring organization:", error);
       res
         .status(500)
-        .json({ success: false, error: "Error restoring organization" });
+        .json({ error: "Error restoring organization", success: false });
     }
   }
 
@@ -502,14 +502,14 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!req.file) {
         return res
           .status(400)
-          .json({ success: false, error: "No file was uploaded" });
+          .json({ error: "No file was uploaded", success: false });
       }
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (
@@ -530,7 +530,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!result.success) {
         return res
           .status(500)
-          .json({ success: false, error: "Error saving logo" });
+          .json({ error: "Error saving logo", success: false });
       }
 
       const updatedOrg = await this.organizationsRepository.updateOrgLogo(
@@ -541,28 +541,28 @@ class OrganizationsController extends OrganizationsBaseController {
 
       if (!updatedOrg) {
         return res.status(403).json({
-          success: false,
-          error: "Insufficient permissions to update logo",
           code: "ORG_FORBIDDEN",
+          error: "Insufficient permissions to update logo",
+          success: false,
         });
       }
 
       res.status(200).json({
-        status: "OK",
-        success: true,
-        message: "Logo updated successfully",
         data: {
           organization: orgDataResponse(updatedOrg),
           upload: {
-            path: result.key,
             filename: result.fileName,
+            path: result.key,
             size: result.size,
           },
         },
+        message: "Logo updated successfully",
+        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error uploading logo:", error);
-      res.status(500).json({ success: false, error: "Error uploading logo" });
+      res.status(500).json({ error: "Error uploading logo", success: false });
     }
   }
 
@@ -581,14 +581,14 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!req.file) {
         return res
           .status(400)
-          .json({ success: false, error: "No file was uploaded" });
+          .json({ error: "No file was uploaded", success: false });
       }
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (
@@ -609,7 +609,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!result.success) {
         return res
           .status(500)
-          .json({ success: false, error: "Error saving banner" });
+          .json({ error: "Error saving banner", success: false });
       }
 
       const updatedOrg = await this.organizationsRepository.updateOrgBanner(
@@ -620,27 +620,27 @@ class OrganizationsController extends OrganizationsBaseController {
 
       if (!updatedOrg) {
         return res.status(403).json({
-          success: false,
-          error: "Insufficient permissions to update banner",
           code: "ORG_FORBIDDEN",
+          error: "Insufficient permissions to update banner",
+          success: false,
         });
       }
 
       res.status(200).json({
-        status: "OK",
-        success: true,
-        message: "Banner updated successfully",
         data: {
           organization: orgDataResponse(updatedOrg),
           upload: {
-            path: result.key,
             filename: result.fileName,
+            path: result.key,
             size: result.size,
           },
         },
+        message: "Banner updated successfully",
+        status: "OK",
+        success: true,
       });
-    } catch (error) {
-      res.status(500).json({ success: false, error: "Error uploading banner" });
+    } catch {
+      res.status(500).json({ error: "Error uploading banner", success: false });
     }
   }
 
@@ -659,7 +659,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const projects =
@@ -668,15 +668,15 @@ class OrganizationsController extends OrganizationsBaseController {
         );
 
       res.status(200).json({
-        status: "OK",
         organization_id: currentOrg.id,
         projects: projects,
+        status: "OK",
       });
     } catch (error) {
       console.error("Error getting organization projects:", error);
       res.status(500).json({
-        status: "ERROR",
         error: "Error getting organization projects",
+        status: "ERROR",
       });
     }
   }

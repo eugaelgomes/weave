@@ -1,8 +1,4 @@
-const {
-  executeQuery,
-  rowCount,
-  getConnection,
-} = require("@/database/connection");
+const { executeQuery, getConnection } = require("@/database/connection");
 const {
   ORG_ROLES,
 } = require("@/modules/organizations/organization-role-policy");
@@ -475,7 +471,6 @@ class OrganizationsRepository {
       const defaultPlanResult = await client.query(defaultPlanQuery);
       const defaultPlan = defaultPlanResult.rows[0] || null;
       const defaultPlanId = defaultPlan?.plan_id || null;
-      const defaultPlanSnapshot = defaultPlan?.details || {};
 
       const insertOrgQuery = `
       INSERT INTO organizations (
@@ -725,7 +720,7 @@ class OrganizationsRepository {
   async updateCreationConfigurationStep(
     organization_id,
     user_id,
-    { settings, branding_properties, integrations, plan_id, plan_snapshot }
+    { settings, branding_properties, integrations, plan_id }
   ) {
     const query = `
       UPDATE organizations o

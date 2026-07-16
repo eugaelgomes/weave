@@ -5,22 +5,22 @@
  * Centralizes the definition of allowed scopes for API tokens.
  */
 const API_SCOPES = {
-  NOTES_READ: "notes:read",
-  NOTES_WRITE: "notes:write",
-  NOTES_DELETE: "notes:delete",
-  PROJECTS_READ: "projects:read",
-  PROJECTS_WRITE: "projects:write",
-  PROFILE_READ: "profile:read",
-  ORGANIZATIONS_READ: "organizations:read",
+  AI_AGENTS: "ai:agents",
+  AI_CHAT: "ai:chat",
   CALENDAR_READ: "calendar:read",
   CALENDAR_WRITE: "calendar:write",
-  TAGS_READ: "tags:read",
-  TAGS_WRITE: "tags:write",
+  NOTES_DELETE: "notes:delete",
+  NOTES_READ: "notes:read",
+  NOTES_WRITE: "notes:write",
+  ORGANIZATIONS_READ: "organizations:read",
   PRIORITIES_READ: "priorities:read",
   PRIORITIES_WRITE: "priorities:write",
+  PROFILE_READ: "profile:read",
+  PROJECTS_READ: "projects:read",
+  PROJECTS_WRITE: "projects:write",
+  TAGS_READ: "tags:read",
+  TAGS_WRITE: "tags:write",
   USERS_READ: "users:read",
-  AI_CHAT: "ai:chat",
-  AI_AGENTS: "ai:agents",
 };
 
 module.exports = {

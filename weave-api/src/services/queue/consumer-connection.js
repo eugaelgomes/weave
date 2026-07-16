@@ -14,7 +14,6 @@ const redisConsumer = new Redis(
 );
 
 redisConsumer.on("error", (error) => {
-  // eslint-disable-next-line no-console -- consumer infra diagnostics
   console.error("[RedisConsumer] Error:", error);
 });
 

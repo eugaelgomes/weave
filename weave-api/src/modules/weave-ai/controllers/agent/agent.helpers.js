@@ -27,12 +27,12 @@ async function processKnowledgeFileUploads(files, userId) {
     );
 
     knowledgeFiles.push({
-      original_name: file.originalname,
-      storage_path: path,
-      url: fileUrl,
       mime_type: file.mimetype,
+      original_name: file.originalname,
       size: file.size,
+      storage_path: path,
       uploaded_at: new Date().toISOString(),
+      url: fileUrl,
     });
   }
   return knowledgeFiles;
@@ -55,7 +55,7 @@ function parseKnowledgeFiles(agent) {
 }
 
 module.exports = {
-  validateAuthentication,
+  parseKnowledgeFiles,
   processKnowledgeFileUploads,
-  parseKnowledgeFiles
+  validateAuthentication,
 };

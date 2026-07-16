@@ -80,6 +80,16 @@ class PlansMeController {
       const ud = usageRecord.usage_details || {};
 
       const usage_summary = {
+        backups_monthly:
+          PlanUsageManager.getNestedValue(
+            ud,
+            USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
+          ) ?? 0,
+        exports_notes_monthly:
+          PlanUsageManager.getNestedValue(
+            ud,
+            USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT
+          ) ?? 0,
         notes_total:
           PlanUsageManager.getNestedValue(
             ud,
@@ -90,46 +100,48 @@ class PlansMeController {
             ud,
             USAGE_PATHS.SUMMARY.PROJECTS_TOTAL
           ) ?? 0,
+        storage_uploaded_mb_monthly:
+          PlanUsageManager.getNestedValue(
+            ud,
+            USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
+          ) ?? 0,
         team_members_total:
           PlanUsageManager.getNestedValue(
             ud,
             USAGE_PATHS.SUMMARY.TEAM_MEMBERS_TOTAL
-          ) ?? 0,
-        exports_notes_monthly:
-          PlanUsageManager.getNestedValue(
-            ud,
-            USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT
-          ) ?? 0,
-        backups_monthly:
-          PlanUsageManager.getNestedValue(
-            ud,
-            USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
           ) ?? 0,
         weave_ai_messages_monthly:
           PlanUsageManager.getNestedValue(
             ud,
             USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT
           ) ?? 0,
-        storage_uploaded_mb_monthly:
-          PlanUsageManager.getNestedValue(
-            ud,
-            USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
-          ) ?? 0,
       };
 
       const usage_period = {
-        plan_id: usageRecord.plan_id || userPlan.plan_id,
+        period_end:
+          PlanUsageManager.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_END) ??
+          null,
         period_start:
           PlanUsageManager.getNestedValue(
             ud,
             USAGE_PATHS.MONTHLY.PERIOD_START
           ) ?? null,
-        period_end:
-          PlanUsageManager.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_END) ??
-          null,
+        plan_id: usageRecord.plan_id || userPlan.plan_id,
       };
 
       const gates = {
+        backups_monthly: this._gate(
+          planDetails,
+          ud,
+          USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT,
+          PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
+        ),
+        exports_notes_monthly: this._gate(
+          planDetails,
+          ud,
+          USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT,
+          PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY
+        ),
         notes: this._gate(
           planDetails,
           ud,
@@ -142,23 +154,17 @@ class PlansMeController {
           USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
           PLAN_PATHS.LIMITS.MAX_PROJECTS
         ),
+        storage_upload_mb_monthly: this._gate(
+          planDetails,
+          ud,
+          USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB,
+          PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD
+        ),
         team_members: this._gate(
           planDetails,
           ud,
           USAGE_PATHS.SUMMARY.TEAM_MEMBERS_TOTAL,
           PLAN_PATHS.LIMITS.MAX_TEAM_MEMBERS
-        ),
-        exports_notes_monthly: this._gate(
-          planDetails,
-          ud,
-          USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT,
-          PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY
-        ),
-        backups_monthly: this._gate(
-          planDetails,
-          ud,
-          USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT,
-          PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
         ),
         weave_ai_messages_monthly: this._gate(
           planDetails,
@@ -166,25 +172,19 @@ class PlansMeController {
           USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT,
           PLAN_PATHS.WEAVE_AI.CONFIG.MONTHLY_MESSAGES
         ),
-        storage_upload_mb_monthly: this._gate(
-          planDetails,
-          ud,
-          USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB,
-          PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD
-        ),
       };
 
       return res.status(200).json({
+        as_of: new Date().toISOString(),
+        gates,
         plan: {
+          client_type: usageRecord.client_type || null,
           id: planRow.plan_id,
           name: planRow.name,
-          client_type: usageRecord.client_type || null,
         },
+        plan_details: planDetails,
         usage_period,
         usage_summary,
-        gates,
-        plan_details: planDetails,
-        as_of: new Date().toISOString(),
       });
     } catch (err) {
       console.error("[PlansMeController.getPlanMe]", err);

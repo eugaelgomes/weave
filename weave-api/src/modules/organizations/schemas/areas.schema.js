@@ -4,8 +4,8 @@ const { z } = require("zod");
  * Validates the request body for adding an area member.
  */
 const addAreaMemberSchema = z.object({
-  user_id: z.string().uuid("Invalid user ID format"),
   role: z.enum(["ADMIN", "MEMBER", "GUEST"]).optional().default("MEMBER"),
+  user_id: z.string().uuid("Invalid user ID format"),
 });
 
 /**
@@ -24,35 +24,35 @@ const updateAreaMemberSchema = z.object({
  */
 const createAreaSchema = z.object({
   area_name: z.string().trim().min(1, "area_name is required"),
+  description: z.string().trim().optional().nullable(),
   parent_area_id: z
     .string()
     .uuid("Invalid parent area ID")
     .optional()
     .nullable(),
-  slug: z.string().trim().optional().nullable(),
-  description: z.string().trim().optional().nullable(),
   properties: z.record(z.any()).optional().nullable(),
+  slug: z.string().trim().optional().nullable(),
 });
 
 /**
  * Validates the request body for updating an area.
  */
 const updateAreaSchema = z.object({
-  area_name: z.string().trim().min(1, "area_name cannot be empty").optional(),
-  slug: z.string().trim().optional(),
-  description: z.string().trim().optional().nullable(),
-  properties: z.record(z.any()).optional(),
   active: z.boolean().optional(),
+  area_name: z.string().trim().min(1, "area_name cannot be empty").optional(),
+  description: z.string().trim().optional().nullable(),
   parent_area_id: z
     .string()
     .uuid("Invalid parent area ID")
     .optional()
     .nullable(),
+  properties: z.record(z.any()).optional(),
+  slug: z.string().trim().optional(),
 });
 
 module.exports = {
   addAreaMemberSchema,
-  updateAreaMemberSchema,
   createAreaSchema,
+  updateAreaMemberSchema,
   updateAreaSchema,
 };

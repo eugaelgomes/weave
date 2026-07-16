@@ -91,51 +91,51 @@ function attachParsedProjectsList(req) {
       : "all";
 
   req.parsedQuery = {
-    pagination,
-    sort,
-    include,
     filters: {
-      search: trimSearch(q.search, 120),
-      status: parseCsvEnum(q.status, PROJECT_STATUSES, { maxItems: 10 }),
-      methodology: parseCsvEnum(q.methodology, METHODOLOGIES, {
-        maxItems: 10,
-      }),
-      visibility: parseCsvEnum(q.visibility, VISIBILITIES, { maxItems: 10 }),
-      ownership,
-      owner_user_id:
-        q.owner_user_id && isUuid(q.owner_user_id) ? q.owner_user_id : null,
+      active: activeFilter,
       collaborator_user_id:
         q.collaborator_user_id && isUuid(q.collaborator_user_id)
           ? q.collaborator_user_id
           : null,
+      created_from: parseIsoDateTime(q.created_from),
+      created_to: parseIsoDateTime(q.created_to),
+      has_parent: hasParent,
+      methodology: parseCsvEnum(q.methodology, METHODOLOGIES, {
+        maxItems: 10,
+      }),
       organization_id:
         q.organization_id && isUuid(q.organization_id)
           ? q.organization_id
           : null,
+      owner_user_id:
+        q.owner_user_id && isUuid(q.owner_user_id) ? q.owner_user_id : null,
+      ownership,
       parent_only: parentOnly,
-      has_parent: hasParent,
-      created_from: parseIsoDateTime(q.created_from),
-      created_to: parseIsoDateTime(q.created_to),
-      updated_from: parseIsoDateTime(q.updated_from),
-      updated_to: parseIsoDateTime(q.updated_to),
-      start_from: parseIsoDateOnly(q.start_from),
-      start_to: parseIsoDateOnly(q.start_to),
-      target_end_from: parseIsoDateOnly(q.target_end_from),
-      target_end_to: parseIsoDateOnly(q.target_end_to),
-      progress_min:
-        q.progress_min !== undefined && q.progress_min !== ""
-          ? Number(q.progress_min)
-          : null,
+      priority: parseCsvEnum(q.priority, PRIORITIES, { maxItems: 10 }).map(
+        (p) => p.toLowerCase()
+      ),
       progress_max:
         q.progress_max !== undefined && q.progress_max !== ""
           ? Number(q.progress_max)
           : null,
-      priority: parseCsvEnum(q.priority, PRIORITIES, { maxItems: 10 }).map(
-        (p) => p.toLowerCase()
-      ),
+      progress_min:
+        q.progress_min !== undefined && q.progress_min !== ""
+          ? Number(q.progress_min)
+          : null,
+      search: trimSearch(q.search, 120),
+      start_from: parseIsoDateOnly(q.start_from),
+      start_to: parseIsoDateOnly(q.start_to),
+      status: parseCsvEnum(q.status, PROJECT_STATUSES, { maxItems: 10 }),
       tags: parseCsvStrings(q.tags, { maxItems: 50 }),
-      active: activeFilter,
+      target_end_from: parseIsoDateOnly(q.target_end_from),
+      target_end_to: parseIsoDateOnly(q.target_end_to),
+      updated_from: parseIsoDateTime(q.updated_from),
+      updated_to: parseIsoDateTime(q.updated_to),
+      visibility: parseCsvEnum(q.visibility, VISIBILITIES, { maxItems: 10 }),
     },
+    include,
+    pagination,
+    sort,
   };
 }
 
@@ -148,13 +148,13 @@ const validateGetProjects = [
       if (filters.parent_only && filters.has_parent) {
         return res.status(422).json({
           error: {
-            message: "Validation failed",
             details: [
               {
-                path: "has_parent",
                 msg: "cannot combine parent_only=true with has_parent=true",
+                path: "has_parent",
               },
             ],
+            message: "Validation failed",
           },
         });
       }
@@ -167,13 +167,13 @@ const validateGetProjects = [
       ) {
         return res.status(422).json({
           error: {
-            message: "Validation failed",
             details: [
               {
-                path: "progress_max",
                 msg: "progress_max must be >= progress_min",
+                path: "progress_max",
               },
             ],
+            message: "Validation failed",
           },
         });
       }
@@ -227,12 +227,12 @@ function attachParsedStages(req) {
   }
 
   req.parsedQuery = {
-    pagination,
-    sort,
     filters: {
       include_done: includeDone,
       search: trimSearch(q.search, 80),
     },
+    pagination,
+    sort,
   };
 }
 
@@ -257,25 +257,25 @@ function attachParsedNotes(req) {
   });
 
   req.parsedQuery = {
-    pagination,
-    sort,
     filters: {
-      search: trimSearch(q.search, 120),
-      status: parseCsvEnum(q.status, NOTES_STATUSES, { maxItems: 10 }),
-      priority_id: parseCsvUuid(q.priority_id, { maxItems: 20 }),
-      tags: parseCsvUuid(q.tags, { maxItems: 50 }),
-      stage_id: parseCsvUuid(q.stage_id, { maxItems: 20 }),
-      created_by: parseCsvUuid(q.created_by, { maxItems: 20 }),
       collaborator_user_id: parseCsvUuid(q.collaborator_user_id, {
         maxItems: 20,
       }),
-      due_from: parseIsoDateTime(q.due_from),
-      due_to: parseIsoDateTime(q.due_to),
+      created_by: parseCsvUuid(q.created_by, { maxItems: 20 }),
       created_from: parseIsoDateTime(q.created_from),
       created_to: parseIsoDateTime(q.created_to),
+      due_from: parseIsoDateTime(q.due_from),
+      due_to: parseIsoDateTime(q.due_to),
+      priority_id: parseCsvUuid(q.priority_id, { maxItems: 20 }),
+      search: trimSearch(q.search, 120),
+      stage_id: parseCsvUuid(q.stage_id, { maxItems: 20 }),
+      status: parseCsvEnum(q.status, NOTES_STATUSES, { maxItems: 10 }),
+      tags: parseCsvUuid(q.tags, { maxItems: 50 }),
       updated_from: parseIsoDateTime(q.updated_from),
       updated_to: parseIsoDateTime(q.updated_to),
     },
+    pagination,
+    sort,
   };
 }
 
@@ -299,14 +299,14 @@ function attachParsedCollaborators(req) {
     order: "desc",
   });
   req.parsedQuery = {
-    pagination,
-    sort,
     filters: {
-      role: parseCsvEnum(q.role, PROJECT_MEMBER_ROLES, { maxItems: 10 }),
-      search: trimSearch(q.search, 80),
       added_from: parseIsoDateTime(q.added_from),
       added_to: parseIsoDateTime(q.added_to),
+      role: parseCsvEnum(q.role, PROJECT_MEMBER_ROLES, { maxItems: 10 }),
+      search: trimSearch(q.search, 80),
     },
+    pagination,
+    sort,
   };
 }
 
@@ -404,17 +404,17 @@ const PROJECTS_LIST_TRIGGER_KEYS = [
 ];
 
 module.exports = {
+  attachParsedProjectsList,
   PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS,
   PROJECT_NOTES_LIST_TRIGGER_KEYS,
   PROJECT_STAGES_LIST_TRIGGER_KEYS,
   PROJECTS_LIST_TRIGGER_KEYS,
-  attachParsedProjectsList,
+  validateGetMyViewPref,
   validateGetProjectById,
   validateGetProjectCollaborators,
   validateGetProjectNotes,
   validateGetProjects,
   validateGetProjectStages,
-  validateGetMyViewPref,
   validateProjectIdParam,
   validateSetMyViewPref,
 };

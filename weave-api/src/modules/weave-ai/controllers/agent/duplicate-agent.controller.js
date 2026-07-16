@@ -12,15 +12,17 @@ async function duplicateAgent(req, res) {
 
     const duplicated = await agentRepository.duplicateAgent(id, userId);
     if (!duplicated) {
-      return res.status(404).json({ success: false, error: t.agentNotFound });
+      return res.status(404).json({ error: t.agentNotFound, success: false });
     }
-    res.json({ success: true, agent: formatAgentResponse(duplicated) });
+    res.json({ agent: formatAgentResponse(duplicated), success: true });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error duplicating agent:", error);
-    res.status(500).json({ success: false, error: t.duplicateAgentFailed });
+    res.status(500).json({ error: t.duplicateAgentFailed, success: false });
   }
 }
 

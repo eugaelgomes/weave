@@ -22,7 +22,7 @@ class ReasoningTriggerConsumer {
     this.isRunning = true;
 
     const queueKey = getReasoningTriggerQueueRedisKey();
-    console.log(`[Reasoning Trigger Consumer] Listening on: ${queueKey}`);
+    console.info(`[Reasoning Trigger Consumer] Listening on: ${queueKey}`);
 
     while (this.isRunning) {
       try {
@@ -50,7 +50,7 @@ class ReasoningTriggerConsumer {
   async processTrigger(trigger) {
     const { projectId, reportType, config } = trigger;
 
-    console.log(
+    console.info(
       `[Reasoning Trigger Consumer] Building context for project: ${projectId}, type: ${reportType}`
     );
 
@@ -81,38 +81,38 @@ class ReasoningTriggerConsumer {
 
       // 2. Prepare Engine Job
       const job = {
-        type: normalizedType,
-        reasoningType: normalizedType,
-        title:
-          trigger.title ||
-          `${this._toLabel(normalizedType)} - ${new Date().toISOString().slice(0, 10)}`,
-        projectId,
-        sprintId,
-        reportConfigId: config?.id || null,
-        organizationId: config?.organization_id || null,
-        triggeredBy: config?.user_id || trigger.triggeredBy || null,
-        recipientScope: config?.recipient_scope || "all_members",
-        customRecipients: Array.isArray(config?.custom_recipients)
-          ? config.custom_recipients
-          : [],
         channels: Array.isArray(config?.channels)
           ? config.channels
           : ["in_app"],
+        createdAt: new Date().toISOString(),
+        customRecipients: Array.isArray(config?.custom_recipients)
+          ? config.custom_recipients
+          : [],
         expiresAt: this._buildExpiresAt(config),
         inputContext: context || {},
-        prompt,
-        systemMessage,
         model: process.env.WEAVE_PROACTIVE_MODEL || null,
         options: {
           allowEdit: false,
         },
+        organizationId: config?.organization_id || null,
+        projectId,
+        prompt,
+        reasoningType: normalizedType,
+        recipientScope: config?.recipient_scope || "all_members",
+        reportConfigId: config?.id || null,
         responseQueueKey: this.responseQueueKey,
-        createdAt: new Date().toISOString(),
+        sprintId,
+        systemMessage,
+        title:
+          trigger.title ||
+          `${this._toLabel(normalizedType)} - ${new Date().toISOString().slice(0, 10)}`,
+        triggeredBy: config?.user_id || trigger.triggeredBy || null,
+        type: normalizedType,
       };
 
       // 3. Push to Engine
       await redis.rpush(this.engineQueueKey, JSON.stringify(job));
-      console.log(
+      console.info(
         `[Reasoning Trigger Consumer] Job pushed to engine for project: ${projectId}`
       );
     } catch (error) {
@@ -158,16 +158,16 @@ class ReasoningTriggerConsumer {
         : "No structured sprint context available.";
 
     const intentByType = {
-      sprint_kickoff:
-        "Create a kickoff briefing for the current sprint with priorities, risks and first actions.",
-      daily_standup:
-        "Create a daily standup briefing with progress, blockers, deadlines at risk and prioritized next actions.",
-      sprint_review:
-        "Create a sprint review summary with outcomes, risks that materialized, and recommendations for the next sprint.",
-      deadline_alert:
-        "Create a focused deadline risk alert with impacted tasks and immediate mitigation actions.",
       analysis:
         "Create an operational project analysis highlighting key signals, risk areas and next actions.",
+      daily_standup:
+        "Create a daily standup briefing with progress, blockers, deadlines at risk and prioritized next actions.",
+      deadline_alert:
+        "Create a focused deadline risk alert with impacted tasks and immediate mitigation actions.",
+      sprint_kickoff:
+        "Create a kickoff briefing for the current sprint with priorities, risks and first actions.",
+      sprint_review:
+        "Create a sprint review summary with outcomes, risks that materialized, and recommendations for the next sprint.",
     };
 
     const base = [
@@ -223,11 +223,11 @@ class ReasoningTriggerConsumer {
    */
   _toLabel(reportType) {
     const labels = {
-      sprint_kickoff: "Sprint kickoff",
-      daily_standup: "Daily standup",
-      sprint_review: "Sprint review",
-      deadline_alert: "Deadline alert",
       analysis: "Analysis",
+      daily_standup: "Daily standup",
+      deadline_alert: "Deadline alert",
+      sprint_kickoff: "Sprint kickoff",
+      sprint_review: "Sprint review",
     };
     return labels[reportType] || "Reasoning";
   }

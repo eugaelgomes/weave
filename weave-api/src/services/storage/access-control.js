@@ -47,17 +47,17 @@ const parseResourceDescriptor = (key) => {
     case "backups":
     case "images": {
       return {
-        type: "user-owned",
-        ownerId: sanitizeId(segments[1]),
         key: normalized,
+        ownerId: sanitizeId(segments[1]),
+        type: "user-owned",
       };
     }
     case "users-content": {
       if (segments[1] === "profile") {
         return {
-          type: "user-owned",
-          ownerId: sanitizeId(segments[2]),
           key: normalized,
+          ownerId: sanitizeId(segments[2]),
+          type: "user-owned",
         };
       }
       return null;
@@ -67,10 +67,10 @@ const parseResourceDescriptor = (key) => {
       const noteId = extractPrefixedValue(segments[2] || "", NOTE_ID_PREFIX);
       if (!noteId) return null;
       return {
-        type: "note",
+        key: normalized,
         noteId,
         ownerId: sanitizeId(ownerId),
-        key: normalized,
+        type: "note",
       };
     }
     case "notes-comments-files": {
@@ -78,10 +78,10 @@ const parseResourceDescriptor = (key) => {
       const noteId = extractPrefixedValue(segments[2] || "", NOTE_ID_PREFIX);
       if (!noteId) return null;
       return {
-        type: "note",
+        key: normalized,
         noteId,
         ownerId: sanitizeId(ownerId),
-        key: normalized,
+        type: "note",
       };
     }
     case "projects": {
@@ -92,19 +92,19 @@ const parseResourceDescriptor = (key) => {
       );
       if (!projectId) return null;
       return {
-        type: "project",
-        projectId,
-        ownerId: sanitizeId(ownerId),
         key: normalized,
+        ownerId: sanitizeId(ownerId),
+        projectId,
+        type: "project",
       };
     }
     case "organizations": {
       const organizationId = sanitizeId(segments[1]);
       if (!organizationId) return null;
       return {
-        type: "organization",
-        organizationId,
         key: normalized,
+        organizationId,
+        type: "organization",
       };
     }
     default:
@@ -230,6 +230,6 @@ const assertFileAccess = async (userId, key) => {
 };
 
 module.exports = {
-  StorageAccessError,
   assertFileAccess,
+  StorageAccessError,
 };

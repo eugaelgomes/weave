@@ -15,6 +15,6 @@ const backupJobStatusSchema = z.object({
 });
 
 module.exports = {
-  downloadBackupSchema,
   backupJobStatusSchema,
+  downloadBackupSchema,
 };

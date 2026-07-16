@@ -14,7 +14,6 @@ const projectsReadRepository = require("@/modules/projects/repositories/projects
 const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
 const chatAccessUtil = require("../../utils/chat-access.util");
 
-
 const { markdownToBlocks } = require("../../utils/markdown-to-blocks.util");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
 const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
@@ -98,7 +97,7 @@ class CreateNoteHandler {
       try {
         const normalizedDueDate = new Date(String(args.dueDate)).toISOString();
         updateData.due_date = normalizedDueDate;
-      } catch (e) {
+      } catch {
         // ignore invalid date
       }
     }
@@ -139,8 +138,8 @@ class CreateNoteHandler {
             );
             return {
               id: result.fileName,
-              path: result.key || result.path || "",
               name: originalName,
+              path: result.key || result.path || "",
               type: mimeType,
             };
           })
@@ -177,8 +176,8 @@ class CreateNoteHandler {
             : [
                 {
                   id: newBlockId(),
-                  type: "paragraph",
                   properties: { text: args.content },
+                  type: "paragraph",
                 },
               ]
         )
@@ -222,10 +221,10 @@ class CreateNoteHandler {
     return {
       name,
       result: {
-        noteId,
-        publicNoteId: createdNote.public_note_id,
-        projectPublicId,
         created: true,
+        noteId,
+        projectPublicId,
+        publicNoteId: createdNote.public_note_id,
       },
       success: true,
     };

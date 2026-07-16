@@ -228,11 +228,11 @@ class SprintContextBuilder {
         const props =
           r.properties && typeof r.properties === "object" ? r.properties : {};
         const node = {
-          id: String(r.id),
-          type: r.type,
-          text: typeof props.text === "string" ? props.text : "",
-          properties: props,
           children: [],
+          id: String(r.id),
+          properties: props,
+          text: typeof props.text === "string" ? props.text : "",
+          type: r.type,
         };
         if (r.type === "todo") {
           node.done = props.attrs?.checked === true;
@@ -283,11 +283,11 @@ class SprintContextBuilder {
     }
 
     return {
-      totalNotes: notes.length,
-      notesByStage,
       completedTodos,
-      pendingTodos,
+      notesByStage,
       overdueNotes,
+      pendingTodos,
+      totalNotes: notes.length,
     };
   }
 

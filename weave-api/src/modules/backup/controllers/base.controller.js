@@ -13,9 +13,9 @@ class BackupBaseController {
     const userId = req.user?.userId;
     if (!userId) {
       res.status(401).json({
-        status: "Unauthorized",
         error: "Authentication required",
         message: "User is not authenticated",
+        status: "Unauthorized",
       });
       return null;
     }

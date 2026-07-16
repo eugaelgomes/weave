@@ -22,7 +22,7 @@ async function enqueueRedisListJob(listKey, jobBody) {
     return await redis.lpush(listKey, JSON.stringify(jobBody));
   } catch (err) {
     // Don't block core API flows if Redis/worker is down.
-    // eslint-disable-next-line no-console -- queue infra failure diagnostics
+
     console.error("[QueueController] Failed to enqueue job:", {
       err: err?.message || String(err),
       listKey,
@@ -120,7 +120,6 @@ async function enqueueBackupExportJob({ jobId, userId }) {
 async function enqueueNoteEmbeddingJob(noteId) {
   const internalId = await resolveNoteIdToUuid(noteId);
   if (!internalId) {
-    // eslint-disable-next-line no-console -- queue infra failure diagnostics
     console.warn(
       "[QueueController] Skipping embedding job for unresolved noteId:",
       noteId

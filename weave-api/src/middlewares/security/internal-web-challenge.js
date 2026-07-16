@@ -47,8 +47,8 @@ function issueInternalChallenge(req, res) {
       return res.json({ disabled: true });
     }
     return res.status(503).json({
-      error: "Desafio interno não configurado no servidor.",
       code: "INTERNAL_CHALLENGE_NOT_CONFIGURED",
+      error: "Desafio interno não configurado no servidor.",
     });
   }
 
@@ -56,13 +56,13 @@ function issueInternalChallenge(req, res) {
   if (!origin) {
     if (isDev) {
       return res.status(400).json({
-        error: "Header Origin é obrigatório para emitir o desafio.",
         code: "ORIGIN_REQUIRED",
+        error: "Header Origin é obrigatório para emitir o desafio.",
       });
     }
     return res.status(403).json({
-      error: "Acesso negado.",
       code: "ORIGIN_REQUIRED",
+      error: "Acesso negado.",
     });
   }
 
@@ -72,12 +72,12 @@ function issueInternalChallenge(req, res) {
       weaveTyp: "internal-web-challenge",
     },
     secret,
-    { expiresIn: "4m", algorithm: "HS256" }
+    { algorithm: "HS256", expiresIn: "4m" }
   );
 
   return res.json({
-    token,
     expiresInSeconds: 240,
+    token,
   });
 }
 
@@ -98,16 +98,16 @@ function verifyInternalWebChallenge(req, res, next) {
       return next();
     }
     return res.status(503).json({
-      error: "Desafio interno não configurado no servidor.",
       code: "INTERNAL_CHALLENGE_NOT_CONFIGURED",
+      error: "Desafio interno não configurado no servidor.",
     });
   }
 
   const rawToken = req.headers[CHALLENGE_HEADER];
   if (!rawToken || typeof rawToken !== "string") {
     return res.status(403).json({
-      error: "Cliente não autorizado.",
       code: "INTERNAL_CHALLENGE_REQUIRED",
+      error: "Cliente não autorizado.",
     });
   }
 
@@ -118,45 +118,45 @@ function verifyInternalWebChallenge(req, res, next) {
 
     if (payload.weaveTyp !== "internal-web-challenge") {
       return res.status(403).json({
-        error: "Cliente não autorizado.",
         code: "INTERNAL_CHALLENGE_INVALID",
+        error: "Cliente não autorizado.",
       });
     }
 
     const claimed = normalizeOrigin(payload[CHALLENGE_CLAIM]);
     if (!claimed) {
       return res.status(403).json({
-        error: "Cliente não autorizado.",
         code: "INTERNAL_CHALLENGE_INVALID",
+        error: "Cliente não autorizado.",
       });
     }
 
     const current = normalizeOrigin(req.headers.origin);
     if (!current) {
       return res.status(403).json({
-        error: "Cliente não autorizado.",
         code: "ORIGIN_REQUIRED",
+        error: "Cliente não autorizado.",
       });
     }
 
     if (claimed !== current) {
       return res.status(403).json({
-        error: "Cliente não autorizado.",
         code: "INTERNAL_CHALLENGE_ORIGIN_MISMATCH",
+        error: "Cliente não autorizado.",
       });
     }
 
     return next();
   } catch {
     return res.status(403).json({
-      error: "Cliente não autorizado.",
       code: "INTERNAL_CHALLENGE_INVALID",
+      error: "Cliente não autorizado.",
     });
   }
 }
 
 module.exports = {
+  INTERNAL_CHALLENGE_HEADER: "X-Weave-Internal-Challenge",
   issueInternalChallenge,
   verifyInternalWebChallenge,
-  INTERNAL_CHALLENGE_HEADER: "X-Weave-Internal-Challenge",
 };

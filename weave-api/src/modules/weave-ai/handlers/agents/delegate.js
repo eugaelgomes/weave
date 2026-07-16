@@ -11,7 +11,6 @@ class DelegateToAgentHandler {
     args,
     organizationId,
     lang,
-    t,
     name,
     toolCallId,
     files,
@@ -40,8 +39,8 @@ class DelegateToAgentHandler {
 
     return {
       name,
-      success: true,
       result: execution.result,
+      success: true,
     };
   }
 }

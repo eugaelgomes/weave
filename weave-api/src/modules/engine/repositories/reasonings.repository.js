@@ -18,10 +18,10 @@ module.exports = {
   listByProjectForMember: ReasoningsReadRepository.listByProjectForMember.bind(
     ReasoningsReadRepository
   ),
-  upsertInteraction: ReasoningsInteractionsRepository.upsertInteraction.bind(
-    ReasoningsInteractionsRepository
-  ),
   updateActionItem: ReasoningsActionItemsRepository.updateActionItem.bind(
     ReasoningsActionItemsRepository
+  ),
+  upsertInteraction: ReasoningsInteractionsRepository.upsertInteraction.bind(
+    ReasoningsInteractionsRepository
   ),
 };

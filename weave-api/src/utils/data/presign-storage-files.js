@@ -169,6 +169,6 @@ async function presignListFields(list, fields = [], options = {}) {
 
 module.exports = {
   generatePresignedUrl,
-  presignObjectFields,
   presignListFields,
+  presignObjectFields,
 };

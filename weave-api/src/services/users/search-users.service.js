@@ -36,12 +36,12 @@ class SearchUsersService {
     return users.map((user) => {
       const info = contextMap[user.user_id];
       return {
-        id: user.user_id,
-        username: user.username,
-        name: user.name,
-        email: user.email,
         avatar_url: user.avatar_url,
         context_info: info || { is_member: false, role: null, status: null },
+        email: user.email,
+        id: user.user_id,
+        name: user.name,
+        username: user.username,
       };
     });
   }

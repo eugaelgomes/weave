@@ -28,57 +28,57 @@ const inviteIdParamSchema = z.object({
 
 // Query schemas
 const listEventsQuerySchema = z.object({
-  organization_id: uuidParamSchema.optional(),
-  organizationId: uuidParamSchema.optional(),
+  from: z.string().datetime({ offset: true }).or(z.string()).optional(),
   include_deleted: z.string().optional(),
   includeDeleted: z.string().optional(),
-  from: z.string().datetime({ offset: true }).or(z.string()).optional(),
+  organization_id: uuidParamSchema.optional(),
+  organizationId: uuidParamSchema.optional(),
   to: z.string().datetime({ offset: true }).or(z.string()).optional(),
 });
 
 // Body schemas
 const createEventSchema = z
   .object({
-    title: z.string().min(1, "title is required"),
+    attendees: z
+      .array(z.string().email("Invalid email in attendees"))
+      .optional(),
+    create_google_meet: z.boolean().optional().nullable(),
+    createGoogleMeet: z.boolean().optional().nullable(),
     description: z.string().optional().nullable(),
+    end_time: z.string().or(z.date()).optional(),
+    endTime: z.string().or(z.date()).optional(),
+    etag: z.string().optional().nullable(),
+    google_calendar_id: z.string().optional().nullable(),
+    google_event_id: z.string().optional().nullable(),
+    googleCalendarId: z.string().optional().nullable(),
+    googleEventId: z.string().optional().nullable(),
+    guests: z.array(z.string().email("Invalid email in guests")).optional(),
+    is_all_day: z.boolean().optional().nullable(),
+    is_from_note: z.boolean().optional().nullable(),
+    is_from_project: z.boolean().optional().nullable(),
+    isAllDay: z.boolean().optional().nullable(),
+    isFromNote: z.boolean().optional().nullable(),
+    isFromProject: z.boolean().optional().nullable(),
+    last_synced_at: z.string().or(z.date()).optional().nullable(),
+    lastSyncedAt: z.string().or(z.date()).optional().nullable(),
     location: z.string().optional().nullable(),
-    organization_id: uuidParamSchema.optional().nullable(),
-    organizationId: uuidParamSchema.optional().nullable(),
     note_id: publicIdOrUuidSchema.optional().nullable(),
     noteId: publicIdOrUuidSchema.optional().nullable(),
+    organization_id: uuidParamSchema.optional().nullable(),
+    organizationId: uuidParamSchema.optional().nullable(),
+    outlook_calendar_id: z.string().optional().nullable(),
+    outlook_event_id: z.string().optional().nullable(),
+    outlookCalendarId: z.string().optional().nullable(),
+    outlookEventId: z.string().optional().nullable(),
     project_id: publicIdOrUuidSchema.optional().nullable(),
     projectId: publicIdOrUuidSchema.optional().nullable(),
     start_time: z.string().or(z.date()).optional(),
     startTime: z.string().or(z.date()).optional(),
-    end_time: z.string().or(z.date()).optional(),
-    endTime: z.string().or(z.date()).optional(),
-    is_all_day: z.boolean().optional().nullable(),
-    isAllDay: z.boolean().optional().nullable(),
-    is_from_note: z.boolean().optional().nullable(),
-    isFromNote: z.boolean().optional().nullable(),
-    is_from_project: z.boolean().optional().nullable(),
-    isFromProject: z.boolean().optional().nullable(),
     sync_status: syncStatusEnum.optional().nullable(),
-    syncStatus: syncStatusEnum.optional().nullable(),
     sync_with_google: z.boolean().optional().nullable(),
+    syncStatus: syncStatusEnum.optional().nullable(),
     syncWithGoogle: z.boolean().optional().nullable(),
-    create_google_meet: z.boolean().optional().nullable(),
-    createGoogleMeet: z.boolean().optional().nullable(),
-    attendees: z
-      .array(z.string().email("Invalid email in attendees"))
-      .optional(),
-    guests: z.array(z.string().email("Invalid email in guests")).optional(),
-    google_calendar_id: z.string().optional().nullable(),
-    googleCalendarId: z.string().optional().nullable(),
-    google_event_id: z.string().optional().nullable(),
-    googleEventId: z.string().optional().nullable(),
-    outlook_calendar_id: z.string().optional().nullable(),
-    outlookCalendarId: z.string().optional().nullable(),
-    outlook_event_id: z.string().optional().nullable(),
-    outlookEventId: z.string().optional().nullable(),
-    etag: z.string().optional().nullable(),
-    last_synced_at: z.string().or(z.date()).optional().nullable(),
-    lastSyncedAt: z.string().or(z.date()).optional().nullable(),
+    title: z.string().min(1, "title is required"),
   })
   .refine((data) => data.start_time || data.startTime, {
     message: "start_time or startTime is required",
@@ -90,53 +90,53 @@ const createEventSchema = z
   });
 
 const updateEventSchema = z.object({
-  title: z.string().min(1, "title cannot be empty").optional(),
+  attendees: z.array(z.string().email("Invalid email in attendees")).optional(),
+  create_google_meet: z.boolean().optional().nullable(),
+  createGoogleMeet: z.boolean().optional().nullable(),
   description: z.string().optional().nullable(),
+  end_time: z.string().or(z.date()).optional(),
+  endTime: z.string().or(z.date()).optional(),
+  etag: z.string().optional().nullable(),
+  google_calendar_id: z.string().optional().nullable(),
+  google_event_id: z.string().optional().nullable(),
+  googleCalendarId: z.string().optional().nullable(),
+  googleEventId: z.string().optional().nullable(),
+  guests: z.array(z.string().email("Invalid email in guests")).optional(),
+  is_all_day: z.boolean().optional().nullable(),
+  is_from_note: z.boolean().optional().nullable(),
+  is_from_project: z.boolean().optional().nullable(),
+  isAllDay: z.boolean().optional().nullable(),
+  isFromNote: z.boolean().optional().nullable(),
+  isFromProject: z.boolean().optional().nullable(),
+  last_synced_at: z.string().or(z.date()).optional().nullable(),
+  lastSyncedAt: z.string().or(z.date()).optional().nullable(),
   location: z.string().optional().nullable(),
-  organization_id: uuidParamSchema.optional().nullable(),
-  organizationId: uuidParamSchema.optional().nullable(),
   note_id: publicIdOrUuidSchema.optional().nullable(),
   noteId: publicIdOrUuidSchema.optional().nullable(),
+  organization_id: uuidParamSchema.optional().nullable(),
+  organizationId: uuidParamSchema.optional().nullable(),
+  outlook_calendar_id: z.string().optional().nullable(),
+  outlook_event_id: z.string().optional().nullable(),
+  outlookCalendarId: z.string().optional().nullable(),
+  outlookEventId: z.string().optional().nullable(),
   project_id: publicIdOrUuidSchema.optional().nullable(),
   projectId: publicIdOrUuidSchema.optional().nullable(),
   start_time: z.string().or(z.date()).optional(),
   startTime: z.string().or(z.date()).optional(),
-  end_time: z.string().or(z.date()).optional(),
-  endTime: z.string().or(z.date()).optional(),
-  is_all_day: z.boolean().optional().nullable(),
-  isAllDay: z.boolean().optional().nullable(),
-  is_from_note: z.boolean().optional().nullable(),
-  isFromNote: z.boolean().optional().nullable(),
-  is_from_project: z.boolean().optional().nullable(),
-  isFromProject: z.boolean().optional().nullable(),
   sync_status: syncStatusEnum.optional().nullable(),
-  syncStatus: syncStatusEnum.optional().nullable(),
   sync_with_google: z.boolean().optional().nullable(),
+  syncStatus: syncStatusEnum.optional().nullable(),
   syncWithGoogle: z.boolean().optional().nullable(),
-  create_google_meet: z.boolean().optional().nullable(),
-  createGoogleMeet: z.boolean().optional().nullable(),
-  attendees: z.array(z.string().email("Invalid email in attendees")).optional(),
-  guests: z.array(z.string().email("Invalid email in guests")).optional(),
-  google_calendar_id: z.string().optional().nullable(),
-  googleCalendarId: z.string().optional().nullable(),
-  google_event_id: z.string().optional().nullable(),
-  googleEventId: z.string().optional().nullable(),
-  outlook_calendar_id: z.string().optional().nullable(),
-  outlookCalendarId: z.string().optional().nullable(),
-  outlook_event_id: z.string().optional().nullable(),
-  outlookEventId: z.string().optional().nullable(),
-  etag: z.string().optional().nullable(),
-  last_synced_at: z.string().or(z.date()).optional().nullable(),
-  lastSyncedAt: z.string().or(z.date()).optional().nullable(),
+  title: z.string().min(1, "title cannot be empty").optional(),
 });
 
 // Invites
 const createInviteSchema = z.object({
   email: z.string().email("Email is required and must be a valid email"),
+  externalGuestId: uuidParamSchema.optional().nullable(),
   role: z.string().optional(),
   status: z.string().optional(),
   userId: uuidParamSchema.optional().nullable(),
-  externalGuestId: uuidParamSchema.optional().nullable(),
 });
 
 const updateInviteSchema = z.object({
@@ -146,8 +146,6 @@ const updateInviteSchema = z.object({
 
 // FreeBusy
 const checkFreeBusySchema = z.object({
-  timeMin: z.string().min(1, "timeMin is required"),
-  timeMax: z.string().min(1, "timeMax is required"),
   items: z
     .array(
       z.object({
@@ -155,15 +153,17 @@ const checkFreeBusySchema = z.object({
       })
     )
     .optional(),
+  timeMax: z.string().min(1, "timeMax is required"),
+  timeMin: z.string().min(1, "timeMin is required"),
 });
 
 module.exports = {
+  checkFreeBusySchema,
+  createEventSchema,
+  createInviteSchema,
   eventIdParamSchema,
   inviteIdParamSchema,
   listEventsQuerySchema,
-  createEventSchema,
   updateEventSchema,
-  createInviteSchema,
   updateInviteSchema,
-  checkFreeBusySchema,
 };

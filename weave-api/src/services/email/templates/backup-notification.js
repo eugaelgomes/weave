@@ -44,40 +44,40 @@ async function sendBackupEmail({
     const displayName = userName || t(locale, "common.greetingFallback");
 
     const { html, text } = buildMailTemplate({
-      locale,
-      preheader: t(locale, "backup.preheader"),
-      title: t(locale, "backup.title"),
-      subtitle: t(locale, "backup.subtitle"),
-      greeting: `${displayName},`,
-      introLines: [t(locale, "backup.intro1"), t(locale, "backup.intro2")],
-      ctaText: t(locale, "backup.cta"),
-      ctaUrl: downloadUrl,
-      infoText: t(locale, "backup.info", {
-        hours: hoursUntilExpiration,
-        expiresLabel,
-      }),
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
           <p style="margin: 0 0 8px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.format"))}:</strong> ${escapeHtml(t(locale, "common.formatCsv"))}</p>
           <p style="margin: 0; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.content"))}:</strong> ${escapeHtml(t(locale, "common.contentNotesBlocks"))}</p>
         </div>
       `,
+      ctaText: t(locale, "backup.cta"),
+      ctaUrl: downloadUrl,
+      greeting: `${displayName},`,
+      infoText: t(locale, "backup.info", {
+        expiresLabel,
+        hours: hoursUntilExpiration,
+      }),
+      introLines: [t(locale, "backup.intro1"), t(locale, "backup.intro2")],
+      locale,
       outroLines: [t(locale, "backup.outro")],
+      preheader: t(locale, "backup.preheader"),
+      subtitle: t(locale, "backup.subtitle"),
+      title: t(locale, "backup.title"),
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
-      to: userEmail,
+      html,
       subject: t(locale, "backup.subject"),
       text,
-      html,
+      to: userEmail,
     });
 
     return { success: true };
   } catch (error) {
     return {
-      success: false,
       error: error.message || "Falha ao enviar email de backup.",
+      success: false,
     };
   }
 }
@@ -100,34 +100,34 @@ function buildBackupEmailPayload({ locale, userName, downloadUrl, expiresAt }) {
   const displayName = userName || t(resolvedLocale, "common.greetingFallback");
 
   const { html, text } = buildMailTemplate({
-    locale: resolvedLocale,
-    preheader: t(resolvedLocale, "backup.preheader"),
-    title: t(resolvedLocale, "backup.title"),
-    subtitle: t(resolvedLocale, "backup.subtitle"),
-    greeting: `${displayName},`,
-    introLines: [
-      t(resolvedLocale, "backup.intro1"),
-      t(resolvedLocale, "backup.intro2"),
-    ],
-    ctaText: t(resolvedLocale, "backup.cta"),
-    ctaUrl: downloadUrl,
-    infoText: t(resolvedLocale, "backup.info", {
-      hours: hoursUntilExpiration,
-      expiresLabel,
-    }),
     contentHtml: `
       <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
         <p style="margin: 0 0 8px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(resolvedLocale, "common.format"))}:</strong> ${escapeHtml(t(resolvedLocale, "common.formatCsv"))}</p>
         <p style="margin: 0; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(resolvedLocale, "common.content"))}:</strong> ${escapeHtml(t(resolvedLocale, "common.contentNotesBlocks"))}</p>
       </div>
     `,
+    ctaText: t(resolvedLocale, "backup.cta"),
+    ctaUrl: downloadUrl,
+    greeting: `${displayName},`,
+    infoText: t(resolvedLocale, "backup.info", {
+      expiresLabel,
+      hours: hoursUntilExpiration,
+    }),
+    introLines: [
+      t(resolvedLocale, "backup.intro1"),
+      t(resolvedLocale, "backup.intro2"),
+    ],
+    locale: resolvedLocale,
     outroLines: [t(resolvedLocale, "backup.outro")],
+    preheader: t(resolvedLocale, "backup.preheader"),
+    subtitle: t(resolvedLocale, "backup.subtitle"),
+    title: t(resolvedLocale, "backup.title"),
   });
 
   return {
     html,
-    text,
     subject: t(resolvedLocale, "backup.subject"),
+    text,
   };
 }
 
@@ -142,7 +142,7 @@ function formatFileSize(bytes) {
 }
 
 module.exports = {
-  sendBackupEmail,
   buildBackupEmailPayload,
   formatFileSize,
+  sendBackupEmail,
 };

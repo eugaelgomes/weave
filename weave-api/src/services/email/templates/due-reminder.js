@@ -30,29 +30,29 @@ function buildDueReminderTemplate({
     noteTitle: safeTitle,
   });
   const { html, text } = buildMailTemplate({
-    locale: resolvedLocale,
-    preheader: t(resolvedLocale, "dueReminder.preheader"),
-    title: t(resolvedLocale, "dueReminder.title"),
-    subtitle: t(resolvedLocale, "dueReminder.subtitle"),
-    greeting: `${displayName},`,
-    introLines: [
-      t(resolvedLocale, "dueReminder.intro", {
-        noteTitle: safeTitle,
-        dueDateLabel,
-      }),
-    ],
-    ctaText: t(resolvedLocale, "dueReminder.cta"),
-    ctaUrl: noteUrl,
-    infoText: t(resolvedLocale, "dueReminder.info"),
     contentHtml: `
       <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
         <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(resolvedLocale, "common.note"))}:</strong> ${escapeHtml(safeTitle)}</p>
         <p style="margin: 0; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(resolvedLocale, "common.dueDate"))}:</strong> ${escapeHtml(dueDateLabel)}</p>
       </div>
     `,
+    ctaText: t(resolvedLocale, "dueReminder.cta"),
+    ctaUrl: noteUrl,
+    greeting: `${displayName},`,
+    infoText: t(resolvedLocale, "dueReminder.info"),
+    introLines: [
+      t(resolvedLocale, "dueReminder.intro", {
+        dueDateLabel,
+        noteTitle: safeTitle,
+      }),
+    ],
+    locale: resolvedLocale,
+    preheader: t(resolvedLocale, "dueReminder.preheader"),
+    subtitle: t(resolvedLocale, "dueReminder.subtitle"),
+    title: t(resolvedLocale, "dueReminder.title"),
   });
 
-  return { subject, text, html };
+  return { html, subject, text };
 }
 
 /**
@@ -78,28 +78,28 @@ async function sendDueReminderEmail(
     const dueDateLabel = formatDateForLocale(locale, dueDate);
 
     const emailTemplate = buildDueReminderTemplate({
-      locale,
-      recipientName,
-      noteTitle,
       dueDateLabel,
+      locale,
+      noteTitle,
       noteUrl,
+      recipientName,
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
-      to: toEmail,
+      html: emailTemplate.html,
       subject: emailTemplate.subject,
       text: emailTemplate.text,
-      html: emailTemplate.html,
+      to: toEmail,
     });
 
     return { success: true };
   } catch (error) {
     return {
-      success: false,
       error: error.message || "Falha ao enviar lembrete de prazo.",
+      success: false,
     };
   }
 }
 
-module.exports = { sendDueReminderEmail, buildDueReminderTemplate };
+module.exports = { buildDueReminderTemplate, sendDueReminderEmail };

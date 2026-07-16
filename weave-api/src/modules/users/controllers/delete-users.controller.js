@@ -58,9 +58,9 @@ class DeleteUsersController extends BaseController {
         }
 
         res.status(200).json({
-          status: "OK",
           message:
             "Confirmation email sent. Please check your inbox to confirm account deletion.",
+          status: "OK",
         });
       } else {
         res.status(500).json({
@@ -133,8 +133,8 @@ class DeleteUsersController extends BaseController {
         }
 
         res.status(200).json({
-          status: "OK",
           message: "Account deleted successfully.",
+          status: "OK",
         });
       } else {
         res.status(500).json({

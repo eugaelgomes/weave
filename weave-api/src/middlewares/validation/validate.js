@@ -1,5 +1,3 @@
-const { ZodError } = require("zod");
-
 const { AppError } = require("@/errors/app-error");
 
 /**

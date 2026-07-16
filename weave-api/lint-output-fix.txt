@@ -1,0 +1,385 @@
+
+> weave-notes-api@1.0.0 lint
+> eslint "src/**/*.{js,mjs,cjs,ts}" --fix
+
+
+/home/gaelgomes/projetos/theweave/weave-api/src/config/allowed-origins.js
+  19:14  error  '_e' is defined but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/instrument.js
+  18:3  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/engine/repositories/reasonings.action-items.repository.js
+  48:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/engine/repositories/reasonings.interactions.repository.js
+  75:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/engine/repositories/reasonings.read.repository.js
+   34:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  161:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  230:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  254:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/engine/repositories/report-config.repository.js
+   11:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+   38:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  131:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  149:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  166:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/engine/repositories/sprints.repository.js
+   11:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+   40:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+   62:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  145:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  173:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  191:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  208:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  229:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+  258:19  error  SQL queries must be written as multiline strings, one clause per line  local/sql-query-multiline
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/notes/controllers/notes-collaborators.controller.js
+  178:13  error  'note' is assigned a value but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/notes/controllers/notes-write.controller.js
+  359:9  error  'title' is never reassigned. Use 'const' instead         prefer-const
+  360:9  error  'description' is never reassigned. Use 'const' instead   prefer-const
+  362:9  error  'status' is never reassigned. Use 'const' instead        prefer-const
+  363:9  error  'deleted' is never reassigned. Use 'const' instead       prefer-const
+  364:9  error  'project_id' is never reassigned. Use 'const' instead    prefer-const
+  366:9  error  'priority_id' is never reassigned. Use 'const' instead   prefer-const
+  367:9  error  'due_date' is never reassigned. Use 'const' instead      prefer-const
+  368:9  error  'baseRevision' is never reassigned. Use 'const' instead  prefer-const
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/notes/repositories/create-notes.repository.js
+   29:5  error  'assignedTo' is assigned a value but never used. Allowed unused args must match /^_/u           no-unused-vars
+   76:5  error  'initialBlockContent' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+  128:5  error  Unexpected console statement. Only these console methods are allowed: warn, error, info         no-console
+  133:7  error  Unexpected console statement. Only these console methods are allowed: warn, error, info         no-console
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/notes/repositories/mutate-notes.repository.js
+  77:5  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+  82:7  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/notifications/normalize.js
+  28:14  error  'error' is defined but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/organizations/controllers/areas.controller.js
+  10:7  error  'AREA_MEMBER_ROLES' is assigned a value but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/organizations/controllers/creation-steps.controller.js
+  105:14  error  'error' is defined but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/organizations/controllers/members.controller.js
+   13:7   error  'DeleteUsersRepository' is assigned a value but never used    no-unused-vars
+   14:7   error  'NotificationsRepository' is assigned a value but never used  no-unused-vars
+   18:7   error  'crypto' is assigned a value but never used                   no-unused-vars
+   26:9   error  'validRoles' is assigned a value but never used               no-unused-vars
+   27:9   error  'hasPlusAliasInLocalPart' is assigned a value but never used  no-unused-vars
+   36:7   error  'PROJECT_MEMBER_ROLES' is assigned a value but never used     no-unused-vars
+  333:13  error  'isGlobalRole' is assigned a value but never used             no-unused-vars
+  508:20  error  'name' is never reassigned. Use 'const' instead               prefer-const
+  508:26  error  'username' is never reassigned. Use 'const' instead           prefer-const
+  508:36  error  'password' is never reassigned. Use 'const' instead           prefer-const
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/organizations/controllers/organizations.controller.js
+  348:14  error  'error' is defined but never used  no-unused-vars
+  642:14  error  'error' is defined but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/organizations/repositories/organizations.repository.js
+    3:3   error  'rowCount' is assigned a value but never used                                    no-unused-vars
+  478:13  error  'defaultPlanSnapshot' is assigned a value but never used                         no-unused-vars
+  728:61  error  'plan_snapshot' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/plans/controllers/plans.controller.js
+  3:9  error  'USAGE_PATHS' is assigned a value but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/projects/controllers/projects-read.controller.js
+  14:3  error  'PROJECT_SPRINTS_LIST_TRIGGER_KEYS' is assigned a value but never used     no-unused-vars
+  15:3  error  'PROJECT_REASONINGS_LIST_TRIGGER_KEYS' is assigned a value but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/projects/controllers/projects-update.controller.js
+   10:9   error  'PLAN_PATHS' is assigned a value but never used                                          no-unused-vars
+   26:7   error  'redis' is assigned a value but never used                                               no-unused-vars
+   28:3   error  'getReasoningTriggerQueueRedisKey' is assigned a value but never used                    no-unused-vars
+   42:58  error  'rest' is assigned a value but never used                                                no-unused-vars
+   82:20  error  'e' is defined but never used                                                            no-unused-vars
+  322:13  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+  326:13  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+  332:15  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+  370:15  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/users/controllers/create-users.controller.js
+  31:9  error  'name' is assigned a value but never used             no-unused-vars
+  32:9  error  'user_name' is assigned a value but never used        no-unused-vars
+  33:9  error  'username' is assigned a value but never used         no-unused-vars
+  34:9  error  'email' is assigned a value but never used            no-unused-vars
+  35:9  error  'password' is assigned a value but never used         no-unused-vars
+  37:9  error  'private_profile' is assigned a value but never used  no-unused-vars
+  38:9  error  'birth_date' is assigned a value but never used       no-unused-vars
+  39:9  error  'phone_number' is assigned a value but never used     no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/users/controllers/user-data.controller.js
+    1:7   error  'spacesService' is assigned a value but never used         no-unused-vars
+    4:7   error  'bcrypt' is assigned a value but never used                no-unused-vars
+    5:7   error  'crypto' is assigned a value but never used                no-unused-vars
+    8:7   error  'UserTokensRepository' is assigned a value but never used  no-unused-vars
+  314:7   error  'name' is assigned a value but never used                  no-unused-vars
+  315:7   error  'username' is assigned a value but never used              no-unused-vars
+  316:7   error  'email' is assigned a value but never used                 no-unused-vars
+  317:7   error  'emailValidationToken' is assigned a value but never used  no-unused-vars
+  318:7   error  'currentPassword' is assigned a value but never used       no-unused-vars
+  319:7   error  'newPassword' is assigned a value but never used           no-unused-vars
+  320:7   error  'theme_mode' is assigned a value but never used            no-unused-vars
+  321:7   error  'birth_date' is assigned a value but never used            no-unused-vars
+  322:7   error  'phone_number' is assigned a value but never used          no-unused-vars
+  323:7   error  'private_profile' is assigned a value but never used       no-unused-vars
+  324:7   error  'usage_preference' is assigned a value but never used      no-unused-vars
+  325:7   error  'user_preference' is assigned a value but never used       no-unused-vars
+  328:11  error  'auditChanges' is assigned a value but never used          no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/agents/delegate.js
+  14:5  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/create.js
+  101:16  error  'e' is defined but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/delete.js
+  25:55  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/update-collaborator-add.js
+  10:7  error  'projectsReadRepository' is assigned a value but never used    no-unused-vars
+  11:7  error  'projectsUpdateRepository' is assigned a value but never used  no-unused-vars
+  14:7  error  'chatFormatterUtil' is assigned a value but never used         no-unused-vars
+  15:9  error  'markdownToBlocks' is assigned a value but never used          no-unused-vars
+  16:9  error  'NOTE_STATUS' is assigned a value but never used               no-unused-vars
+  19:3  error  'normalizeBlocksTree' is assigned a value but never used       no-unused-vars
+  20:3  error  'newBlockId' is assigned a value but never used                no-unused-vars
+  23:3  error  'enqueueNoteEmbeddingJob' is assigned a value but never used   no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/update-collaborator-remove.js
+  10:7   error  'projectsReadRepository' is assigned a value but never used          no-unused-vars
+  11:7   error  'projectsUpdateRepository' is assigned a value but never used        no-unused-vars
+  12:7   error  'workspaceUserScopeRepository' is assigned a value but never used    no-unused-vars
+  14:7   error  'chatFormatterUtil' is assigned a value but never used               no-unused-vars
+  15:9   error  'markdownToBlocks' is assigned a value but never used                no-unused-vars
+  16:9   error  'NOTE_STATUS' is assigned a value but never used                     no-unused-vars
+  17:9   error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used          no-unused-vars
+  19:3   error  'normalizeBlocksTree' is assigned a value but never used             no-unused-vars
+  20:3   error  'newBlockId' is assigned a value but never used                      no-unused-vars
+  23:3   error  'enqueueNoteEmbeddingJob' is assigned a value but never used         no-unused-vars
+  40:55  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/update-content.js
+  12:7  error  'projectsReadRepository' is assigned a value but never used        no-unused-vars
+  13:7  error  'projectsUpdateRepository' is assigned a value but never used      no-unused-vars
+  14:7  error  'workspaceUserScopeRepository' is assigned a value but never used  no-unused-vars
+  18:9  error  'NOTE_STATUS' is assigned a value but never used                   no-unused-vars
+  19:9  error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used        no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/update-due-date.js
+  10:7   error  'projectsReadRepository' is assigned a value but never used          no-unused-vars
+  11:7   error  'projectsUpdateRepository' is assigned a value but never used        no-unused-vars
+  12:7   error  'workspaceUserScopeRepository' is assigned a value but never used    no-unused-vars
+  14:7   error  'chatFormatterUtil' is assigned a value but never used               no-unused-vars
+  15:9   error  'markdownToBlocks' is assigned a value but never used                no-unused-vars
+  16:9   error  'NOTE_STATUS' is assigned a value but never used                     no-unused-vars
+  17:9   error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used          no-unused-vars
+  19:3   error  'normalizeBlocksTree' is assigned a value but never used             no-unused-vars
+  20:3   error  'newBlockId' is assigned a value but never used                      no-unused-vars
+  23:3   error  'enqueueNoteEmbeddingJob' is assigned a value but never used         no-unused-vars
+  40:55  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/update-priority.js
+  10:7   error  'projectsReadRepository' is assigned a value but never used          no-unused-vars
+  11:7   error  'projectsUpdateRepository' is assigned a value but never used        no-unused-vars
+  12:7   error  'workspaceUserScopeRepository' is assigned a value but never used    no-unused-vars
+  14:7   error  'chatFormatterUtil' is assigned a value but never used               no-unused-vars
+  15:9   error  'markdownToBlocks' is assigned a value but never used                no-unused-vars
+  16:9   error  'NOTE_STATUS' is assigned a value but never used                     no-unused-vars
+  17:9   error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used          no-unused-vars
+  19:3   error  'normalizeBlocksTree' is assigned a value but never used             no-unused-vars
+  20:3   error  'newBlockId' is assigned a value but never used                      no-unused-vars
+  23:3   error  'enqueueNoteEmbeddingJob' is assigned a value but never used         no-unused-vars
+  40:55  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/update-stage.js
+  11:7  error  'projectsUpdateRepository' is assigned a value but never used      no-unused-vars
+  12:7  error  'workspaceUserScopeRepository' is assigned a value but never used  no-unused-vars
+  14:7  error  'chatFormatterUtil' is assigned a value but never used             no-unused-vars
+  15:9  error  'markdownToBlocks' is assigned a value but never used              no-unused-vars
+  16:9  error  'NOTE_STATUS' is assigned a value but never used                   no-unused-vars
+  17:9  error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used        no-unused-vars
+  19:3  error  'normalizeBlocksTree' is assigned a value but never used           no-unused-vars
+  20:3  error  'newBlockId' is assigned a value but never used                    no-unused-vars
+  23:3  error  'enqueueNoteEmbeddingJob' is assigned a value but never used       no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/update-tags.js
+  10:7   error  'projectsReadRepository' is assigned a value but never used          no-unused-vars
+  11:7   error  'projectsUpdateRepository' is assigned a value but never used        no-unused-vars
+  12:7   error  'workspaceUserScopeRepository' is assigned a value but never used    no-unused-vars
+  14:7   error  'chatFormatterUtil' is assigned a value but never used               no-unused-vars
+  15:9   error  'markdownToBlocks' is assigned a value but never used                no-unused-vars
+  16:9   error  'NOTE_STATUS' is assigned a value but never used                     no-unused-vars
+  17:9   error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used          no-unused-vars
+  19:3   error  'normalizeBlocksTree' is assigned a value but never used             no-unused-vars
+  20:3   error  'newBlockId' is assigned a value but never used                      no-unused-vars
+  23:3   error  'enqueueNoteEmbeddingJob' is assigned a value but never used         no-unused-vars
+  40:55  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/notes/update-title.js
+  10:7   error  'projectsReadRepository' is assigned a value but never used          no-unused-vars
+  11:7   error  'projectsUpdateRepository' is assigned a value but never used        no-unused-vars
+  12:7   error  'workspaceUserScopeRepository' is assigned a value but never used    no-unused-vars
+  14:7   error  'chatFormatterUtil' is assigned a value but never used               no-unused-vars
+  15:9   error  'markdownToBlocks' is assigned a value but never used                no-unused-vars
+  16:9   error  'NOTE_STATUS' is assigned a value but never used                     no-unused-vars
+  17:9   error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used          no-unused-vars
+  19:3   error  'normalizeBlocksTree' is assigned a value but never used             no-unused-vars
+  20:3   error  'newBlockId' is assigned a value but never used                      no-unused-vars
+  23:3   error  'enqueueNoteEmbeddingJob' is assigned a value but never used         no-unused-vars
+  40:55  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/projects/create.js
+   9:9   error  'PROJECT_STATUS' is assigned a value but never used                     no-unused-vars
+  24:49  error  'lang' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/projects/delete.js
+  27:55  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/projects/search.js
+   1:7   error  'notesRepository' is assigned a value but never used                    no-unused-vars
+  10:7   error  'projectsUpdateRepository' is assigned a value but never used           no-unused-vars
+  11:7   error  'workspaceUserScopeRepository' is assigned a value but never used       no-unused-vars
+  12:7   error  'chatAccessUtil' is assigned a value but never used                     no-unused-vars
+  13:7   error  'chatFormatterUtil' is assigned a value but never used                  no-unused-vars
+  14:9   error  'markdownToBlocks' is assigned a value but never used                   no-unused-vars
+  15:9   error  'NOTE_STATUS' is assigned a value but never used                        no-unused-vars
+  16:9   error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used             no-unused-vars
+  18:3   error  'normalizeBlocksTree' is assigned a value but never used                no-unused-vars
+  19:3   error  'newBlockId' is assigned a value but never used                         no-unused-vars
+  22:3   error  'enqueueNoteEmbeddingJob' is assigned a value but never used            no-unused-vars
+  39:49  error  'lang' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/projects/update-title.js
+   9:7   error  'notesRepository' is assigned a value but never used                 no-unused-vars
+  12:7   error  'workspaceUserScopeRepository' is assigned a value but never used    no-unused-vars
+  14:7   error  'chatFormatterUtil' is assigned a value but never used               no-unused-vars
+  15:9   error  'markdownToBlocks' is assigned a value but never used                no-unused-vars
+  16:9   error  'NOTE_STATUS' is assigned a value but never used                     no-unused-vars
+  17:9   error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used          no-unused-vars
+  19:3   error  'normalizeBlocksTree' is assigned a value but never used             no-unused-vars
+  20:3   error  'newBlockId' is assigned a value but never used                      no-unused-vars
+  23:3   error  'enqueueNoteEmbeddingJob' is assigned a value but never used         no-unused-vars
+  40:55  error  't' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/handlers/users/search.js
+   1:7   error  'notesRepository' is assigned a value but never used                              no-unused-vars
+   2:7   error  'projectsReadRepository' is assigned a value but never used                       no-unused-vars
+   3:7   error  'projectsUpdateRepository' is assigned a value but never used                     no-unused-vars
+  11:7   error  'workspaceUserScopeRepository' is assigned a value but never used                 no-unused-vars
+  12:7   error  'chatAccessUtil' is assigned a value but never used                               no-unused-vars
+  13:7   error  'chatFormatterUtil' is assigned a value but never used                            no-unused-vars
+  14:9   error  'markdownToBlocks' is assigned a value but never used                             no-unused-vars
+  15:9   error  'NOTE_STATUS' is assigned a value but never used                                  no-unused-vars
+  16:9   error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used                       no-unused-vars
+  18:3   error  'normalizeBlocksTree' is assigned a value but never used                          no-unused-vars
+  19:3   error  'newBlockId' is assigned a value but never used                                   no-unused-vars
+  22:3   error  'enqueueNoteEmbeddingJob' is assigned a value but never used                      no-unused-vars
+  39:33  error  'organizationId' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  39:49  error  'lang' is defined but never used. Allowed unused args must match /^_/u            no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/services/agent-delegation.service.js
+  31:5  error  'files' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/services/chat-engine.service.js
+  42:12  error  'e' is defined but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/modules/weave-ai/services/chat-functions.service.js
+  12:7  error  'notesRepository' is assigned a value but never used               no-unused-vars
+  13:7  error  'projectsReadRepository' is assigned a value but never used        no-unused-vars
+  14:7  error  'projectsUpdateRepository' is assigned a value but never used      no-unused-vars
+  15:7  error  'workspaceUserScopeRepository' is assigned a value but never used  no-unused-vars
+  16:7  error  'chatAccessUtil' is assigned a value but never used                no-unused-vars
+  17:7  error  'chatFormatterUtil' is assigned a value but never used             no-unused-vars
+  18:9  error  'markdownToBlocks' is assigned a value but never used              no-unused-vars
+  19:9  error  'NOTE_STATUS' is assigned a value but never used                   no-unused-vars
+  20:9  error  'WORKSPACE_SHARE_DENIED' is assigned a value but never used        no-unused-vars
+  22:3  error  'normalizeBlocksTree' is assigned a value but never used           no-unused-vars
+  23:3  error  'newBlockId' is assigned a value but never used                    no-unused-vars
+  26:3  error  'enqueueNoteEmbeddingJob' is assigned a value but never used       no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/services/email/i18n/locales/es-es.js
+    5:3  error  Expected object keys to be in natural insensitive ascending order. 'collab.cta' should be before 'collab.subtitle'                  sort-keys-fix/sort-keys-fix
+    8:3  error  Expected object keys to be in natural insensitive ascending order. 'collab.intro' should be before 'common.autoFooter'              sort-keys-fix/sort-keys-fix
+   10:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.preheader' should be before 'common.brandName'           sort-keys-fix/sort-keys-fix
+   12:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.subtitle' should be before 'common.content'              sort-keys-fix/sort-keys-fix
+   14:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.intro1' should be before 'common.contentNotesBlocks'     sort-keys-fix/sort-keys-fix
+   17:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.cta' should be before 'common.ctaHint'                   sort-keys-fix/sort-keys-fix
+   19:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.info' should be before 'common.currentEmail'             sort-keys-fix/sort-keys-fix
+   23:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.intro2' should be before 'common.dueDate'                sort-keys-fix/sort-keys-fix
+   25:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.outro' should be before 'common.format'                  sort-keys-fix/sort-keys-fix
+   28:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.subject' should be before 'common.formatCsv'             sort-keys-fix/sort-keys-fix
+   30:3  error  Expected object keys to be in natural insensitive ascending order. 'backup.title' should be before 'common.greetingFallback'        sort-keys-fix/sort-keys-fix
+   32:3  error  Expected object keys to be in natural insensitive ascending order. 'aiReport.cta' should be before 'common.newEmail'                sort-keys-fix/sort-keys-fix
+   35:3  error  Expected object keys to be in natural insensitive ascending order. 'aiReport.footer' should be before 'common.note'                 sort-keys-fix/sort-keys-fix
+   38:3  error  Expected object keys to be in natural insensitive ascending order. 'aiReport.intro' should be before 'common.organization'          sort-keys-fix/sort-keys-fix
+   41:3  error  Expected object keys to be in natural insensitive ascending order. 'aiReport.preheader' should be before 'common.project'           sort-keys-fix/sort-keys-fix
+   43:3  error  Expected object keys to be in natural insensitive ascending order. 'aiReport.sprintSuffix' should be before 'common.role'           sort-keys-fix/sort-keys-fix
+   45:3  error  Expected object keys to be in natural insensitive ascending order. 'collab.outro' should be before 'common.username'                sort-keys-fix/sort-keys-fix
+   50:3  error  Expected object keys to be in natural insensitive ascending order. 'collab.permission' should be before 'deleteMessage.bodyDetail'  sort-keys-fix/sort-keys-fix
+   52:3  error  Expected object keys to be in natural insensitive ascending order. 'collab.subject' should be before 'deleteMessage.bodyUser'       sort-keys-fix/sort-keys-fix
+   55:3  error  Expected object keys to be in natural insensitive ascending order. 'collab.title' should be before 'deleteMessage.footer'           sort-keys-fix/sort-keys-fix
+  117:3  error  Expected object keys to be in natural insensitive ascending order. 'project.cta' should be before 'rescue.cta'                      sort-keys-fix/sort-keys-fix
+  119:3  error  Expected object keys to be in natural insensitive ascending order. 'project.footer' should be before 'rescue.info'                  sort-keys-fix/sort-keys-fix
+  123:3  error  Expected object keys to be in natural insensitive ascending order. 'project.intro' should be before 'rescue.intro1'                 sort-keys-fix/sort-keys-fix
+  128:3  error  Expected object keys to be in natural insensitive ascending order. 'project.outro' should be before 'rescue.intro2'                 sort-keys-fix/sort-keys-fix
+  131:3  error  Expected object keys to be in natural insensitive ascending order. 'project.preheader' should be before 'rescue.outro'              sort-keys-fix/sort-keys-fix
+  133:3  error  Expected object keys to be in natural insensitive ascending order. 'project.subject' should be before 'rescue.preheader'            sort-keys-fix/sort-keys-fix
+  135:3  error  Expected object keys to be in natural insensitive ascending order. 'project.subtitle' should be before 'rescue.subject'             sort-keys-fix/sort-keys-fix
+  138:3  error  Expected object keys to be in natural insensitive ascending order. 'project.title' should be before 'rescue.subtitle'               sort-keys-fix/sort-keys-fix
+  140:3  error  Expected object keys to be in natural insensitive ascending order. 'project.untitled' should be before 'rescue.title'               sort-keys-fix/sort-keys-fix
+  142:3  error  Expected object keys to be in natural insensitive ascending order. 'reportType.analysis' should be before 'reset.cta'               sort-keys-fix/sort-keys-fix
+  144:3  error  Expected object keys to be in natural insensitive ascending order. 'reportType.daily_standup' should be before 'welcome.cta'        sort-keys-fix/sort-keys-fix
+  147:3  error  Expected object keys to be in natural insensitive ascending order. 'reportType.deadline_alert' should be before 'welcome.footer'    sort-keys-fix/sort-keys-fix
+  150:3  error  Expected object keys to be in natural insensitive ascending order. 'reportType.default' should be before 'welcome.info'             sort-keys-fix/sort-keys-fix
+  152:3  error  Expected object keys to be in natural insensitive ascending order. 'reportType.sprint_kickoff' should be before 'welcome.intro1'    sort-keys-fix/sort-keys-fix
+  154:3  error  Expected object keys to be in natural insensitive ascending order. 'reportType.sprint_review' should be before 'welcome.preheader'  sort-keys-fix/sort-keys-fix
+  156:3  error  Expected object keys to be in natural insensitive ascending order. 'reset.info' should be before 'welcome.subtitle'                 sort-keys-fix/sort-keys-fix
+  159:3  error  Expected object keys to be in natural insensitive ascending order. 'reset.intro1' should be before 'welcome.title'                  sort-keys-fix/sort-keys-fix
+  163:3  error  Expected object keys to be in natural insensitive ascending order. 'reset.outro' should be before 'welcome.intro2'                  sort-keys-fix/sort-keys-fix
+  167:3  error  Expected object keys to be in natural insensitive ascending order. 'reset.subject' should be before 'welcome.outro1'                sort-keys-fix/sort-keys-fix
+  169:3  error  Expected object keys to be in natural insensitive ascending order. 'reset.subtitle' should be before 'welcome.subject'              sort-keys-fix/sort-keys-fix
+
+/home/gaelgomes/projetos/theweave/weave-api/src/services/plans/manager.js
+  13:13  error  'billing' is assigned a value but never used     no-unused-vars
+  13:22  error  'governance' is assigned a value but never used  no-unused-vars
+  13:34  error  'weave_ai' is assigned a value but never used    no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/services/reasoning/response-consumer.js
+   18:5  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+   52:5  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+   87:7  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+  119:5  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+
+/home/gaelgomes/projetos/theweave/weave-api/src/services/reasoning/trigger-consumer.js
+   25:5  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+   53:5  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+  115:7  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+
+/home/gaelgomes/projetos/theweave/weave-api/src/services/storage/index.js
+  172:13  error  'publicUrl' is assigned a value but never used  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/services/users/user-data.service.js
+  43:49  error  'client' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-api/src/utils/cookie-helper.js
+  46:5  error  Unexpected console statement. Only these console methods are allowed: warn, error, info  no-console
+
+/home/gaelgomes/projetos/theweave/weave-api/src/utils/system-logs/update-profile-logs.js
+  3:7  error  'UpdateProfileLogs' is defined but never used  no-unused-vars
+
+✖ 279 problems (279 errors, 0 warnings)
+  40 errors and 0 warnings potentially fixable with the `--fix` option.
+

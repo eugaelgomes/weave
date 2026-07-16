@@ -45,7 +45,6 @@ function requireOrgPermission(permission) {
       req.organizationContext = organization;
       return next();
     } catch (err) {
-      // eslint-disable-next-line no-console -- diagnóstico de falha inesperada na org ativa
       console.error("[requireOrgPermission]", err);
       return res.status(500).json({
         error: "Internal server error",

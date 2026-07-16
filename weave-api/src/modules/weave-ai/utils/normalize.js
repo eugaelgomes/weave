@@ -176,19 +176,19 @@ function formatAgentResponse(rawAgent) {
       : rawAgent.shared_with || [];
 
   return {
-    id: rawAgent.id,
-    user_id: rawAgent.user_id,
-    name: rawAgent.name || personality?.metadata?.name || "Unnamed Agent",
+    created_at: rawAgent.created_at,
     description:
       rawAgent.description || personality?.metadata?.description || null,
+    id: rawAgent.id,
+    is_active: rawAgent.is_active !== false,
+    knowledge_files: knowledgeFiles,
+    name: rawAgent.name || personality?.metadata?.name || "Unnamed Agent",
+    personality,
     project_id: rawAgent.project_id || null,
     project_title: rawAgent.project_title || null,
-    is_active: rawAgent.is_active !== false,
-    personality,
-    knowledge_files: knowledgeFiles,
     shared_with: sharedWith,
-    created_at: rawAgent.created_at,
     updated_at: rawAgent.updated_at,
+    user_id: rawAgent.user_id,
   };
 }
 

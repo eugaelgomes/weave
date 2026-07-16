@@ -1,6 +1,3 @@
-const projectsRepository = require("@/modules/projects/repositories/projects.repository");
-const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-
 /**
  * Middleware for router.param('id') or router.param('projectId')
  */
@@ -93,6 +90,6 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
 
 module.exports = {
   resolveNotePublicIdParam,
-  resolveProjectPublicIdParam,
   resolveOrganizationPublicIdParam,
+  resolveProjectPublicIdParam,
 };

@@ -6,10 +6,11 @@
  */
 function getBlockingRedisOptions() {
   const options = {
-    family: 4, // Force IPv4 to prevent Node 18+ ETIMEDOUT on IPv6 resolution
+    // Force IPv4 to prevent Node 18+ ETIMEDOUT on IPv6 resolution
     connectTimeout: 5000,
     enableOfflineQueue: true,
     enableReadyCheck: true,
+    family: 4,
     maxRetriesPerRequest: null,
     retryStrategy: (times) => {
       return Math.min(5000, 200 * times);

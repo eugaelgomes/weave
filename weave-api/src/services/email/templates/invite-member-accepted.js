@@ -20,16 +20,6 @@ async function send_organization_invite_accepted(
 
   try {
     const { html, text } = buildMailTemplate({
-      locale,
-      preheader: t(locale, "inviteAccepted.preheader"),
-      title: t(locale, "inviteAccepted.title", { organizationName: safeOrg }),
-      subtitle: t(locale, "inviteAccepted.subtitle"),
-      introLines: [
-        t(locale, "inviteAccepted.intro1"),
-        t(locale, "inviteAccepted.intro2"),
-      ],
-      ctaText: t(locale, "inviteAccepted.cta"),
-      ctaUrl: homeUrl,
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
           <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.organization"))}:</strong> ${escapeHtml(safeOrg)}</p>
@@ -42,22 +32,32 @@ async function send_organization_invite_accepted(
           </ul>
         </div>
       `,
+      ctaText: t(locale, "inviteAccepted.cta"),
+      ctaUrl: homeUrl,
+      introLines: [
+        t(locale, "inviteAccepted.intro1"),
+        t(locale, "inviteAccepted.intro2"),
+      ],
+      locale,
+      preheader: t(locale, "inviteAccepted.preheader"),
+      subtitle: t(locale, "inviteAccepted.subtitle"),
+      title: t(locale, "inviteAccepted.title", { organizationName: safeOrg }),
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
-      to: toEmail,
+      html,
       subject: t(locale, "inviteAccepted.subject", {
         organizationName: safeOrg,
       }),
       text,
-      html,
+      to: toEmail,
     });
 
     return { success: true };
   } catch (error) {
     console.error("Invite accepted email failed:", error);
-    return { success: false, error: error.message };
+    return { error: error.message, success: false };
   }
 }
 

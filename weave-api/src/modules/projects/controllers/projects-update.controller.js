@@ -7,7 +7,7 @@ const {
 } = require("@/utils/patterns/product-patterns");
 const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { PLAN_PATHS } = require("@/services/plans/plan-paths");
+// Removed PLAN_PATHS
 const {
   inviteProjectMember,
 } = require("@/services/email/templates/project-add-person");
@@ -23,10 +23,7 @@ const {
   respondIfWorkspaceShareDenied,
 } = require("@/utils/workspace-share-guard");
 const { resolveNoteTitle } = require("@/modules/notes/utils/derive-note-title");
-const redis = require("@/services/queue/consumer-connection");
-const {
-  getReasoningTriggerQueueRedisKey,
-} = require("@/services/queue/queue-keys");
+// Removed redis and queue keys
 const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
 
 class ProjectsUpdateController extends ProjectsCoreController {
@@ -39,7 +36,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
   async updateProject(req, res, next) {
     try {
       const { id } = req.params;
-      const { title, description, status, properties, ...rest } = req.body;
+      const { title, description, status, properties } = req.body;
 
       // Validação de autenticação
       const userId = this._requireAuthenticatedUser(req, res);
@@ -79,7 +76,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
         if (typeof properties === "string") {
           try {
             parsedProperties = JSON.parse(properties);
-          } catch (e) {
+          } catch {
             // Ignorar erro de parse e usar o original (que vai falhar no typeof object)
           }
         }
@@ -101,10 +98,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
           userId
         );
         propertiesUpdate.icon = {
-          path: result.path || result.key || "",
           name: iconFile.originalname,
-          type: iconFile.mimetype,
+          path: result.path || result.key || "",
           size: String(iconFile.size ?? ""),
+          type: iconFile.mimetype,
         };
       }
 
@@ -121,10 +118,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
             );
             return {
               id: result.fileName,
-              path: result.key || result.path || "",
               name: file.originalname,
-              type: file.mimetype,
+              path: result.key || result.path || "",
               size: file.size,
+              type: file.mimetype,
               uploaded_at: new Date().toISOString(),
             };
           })
@@ -241,10 +238,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
           currentCollaborators.length >= maxCollaborators
         ) {
           return sendPlanLimitExceeded(res, {
-            resource: "project_collaborators",
-            limit_key: "limits.max_collaborators_per_project",
             error: "Limite de colaboradores atingido",
+            limit_key: "limits.max_collaborators_per_project",
             message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
+            resource: "project_collaborators",
           });
         }
       }
@@ -319,24 +316,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
                 (c) => c.user_id === collaboratorId
               );
 
-            console.log(
-              "📧 [EMAIL DEBUG] addedCollaborator:",
-              addedCollaborator
-            );
-            console.log(
-              "📧 [EMAIL DEBUG] projectWithOwner:",
-              projectWithOwner?.[0]
-            );
-
             if (addedCollaborator && projectWithOwner && projectWithOwner[0]) {
-              console.log("📧 [EMAIL DEBUG] Enviando email com params:", {
-                nome: addedCollaborator.name,
-                email: addedCollaborator.email,
-                projectName: projectWithOwner[0].title,
-                projectId,
-                addedByName: projectWithOwner[0].owner_name,
-              });
-
               inviteProjectMember(
                 addedCollaborator.name,
                 addedCollaborator.email,
@@ -344,35 +324,30 @@ class ProjectsUpdateController extends ProjectsCoreController {
                 projectId,
                 projectWithOwner[0].owner_name,
                 projectWithOwner[0].public_id
-              ).catch((err) => {
-                console.error(
-                  "❌ [EMAIL DEBUG] Error sending invitation email:",
-                  err
-                );
+              ).catch(() => {
+                // Ignore email errors
               });
 
               // Adicionar notificação no sistema
               await NotificationsRepository.createNotification({
-                userId: collaboratorId,
                 actorId: userId,
-                type: "project_invite",
-                entityType: "project",
-                entityId: projectId,
-                title: `Você foi adicionado ao projeto ${projectWithOwner[0].title}`,
                 content: {
                   action: "collaborator_added",
-                  role: role,
                   added_by: userId,
                   project_id: projectId,
+                  role: role,
                 },
+                entityId: projectId,
+                entityType: "project",
+                title: `Você foi adicionado ao projeto ${projectWithOwner[0].title}`,
+                type: "project_invite",
+                userId: collaboratorId,
               });
             } else {
-              console.log(
-                "⚠️ [EMAIL DEBUG] Dados insuficientes para enviar email"
-              );
+              // Missing data to send email
             }
-          } catch (emailError) {
-            console.error("Error preparing invitation email:", emailError);
+          } catch {
+            // Error preparing invitation email
           }
           break;
         }
@@ -411,17 +386,17 @@ class ProjectsUpdateController extends ProjectsCoreController {
           message = "Role successfully updated";
 
           await NotificationsRepository.createNotification({
-            userId: collaboratorId,
             actorId: userId,
-            type: "project_action",
-            entityType: "project",
-            entityId: projectId,
-            title: `Sua permissão no projeto ${project.title} foi alterada para ${role}`,
             content: {
               action: "collaborator_updated",
-              role: role,
               project_id: projectId,
+              role: role,
             },
+            entityId: projectId,
+            entityType: "project",
+            title: `Sua permissão no projeto ${project.title} foi alterada para ${role}`,
+            type: "project_action",
+            userId: collaboratorId,
           });
           break;
         }
@@ -458,9 +433,9 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       res.status(200).json({
-        message,
         collaborators:
           action === "remove" ? undefined : result[0].collaborators,
+        message,
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -517,8 +492,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       res.status(200).json({
-        message: "Role successfully updated",
         collaborators: result[0].collaborators,
+        message: "Role successfully updated",
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -711,8 +686,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       res.status(201).json({
-        message: "Nota adicionada ao projeto com sucesso",
         associated_notes: result[0].associated_notes,
+        message: "Nota adicionada ao projeto com sucesso",
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -763,8 +738,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       res.status(200).json({
-        message: "Nota atualizada no projeto com sucesso",
         associated_notes: result[0].associated_notes,
+        message: "Nota atualizada no projeto com sucesso",
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -909,8 +884,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
           : "";
       const effectiveTitle =
         resolveNoteTitle({
-          title: title !== null && title !== undefined ? String(title) : "",
           description: descStr,
+          title: title !== null && title !== undefined ? String(title) : "",
         }) || "Sem título";
 
       await this._validateProjectAccess(projectId, userId);
@@ -1314,8 +1289,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       res.status(200).json({
         message: "Note stage successfully updated",
-        noteId: result[0].id,
         newStageId: result[0].project_stage_id,
+        noteId: result[0].id,
         notes,
       });
     } catch (error) {

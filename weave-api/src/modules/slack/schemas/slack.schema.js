@@ -22,8 +22,8 @@ const setDefaultChannelSchema = z
  */
 const slackOauthCallbackSchema = z.object({
   code: z.string().optional(),
-  state: z.string().optional(),
   error: z.string().optional(),
+  state: z.string().optional(),
 });
 
 module.exports = {

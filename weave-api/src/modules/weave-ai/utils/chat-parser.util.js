@@ -296,17 +296,17 @@ class ChatParserUtil {
         : String(useCase).trim() || null;
 
     return {
-      message: message.trim(),
-      model: parsedModel,
+      agentId: parsedAgentId,
       allowEdit: this.parseBoolean(allowEdit, true),
       allowWebSearch: this.parseBoolean(allowWebSearch, false),
+      context: this.parseNullableObject(context, "context", lang),
+      message: message.trim(),
+      model: parsedModel,
       noteIds: this.parseNullableStringArray(noteIds, "noteIds", lang),
       projectIds: this.parseNullableStringArray(projectIds, "projectIds", lang),
-      agentId: parsedAgentId,
-      sessionId: parsedSessionId,
       requestId: parsedRequestId,
+      sessionId: parsedSessionId,
       useCase: parsedUseCase,
-      context: this.parseNullableObject(context, "context", lang),
     };
   }
 }

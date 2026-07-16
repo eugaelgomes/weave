@@ -1,4 +1,3 @@
-/* eslint-disable no-console -- OAuth/install diagnostics */
 const WebhooksBaseController = require("@/modules/webhooks/controllers/base.controller");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const {

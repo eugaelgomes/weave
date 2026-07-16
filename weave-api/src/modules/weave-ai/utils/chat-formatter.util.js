@@ -39,8 +39,8 @@ class ChatFormatterUtil {
     }
 
     return files.map((file) => ({
-      originalName: file.originalname,
       mimeType: file.mimetype,
+      originalName: file.originalname,
       size: file.size,
     }));
   }

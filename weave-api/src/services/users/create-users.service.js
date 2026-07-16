@@ -57,9 +57,9 @@ class CreateUsersService {
     const userName = user_name || name;
 
     const availability = await SearchUsersRepository.checkUniqueAvailability({
-      username,
       email,
       phone_number,
+      username,
     });
     if (!availability.email.available) return { conflict: "email" };
     if (!availability.username.available) return { conflict: "username" };
@@ -81,15 +81,15 @@ class CreateUsersService {
     const result = await withTransaction(async (client) => {
       const newUser = await CreateUsersRepository.createUser(
         {
-          name: userName,
-          username,
-          email,
-          password: hashedPassword,
-          timezone,
-          private_profile,
-          birth_date,
-          phone_number,
           avatar_url: null,
+          birth_date,
+          email,
+          name: userName,
+          password: hashedPassword,
+          phone_number,
+          private_profile,
+          timezone,
+          username,
         },
         client
       );
@@ -105,23 +105,23 @@ class CreateUsersService {
       );
 
       return {
+        createdAt: newUser[0].created_at,
+        email,
         userId,
         userName,
         username,
-        email,
-        createdAt: newUser[0].created_at,
       };
     });
 
     // Dispatch async welcome email to Redis queue
     try {
       await queueController.addJob("emails_queue", {
+        activationToken,
+        email: result.email,
+        locale,
         type: "welcome_message",
         userName: result.userName,
-        email: result.email,
         username: result.username,
-        activationToken,
-        locale,
       });
     } catch (queueError) {
       console.error(

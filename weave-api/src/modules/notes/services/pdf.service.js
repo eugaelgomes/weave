@@ -73,8 +73,8 @@ class PDFService {
         .font("Courier")
         .fontSize(10)
         .text(body, indent + padding, doc.y + padding, {
-          width: availableWidth - padding * 2,
           lineGap: 2,
+          width: availableWidth - padding * 2,
         });
       doc.moveDown(2);
       return;
@@ -109,8 +109,8 @@ class PDFService {
         .fontSize(11)
         .fillColor("#000000")
         .text(`${bullet} ${text || ""}`, indent, doc.y, {
-          width: availableWidth,
           lineGap: 3,
+          width: availableWidth,
         });
       doc.moveDown(0.5);
       return;

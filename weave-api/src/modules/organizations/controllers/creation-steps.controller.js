@@ -66,13 +66,13 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
       slugBase
     );
     const newArea = await this.areasRepository.createArea({
+      areaName: defaultName,
+      createdBy,
+      description: `Main area for organization ${organization.org_name}`,
       organizationId: organization.id,
       parentAreaId: null,
-      areaName: defaultName,
-      slug: uniqueSlug || `${slugBase}-${organization.id}`,
-      description: `Main area for organization ${organization.org_name}`,
       properties: { system: true },
-      createdBy,
+      slug: uniqueSlug || `${slugBase}-${organization.id}`,
     });
     await this.areasRepository.addAreaMember(
       newArea.id,
@@ -95,17 +95,17 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
       if (!userId) return;
       const organization = await this._getUserOrganization(userId);
       return res.status(200).json({
-        status: "OK",
-        success: true,
         data: {
           ...this.creationStepsService.getStepOneMetadata(),
           organization: organization || null,
         },
+        status: "OK",
+        success: true,
       });
-    } catch (error) {
+    } catch {
       return res.status(500).json({
-        success: false,
         error: "Error loading organization creation step 1",
+        success: false,
       });
     }
   }
@@ -159,31 +159,31 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
             organization.id,
             userId,
             {
-              org_name: validated.org_name,
-              unique_name: validated.unique_name,
+              banner_url: organization.banner_url,
+              country: validated.country,
+              default_locale: validated.default_locale,
+              default_timezone:
+                organization.default_timezone || "America/Sao_Paulo",
+              description: validated.description,
               logo_url:
                 validated.logo_url !== null
                   ? validated.logo_url
                   : organization.logo_url,
-              banner_url: organization.banner_url,
-              description: validated.description,
-              default_timezone:
-                organization.default_timezone || "America/Sao_Paulo",
-              default_locale: validated.default_locale,
-              country: validated.country,
+              org_name: validated.org_name,
               settings: settingsWithStep,
+              unique_name: validated.unique_name,
             }
           );
       }
 
       return res.status(200).json({
-        status: "OK",
-        success: true,
-        message: "Organization creation step 1 saved",
         data: {
           ...this.creationStepsService.getStepOneMetadata(),
           organization,
         },
+        message: "Organization creation step 1 saved",
+        status: "OK",
+        success: true,
       });
     } catch (error) {
       return next(fromUnknown(error));
@@ -203,28 +203,28 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
       const organization = await this._getUserOrganization(userId);
       if (!organization) {
         return res.status(404).json({
-          success: false,
           error: "Organization not found",
+          success: false,
         });
       }
 
       const role = organization?.settings?.organization_role || null;
       if (!role) {
         return res.status(400).json({
-          success: false,
           error: "organization_role must be defined before completing step 1",
+          success: false,
         });
       }
 
       const currentStepData = {
-        org_name: organization.org_name,
-        unique_name: organization.unique_name,
-        description: organization.description,
-        logo_url: organization.logo_url,
-        organization_role: role,
-        default_locale: organization.default_locale,
         country: organization.country,
+        default_locale: organization.default_locale,
+        description: organization.description,
         language: organization?.settings?.language || "en",
+        logo_url: organization.logo_url,
+        org_name: organization.org_name,
+        organization_role: role,
+        unique_name: organization.unique_name,
       };
 
       const settingsWithStep = this.creationStepsService.buildStepOneSettings(
@@ -238,26 +238,26 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
           organization.id,
           userId,
           {
-            org_name: organization.org_name,
-            unique_name: organization.unique_name,
-            logo_url: organization.logo_url,
             banner_url: organization.banner_url,
-            description: organization.description,
-            default_timezone: organization.default_timezone,
-            default_locale: organization.default_locale,
             country: organization.country,
+            default_locale: organization.default_locale,
+            default_timezone: organization.default_timezone,
+            description: organization.description,
+            logo_url: organization.logo_url,
+            org_name: organization.org_name,
             settings: settingsWithStep,
+            unique_name: organization.unique_name,
           }
         );
 
       return res.status(200).json({
-        status: "OK",
-        success: true,
-        message: "Organization creation step 1 completed",
         data: {
           ...this.creationStepsService.getStepOneMetadata(),
           organization: updated,
         },
+        message: "Organization creation step 1 completed",
+        status: "OK",
+        success: true,
       });
     } catch (error) {
       return next(fromUnknown(error));

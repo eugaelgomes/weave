@@ -1,11 +1,6 @@
-const spacesService = require("@/services/storage");
-
 const BaseController = require("./base.controller");
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
 const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const { presignObjectFields } = require("@/utils/data/presign-storage-files");
 const updateProfileLogs = require("@/utils/system-logs/update-profile-logs");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
@@ -40,13 +35,13 @@ const {
 const mapDefaultAreaInfo = (defaultAreaData) => {
   if (!defaultAreaData) return null;
   return {
-    id: defaultAreaData.org_default_area_id,
-    name: defaultAreaData.org_default_area_name,
-    slug: defaultAreaData.org_default_area_slug,
-    role: defaultAreaData.org_default_area_role,
-    member_since: defaultAreaData.org_default_area_member_since,
     description: defaultAreaData.org_default_area_description,
+    id: defaultAreaData.org_default_area_id,
+    member_since: defaultAreaData.org_default_area_member_since,
+    name: defaultAreaData.org_default_area_name,
     properties: defaultAreaData.org_default_area_properties || {},
+    role: defaultAreaData.org_default_area_role,
+    slug: defaultAreaData.org_default_area_slug,
   };
 };
 
@@ -65,12 +60,12 @@ const mapOrganizationInfo = (organizationData) => {
   if (!organizationData) return null;
   return {
     id: organizationData.org_id,
-    public_id: organizationData.org_public_id,
-    unique_name: organizationData.org_unique_name,
-    name: organizationData.org_name,
     logo_url: organizationData.org_logo_url,
     member_role: organizationData.org_member_role,
     member_since: organizationData.org_member_since,
+    name: organizationData.org_name,
+    public_id: organizationData.org_public_id,
+    unique_name: organizationData.org_unique_name,
   };
 };
 
@@ -88,12 +83,12 @@ const mapOrganizationInfo = (organizationData) => {
 const mapPlanUsageInfo = (usageData) => {
   if (!usageData) return null;
   return {
+    client_type: usageData.usage_client_type,
+    details: usageData.usage_details || {},
+    period_end: usageData.period_end,
+    period_start: usageData.period_start,
     plan_id: usageData.usage_plan_id,
     plan_name: usageData.usage_plan_name,
-    client_type: usageData.usage_client_type,
-    period_start: usageData.period_start,
-    period_end: usageData.period_end,
-    details: usageData.usage_details || {},
   };
 };
 
@@ -153,12 +148,12 @@ class UserDataController extends BaseController {
 
       res.json({
         hasImage: true,
-        userName: user.name,
         imageInfo: {
-          url: user.avatar_url,
           isExternal: true,
           provider: "Digital Ocean Spaces",
+          url: user.avatar_url,
         },
+        userName: user.name,
       });
     } catch (error) {
       console.error("Error retrieving profile image info:", error);
@@ -204,41 +199,41 @@ class UserDataController extends BaseController {
 
       return res.status(200).json({
         user: {
-          user_profile: {
-            id: protectedUser.user_id,
-            public_id: protectedUser.public_user_id,
-            user_name: protectedUser.user_name,
-            username: protectedUser.username,
-            email: protectedUser.email,
-            avatar_url: protectedUser.avatar_url,
-            birth_date: protectedUser.birth_date,
-            phone_number: protectedUser.phone_number,
-            created_at: protectedUser.created_at,
-            updated_at: protectedUser.updated_at,
-          },
-          user_settings: {
-            theme_mode: protectedUser.theme_mode,
-            private_profile: protectedUser.private_profile,
-            auth_with_google: protectedUser.auth_with_google,
-          },
-          user_organization: {
-            id: protectedOrg?.id || null,
-            public_id: protectedOrg?.public_id || null,
-            unique_name: protectedOrg?.unique_name || null,
-            name: protectedOrg?.name || null,
-            logo_url: protectedOrg?.logo_url || null,
-            member_role: protectedOrg?.member_role || null,
-            member_since: protectedOrg?.member_since || null,
-            default_area: defaultArea,
-          },
           current_plan: {
-            id: user.plan_id,
-            plan_name: user.plan_name,
             client_type: planUsage?.client_type || null,
             details: user.plan_details || {},
+            id: user.plan_id,
+            plan_name: user.plan_name,
           },
           current_plan_usage: planUsage,
           usage_preference: normalizeAppPreferences(user.user_preference || {}),
+          user_organization: {
+            default_area: defaultArea,
+            id: protectedOrg?.id || null,
+            logo_url: protectedOrg?.logo_url || null,
+            member_role: protectedOrg?.member_role || null,
+            member_since: protectedOrg?.member_since || null,
+            name: protectedOrg?.name || null,
+            public_id: protectedOrg?.public_id || null,
+            unique_name: protectedOrg?.unique_name || null,
+          },
+          user_profile: {
+            avatar_url: protectedUser.avatar_url,
+            birth_date: protectedUser.birth_date,
+            created_at: protectedUser.created_at,
+            email: protectedUser.email,
+            id: protectedUser.user_id,
+            phone_number: protectedUser.phone_number,
+            public_id: protectedUser.public_user_id,
+            updated_at: protectedUser.updated_at,
+            user_name: protectedUser.user_name,
+            username: protectedUser.username,
+          },
+          user_settings: {
+            auth_with_google: protectedUser.auth_with_google,
+            private_profile: protectedUser.private_profile,
+            theme_mode: protectedUser.theme_mode,
+          },
         },
       });
     } catch (error) {
@@ -289,7 +284,7 @@ class UserDataController extends BaseController {
       const phone_number = normalizePhoneNumber(req.query?.phone_number);
 
       const availability = await SearchUsersRepository.checkUniqueAvailability(
-        { email, username, phone_number },
+        { email, phone_number, username },
         { excludeUserId: req.user.userId }
       );
 
@@ -310,23 +305,6 @@ class UserDataController extends BaseController {
    * @returns {Promise<void>}
    */
   async updateProfile(req, res, next) {
-    const {
-      name,
-      username,
-      email,
-      emailValidationToken,
-      currentPassword,
-      newPassword,
-      theme_mode,
-      birth_date,
-      phone_number,
-      private_profile,
-      usage_preference,
-      user_preference,
-    } = req.body;
-
-    const auditChanges = {};
-
     try {
       const currentUser = await this.signinRepository.findUserByUsername(
         req.user.username
@@ -357,21 +335,21 @@ class UserDataController extends BaseController {
 
       const response = {
         user: {
+          usage_preference: updatedUser.user_preference || {},
           user_profile: {
+            avatar_url: protectedMock.avatar_url,
+            birth_date: updatedUser.birth_date,
+            email: updatedUser.email,
             id: updatedUser.user_id,
+            phone_number: updatedUser.phone_number,
             public_id: updatedUser.public_user_id,
             user_name: updatedUser.user_name || updatedUser.name,
             username: updatedUser.username,
-            email: updatedUser.email,
-            avatar_url: protectedMock.avatar_url,
-            birth_date: updatedUser.birth_date,
-            phone_number: updatedUser.phone_number,
           },
           user_settings: {
-            theme_mode: updatedUser.theme_mode,
             private_profile: updatedUser.private_profile,
+            theme_mode: updatedUser.theme_mode,
           },
-          usage_preference: updatedUser.user_preference || {},
         },
       };
 
@@ -410,8 +388,8 @@ class UserDataController extends BaseController {
         req,
         "failure",
         {
-          error: error.message,
           context: "updateProfile",
+          error: error.message,
         }
       );
 

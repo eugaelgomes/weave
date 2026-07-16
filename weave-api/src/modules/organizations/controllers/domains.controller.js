@@ -44,25 +44,25 @@ class OrganizationDomainsController extends OrganizationsBaseController {
     if (!domain) return null;
 
     return {
-      id: domain.id,
-      organization_id: domain.organization_id,
-      domain_name: domain.domain_name,
-      verification_token: domain.verification_token,
-      status: domain.status,
-      sso_enabled: domain.sso_enabled,
-      sso_provider: domain.sso_provider,
-      sso_metadata: domain.sso_metadata,
-      verified_at: domain.verified_at,
       created_at: domain.created_at,
-      updated_at: domain.updated_at,
       deleted: domain.deleted,
+      domain_name: domain.domain_name,
+      id: domain.id,
       instructions: {
-        type: "TXT",
-        host: `_weave-challenge.${domain.domain_name}`,
-        value: domain.verification_token,
         description:
           "Create a TXT record for _weave-challenge.<domain> with the provided value to complete verification.",
+        host: `_weave-challenge.${domain.domain_name}`,
+        type: "TXT",
+        value: domain.verification_token,
       },
+      organization_id: domain.organization_id,
+      sso_enabled: domain.sso_enabled,
+      sso_metadata: domain.sso_metadata,
+      sso_provider: domain.sso_provider,
+      status: domain.status,
+      updated_at: domain.updated_at,
+      verification_token: domain.verification_token,
+      verified_at: domain.verified_at,
     };
   }
 
@@ -81,7 +81,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const domains = await this.domainRepository.listByOrganization(
@@ -89,14 +89,14 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
         domains: domains.map((domain) => this._serializeDomain(domain)),
+        status: "OK",
       });
     } catch (error) {
       console.error("Error listing organization domains:", error);
       res.status(500).json({
-        success: false,
         error: "Error listing organization domains",
+        success: false,
       });
     }
   }
@@ -117,7 +117,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (
@@ -141,8 +141,8 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
       if (duplicatedInOrg) {
         return res.status(400).json({
-          success: false,
           error: "Domain already registered for this organization",
+          success: false,
         });
       }
 
@@ -155,30 +155,30 @@ class OrganizationDomainsController extends OrganizationsBaseController {
         !existingDomain.deleted
       ) {
         return res.status(409).json({
-          success: false,
           error: "Domain is already in use by another organization",
+          success: false,
         });
       }
 
       const verificationToken = this._generateVerificationToken();
 
       const domain = await this.domainRepository.createDomain({
-        organizationId: organization.id,
         domainName: normalizedDomain,
+        organizationId: organization.id,
         verificationToken,
       });
 
       res.status(201).json({
-        status: "OK",
+        data: this._serializeDomain(domain),
         message:
           "Domain registered. Configure the TXT record and click verify.",
-        data: this._serializeDomain(domain),
+        status: "OK",
       });
     } catch (error) {
       console.error("Error registering domain:", error);
       res
         .status(500)
-        .json({ success: false, error: "Error registering domain" });
+        .json({ error: "Error registering domain", success: false });
     }
   }
 
@@ -198,7 +198,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (
@@ -216,7 +216,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!domain || domain.organization_id !== organization.id) {
         return res
           .status(404)
-          .json({ success: false, error: "Domain not found" });
+          .json({ error: "Domain not found", success: false });
       }
 
       await enqueueDomainVerificationJob({
@@ -225,14 +225,14 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       });
 
       res.status(200).json({
-        status: "OK",
+        data: this._serializeDomain(domain),
         message:
           "Domain verification queued. Worker will retry DNS every 30 minutes until verified.",
-        data: this._serializeDomain(domain),
+        status: "OK",
       });
     } catch (error) {
       console.error("Error verifying domain:", error);
-      res.status(500).json({ success: false, error: "Error verifying domain" });
+      res.status(500).json({ error: "Error verifying domain", success: false });
     }
   }
 
@@ -252,7 +252,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (
@@ -270,26 +270,26 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!domain || domain.organization_id !== organization.id) {
         return res
           .status(404)
-          .json({ success: false, error: "Domain not found" });
+          .json({ error: "Domain not found", success: false });
       }
 
       if (domain.sso_enabled) {
         return res.status(400).json({
-          success: false,
           error:
             "Disable SSO for this domain before removing it from the organization",
+          success: false,
         });
       }
 
       await this.domainRepository.deleteDomain(domain.id);
 
       res.status(200).json({
-        status: "OK",
         message: "Domain removed successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error deleting domain:", error);
-      res.status(500).json({ success: false, error: "Error deleting domain" });
+      res.status(500).json({ error: "Error deleting domain", success: false });
     }
   }
 
@@ -309,7 +309,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (
@@ -327,13 +327,13 @@ class OrganizationDomainsController extends OrganizationsBaseController {
       if (!domain || domain.organization_id !== organization.id) {
         return res
           .status(404)
-          .json({ success: false, error: "Domain not found" });
+          .json({ error: "Domain not found", success: false });
       }
 
       if (domain.status !== "VERIFIED") {
         return res.status(400).json({
-          success: false,
           error: "Enable SSO only after domain is verified",
+          success: false,
         });
       }
 
@@ -346,34 +346,34 @@ class OrganizationDomainsController extends OrganizationsBaseController {
         typeof value === "string" ? value.trim() : null;
 
       const samlMetadata = {
+        certificate: sanitizeString(metadata.certificate),
         entityId: sanitizeString(metadata.entityId),
+        sloUrl: sanitizeString(metadata.sloUrl),
         ssoUrl:
           sanitizeString(metadata.ssoUrl) || sanitizeString(metadata.acsUrl),
-        sloUrl: sanitizeString(metadata.sloUrl),
-        certificate: sanitizeString(metadata.certificate),
       };
 
       const updatedDomain = await this.domainRepository.updateSsoConfiguration(
         domain.id,
         {
-          provider: normalizedProvider,
-          metadata: samlMetadata,
           enabled: shouldEnable,
+          metadata: samlMetadata,
+          provider: normalizedProvider,
         }
       );
 
       res.status(200).json({
-        status: "OK",
+        data: this._serializeDomain(updatedDomain),
         message: shouldEnable
           ? "SAML settings saved. Users of this domain will be redirected to the IdP."
           : "SSO disabled for this domain",
-        data: this._serializeDomain(updatedDomain),
+        status: "OK",
       });
     } catch (error) {
       console.error("Error updating SSO settings for domain:", error);
       res.status(500).json({
-        success: false,
         error: "Error updating SSO settings for domain",
+        success: false,
       });
     }
   }

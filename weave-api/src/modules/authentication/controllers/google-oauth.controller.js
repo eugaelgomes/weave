@@ -41,8 +41,8 @@ class GoogleOauthController extends AuthBaseController {
   async googleCallback(req, res) {
     // Schema for the Google userinfo API response
     const googleUserSchema = z.object({
-      id: z.string().min(1),
       email: z.string().email(),
+      id: z.string().min(1),
       name: z.string().optional(),
       picture: z.string().url().optional(),
     });

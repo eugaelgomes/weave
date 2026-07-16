@@ -30,10 +30,10 @@ function getAuthCookieOptions(req, options = {}) {
 
   const cookieOptions = {
     httpOnly: true,
-    secure,
-    sameSite: sameSite,
     maxAge: maxAge,
     path: "/",
+    sameSite: sameSite,
+    secure,
   };
 
   // Só adiciona domain se estiver definido
@@ -43,12 +43,12 @@ function getAuthCookieOptions(req, options = {}) {
 
   // Log para debug em produção
   if (isProduction) {
-    console.log("[Cookie Config]", {
-      hostname: req.hostname,
+    console.info("[Cookie Config]", {
       domain: domain || "undefined",
-      secure: cookieOptions.secure,
-      sameSite: cookieOptions.sameSite,
+      hostname: req.hostname,
       origin: req.headers.origin,
+      sameSite: cookieOptions.sameSite,
+      secure: cookieOptions.secure,
     });
   }
 
@@ -86,9 +86,9 @@ function clearAuthCookie(res, req) {
 
   const clearOptions = {
     httpOnly: true,
-    secure,
-    sameSite: sameSite,
     path: "/",
+    sameSite: sameSite,
+    secure,
   };
 
   if (domain) {
@@ -99,7 +99,7 @@ function clearAuthCookie(res, req) {
 }
 
 module.exports = {
+  clearAuthCookie,
   getAuthCookieOptions,
   setAuthCookie,
-  clearAuthCookie,
 };

@@ -71,19 +71,19 @@ class CreateApiTokensController {
       }
 
       const tokenRecord = await CreateApiTokensRepository.createToken({
-        name,
+        expiresAt,
         keyPrefix: rawPrefix,
-        tokenHash,
-        userId,
+        name,
         organizationId,
         scopes: cleanScopes,
-        expiresAt,
+        tokenHash,
+        userId,
       });
 
       res.status(201).json({
         message: "Token created successfully.",
-        token: plainToken,
         record: tokenRecord,
+        token: plainToken,
       });
     } catch (error) {
       next(fromUnknown(error));

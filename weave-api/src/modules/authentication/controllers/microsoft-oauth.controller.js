@@ -69,8 +69,8 @@ class MicrosoftOauthController extends AuthBaseController {
         client_id: process.env.MICROSOFT_CLIENT_ID,
         client_secret: process.env.MICROSOFT_CLIENT_SECRET,
         code,
-        redirect_uri: MICROSOFT_OAUTH_REDIRECT_URI,
         grant_type: "authorization_code",
+        redirect_uri: MICROSOFT_OAUTH_REDIRECT_URI,
         scope: "openid profile email User.Read",
       });
 
@@ -100,8 +100,8 @@ class MicrosoftOauthController extends AuthBaseController {
       // Schema for Microsoft Graph /me response
       const microsoftUserSchema = z
         .object({
-          id: z.string().min(1),
           displayName: z.string().nullable().optional(),
+          id: z.string().min(1),
           mail: z.string().email().nullable().optional(),
           userPrincipalName: z.string().min(1).optional(),
         })

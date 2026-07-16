@@ -1,6 +1,6 @@
 const { executeQuery } = require("@/database/connection");
 
-class updateProfileLogs {
+class UpdateProfileLogs {
   static #SENSITIVE_KEYS = [
     "password",
     "token",
@@ -28,20 +28,20 @@ class updateProfileLogs {
 
   static #formatLogMetadata(req, status, cleanDetails) {
     return {
-      status: status,
-      network: {
-        ip: req.ip || req.headers["x-forwarded-for"] || "127.0.0.1",
-        hostname: req.hostname,
-      },
       client: {
         user_agent: req.headers["user-agent"],
       },
       context: {
-        path: req.originalUrl,
         method: req.method,
+        path: req.originalUrl,
       },
       details: cleanDetails,
       log_version: 1,
+      network: {
+        hostname: req.hostname,
+        ip: req.ip || req.headers["x-forwarded-for"] || "127.0.0.1",
+      },
+      status: status,
     };
   }
 
@@ -66,4 +66,4 @@ class updateProfileLogs {
   }
 }
 
-module.exports = updateProfileLogs;
+module.exports = UpdateProfileLogs;

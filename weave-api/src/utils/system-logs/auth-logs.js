@@ -3,22 +3,22 @@ const { executeQuery } = require("@/database/connection");
 class authLogs {
   static #formatLogMetadata(req, status = "success", extraDetails = {}) {
     return {
-      status: status,
-      network: {
-        ip: req.ip || req.headers["x-forwarded-for"],
-        hostname: req.hostname,
-      },
       client: {
-        user_agent: req.headers["user-agent"],
         language: req.headers["accept-language"],
+        user_agent: req.headers["user-agent"],
       },
       context: {
-        path: req.originalUrl,
         method: req.method,
+        path: req.originalUrl,
         request_id: req.headers["x-request-id"] || null,
       },
       details: extraDetails,
       log_version: 1,
+      network: {
+        hostname: req.hostname,
+        ip: req.ip || req.headers["x-forwarded-for"],
+      },
+      status: status,
     };
   }
 

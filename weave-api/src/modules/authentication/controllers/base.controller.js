@@ -20,13 +20,13 @@ class AuthBaseController {
     }
 
     return {
-      id: defaultAreaData.org_default_area_id,
-      name: defaultAreaData.org_default_area_name,
-      slug: defaultAreaData.org_default_area_slug,
-      role: defaultAreaData.org_default_area_role,
-      member_since: defaultAreaData.org_default_area_member_since,
       description: defaultAreaData.org_default_area_description,
+      id: defaultAreaData.org_default_area_id,
+      member_since: defaultAreaData.org_default_area_member_since,
+      name: defaultAreaData.org_default_area_name,
       properties: defaultAreaData.org_default_area_properties || {},
+      role: defaultAreaData.org_default_area_role,
+      slug: defaultAreaData.org_default_area_slug,
     };
   }
 
@@ -49,12 +49,12 @@ class AuthBaseController {
 
     return {
       id: organizationData.org_id,
-      public_id: organizationData.org_public_id,
-      unique_name: organizationData.org_unique_name,
-      name: organizationData.org_name,
       logo_url: organizationData.org_logo_url,
       member_role: organizationData.org_member_role,
       member_since: organizationData.org_member_since,
+      name: organizationData.org_name,
+      public_id: organizationData.org_public_id,
+      unique_name: organizationData.org_unique_name,
     };
   }
 }

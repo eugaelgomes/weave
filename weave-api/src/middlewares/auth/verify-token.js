@@ -1,13 +1,9 @@
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const Sentry = require("@sentry/node");
 const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
-const secretsService = require("@/services/secrets");
 const {
   jwtPayloadSchema,
 } = require("@/modules/authentication/schemas/jwt-payload.schema");
-
-const secretsManager = secretsService.secretsManager;
 
 /**
  * Middleware that verifies the authentication of the request.
@@ -78,9 +74,9 @@ const verifyToken = async (req, res, next) => {
       };
 
       req.user = {
-        userId: tokenRecord.user_id,
-        organizationId: tokenRecord.organization_id,
         isApiCall: true,
+        organizationId: tokenRecord.organization_id,
+        userId: tokenRecord.user_id,
       };
 
       return next(); // Follows the public API flow
@@ -101,20 +97,20 @@ const verifyToken = async (req, res, next) => {
     // Debug in production to identify the problem of lost requests
     if (isProduction) {
       const debugInfo = {
-        hasCookies: !!req.cookies,
         cookieKeys: req.cookies ? Object.keys(req.cookies) : [],
-        sessionExists: !!req.session,
+        hasCookies: !!req.cookies,
         origin: req.headers.origin,
-        referer: req.headers.referer,
-        userAgent: req.headers["user-agent"]?.substring(0, 50),
         path: req.path,
+        referer: req.headers.referer,
+        sessionExists: !!req.session,
+        userAgent: req.headers["user-agent"]?.substring(0, 50),
       };
 
       console.error("[Auth Error] Session not found", debugInfo);
 
       Sentry.captureMessage("[Auth Error] Session not found", {
-        level: "warning",
         extra: debugInfo,
+        level: "warning",
       });
     }
     return res.status(401).json({

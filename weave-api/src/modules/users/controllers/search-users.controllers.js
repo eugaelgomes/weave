@@ -37,17 +37,17 @@ class SearchUsersController extends BaseController {
       const filteredUsers = search_users
         .filter((user) => user && user.id !== userId) // Note: ID was mapped to id inside Service
         .map((user) => ({
-          id: user.id,
-          username: user.username,
-          name: user.name,
-          email: user.email,
           avatar_url: user.avatar_url,
           context_info: user.context_info,
+          email: user.email,
+          id: user.id,
+          name: user.name,
+          username: user.username,
         }));
 
       res.status(200).json({
-        search_users_query: searchTerm,
         search_users: filteredUsers,
+        search_users_query: searchTerm,
       });
     } catch (error) {
       this._handleError(error, res, next);

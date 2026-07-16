@@ -8,13 +8,15 @@ async function getProvidersAndModels(req, res) {
   try {
     validateAuthentication(req);
     const providers = getProvidersWithModels();
-    res.json({ status: "OK", providers });
+    res.json({ providers, status: "OK" });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error fetching providers and models:", error);
-    res.status(500).json({ success: false, error: t.fetchProvidersFailed });
+    res.status(500).json({ error: t.fetchProvidersFailed, success: false });
   }
 }
 

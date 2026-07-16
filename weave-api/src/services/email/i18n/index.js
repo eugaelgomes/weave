@@ -11,9 +11,9 @@ const esES = require("./locales/es-es");
 /** @typedef {"pt-BR"|"en-US"|"es-ES"} EmailLocale */
 
 const LOCALES = /** @type {const} */ ({
-  "pt-BR": ptBR,
   "en-US": enUS,
   "es-ES": esES,
+  "pt-BR": ptBR,
 });
 
 const DEFAULT_LOCALE = /** @type {EmailLocale} */ ("pt-BR");

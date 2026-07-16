@@ -5,13 +5,16 @@ const Redis = require("ioredis");
  * @type {import("ioredis").default}
  */
 const redisOptions = {
-  family: 4, // Force IPv4 to prevent Node 18+ ETIMEDOUT on IPv6 resolution
+  commandTimeout: 2000,
+
+  connectTimeout: 2000,
+
+  enableOfflineQueue: false,
+  // Force IPv4 to prevent Node 18+ ETIMEDOUT on IPv6 resolution
   // Fail fast when Redis is unavailable: API requests must not hang.
   enableReadyCheck: true,
-  enableOfflineQueue: false,
+  family: 4,
   maxRetriesPerRequest: 1,
-  connectTimeout: 2000,
-  commandTimeout: 2000,
   retryStrategy: (times) => {
     // 1st reconnect attempt after 200ms, then stop retrying.
     if (times <= 1) return 200;

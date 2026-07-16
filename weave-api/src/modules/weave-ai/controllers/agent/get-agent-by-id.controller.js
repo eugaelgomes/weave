@@ -12,15 +12,17 @@ async function getAgentById(req, res) {
     const agent = await agentRepository.getAgentById(id, userId);
 
     if (!agent) {
-      return res.status(404).json({ success: false, error: t.agentNotFound });
+      return res.status(404).json({ error: t.agentNotFound, success: false });
     }
-    res.json({ success: true, agent: formatAgentResponse(agent) });
+    res.json({ agent: formatAgentResponse(agent), success: true });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error fetching agent:", error);
-    res.status(500).json({ success: false, error: t.fetchAgentFailed });
+    res.status(500).json({ error: t.fetchAgentFailed, success: false });
   }
 }
 

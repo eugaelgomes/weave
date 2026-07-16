@@ -15,23 +15,23 @@ const { getUserEmailLocale, t } = require("@/services/email/i18n");
 function createCollabTemplate({ locale, noteName, ownerName, noteUrl }) {
   const subject = t(locale, "collab.subject", { noteName });
   const { html, text } = buildMailTemplate({
-    locale,
-    preheader: t(locale, "collab.preheader"),
-    title: t(locale, "collab.title"),
-    subtitle: t(locale, "collab.subtitle"),
-    introLines: [t(locale, "collab.intro", { ownerName })],
-    ctaText: t(locale, "collab.cta"),
-    ctaUrl: noteUrl,
     contentHtml: `
       <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
         <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.note"))}:</strong> ${escapeHtml(noteName)}</p>
         <p style="margin: 0; font-size: 13px; color: #6B7280;">${escapeHtml(t(locale, "collab.permission"))}</p>
       </div>
     `,
+    ctaText: t(locale, "collab.cta"),
+    ctaUrl: noteUrl,
+    introLines: [t(locale, "collab.intro", { ownerName })],
+    locale,
     outroLines: [t(locale, "collab.outro", { ownerName })],
+    preheader: t(locale, "collab.preheader"),
+    subtitle: t(locale, "collab.subtitle"),
+    title: t(locale, "collab.title"),
   });
 
-  return { subject, html, text };
+  return { html, subject, text };
 }
 
 /**
@@ -59,23 +59,23 @@ async function collabMail(
     const emailTemplate = createCollabTemplate({
       locale,
       noteName,
-      ownerName,
       noteUrl,
+      ownerName,
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
-      to: collaboratorEmail,
+      html: emailTemplate.html,
       subject: emailTemplate.subject,
       text: emailTemplate.text,
-      html: emailTemplate.html,
+      to: collaboratorEmail,
     });
 
     return { success: true };
   } catch (error) {
     return {
-      success: false,
       error: error.message || "Falha ao enviar email de notificacao.",
+      success: false,
     };
   }
 }

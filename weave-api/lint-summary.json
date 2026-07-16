@@ -1,0 +1,49 @@
+{
+  "no-unused-vars": {
+    "src/config/allowed-origins.js": 1,
+    "src/modules/notes/controllers/notes-collaborators.controller.js": 1,
+    "src/modules/notes/repositories/create-notes.repository.js": 2,
+    "src/modules/notifications/normalize.js": 1,
+    "src/modules/organizations/controllers/areas.controller.js": 1,
+    "src/modules/organizations/controllers/creation-steps.controller.js": 1,
+    "src/modules/organizations/controllers/organizations.controller.js": 2,
+    "src/modules/organizations/repositories/organizations.repository.js": 3,
+    "src/modules/plans/controllers/plans.controller.js": 1,
+    "src/modules/projects/controllers/projects-read.controller.js": 2,
+    "src/modules/projects/controllers/projects-update.controller.js": 5,
+    "src/modules/users/controllers/create-users.controller.js": 8,
+    "src/modules/users/controllers/user-data.controller.js": 17,
+    "src/modules/weave-ai/handlers/agents/delegate.js": 1,
+    "src/modules/weave-ai/handlers/notes/create.js": 1,
+    "src/modules/weave-ai/handlers/notes/delete.js": 1,
+    "src/modules/weave-ai/handlers/notes/update-collaborator-add.js": 8,
+    "src/modules/weave-ai/handlers/notes/update-collaborator-remove.js": 11,
+    "src/modules/weave-ai/handlers/notes/update-content.js": 5,
+    "src/modules/weave-ai/handlers/notes/update-due-date.js": 11,
+    "src/modules/weave-ai/handlers/notes/update-priority.js": 11,
+    "src/modules/weave-ai/handlers/notes/update-stage.js": 9,
+    "src/modules/weave-ai/handlers/notes/update-tags.js": 11,
+    "src/modules/weave-ai/handlers/notes/update-title.js": 11,
+    "src/modules/weave-ai/handlers/projects/create.js": 2,
+    "src/modules/weave-ai/handlers/projects/delete.js": 1,
+    "src/modules/weave-ai/handlers/projects/search.js": 12,
+    "src/modules/weave-ai/handlers/projects/update-title.js": 10,
+    "src/modules/weave-ai/handlers/users/search.js": 14,
+    "src/modules/weave-ai/services/agent-delegation.service.js": 1,
+    "src/modules/weave-ai/services/chat-engine.service.js": 1,
+    "src/modules/weave-ai/services/chat-functions.service.js": 12
+  },
+  "no-console": {
+    "src/instrument.js": 1,
+    "src/modules/notes/repositories/create-notes.repository.js": 2,
+    "src/modules/notes/repositories/mutate-notes.repository.js": 2,
+    "src/modules/projects/controllers/projects-update.controller.js": 4
+  },
+  "syntax/fatal": {
+    "src/modules/engine/repositories/reasonings.action-items.repository.js": 1,
+    "src/modules/engine/repositories/reasonings.interactions.repository.js": 1,
+    "src/modules/engine/repositories/reasonings.read.repository.js": 1,
+    "src/modules/engine/repositories/report-config.repository.js": 1,
+    "src/modules/engine/repositories/sprints.repository.js": 1
+  }
+}

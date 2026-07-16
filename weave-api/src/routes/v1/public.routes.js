@@ -25,17 +25,17 @@ const DEFAULT_VERSION = "v1";
  */
 const publicRoutes = [
   {
-    method: "get",
-    path: "/me",
-    middlewares: [verifyToken],
     handler: (req, res) => {
       res.json({
-        status: "OK",
-        message: "Successfully accessed Weave Notes Public API.",
-        user: req.user,
         apiToken: req.apiToken,
+        message: "Successfully accessed Weave Notes Public API.",
+        status: "OK",
+        user: req.user,
       });
     },
+    method: "get",
+    middlewares: [verifyToken],
+    path: "/me",
   },
 ];
 

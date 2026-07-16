@@ -66,8 +66,8 @@ class ProjectsCollaboratorsUpdateController extends ProjectsCoreController {
       }
 
       res.status(200).json({
-        message: "Role successfully updated",
         collaborators: result[0].collaborators,
+        message: "Role successfully updated",
       });
     } catch (error) {
       this._handleError(error, res, next);

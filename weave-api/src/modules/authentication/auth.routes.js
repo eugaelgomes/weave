@@ -1,6 +1,4 @@
 const express = require("express");
-
-const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { authLimiter } = require("@/middlewares/security/request-limiters");
 const { validate } = require("@/middlewares/validation/validate");
 

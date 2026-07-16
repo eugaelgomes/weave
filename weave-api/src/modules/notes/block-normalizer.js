@@ -342,7 +342,7 @@ const validateBlockPayload = (node, path = "blocks", depth = 0) => {
   properties = normalizeBlockProperties(type, properties, `${path}.properties`);
 
   /** @type {{ id: string, type: string, properties: Record<string, unknown>, position?: number, children?: unknown[] }} */
-  const out = { id, type, properties };
+  const out = { id, properties, type };
 
   if (node.position !== undefined) {
     const pos = Number(node.position);
@@ -403,13 +403,13 @@ const flattenBlocksForInsert = (
         );
       const position = n.position !== undefined ? n.position : index;
       rows.push({
+        created_by: userId,
         id: n.id,
         note_id: noteId,
         parent_id: pId,
-        type: n.type,
-        properties: n.properties,
         position,
-        created_by: userId,
+        properties: n.properties,
+        type: n.type,
       });
       if (Array.isArray(n.children) && n.children.length > 0) {
         walk(n.children, n.id, d + 1);
@@ -458,11 +458,11 @@ const mergeBlockPropertiesPatch = (
 module.exports = {
   ALLOWED_BLOCK_TYPES,
   ALLOWED_MARK_TYPES,
-  NOTE_DOCUMENT_HEX_COLOR_PALETTE,
   flattenBlocksForInsert,
   mergeBlockPropertiesPatch,
+  newBlockId,
   normalizeBlockProperties,
   normalizeBlocksTree,
-  newBlockId,
+  NOTE_DOCUMENT_HEX_COLOR_PALETTE,
   validateBlockPayload,
 };

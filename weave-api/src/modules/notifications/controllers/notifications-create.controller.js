@@ -27,13 +27,13 @@ class NotificationsCreateController extends NotificationsBaseController {
 
       const notification =
         await this.notificationsRepository.createNotification({
-          userId,
           actorId,
-          type,
-          entityType: entity_type,
-          entityId: entity_id,
-          title,
           content: content && typeof content === "object" ? content : {},
+          entityId: entity_id,
+          entityType: entity_type,
+          title,
+          type,
+          userId,
         });
 
       res.status(201).json({ notification });

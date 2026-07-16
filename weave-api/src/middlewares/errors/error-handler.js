@@ -71,27 +71,19 @@ function logServerError(err, req) {
   if (!shouldLog) return;
 
   console.error("[API Error]", {
-    requestId: req.requestId,
+    code: appError.code,
+    message: err instanceof Error ? err.message : String(err),
     method: req.method,
     path: req.originalUrl,
-    userId: getUserId(req),
-    code: appError.code,
+    requestId: req.requestId,
     status: appError.statusCode,
-    message: err instanceof Error ? err.message : String(err),
+    userId: getUserId(req),
     ...getPgLogContext(err),
     stack: err instanceof Error ? err.stack : undefined,
   });
 }
 
 const errorHandler = {
-  notFoundHandler: (req, res, next) => {
-    const err = AppError.notFound(
-      DEFAULT_MESSAGES[ERROR_CODES.ROUTE_NOT_FOUND],
-      ERROR_CODES.ROUTE_NOT_FOUND
-    );
-    next(err);
-  },
-
   globalErrorHandler: (err, req, res, _next) => {
     const originalError = err;
     const appError = AppError.isAppError(err) ? err : fromUnknown(err);
@@ -111,6 +103,14 @@ const errorHandler = {
 
     const statusCode = clientError.statusCode || 500;
     return res.status(statusCode).json(buildErrorBody(clientError));
+  },
+
+  notFoundHandler: (req, res, next) => {
+    const err = AppError.notFound(
+      DEFAULT_MESSAGES[ERROR_CODES.ROUTE_NOT_FOUND],
+      ERROR_CODES.ROUTE_NOT_FOUND
+    );
+    next(err);
   },
 };
 

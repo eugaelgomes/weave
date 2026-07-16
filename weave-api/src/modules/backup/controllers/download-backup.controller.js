@@ -21,35 +21,35 @@ class DownloadBackupController extends BackupBaseController {
 
       if (!tokenRecord) {
         return res.status(404).json({
-          status: "Not Found",
           error: "Invalid or already used token",
           message: "The download link is invalid or has already been used",
+          status: "Not Found",
         });
       }
 
       if (new Date() > new Date(tokenRecord.expires_at)) {
         return res.status(410).json({
-          status: "Gone",
           error: "Expired token",
           message:
             "The download link has expired. Please request a new backup.",
+          status: "Gone",
         });
       }
 
       if (req.user?.userId && req.user.userId !== tokenRecord.user_id) {
         return res.status(403).json({
-          status: "Forbidden",
           error: "Access denied",
           message: "You do not have permission to access this backup",
+          status: "Forbidden",
         });
       }
 
       const result = tokenRecord.result;
       if (!result || !result.storageKey) {
         return res.status(500).json({
-          status: "Internal Server Error",
           error: "Backup not found in storage",
           message: "Could not locate the backup file",
+          status: "Internal Server Error",
         });
       }
 
@@ -60,8 +60,8 @@ class DownloadBackupController extends BackupBaseController {
 
       if (!fileContent) {
         return res.status(500).json({
-          status: "Internal Server Error",
           error: "Failed to retrieve file from storage",
+          status: "Internal Server Error",
         });
       }
 

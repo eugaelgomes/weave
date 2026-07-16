@@ -7,24 +7,24 @@ const notificationIdParamSchema = z.object({
 });
 
 const listNotificationsQuerySchema = z.object({
-  limit: z.string().optional(),
-  page: z.string().optional(),
-  status: z.string().optional(),
-  order: z.string().optional(),
-  type: z.string().optional(),
   entity_type: z.string().optional(),
+  limit: z.string().optional(),
+  order: z.string().optional(),
+  page: z.string().optional(),
   search: z.string().optional(),
+  status: z.string().optional(),
+  type: z.string().optional(),
 });
 
 const createNotificationSchema = z
   .object({
-    user_id: uuidParamSchema.optional().nullable(),
-    target_user_id: uuidParamSchema.optional().nullable(),
-    type: z.string().min(1, "type is required"),
-    entity_type: z.string().min(1, "entity_type is required"),
-    entity_id: z.string().min(1, "entity_id is required"),
-    title: z.string().min(1, "title is required"),
     content: z.record(z.any()).optional().nullable(),
+    entity_id: z.string().min(1, "entity_id is required"),
+    entity_type: z.string().min(1, "entity_type is required"),
+    target_user_id: uuidParamSchema.optional().nullable(),
+    title: z.string().min(1, "title is required"),
+    type: z.string().min(1, "type is required"),
+    user_id: uuidParamSchema.optional().nullable(),
   })
   .refine((data) => data.user_id || data.target_user_id, {
     message: "user_id or target_user_id is required",
@@ -42,9 +42,9 @@ const toggleTrashStatusSchema = z.object({
 });
 
 module.exports = {
-  notificationIdParamSchema,
-  listNotificationsQuerySchema,
   createNotificationSchema,
+  listNotificationsQuerySchema,
   markNotificationReadSchema,
+  notificationIdParamSchema,
   toggleTrashStatusSchema,
 };

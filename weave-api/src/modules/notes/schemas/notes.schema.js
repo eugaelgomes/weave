@@ -24,22 +24,22 @@ const collaboratorIdParamSchema = z.object({
 
 // Queries
 const listNotesQuerySchema = z.object({
-  page: z.string().optional(),
   limit: z.string().optional(),
+  page: z.string().optional(),
   search: z.string().optional(),
-  tags: z.string().optional(),
   sortBy: z.string().optional(),
   sortOrder: z.string().optional(),
+  tags: z.string().optional(),
 });
 
 // Bodies
 const createNoteSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.union([z.string(), z.array(z.string())]).optional(),
-  status: z.string().optional(),
-  project_id: z.string().optional().nullable(),
   blocks: z.union([z.string(), z.array(z.any())]).optional(),
+  description: z.string().optional(),
+  project_id: z.string().optional().nullable(),
+  status: z.string().optional(),
+  tags: z.union([z.string(), z.array(z.string())]).optional(),
+  title: z.string().optional(),
 });
 
 const createCompleteNoteSchema = createNoteSchema.extend({
@@ -47,49 +47,49 @@ const createCompleteNoteSchema = createNoteSchema.extend({
 });
 
 const updateNoteSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.union([z.string(), z.array(z.string())]).optional(),
-  status: z.string().optional(),
+  baseRevision: z.union([z.number(), z.string()]).optional(),
   deleted: z.union([z.boolean(), z.string()]).optional(),
+  description: z.string().optional(),
+  due_date: z.string().optional().nullable(),
+  priority_id: z.string().optional().nullable(),
   project_id: z.string().optional().nullable(),
   properties: z.union([z.string(), z.record(z.any())]).optional(),
-  priority_id: z.string().optional().nullable(),
-  due_date: z.string().optional().nullable(),
-  baseRevision: z.union([z.number(), z.string()]).optional(),
+  status: z.string().optional(),
+  tags: z.union([z.string(), z.array(z.string())]).optional(),
+  title: z.string().optional(),
 });
 
 // Blocks Bodies
 const createNoteBlockSchema = z.object({
-  type: z.string().optional(),
+  done: z.boolean().optional(),
   parent_id: z.string().optional().nullable(),
   parentId: z.string().optional().nullable(),
   position: z.number().optional(),
   properties: z.record(z.any()).optional(),
   text: z.string().optional(),
-  done: z.boolean().optional(),
+  type: z.string().optional(),
 });
 
 const updateNoteBlockSchema = z.object({
-  expectedVersion: z.union([z.number(), z.string()]).optional(),
+  done: z.boolean().optional(),
   expected_version: z.union([z.number(), z.string()]).optional(),
-  type: z.string().optional(),
+  expectedVersion: z.union([z.number(), z.string()]).optional(),
   position: z.number().optional(),
   properties: z.record(z.any()).optional(),
   text: z.string().optional(),
-  done: z.boolean().optional(),
+  type: z.string().optional(),
 });
 
 const reorderNoteBlocksSchema = z.object({
-  parent_id: z.string().optional().nullable(),
-  parentId: z.string().optional().nullable(),
   ordered_ids: z.array(z.string()).optional(),
   orderedIds: z.array(z.string()).optional(),
+  parent_id: z.string().optional().nullable(),
+  parentId: z.string().optional().nullable(),
 });
 
 const putSyncNoteBlocksSchema = z.object({
-  baseRevision: z.union([z.number(), z.string()]).optional(),
   base_revision: z.union([z.number(), z.string()]).optional(),
+  baseRevision: z.union([z.number(), z.string()]).optional(),
   blocks: z.array(z.any()).min(1, "blocks array is required"),
 });
 
@@ -97,8 +97,8 @@ const putSyncNoteBlocksSchema = z.object({
 const createCommentSchema = z.object({
   content: z.union([z.string(), z.record(z.any())]).optional(),
   files: z.array(z.any()).optional(),
-  parentId: z.string().uuid().optional().nullable(),
   parent_id: z.string().uuid().optional().nullable(),
+  parentId: z.string().uuid().optional().nullable(),
 });
 
 const updateCommentSchema = z.object({
@@ -112,19 +112,19 @@ const addCollaboratorSchema = z.object({
 });
 
 module.exports = {
-  noteIdParamSchema,
-  blockIdParamSchema,
-  commentIdParamSchema,
-  collaboratorIdParamSchema,
-  listNotesQuerySchema,
-  createNoteSchema,
-  createCompleteNoteSchema,
-  updateNoteSchema,
-  createNoteBlockSchema,
-  updateNoteBlockSchema,
-  reorderNoteBlocksSchema,
-  putSyncNoteBlocksSchema,
-  createCommentSchema,
-  updateCommentSchema,
   addCollaboratorSchema,
+  blockIdParamSchema,
+  collaboratorIdParamSchema,
+  commentIdParamSchema,
+  createCommentSchema,
+  createCompleteNoteSchema,
+  createNoteBlockSchema,
+  createNoteSchema,
+  listNotesQuerySchema,
+  noteIdParamSchema,
+  putSyncNoteBlocksSchema,
+  reorderNoteBlocksSchema,
+  updateCommentSchema,
+  updateNoteBlockSchema,
+  updateNoteSchema,
 };

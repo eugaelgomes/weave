@@ -12,15 +12,17 @@ async function unassignFromProject(req, res) {
 
     const updatedAgent = await agentRepository.unassignFromProject(id, userId);
     if (!updatedAgent) {
-      return res.status(404).json({ success: false, error: t.agentNotFound });
+      return res.status(404).json({ error: t.agentNotFound, success: false });
     }
-    res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
+    res.json({ agent: formatAgentResponse(updatedAgent), success: true });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error unassigning agent from project:", error);
-    res.status(500).json({ success: false, error: t.unassignProjectFailed });
+    res.status(500).json({ error: t.unassignProjectFailed, success: false });
   }
 }
 

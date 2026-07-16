@@ -3,27 +3,27 @@
  * Mantém aliases legados para migração gradual sem quebrar dados existentes.
  */
 const PROJECT_ROLES = Object.freeze({
-  PROJECT_MANAGER: "PROJECT_MANAGER",
-  CONTRIBUTOR: "CONTRIBUTOR",
   COMMENTER: "COMMENTER",
+  CONTRIBUTOR: "CONTRIBUTOR",
+  PROJECT_MANAGER: "PROJECT_MANAGER",
   VIEWER: "VIEWER",
 });
 
 const LEGACY_PROJECT_ROLE_ALIASES = Object.freeze({
   admin: PROJECT_ROLES.PROJECT_MANAGER,
+  commenter: PROJECT_ROLES.COMMENTER,
+  contributor: PROJECT_ROLES.CONTRIBUTOR,
   member: PROJECT_ROLES.CONTRIBUTOR,
   project_manager: PROJECT_ROLES.PROJECT_MANAGER,
-  contributor: PROJECT_ROLES.CONTRIBUTOR,
-  commenter: PROJECT_ROLES.COMMENTER,
   viewer: PROJECT_ROLES.VIEWER,
 });
 
 const PROJECT_PERMISSIONS = Object.freeze({
-  READ_PROJECT_CONTENT: "read_project_content",
   COMMENT_PROJECT_CONTENT: "comment_project_content",
-  WRITE_PROJECT_CONTENT: "write_project_content",
-  MANAGE_PROJECT_MEMBERS: "manage_project_members",
   MANAGE_PROJECT_LIFECYCLE: "manage_project_lifecycle",
+  MANAGE_PROJECT_MEMBERS: "manage_project_members",
+  READ_PROJECT_CONTENT: "read_project_content",
+  WRITE_PROJECT_CONTENT: "write_project_content",
 });
 
 const PERMISSIONS_BY_PROJECT_ROLE = Object.freeze({
@@ -79,12 +79,12 @@ function projectRoleHasPermission(role, permission) {
 }
 
 module.exports = {
-  PROJECT_ROLES,
-  PROJECT_PERMISSIONS,
   ASSIGNABLE_PROJECT_ROLES,
-  PROJECT_WRITE_CAPABLE_ROLES,
+  getPermissionsForProjectRole,
   LEGACY_PROJECT_ROLE_ALIASES,
   normalizeProjectRole,
-  getPermissionsForProjectRole,
+  PROJECT_PERMISSIONS,
+  PROJECT_ROLES,
+  PROJECT_WRITE_CAPABLE_ROLES,
   projectRoleHasPermission,
 };

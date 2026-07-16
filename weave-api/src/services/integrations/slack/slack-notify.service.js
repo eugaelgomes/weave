@@ -1,4 +1,3 @@
-/* eslint-disable no-console -- best-effort notification logging */
 const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
 const {
   chatPostMessage,

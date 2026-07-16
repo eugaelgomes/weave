@@ -74,12 +74,12 @@ class MutateNotesRepository extends BaseRepository {
     const results = await this.executeQuery(query, values);
     const updatedNote = results[0];
 
-    console.log("[MutateNotesRepository] Note updated", {
+    console.info("[MutateNotesRepository] Note updated", {
       noteId: updatedNote?.id,
     });
 
     if (updatedNote) {
-      console.log(
+      console.info(
         "[MutateNotesRepository] Enqueueing embedding job for",
         updatedNote.id
       );

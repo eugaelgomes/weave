@@ -12,12 +12,12 @@ class ArtifactsController {
       const organizationId = req.headers["x-organization-id"] || null;
 
       const artifact = await ArtifactsRepository.createArtifact({
-        userId,
+        content,
         organizationId,
         sessionId,
         title,
         type,
-        content,
+        userId,
       });
 
       return res.status(201).json(artifact);
@@ -52,8 +52,8 @@ class ArtifactsController {
       const { title, content } = req.body;
 
       const artifact = await ArtifactsRepository.updateArtifact(id, userId, {
-        title,
         content,
+        title,
       });
 
       if (!artifact) {

@@ -37,25 +37,25 @@ const passwordValidator = z
   .regex(/[0-9]/, "Password must contain at least one number.");
 
 const createAccountSchema = z.object({
-  name: nameValidator,
-  user_name: nameValidator,
-  username: usernameValidator,
+  birth_date: z.string().datetime().or(z.string().date()).nullable().optional(),
   email: emailValidator,
+  locale: z.string().optional(),
+  name: nameValidator,
   password: passwordValidator,
-  timezone: z.string().optional(),
+  phone_number: z.string().nullable().optional(),
   private_profile: z
     .union([z.boolean(), z.string().transform((val) => val === "true")])
     .optional(),
-  birth_date: z.string().datetime().or(z.string().date()).nullable().optional(),
-  phone_number: z.string().nullable().optional(),
-  locale: z.string().optional(),
+  timezone: z.string().optional(),
+  user_name: nameValidator,
+  username: usernameValidator,
 });
 
 const activateAccountSchema = z
   .object({
-    token: z.string().optional(),
     code: z.string().optional(),
     email: z.string().email("Invalid email").optional(),
+    token: z.string().optional(),
   })
   .refine((data) => data.token || (data.code && data.email), {
     message:
@@ -69,16 +69,22 @@ const checkUsernamePublicSchema = z.object({
 
 const checkAvailabilitySchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
-  username: z.string().optional().or(z.literal("")),
   phone_number: z.string().optional().or(z.literal("")),
+  username: z.string().optional().or(z.literal("")),
 });
 
 const updateProfileSchema = z.object({
-  name: nameValidator,
-  username: usernameValidator.optional(),
+  birth_date: z
+    .string()
+    .datetime()
+    .or(z.string().date())
+    .nullable()
+    .optional()
+    .or(z.literal("")),
+  currentPassword: z.string().optional(),
   email: emailValidator.optional().or(z.literal("")),
   emailValidationToken: z.string().optional(),
-  currentPassword: z.string().optional(),
+  name: nameValidator,
   newPassword: z
     .string()
     .min(8, "Password must be at least 8 characters long.")
@@ -87,27 +93,23 @@ const updateProfileSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one number.")
     .optional()
     .or(z.literal("")),
-  theme_mode: z.enum(["light", "dark", "system", "LIGHT", "DARK", "SYSTEM"]).optional(),
-  birth_date: z
-    .string()
-    .datetime()
-    .or(z.string().date())
-    .nullable()
-    .optional()
-    .or(z.literal("")),
   phone_number: z.string().nullable().optional().or(z.literal("")),
   private_profile: z
     .union([z.boolean(), z.string().transform((val) => val === "true")])
     .optional(),
+  theme_mode: z
+    .enum(["light", "dark", "system", "LIGHT", "DARK", "SYSTEM"])
+    .optional(),
   usage_preference: z.record(z.unknown()).optional(),
   user_preference: z.record(z.unknown()).optional(),
+  username: usernameValidator.optional(),
 });
 
 const searchUsersSchema = z.object({
-  q: z.string().optional(),
+  exclude: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).optional().default(20),
   offset: z.coerce.number().min(0).optional().default(0),
-  exclude: z.string().optional(), // Can be a comma-separated list of IDs
+  q: z.string().optional(), // Can be a comma-separated list of IDs
 });
 
 const confirmDeleteAccountSchema = z.object({
@@ -115,11 +117,11 @@ const confirmDeleteAccountSchema = z.object({
 });
 
 module.exports = {
-  createAccountSchema,
   activateAccountSchema,
-  checkUsernamePublicSchema,
   checkAvailabilitySchema,
-  updateProfileSchema,
-  searchUsersSchema,
+  checkUsernamePublicSchema,
   confirmDeleteAccountSchema,
+  createAccountSchema,
+  searchUsersSchema,
+  updateProfileSchema,
 };

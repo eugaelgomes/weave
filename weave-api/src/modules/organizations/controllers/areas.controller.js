@@ -7,8 +7,6 @@ const {
   ORG_ROLES,
 } = require("@/modules/organizations/organization-role-policy");
 
-const AREA_MEMBER_ROLES = [ORG_ROLES.ADMIN, ORG_ROLES.MEMBER, ORG_ROLES.GUEST];
-
 class OrganizationAreasController extends OrganizationsBaseController {
   constructor() {
     super();
@@ -111,7 +109,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const areas = await this.areasRepository.listOrganizationAreas(
@@ -119,10 +117,10 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
-        organization_id: organization.id,
         count: areas.length,
         data: areas,
+        organization_id: organization.id,
+        status: "OK",
       });
     } catch (error) {
       console.error("Error listing areas:", error);
@@ -139,7 +137,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const { areaId } = req.params;
@@ -151,10 +149,10 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Area not found" });
+          .json({ error: "Area not found", success: false });
       }
 
-      res.status(200).json({ status: "OK", data: area });
+      res.status(200).json({ data: area, status: "OK" });
     } catch (error) {
       console.error("Error fetching area:", error);
       return next(fromUnknown(error));
@@ -170,7 +168,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const {
@@ -203,8 +201,8 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
           if (!member || member.role !== ORG_ROLES.ADMIN) {
             return res.status(403).json({
-              success: false,
               error: "Only area admins of the parent area can create sub-areas",
+              success: false,
             });
           }
         }
@@ -214,7 +212,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!normalizedSlug) {
         return res
           .status(400)
-          .json({ success: false, error: "Invalid area slug" });
+          .json({ error: "Invalid area slug", success: false });
       }
 
       const uniqueSlug = await this._ensureUniqueSlug(
@@ -226,19 +224,19 @@ class OrganizationAreasController extends OrganizationsBaseController {
         this._ensurePropertiesShape(properties) || {};
 
       const newArea = await this.areasRepository.createArea({
+        areaName: area_name.trim(),
+        createdBy: userId,
+        description: description?.trim() || "Area description here",
         organizationId: organization.id,
         parentAreaId: parent_area_id || null,
-        areaName: area_name.trim(),
-        slug: uniqueSlug,
-        description: description?.trim() || "Area description here",
         properties: normalizedProperties,
-        createdBy: userId,
+        slug: uniqueSlug,
       });
 
       res.status(201).json({
-        status: "OK",
-        message: "Area created successfully",
         data: newArea,
+        message: "Area created successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error creating area:", error);
@@ -255,7 +253,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const { areaId } = req.params;
@@ -267,14 +265,14 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!existingArea) {
         return res
           .status(404)
-          .json({ success: false, error: "Area not found" });
+          .json({ error: "Area not found", success: false });
       }
 
       // Block structural changes in root area
       if (existingArea.is_root_area && req.body.parent_area_id !== undefined) {
         return res.status(400).json({
-          success: false,
           error: "The root area cannot be moved to another parent area.",
+          success: false,
         });
       }
 
@@ -314,8 +312,8 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (parent_area_id !== undefined) {
         if (parent_area_id === existingArea.id) {
           return res.status(400).json({
-            success: false,
             error: "An area cannot be its own parent",
+            success: false,
           });
         }
         if (parent_area_id) {
@@ -332,7 +330,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         if (!baseSlug) {
           return res
             .status(400)
-            .json({ success: false, error: "Invalid slug" });
+            .json({ error: "Invalid slug", success: false });
         }
 
         const finalSlug = await this._ensureUniqueSlug(
@@ -350,9 +348,9 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
-        message: "Area updated successfully",
         data: updatedArea,
+        message: "Area updated successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error updating area:", error);
@@ -369,7 +367,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const { areaId } = req.params;
@@ -380,13 +378,13 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Area not found" });
+          .json({ error: "Area not found", success: false });
       }
 
       if (area.is_root_area) {
         return res.status(400).json({
-          success: false,
           error: "The root area cannot be removed.",
+          success: false,
         });
       }
 
@@ -402,9 +400,9 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
-        message: "Area removed successfully",
         data: deletedArea,
+        message: "Area removed successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error deleting area:", error);
@@ -421,7 +419,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const { areaId } = req.params;
@@ -432,7 +430,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Area not found" });
+          .json({ error: "Area not found", success: false });
       }
 
       const members = await this.areasRepository.listAreaMembers(
@@ -441,10 +439,10 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
         area_id: areaId,
-        members_count: members.length,
         members,
+        members_count: members.length,
+        status: "OK",
       });
     } catch (error) {
       console.error("Error listing area members:", error);
@@ -461,7 +459,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const { areaId } = req.params;
@@ -472,7 +470,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Area not found" });
+          .json({ error: "Area not found", success: false });
       }
 
       if (
@@ -488,7 +486,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!targetUser) {
         return res
           .status(404)
-          .json({ success: false, error: "User not found" });
+          .json({ error: "User not found", success: false });
       }
 
       const isMember = await this.organizationsRepository.isMember(
@@ -497,8 +495,8 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
       if (!isMember) {
         return res.status(400).json({
-          success: false,
           error: "User must be an organization member",
+          success: false,
         });
       }
 
@@ -509,8 +507,8 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
       if (existingMember) {
         return res.status(400).json({
-          success: false,
           error: "User is already associated with this area",
+          success: false,
         });
       }
 
@@ -523,9 +521,9 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
 
       res.status(201).json({
-        status: "OK",
-        message: "Member added to area",
         data: member,
+        message: "Member added to area",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error adding area member:", error);
@@ -542,7 +540,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const { areaId, memberId } = req.params;
@@ -556,7 +554,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Area not found" });
+          .json({ error: "Area not found", success: false });
       }
 
       if (
@@ -573,7 +571,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!existingMember) {
         return res
           .status(404)
-          .json({ success: false, error: "Area member not found" });
+          .json({ error: "Area member not found", success: false });
       }
 
       const updated = await this.areasRepository.updateAreaMemberRole(
@@ -585,9 +583,9 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
-        message: "Member updated successfully",
         data: updated,
+        message: "Member updated successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error updating area member:", error);
@@ -604,7 +602,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!organization) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       const { areaId, memberId } = req.params;
@@ -616,7 +614,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!area) {
         return res
           .status(404)
-          .json({ success: false, error: "Area not found" });
+          .json({ error: "Area not found", success: false });
       }
 
       if (
@@ -633,7 +631,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       if (!existingMember) {
         return res
           .status(404)
-          .json({ success: false, error: "Member not found" });
+          .json({ error: "Member not found", success: false });
       }
 
       const removed = await this.areasRepository.removeAreaMember(
@@ -644,9 +642,9 @@ class OrganizationAreasController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
-        message: "Member removed from area",
         data: removed,
+        message: "Member removed from area",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error removing area member:", error);

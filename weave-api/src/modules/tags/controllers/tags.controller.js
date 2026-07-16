@@ -19,11 +19,11 @@ class TagsController extends TagsBaseController {
       const { name, color } = req.body;
 
       const tag = await TagsRepository.createTag({
-        projectId: project_id || null,
-        orgId: org_id || null,
-        name,
         color,
         createdBy: userId,
+        name,
+        orgId: org_id || null,
+        projectId: project_id || null,
       });
       res.status(201).json(tag);
     } catch (error) {
@@ -42,8 +42,8 @@ class TagsController extends TagsBaseController {
     try {
       const { project_id, org_id } = req.params;
       const tags = await TagsRepository.getTags({
-        projectId: project_id || null,
         orgId: org_id || null,
+        projectId: project_id || null,
       });
       res.status(200).json(tags);
     } catch (error) {
@@ -64,9 +64,9 @@ class TagsController extends TagsBaseController {
       const { name, color } = req.body;
 
       const tag = await TagsRepository.updateTag(tag_id, {
-        projectId: project_id || null,
         orgId: org_id || null,
-        updates: { name, color },
+        projectId: project_id || null,
+        updates: { color, name },
       });
       if (!tag) {
         return res.status(404).json({ error: "Tag not found" });
@@ -93,9 +93,9 @@ class TagsController extends TagsBaseController {
       const { project_id, org_id, tag_id } = req.params;
 
       const tag = await TagsRepository.deleteTag(tag_id, {
-        projectId: project_id || null,
-        orgId: org_id || null,
         deletedBy: userId,
+        orgId: org_id || null,
+        projectId: project_id || null,
       });
       if (!tag) {
         return res

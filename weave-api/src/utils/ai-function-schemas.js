@@ -10,12 +10,12 @@
  * - `weave-ai/policies/authorized-functions.js`: To resolve which of these schemas the current user/context can access.
  */
 const FunctionCategory = Object.freeze({
+  AGENTS: "agents",
   BLOCKS: "blocks",
   NOTES: "notes",
   PROJECTS: "projects",
-  USERS: "users",
-  AGENTS: "agents",
   SANDBOX: "sandbox",
+  USERS: "users",
 });
 
 /**
@@ -25,12 +25,64 @@ const FunctionCategory = Object.freeze({
 const BLOCKS_SCHEMA = Object.freeze({
   description:
     "Array of structured editor blocks. ALWAYS use this instead of 'content' for rich formatting. Each block represents a visual element (heading, paragraph, list, etc.).",
-  type: "array",
   items: {
-    type: "object",
     properties: {
+      children: {
+        description:
+          "Child blocks for list items. Each child is a paragraph block with the list item text.",
+        items: {
+          properties: {
+            properties: {
+              properties: {
+                text: { type: "string" },
+              },
+              type: "object",
+            },
+            type: {
+              enum: ["paragraph"],
+              type: "string",
+            },
+          },
+          type: "object",
+        },
+        type: "array",
+      },
+      properties: {
+        description: "Block content and attributes.",
+        properties: {
+          attrs: {
+            description: "Type-specific attributes.",
+            properties: {
+              checked: {
+                description:
+                  "Whether the todo item is checked. Only for type=todo.",
+                type: "boolean",
+              },
+              language: {
+                description:
+                  "Programming language identifier. Only for type=code.",
+                type: "string",
+              },
+              level: {
+                description: "Heading level (1-6). Only for type=heading.",
+                type: "integer",
+              },
+              ordered: {
+                description: "Whether the list is ordered. Only for type=list.",
+                type: "boolean",
+              },
+            },
+            type: "object",
+          },
+          text: {
+            description: "Text content of the block.",
+            type: "string",
+          },
+        },
+        type: "object",
+      },
       type: {
-        type: "string",
+        description: "Block type.",
         enum: [
           "paragraph",
           "heading",
@@ -40,65 +92,13 @@ const BLOCKS_SCHEMA = Object.freeze({
           "todo",
           "divider",
         ],
-        description: "Block type.",
-      },
-      properties: {
-        type: "object",
-        description: "Block content and attributes.",
-        properties: {
-          text: {
-            type: "string",
-            description: "Text content of the block.",
-          },
-          attrs: {
-            type: "object",
-            description: "Type-specific attributes.",
-            properties: {
-              level: {
-                type: "integer",
-                description: "Heading level (1-6). Only for type=heading.",
-              },
-              language: {
-                type: "string",
-                description:
-                  "Programming language identifier. Only for type=code.",
-              },
-              ordered: {
-                type: "boolean",
-                description: "Whether the list is ordered. Only for type=list.",
-              },
-              checked: {
-                type: "boolean",
-                description:
-                  "Whether the todo item is checked. Only for type=todo.",
-              },
-            },
-          },
-        },
-      },
-      children: {
-        type: "array",
-        description:
-          "Child blocks for list items. Each child is a paragraph block with the list item text.",
-        items: {
-          type: "object",
-          properties: {
-            type: {
-              type: "string",
-              enum: ["paragraph"],
-            },
-            properties: {
-              type: "object",
-              properties: {
-                text: { type: "string" },
-              },
-            },
-          },
-        },
+        type: "string",
       },
     },
     required: ["type"],
+    type: "object",
   },
+  type: "array",
 });
 
 /**
@@ -106,6 +106,25 @@ const BLOCKS_SCHEMA = Object.freeze({
  * Each schema defines the parameters required by the LLM to call the respective tool.
  */
 const FUNCTION_SCHEMAS = Object.freeze({
+  create_artifact: {
+    category: FunctionCategory.SANDBOX,
+    description:
+      "CRITICAL: You MUST use this tool EVERY TIME you generate a document, draft, prompt, report, code, or any structured content for the user. Do NOT output the artifact in the chat. Present it using this Sandbox tool. ALWAYS use 'blocks' for structured rich text formatting.",
+    name: "create_artifact",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        blocks: BLOCKS_SCHEMA,
+        title: { description: "Title of the document.", type: "string" },
+        type: {
+          description: "Type of the document, default to 'document'.",
+          type: "string",
+        },
+      },
+      required: ["title", "blocks"],
+      type: "object",
+    },
+  },
   create_note: {
     category: FunctionCategory.NOTES,
     description: "Create a new note or task in the user workspace.",
@@ -113,21 +132,21 @@ const FUNCTION_SCHEMAS = Object.freeze({
     parameters: {
       additionalProperties: false,
       properties: {
-        collaboratorIds: {
-          items: { type: "string" },
-          type: "array",
-        },
-        blocks: BLOCKS_SCHEMA,
-        content: {
-          type: "string",
-          description:
-            "Fallback plain text content. Avoid using this; prefer 'blocks' for structured formatting.",
-        },
         attachChatFiles: {
           description:
             "Array of file names from the files the user uploaded in the chat context that you wish to attach to this note.",
           items: { type: "string" },
           type: "array",
+        },
+        blocks: BLOCKS_SCHEMA,
+        collaboratorIds: {
+          items: { type: "string" },
+          type: "array",
+        },
+        content: {
+          description:
+            "Fallback plain text content. Avoid using this; prefer 'blocks' for structured formatting.",
+          type: "string",
         },
         dueDate: {
           description: "ISO datetime string.",
@@ -165,6 +184,47 @@ const FUNCTION_SCHEMAS = Object.freeze({
       type: "object",
     },
   },
+  delegate_to_agent: {
+    category: FunctionCategory.AGENTS,
+    description:
+      "Delegate a sub-task to a specialized agent. Provide the agent ID and a detailed description of what they should do. Wait for their response.",
+    name: "delegate_to_agent",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        agentId: { type: "string" },
+        taskDescription: { type: "string" },
+      },
+      required: ["agentId", "taskDescription"],
+      type: "object",
+    },
+  },
+  delete_note: {
+    category: FunctionCategory.NOTES,
+    description: "Permanently (soft) delete a note or task.",
+    name: "delete_note",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        noteId: { type: "string" },
+      },
+      required: ["noteId"],
+      type: "object",
+    },
+  },
+  delete_project: {
+    category: FunctionCategory.PROJECTS,
+    description: "Permanently (soft) delete a project.",
+    name: "delete_project",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        projectId: { type: "string" },
+      },
+      required: ["projectId"],
+      type: "object",
+    },
+  },
   search_projects: {
     category: FunctionCategory.PROJECTS,
     description:
@@ -196,6 +256,25 @@ const FUNCTION_SCHEMAS = Object.freeze({
         },
       },
       required: ["searchTerm"],
+      type: "object",
+    },
+  },
+  update_artifact: {
+    category: FunctionCategory.SANDBOX,
+    description:
+      "CRITICAL: You MUST use this tool to update an existing Artifact document, draft, or prompt instead of outputting the updated text in the chat. ALWAYS use 'blocks' for structured rich text formatting.",
+    name: "update_artifact",
+    parameters: {
+      additionalProperties: false,
+      properties: {
+        artifactId: {
+          description: "The UUID of the artifact.",
+          type: "string",
+        },
+        blocks: BLOCKS_SCHEMA,
+        title: { description: "Updated title.", type: "string" },
+      },
+      required: ["artifactId", "blocks"],
       type: "object",
     },
   },
@@ -340,85 +419,6 @@ const FUNCTION_SCHEMAS = Object.freeze({
         title: { type: "string" },
       },
       required: ["projectId", "title"],
-      type: "object",
-    },
-  },
-  delete_project: {
-    category: FunctionCategory.PROJECTS,
-    description: "Permanently (soft) delete a project.",
-    name: "delete_project",
-    parameters: {
-      additionalProperties: false,
-      properties: {
-        projectId: { type: "string" },
-      },
-      required: ["projectId"],
-      type: "object",
-    },
-  },
-  delete_note: {
-    category: FunctionCategory.NOTES,
-    description: "Permanently (soft) delete a note or task.",
-    name: "delete_note",
-    parameters: {
-      additionalProperties: false,
-      properties: {
-        noteId: { type: "string" },
-      },
-      required: ["noteId"],
-      type: "object",
-    },
-  },
-  delegate_to_agent: {
-    category: FunctionCategory.AGENTS,
-    description:
-      "Delegate a sub-task to a specialized agent. Provide the agent ID and a detailed description of what they should do. Wait for their response.",
-    name: "delegate_to_agent",
-    parameters: {
-      additionalProperties: false,
-      properties: {
-        agentId: { type: "string" },
-        taskDescription: { type: "string" },
-      },
-      required: ["agentId", "taskDescription"],
-      type: "object",
-    },
-  },
-  create_artifact: {
-    category: FunctionCategory.SANDBOX,
-    description:
-      "CRITICAL: You MUST use this tool EVERY TIME you generate a document, draft, prompt, report, code, or any structured content for the user. Do NOT output the artifact in the chat. Present it using this Sandbox tool. ALWAYS use 'blocks' for structured rich text formatting.",
-    name: "create_artifact",
-    parameters: {
-      additionalProperties: false,
-      properties: {
-        title: { type: "string", description: "Title of the document." },
-        type: {
-          type: "string",
-          description: "Type of the document, default to 'document'.",
-        },
-        blocks: BLOCKS_SCHEMA,
-      },
-      required: ["title", "blocks"],
-      type: "object",
-    },
-  },
-  update_artifact: {
-    category: FunctionCategory.SANDBOX,
-    description:
-      "CRITICAL: You MUST use this tool to update an existing Artifact document, draft, or prompt instead of outputting the updated text in the chat. ALWAYS use 'blocks' for structured rich text formatting.",
-    name: "update_artifact",
-    parameters: {
-      additionalProperties: false,
-      properties: {
-        artifactId: {
-          type: "string",
-          description: "The UUID of the artifact.",
-        },
-        title: { type: "string", description: "Updated title." },
-        blocks: BLOCKS_SCHEMA,
-      },
-      required: ["artifactId", "blocks"],
       type: "object",
     },
   },

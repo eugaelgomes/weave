@@ -32,40 +32,40 @@ async function inviteProjectMember(
 
   try {
     const { html, text } = buildMailTemplate({
-      locale,
-      preheader: t(locale, "project.preheader"),
-      title: t(locale, "project.title"),
-      subtitle: t(locale, "project.subtitle"),
-      greeting: `${firstName},`,
-      introLines: [t(locale, "project.intro", { addedByName })],
-      ctaText: t(locale, "project.cta"),
-      ctaUrl: projectUrl,
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
           <p style="margin: 0; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.project"))}:</strong> ${escapeHtml(safeProjectName)}</p>
         </div>
       `,
-      outroLines: [t(locale, "project.outro")],
+      ctaText: t(locale, "project.cta"),
+      ctaUrl: projectUrl,
       footerNote: t(locale, "project.footer"),
+      greeting: `${firstName},`,
+      introLines: [t(locale, "project.intro", { addedByName })],
+      locale,
+      outroLines: [t(locale, "project.outro")],
+      preheader: t(locale, "project.preheader"),
+      subtitle: t(locale, "project.subtitle"),
+      title: t(locale, "project.title"),
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
-      to: email,
+      html,
       subject: t(locale, "project.subject", {
         firstName,
         projectName: safeProjectName,
       }),
       text,
-      html,
+      to: email,
     });
 
     return { success: true };
   } catch (error) {
     console.error("Project invitation email failed:", error);
     return {
-      success: false,
       error: error.message || "Failed to send project invitation email.",
+      success: false,
     };
   }
 }

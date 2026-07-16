@@ -3,97 +3,104 @@ const DEFAULT_METHODOLOGY = "kanban";
 const BASE_PROJECT_PROPERTIES = {
   // UI & Design
   color: null,
+  complexity: null,
+
+  estimated_time: null,
+
+  estimation_type: null,
+
   icon: null,
-  tags: [],
+
+  lead_time_target_days: null,
   // Tempo e Prioridade
   priority: null,
-  complexity: null,
-  estimated_time: null,
+
   progress: 0,
+
+  sprint_duration_weeks: null,
+
+  tags: [],
   // Metodologias
   type: "custom",
   wip_limit_enabled: false,
-  lead_time_target_days: null,
-  sprint_duration_weeks: null,
-  estimation_type: null,
 };
 
 const BASE_STAGE_PROPERTIES = {
+  auto_assign_to_creator: false,
+  description: null,
   is_done: false,
   wip_limit: null,
-  description: null,
-  auto_assign_to_creator: false,
 };
 
 const METHODOLOGY_CONFIGS = {
   kanban: {
     properties: {
-      wip_limit_enabled: true,
       lead_time_target_days: 7,
       type: "continuous_flow",
+      wip_limit_enabled: true,
     },
     stages: [
       {
+        color: "#94a3b8",
         name: "Backlog",
         position: 0,
-        color: "#94a3b8",
         properties: { is_done: false },
       },
       {
+        color: "#e2e8f0",
         name: "To Do",
         position: 1,
-        color: "#e2e8f0",
         properties: { is_done: false },
       },
       {
+        color: "#bfdbfe",
         name: "Doing",
         position: 2,
-        color: "#bfdbfe",
         properties: { is_done: false, wip_limit: 5 },
       },
       {
+        color: "#bbf7d0",
         name: "Done",
         position: 3,
-        color: "#bbf7d0",
         properties: { is_done: true },
       },
     ],
   },
   scrum: {
     properties: {
-      sprint_duration_weeks: 2,
       estimation_type: "story_points",
+      sprint_duration_weeks: 2,
       type: "iterative",
     },
     stages: [
       {
+        color: "#94a3b8",
         name: "Product Backlog",
         position: 0,
-        color: "#94a3b8",
         properties: { is_done: false },
       },
       {
+        color: "#e2e8f0",
         name: "Sprint Backlog",
         position: 1,
-        color: "#e2e8f0",
         properties: { is_done: false },
       },
       {
+        color: "#bfdbfe",
         name: "In Progress",
         position: 2,
-        color: "#bfdbfe",
         properties: { is_done: false },
       },
       {
+        color: "#fef08a",
         name: "Review / QA",
         position: 3,
-        color: "#fef08a",
         properties: { is_done: false },
       },
       {
+        color: "#bbf7d0",
         name: "Done",
         position: 4,
-        color: "#bbf7d0",
         properties: { is_done: true },
       },
     ],
@@ -141,14 +148,14 @@ const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
   }));
 
   const projectData = {
-    user_id: userId,
-    organization_id: orgId || null,
-    title,
     description,
     methodology: methodology.toUpperCase(),
-    status: String(payload.status || "OPEN").toUpperCase(),
-    properties: JSON.stringify(mergedProjectProperties),
+    organization_id: orgId || null,
     parent_project_id: payload.parent_project_id || null,
+    properties: JSON.stringify(mergedProjectProperties),
+    status: String(payload.status || "OPEN").toUpperCase(),
+    title,
+    user_id: userId,
   };
 
   return {

@@ -6,30 +6,30 @@ async function welcome_message(email, organization_name) {
 
   try {
     const { html, text } = buildMailTemplate({
-      preheader: "Voce foi convidado(a) para o Weave Notes.",
-      title: "Convite para o Weave Notes",
-      subtitle: "Organizacao",
+      ctaText: "Acessar plataforma",
+      ctaUrl: frontendUrl,
       introLines: [
         `A organizacao ${organization_name} convidou voce para usar o Weave Notes.`,
       ],
-      ctaText: "Acessar plataforma",
-      ctaUrl: frontendUrl,
+      preheader: "Voce foi convidado(a) para o Weave Notes.",
+      subtitle: "Organizacao",
+      title: "Convite para o Weave Notes",
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
-      to: email,
+      html,
       subject: `Ola, voce foi convidado para o Weave Notes pela ${organization_name}`,
       text,
-      html,
+      to: email,
     });
 
     return { success: true };
   } catch (error) {
     console.error("Welcome email failed:", error);
     return {
-      success: false,
       error: error.message || "Failed to send welcome email.",
+      success: false,
     };
   }
 }

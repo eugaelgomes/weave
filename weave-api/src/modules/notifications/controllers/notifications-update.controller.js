@@ -18,9 +18,9 @@ class NotificationsUpdateController extends NotificationsBaseController {
       const isRead = typeof rawIsRead === "boolean" ? rawIsRead : true;
 
       const result = await this.notificationsRepository.markNotificationRead({
+        isRead,
         notificationId,
         userId,
-        isRead,
       });
 
       const notification = this._handleRepositoryResult(result, res);
@@ -55,9 +55,9 @@ class NotificationsUpdateController extends NotificationsBaseController {
       const inTrash = typeof rawInTrash === "boolean" ? rawInTrash : true;
 
       const result = await this.notificationsRepository.toggleTrashStatus({
+        inTrash,
         notificationId,
         userId,
-        inTrash,
       });
 
       const notification = this._handleRepositoryResult(result, res);

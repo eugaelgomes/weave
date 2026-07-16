@@ -8,37 +8,37 @@ const { v4: uuidv4 } = require("uuid");
 
 class SpacesService {
   static FOLDER_PATHS = {
+    AGENTS: {
+      FILES: "files",
+      ROOT: "agents",
+    },
     BACKUPS: "backups",
     IMAGES: "images",
     NOTES: {
-      ROOT: "notes",
-      ICONS: "icons",
       BANNERS: "banners",
-      FILES: "files",
       DOCUMENT_IMAGES: "document-images",
+      FILES: "files",
+      ICONS: "icons",
+      ROOT: "notes",
     },
     NOTES_COMMENTS_FILES: {
+      FILES: "files",
       ROOT: "notes-comments-files",
-      FILES: "files",
-    },
-    PROJECTS: {
-      ROOT: "projects",
-      ICONS: "icons",
-      FILES: "files",
-    },
-    USERS_CONTENT: {
-      ROOT: "users-content",
-      PROFILE: "profile",
-      AVATAR: "avatar",
     },
     ORGANIZATIONS: {
-      ROOT: "organizations",
-      LOGO: "logo",
       BANNER: "banner",
+      LOGO: "logo",
+      ROOT: "organizations",
     },
-    AGENTS: {
-      ROOT: "agents",
+    PROJECTS: {
       FILES: "files",
+      ICONS: "icons",
+      ROOT: "projects",
+    },
+    USERS_CONTENT: {
+      AVATAR: "avatar",
+      PROFILE: "profile",
+      ROOT: "users-content",
     },
   };
 
@@ -62,13 +62,13 @@ class SpacesService {
     }
 
     this.s3Client = new S3Client({
-      endpoint: this.spacesEndpoint,
-      region: this.region,
       credentials: {
         accessKeyId: this.accessKeyId,
         secretAccessKey: this.secretAccessKey,
       },
+      endpoint: this.spacesEndpoint,
       forcePathStyle: false,
+      region: this.region,
     });
   }
 
@@ -105,24 +105,24 @@ class SpacesService {
         : Buffer.from(fileContent, "utf-8");
 
       const uploadParams = {
-        Bucket: this.bucketName,
-        Key: key,
-        Body: buffer,
-        ContentType: "text/csv",
         ACL: "private",
+        Body: buffer,
+        Bucket: this.bucketName,
         CacheControl: "no-cache, no-store, must-revalidate",
-        Expires: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48H
+        ContentType: "text/csv",
+        Expires: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        Key: key, // 48H
       };
 
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
       return {
-        success: true,
-        key: key,
-        fileName: uniqueFileName,
-        size: buffer.length,
         expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        fileName: uniqueFileName,
+        key: key,
+        size: buffer.length,
+        success: true,
       };
     } catch (error) {
       console.error("Erro ao fazer upload do backup:", error);
@@ -158,17 +158,18 @@ class SpacesService {
           );
 
       const uploadParams = {
-        Bucket: this.bucketName,
-        Key: key,
-        Body: imageBuffer,
-        ContentType: mimeType,
         ACL: "public-read",
-        CacheControl: "max-age=31536000", // Cache por 1 ano
+        Body: imageBuffer,
+        Bucket: this.bucketName,
+        CacheControl: "max-age=31536000",
+        ContentType: mimeType,
+        Key: key, // Cache por 1 ano
       };
 
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
+      // eslint-disable-next-line no-unused-vars
       const publicUrl =
         `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
           "digitaloceanspaces.com",
@@ -178,11 +179,11 @@ class SpacesService {
       const simpleUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
 
       return {
+        fileName: uniqueFileName,
+        key: key,
+        size: imageBuffer.length,
         success: true,
         url: simpleUrl,
-        key: key,
-        fileName: uniqueFileName,
-        size: imageBuffer.length,
       };
     } catch (error) {
       console.error("Erro ao fazer upload para Digital Ocean Spaces:", error);
@@ -240,34 +241,34 @@ class SpacesService {
    */
   getFileExtensionFromMimeType(mimeType) {
     const mimeToExt = {
-      "image/jpeg": ".jpg",
-      "image/jpg": ".jpg",
-      "image/png": ".png",
-      "image/webp": ".webp",
-      "image/gif": ".gif",
-      "image/svg+xml": ".svg",
-      "application/pdf": ".pdf",
+      "application/gzip": ".gz",
+      "application/json": ".json",
       "application/msword": ".doc",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
+      "application/pdf": ".pdf",
       "application/vnd.ms-excel": ".xls",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        ".xlsx",
       "application/vnd.ms-powerpoint": ".ppt",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation":
         ".pptx",
-      "text/plain": ".txt",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        ".xlsx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+      "application/x-rar-compressed": ".rar",
+      "application/xml": ".xml",
+      "application/zip": ".zip",
+      "image/gif": ".gif",
+      "image/jpeg": ".jpg",
+      "image/jpg": ".jpg",
+      "image/png": ".png",
+      "image/svg+xml": ".svg",
+      "image/webp": ".webp",
       "text/csv": ".csv",
       "text/markdown": ".md",
-      "application/zip": ".zip",
-      "application/x-rar-compressed": ".rar",
-      "application/gzip": ".gz",
-      "application/json": ".json",
-      "application/xml": ".xml",
+      "text/plain": ".txt",
       "video/mp4": ".mp4",
-      "video/webm": ".webm",
-      "video/quicktime": ".mov",
       "video/ogg": ".ogv",
+      "video/quicktime": ".mov",
+      "video/webm": ".webm",
     };
 
     return mimeToExt[mimeType] || ".bin";
@@ -563,18 +564,18 @@ class SpacesService {
 
   validateConfiguration() {
     const config = {
-      endpoint: !!this.spacesEndpoint,
       accessKey: !!this.accessKeyId,
-      secretKey: !!this.secretAccessKey,
       bucket: !!this.bucketName,
+      endpoint: !!this.spacesEndpoint,
       region: !!this.region,
+      secretKey: !!this.secretAccessKey,
     };
 
     const isValid = Object.values(config).every(Boolean);
 
     return {
-      isValid,
       config,
+      isValid,
       missing: Object.keys(config).filter((key) => !config[key]),
     };
   }

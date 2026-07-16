@@ -12,11 +12,11 @@ const googleCallbackSchema = z.object({
  * Validates the query parameters for fetching Google Calendar events.
  */
 const getCalendarEventsSchema = z.object({
-  timeMin: z.string().datetime("Invalid timeMin date format").optional(),
   timeMax: z.string().datetime("Invalid timeMax date format").optional(),
+  timeMin: z.string().datetime("Invalid timeMin date format").optional(),
 });
 
 module.exports = {
-  googleCallbackSchema,
   getCalendarEventsSchema,
+  googleCallbackSchema,
 };

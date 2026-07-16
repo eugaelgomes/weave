@@ -15,13 +15,13 @@ class NotificationsCreateRepository {
     content = {},
   }) {
     const normalized = normalizeNotificationPayload({
-      userId,
       actorId,
-      type,
-      entityType,
-      entityId,
-      title,
       content,
+      entityId,
+      entityType,
+      title,
+      type,
+      userId,
     });
 
     const query = `

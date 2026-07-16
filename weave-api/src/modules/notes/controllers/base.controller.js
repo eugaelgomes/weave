@@ -211,23 +211,6 @@ class NotesBaseController {
     const { includeBlocks = true } = options;
     const projectId = note.project_id ? String(note.project_id) : null;
     return {
-      id: note.id === undefined || note.id === null ? "" : String(note.id),
-      public_id: note.public_note_id || null,
-      title: note.title,
-      description: note.description,
-      properties: note.properties || {},
-      tags: note.tags || [],
-      status: note.status,
-      due_date: note.due_date ?? null,
-      priority_id: note.priority_id ?? null,
-      priority_name: note.priority_name ?? null,
-      priority_color: note.priority_color ?? null,
-      created_at: note.created_at,
-      updated_at: note.updated_at,
-      revision:
-        note.revision === undefined || note.revision === null
-          ? null
-          : Number(note.revision),
       associated_project: projectId
         ? {
             id: projectId,
@@ -239,6 +222,23 @@ class NotesBaseController {
           }
         : null,
       blocks: includeBlocks && Array.isArray(blocks) ? blocks : [],
+      created_at: note.created_at,
+      description: note.description,
+      due_date: note.due_date ?? null,
+      id: note.id === undefined || note.id === null ? "" : String(note.id),
+      priority_color: note.priority_color ?? null,
+      priority_id: note.priority_id ?? null,
+      priority_name: note.priority_name ?? null,
+      properties: note.properties || {},
+      public_id: note.public_note_id || null,
+      revision:
+        note.revision === undefined || note.revision === null
+          ? null
+          : Number(note.revision),
+      status: note.status,
+      tags: note.tags || [],
+      title: note.title,
+      updated_at: note.updated_at,
     };
   }
 

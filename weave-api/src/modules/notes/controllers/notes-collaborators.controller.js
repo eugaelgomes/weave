@@ -52,10 +52,10 @@ class NotesCollaboratorsController extends NotesBaseController {
 
       if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
         return sendPlanLimitExceeded(res, {
-          resource: "note_collaborators",
-          limit_key: "limits.max_collaborators_per_note",
           error: "Collaborators limit reached",
+          limit_key: "limits.max_collaborators_per_note",
           message: `Your plan (${planDetails.name}) allows only ${maxCollaborators} collaborators per note.`,
+          resource: "note_collaborators",
         });
       }
 
@@ -131,17 +131,17 @@ class NotesCollaboratorsController extends NotesBaseController {
       // Add notification to the system
       if (noteData) {
         await NotificationsRepository.createNotification({
-          userId: collaboratorId,
           actorId: userId,
-          type: "note_shared",
-          entityType: "note",
-          entityId: noteId,
-          title: `You have been added to the note ${noteData.title}`,
           content: {
             action: "collaborator_added",
             note_id: noteId,
             shared_by: userId,
           },
+          entityId: noteId,
+          entityType: "note",
+          title: `You have been added to the note ${noteData.title}`,
+          type: "note_shared",
+          userId: collaboratorId,
         });
       }
 
@@ -154,8 +154,8 @@ class NotesCollaboratorsController extends NotesBaseController {
       }
 
       res.status(201).json({
-        message: "Collaborator added successfully",
         collaborator: newCollaborator,
+        message: "Collaborator added successfully",
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -175,7 +175,7 @@ class NotesCollaboratorsController extends NotesBaseController {
       if (!userId) return;
 
       // Verify if the note exists and belongs to the user
-      const note = await this._validateNoteOwnership(noteId, userId);
+      await this._validateNoteOwnership(noteId, userId);
 
       // Verify if the collaborator exists in the note
       const isCollaborator = await this.notesRepository.isCollaborator(
@@ -226,15 +226,15 @@ class NotesCollaboratorsController extends NotesBaseController {
 
       if (result.rowCount === 0) {
         return res.status(400).json({
-          success: false,
           message:
             "You have already refused or were not a collaborator in this note",
+          success: false,
         });
       }
 
       res.status(200).json({
-        success: true,
         message: "You are no longer a collaborator in this note",
+        success: true,
       });
     } catch (error) {
       this._handleError(error, res, next);

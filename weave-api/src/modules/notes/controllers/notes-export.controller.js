@@ -41,10 +41,10 @@ class NotesExportController extends NotesBaseController {
 
       if (!canExport) {
         return sendPlanLimitExceeded(res, {
-          resource: "exports",
-          limit_key: PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY,
           error: "Exports limit reached",
+          limit_key: PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY,
           message: `Your plan (${planDetails.name}) allows only ${planDetails.details.limits.exports.notes_monthly} note exports per month.`,
+          resource: "exports",
         });
       }
 
@@ -61,8 +61,8 @@ class NotesExportController extends NotesBaseController {
         ...note,
         blocks,
         collaborators: note.collaborators || [],
-        user_name: note.user_name,
         user_email: note.user_email,
+        user_name: note.user_name,
       };
 
       const pdfBuffer = await PDFService.generateNotePDF(dataForPDF);

@@ -10,31 +10,44 @@ async function submitFeedback(req, res) {
 
     if (!messageId) {
       return res.status(400).json({
+        error: {
+          code: "MESSAGE_ID_REQUIRED",
+          message: "A message ID is required to submit feedback.",
+        },
         success: false,
-        error: { code: "MESSAGE_ID_REQUIRED", message: "A message ID is required to submit feedback." },
       });
     }
 
-    const updated = await chatRepository.updateMessageFeedback(messageId, userId, rating, comment || null);
+    const updated = await chatRepository.updateMessageFeedback(
+      messageId,
+      userId,
+      rating,
+      comment || null
+    );
 
     if (!updated) {
       return res.status(404).json({
+        error: {
+          code: "CHAT_MESSAGE_NOT_FOUND",
+          message: "Message not found or you don't have access to it.",
+        },
         success: false,
-        error: { code: "CHAT_MESSAGE_NOT_FOUND", message: "Message not found or you don't have access to it." },
       });
     }
 
-    return res.json({ success: true, messageId, rating });
+    return res.json({ messageId, rating, success: true });
   } catch (error) {
     const normalizedError = chatFormatterUtil.normalizeApiError(error, {
       code: "FEEDBACK_SUBMIT_FAILED",
       message: "Failed to submit feedback.",
       statusCode: 500,
     });
-    console.error("[weave-ai/chat] feedback submit failed", { error: normalizedError });
+    console.error("[weave-ai/chat] feedback submit failed", {
+      error: normalizedError,
+    });
     return res.status(normalizedError.statusCode).json({
-      success: false,
       error: { code: normalizedError.code, message: normalizedError.message },
+      success: false,
     });
   }
 }

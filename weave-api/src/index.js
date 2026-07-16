@@ -1,10 +1,8 @@
 require("module-alias/register");
 require("dotenv").config();
 require("./instrument");
-const Sentry = require("@sentry/node");
 const http = require("http");
 const { app } = require("@/app");
-const { pool } = require("@/database/connection");
 const responseConsumer = require("@/services/reasoning/response-consumer");
 const triggerConsumer = require("@/services/reasoning/trigger-consumer");
 
@@ -56,7 +54,7 @@ server.on("error", onError);
 server.on("listening", () => {
   const addr = server.address();
   const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
-  console.log(`Weave Notes API running on ${bind}`);
+  console.info(`Weave Notes API running on ${bind}`);
 
   // Start background consumers
   responseConsumer.start().catch((err) => {

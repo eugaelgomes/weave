@@ -40,8 +40,6 @@ const ALLOWED_FILE_TYPES = [
  * Aceita: icon (1) e files (múltiplos)
  */
 const projectUpdateUpload = multer({
-  storage,
-  limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (req, file, cb) => {
     if (file.fieldname === "icon") {
       if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
@@ -61,6 +59,8 @@ const projectUpdateUpload = multer({
     }
     cb(null, true);
   },
+  limits: { fileSize: MAX_FILE_SIZE },
+  storage,
 });
 
 module.exports = { projectUpdateUpload };

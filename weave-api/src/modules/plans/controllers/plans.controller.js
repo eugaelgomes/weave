@@ -1,6 +1,6 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { executeQuery } = require("@/database/connection");
-const { USAGE_PATHS } = require("@/services/plans/plan-paths");
+
 const { enqueuePlanUsageJob } = require("@/services/queue/queue-controller");
 
 class PlanUsageManager {
@@ -165,15 +165,15 @@ class PlanUsageManager {
 
     return {
       current_period: currentUsage?.usage_details,
-      lifetime_stats: currentUsage?.lifetime_stats,
       history: history.map((h) => ({
-        period: `${h.period_start} - ${h.period_end}`,
-        notes: h.total_notes_created,
-        projects: h.total_projects_created,
         ai_messages: h.total_ai_messages,
-        storage_mb: h.total_storage_mb,
         exports: h.total_exports,
+        notes: h.total_notes_created,
+        period: `${h.period_start} - ${h.period_end}`,
+        projects: h.total_projects_created,
+        storage_mb: h.total_storage_mb,
       })),
+      lifetime_stats: currentUsage?.lifetime_stats,
     };
   }
 
@@ -215,21 +215,21 @@ class PlanUsageManager {
     endDate.setMonth(endDate.getMonth() + 1);
 
     const initialUsageDetails = {
+      history_metadata: {
+        last_activity_at: startDate.toISOString(),
+        usage_percentage_total: 0,
+      },
+      monthly_cycle: {
+        current_period_end: endDate.toISOString(),
+        current_period_start: startDate.toISOString(),
+        exports: { backups_count: 0, notes_count: 0 },
+        storage: { files_count: 0, total_uploaded_mb: 0 },
+        weave_ai: { messages_sent: 0, tokens_estimated: 0 },
+      },
       usage_summary: {
         notes_total: 0,
         projects_total: 0,
         team_members_total: 1,
-      },
-      monthly_cycle: {
-        current_period_start: startDate.toISOString(),
-        current_period_end: endDate.toISOString(),
-        exports: { notes_count: 0, backups_count: 0 },
-        storage: { total_uploaded_mb: 0, files_count: 0 },
-        weave_ai: { messages_sent: 0, tokens_estimated: 0 },
-      },
-      history_metadata: {
-        last_activity_at: startDate.toISOString(),
-        usage_percentage_total: 0,
       },
     };
 

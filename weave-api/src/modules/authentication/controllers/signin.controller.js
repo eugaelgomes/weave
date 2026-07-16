@@ -60,7 +60,7 @@ class SigninController extends AuthBaseController {
       if (req.body.verify_only) {
         return res
           .status(200)
-          .json({ status: "OK", message: "Credentials verified." });
+          .json({ message: "Credentials verified.", status: "OK" });
       }
 
       const organization = this._normalizeOrganization(user.organization);
@@ -88,40 +88,40 @@ class SigninController extends AuthBaseController {
         if (err) return next(err);
 
         return res.status(200).json({
-          status: "OK",
-          message: "Successfully performed user signin.",
-          user: {
-            user_profile: {
-              id: protectedUser.user_id,
-              public_id: protectedUser.public_user_id,
-              name: protectedUser.user_name || protectedUser.name,
-              username: protectedUser.username,
-              email: protectedUser.email,
-              avatar_url: protectedUser.avatar_url,
-            },
-            user_settings: {
-              theme_mode: protectedUser.theme_mode,
-              private_profile: protectedUser.private_profile,
-            },
-            user_organization: {
-              id: protectedOrg?.id || null,
-              public_id: protectedOrg?.public_id || null,
-              unique_name: protectedOrg?.unique_name || null,
-              name: protectedOrg?.name || null,
-              logo_url: protectedOrg?.logo_url || null,
-              role: protectedOrg?.member_role || null,
-              member_since: protectedOrg?.member_since || null,
-              default_area: defaultArea,
-            },
-            user_subscription: {
-              plan_id: user.plan_id,
-              plan_name: user.plan_name,
-              plan_details: user.plan_details || {},
-            },
-          },
           auth: {
             expires_in: 12 * 60 * 60,
             login_time: new Date(),
+          },
+          message: "Successfully performed user signin.",
+          status: "OK",
+          user: {
+            user_organization: {
+              default_area: defaultArea,
+              id: protectedOrg?.id || null,
+              logo_url: protectedOrg?.logo_url || null,
+              member_since: protectedOrg?.member_since || null,
+              name: protectedOrg?.name || null,
+              public_id: protectedOrg?.public_id || null,
+              role: protectedOrg?.member_role || null,
+              unique_name: protectedOrg?.unique_name || null,
+            },
+            user_profile: {
+              avatar_url: protectedUser.avatar_url,
+              email: protectedUser.email,
+              id: protectedUser.user_id,
+              name: protectedUser.user_name || protectedUser.name,
+              public_id: protectedUser.public_user_id,
+              username: protectedUser.username,
+            },
+            user_settings: {
+              private_profile: protectedUser.private_profile,
+              theme_mode: protectedUser.theme_mode,
+            },
+            user_subscription: {
+              plan_details: user.plan_details || {},
+              plan_id: user.plan_id,
+              plan_name: user.plan_name,
+            },
           },
         });
       });

@@ -9,22 +9,6 @@
  * Used by:
  * - `weave-ai/services/chat-orchestrator.service.js`: During the ReAct loop to execute functions returned by the engine.
  */
-const notesRepository = require("@/modules/notes/notes.repository");
-const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
-const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
-const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
-const chatAccessUtil = require("../utils/chat-access.util");
-const chatFormatterUtil = require("../utils/chat-formatter.util");
-const { markdownToBlocks } = require("../utils/markdown-to-blocks.util");
-const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
-const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
-const {
-  normalizeBlocksTree,
-  newBlockId,
-} = require("@/modules/notes/block-normalizer");
-const {
-  enqueueNoteEmbeddingJob,
-} = require("@/services/queue/queue-controller");
 const { getI18n } = require("../utils/weave-ai-i18n.util");
 
 class ChatFunctionsService {
@@ -66,14 +50,14 @@ class ChatFunctionsService {
     }
 
     return await handler.execute({
-      userId,
       args,
-      organizationId,
-      lang,
-      t,
-      name,
       files,
+      lang,
+      name,
+      organizationId,
+      t,
       toolCallId: functionCall?.id,
+      userId,
     });
   }
 
@@ -99,10 +83,10 @@ class ChatFunctionsService {
     for (const functionCall of functionCalls) {
       if (onChunk) {
         onChunk({
-          type: "tool_call_start",
+          arguments: functionCall?.arguments,
           id: functionCall?.id,
           name: functionCall?.name,
-          arguments: functionCall?.arguments,
+          type: "tool_call_start",
         });
       }
       try {
@@ -116,9 +100,9 @@ class ChatFunctionsService {
         results.push(execution);
         if (onChunk) {
           onChunk({
-            type: "tool_call_result",
             id: functionCall?.id,
             result: execution.result || execution,
+            type: "tool_call_result",
           });
         }
       } catch (error) {
@@ -127,15 +111,15 @@ class ChatFunctionsService {
           error?.message
         );
         results.push({
+          error: error?.message || String(error),
           name: functionCall?.name || "unknown",
           success: false,
-          error: error?.message || String(error),
         });
         if (onChunk) {
           onChunk({
-            type: "tool_call_result",
             id: functionCall?.id,
             result: { error: error?.message || String(error) },
+            type: "tool_call_result",
           });
         }
       }

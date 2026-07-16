@@ -6,10 +6,10 @@ const MAX_INSTRUCTIONS_CHARS = 16000;
  * @returns {{ global: { systemAppend: string, promptAppend: string }, byType: Record<string, { systemAppend: string, promptAppend: string }> }}
  */
 function normalizeReasoningInstructions(raw) {
-  const emptySlice = () => ({ systemAppend: "", promptAppend: "" });
+  const emptySlice = () => ({ promptAppend: "", systemAppend: "" });
 
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    return { global: emptySlice(), byType: {} };
+    return { byType: {}, global: emptySlice() };
   }
 
   const input = /** @type {Record<string, unknown>} */ (raw);
@@ -20,13 +20,13 @@ function normalizeReasoningInstructions(raw) {
     }
     const slice = /** @type {Record<string, unknown>} */ (value);
     return {
-      systemAppend:
-        typeof slice.systemAppend === "string"
-          ? slice.systemAppend.trim().slice(0, 8000)
-          : "",
       promptAppend:
         typeof slice.promptAppend === "string"
           ? slice.promptAppend.trim().slice(0, 8000)
+          : "",
+      systemAppend:
+        typeof slice.systemAppend === "string"
+          ? slice.systemAppend.trim().slice(0, 8000)
           : "",
     };
   };
@@ -63,7 +63,7 @@ function normalizeReasoningInstructions(raw) {
     throw err;
   }
 
-  return { global, byType };
+  return { byType, global };
 }
 
 /**
@@ -90,23 +90,23 @@ function resolveInstructionAppends(instructions, reportType) {
     .trim()
     .toLowerCase();
   const typeSlice = normalized.byType[typeKey] || {
-    systemAppend: "",
     promptAppend: "",
+    systemAppend: "",
   };
 
   return {
-    systemAppend: [normalized.global.systemAppend, typeSlice.systemAppend]
+    promptAppend: [normalized.global.promptAppend, typeSlice.promptAppend]
       .filter(Boolean)
       .join("\n\n"),
-    promptAppend: [normalized.global.promptAppend, typeSlice.promptAppend]
+    systemAppend: [normalized.global.systemAppend, typeSlice.systemAppend]
       .filter(Boolean)
       .join("\n\n"),
   };
 }
 
 module.exports = {
+  appendInstructionBlock,
   MAX_INSTRUCTIONS_CHARS,
   normalizeReasoningInstructions,
-  appendInstructionBlock,
   resolveInstructionAppends,
 };

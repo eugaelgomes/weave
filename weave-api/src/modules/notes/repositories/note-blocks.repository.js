@@ -103,14 +103,14 @@ class NoteBlocksRepository extends BaseRepository {
         const text = typeof props.text === "string" ? props.text : "";
         const node = {
           id: String(r.id),
+          level: depth,
           note_id: String(r.note_id),
           parent_id: r.parent_id ? String(r.parent_id) : null,
           position: Number(r.position),
+          properties: props,
+          text,
           type: r.type,
           version: Number(r.version),
-          text,
-          properties: props,
-          level: depth,
         };
         if (r.type === "todo") {
           node.done = props.attrs?.checked === true;
@@ -194,11 +194,11 @@ class NoteBlocksRepository extends BaseRepository {
     const id = newBlockId();
     const validated = validateBlockPayload(
       {
+        done: data.done,
         id,
-        type: data.type || "paragraph",
         properties: data.properties,
         text: data.text,
-        done: data.done,
+        type: data.type || "paragraph",
       },
       "block",
       0
@@ -459,16 +459,16 @@ class NoteBlocksRepository extends BaseRepository {
         : {};
     const text = typeof props.text === "string" ? props.text : "";
     const out = {
+      children: row.type === "list" ? [] : [],
       id: String(row.id),
+      level: 0,
       note_id: String(row.note_id),
       parent_id: row.parent_id ? String(row.parent_id) : null,
       position: Number(row.position),
+      properties: props,
+      text,
       type: row.type,
       version: Number(row.version),
-      text,
-      properties: props,
-      level: 0,
-      children: row.type === "list" ? [] : [],
     };
     if (row.type === "todo") {
       out.done = props.attrs?.checked === true;

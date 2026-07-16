@@ -42,7 +42,14 @@ class OrganizationCreationStepsService {
    */
   getStepOneMetadata() {
     return {
-      step: STEP_ONE,
+      available_roles: [...ORGANIZATION_BUSINESS_ROLES],
+      optional_fields: ["description", "logo_url"],
+      planned_optional_steps: [
+        "branding_properties",
+        "users",
+        "integrations",
+        "domains",
+      ],
       required_fields: [
         "org_name",
         "unique_name",
@@ -51,15 +58,8 @@ class OrganizationCreationStepsService {
         "country",
         "language",
       ],
-      optional_fields: ["description", "logo_url"],
-      available_roles: [...ORGANIZATION_BUSINESS_ROLES],
       role_options: [...ORGANIZATION_BUSINESS_ROLES],
-      planned_optional_steps: [
-        "branding_properties",
-        "users",
-        "integrations",
-        "domains",
-      ],
+      step: STEP_ONE,
     };
   }
 
@@ -121,8 +121,9 @@ class OrganizationCreationStepsService {
 
   _buildCreationStepState(completed) {
     return {
-      current_step: STEP_ONE,
       completed_steps: completed ? [STEP_ONE] : [],
+      current_step: STEP_ONE,
+      is_completed: Boolean(completed),
       planned_steps: [
         "step_1_basic",
         "step_2_branding_properties",
@@ -130,7 +131,6 @@ class OrganizationCreationStepsService {
         "step_4_integrations",
         "step_5_domains",
       ],
-      is_completed: Boolean(completed),
       updated_at: new Date().toISOString(),
     };
   }
@@ -201,14 +201,14 @@ class OrganizationCreationStepsService {
         : "";
 
     return {
-      org_name: orgName,
-      unique_name: uniqueName,
-      logo_url: payload.logo_url !== undefined ? payload.logo_url : null,
-      description: normalizedDescription || "Type description here...",
-      organization_role: normalizedRole,
-      default_locale: defaultLocale,
       country,
+      default_locale: defaultLocale,
+      description: normalizedDescription || "Type description here...",
       language,
+      logo_url: payload.logo_url !== undefined ? payload.logo_url : null,
+      org_name: orgName,
+      organization_role: normalizedRole,
+      unique_name: uniqueName,
     };
   }
 
@@ -222,25 +222,25 @@ class OrganizationCreationStepsService {
     const baseSettings = this._sanitizeSettings(currentSettings);
     return {
       ...baseSettings,
-      organization_role: stepData.organization_role,
-      language: stepData.language,
-      creation_steps: this._buildCreationStepState(completed),
       creation_step_1: {
-        org_name: stepData.org_name,
-        unique_name: stepData.unique_name,
-        description: stepData.description,
-        logo_url: stepData.logo_url,
-        organization_role: stepData.organization_role,
-        default_locale: stepData.default_locale,
         country: stepData.country,
+        default_locale: stepData.default_locale,
+        description: stepData.description,
         language: stepData.language,
+        logo_url: stepData.logo_url,
+        org_name: stepData.org_name,
+        organization_role: stepData.organization_role,
+        unique_name: stepData.unique_name,
       },
+      creation_steps: this._buildCreationStepState(completed),
+      language: stepData.language,
+      organization_role: stepData.organization_role,
     };
   }
 }
 
 module.exports = {
-  OrganizationCreationStepsService,
   ORGANIZATION_BUSINESS_ROLES,
+  OrganizationCreationStepsService,
   STEP_ONE,
 };

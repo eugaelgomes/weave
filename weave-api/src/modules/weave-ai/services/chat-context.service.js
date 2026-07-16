@@ -94,7 +94,7 @@ class ChatContextService {
     }
 
     if (onChunk && !payload.sessionId) {
-      onChunk({ type: "session_created", sessionId });
+      onChunk({ sessionId, type: "session_created" });
     }
 
     const rawConversationHistory =
@@ -119,8 +119,13 @@ class ChatContextService {
             ? file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_")
             : `file${ext}`;
           const uniqueFileName = `${uuidv4()}_${safeOriginalName}`;
-          const folderPath = spacesService.buildKey("chat", String(userId), String(sessionId), "files");
-          
+          const folderPath = spacesService.buildKey(
+            "chat",
+            String(userId),
+            String(sessionId),
+            "files"
+          );
+
           const uploadResult = await spacesService.uploadImage(
             file.buffer,
             file.mimetype || "application/octet-stream",
@@ -131,25 +136,25 @@ class ChatContextService {
 
           if (uploadResult && uploadResult.success) {
             filesMetadata.push({
-              originalName: file.originalname,
-              mimeType: file.mimetype,
-              size: file.size,
               key: uploadResult.key,
-              url: uploadResult.url,
+              mimeType: file.mimetype,
+              originalName: file.originalname,
               path: uploadResult.key,
+              size: file.size,
+              url: uploadResult.url,
             });
           } else {
             filesMetadata.push({
-              originalName: file.originalname,
               mimeType: file.mimetype,
+              originalName: file.originalname,
               size: file.size,
             });
           }
         } catch (uploadError) {
           console.error("Failed to upload chat file attachment:", uploadError);
           filesMetadata.push({
-            originalName: file.originalname,
             mimeType: file.mimetype,
+            originalName: file.originalname,
             size: file.size,
           });
         }
@@ -167,17 +172,17 @@ class ChatContextService {
     if (existingAssistantMessage) {
       return {
         idempotencyMatch: {
-          sessionId,
           response: {
-            role: "assistant",
-            content: existingAssistantMessage.content || "",
             citations: existingAssistantMessage?.metadata?.citations || [],
+            content: existingAssistantMessage.content || "",
             functionExecution:
               existingAssistantMessage?.metadata?.functionExecution || [],
             functions: existingAssistantMessage?.metadata?.functions || [],
             model: payload.model,
             provider: existingAssistantMessage.provider || null,
+            role: "assistant",
           },
+          sessionId,
         },
       };
     }
@@ -187,26 +192,26 @@ class ChatContextService {
     );
     if (!hasPersistedUserMessage) {
       await chatRepository.saveMessageIdempotent({
-        sessionId,
-        userId,
-        organizationId,
-        role: "user",
-        content: payload.message,
-        model: `${payload.model.name}:${payload.model.version}`,
-        requestId,
-        status: "ok",
         agentId: payload.agentId,
         allowEdit: payload.allowEdit,
+        content: payload.message,
         metadata: {
+          agentId: payload.agentId,
           allowEdit: payload.allowEdit,
           context: payload.context,
-          noteIds: payload.noteIds,
-          projectIds: payload.projectIds,
           files: filesMetadata,
-          agentId: payload.agentId,
-          useCase: payload.useCase,
+          noteIds: payload.noteIds,
           parentToolCallId: payload.parentToolCallId,
+          projectIds: payload.projectIds,
+          useCase: payload.useCase,
         },
+        model: `${payload.model.name}:${payload.model.version}`,
+        organizationId,
+        requestId,
+        role: "user",
+        sessionId,
+        status: "ok",
+        userId,
       });
     }
 
@@ -215,7 +220,11 @@ class ChatContextService {
         payload.message
       );
       if (derivedTitle) {
-        await chatRepository.updateSessionTitle(sessionId, userId, derivedTitle);
+        await chatRepository.updateSessionTitle(
+          sessionId,
+          userId,
+          derivedTitle
+        );
       }
     }
 
@@ -230,11 +239,12 @@ class ChatContextService {
       const authorization = await resolveAuthorizedFunctions({
         allowEdit: payload.allowEdit,
         context: {
-          planUsageContext,
-          organizationId,
-          noteId: resolvedNoteIds.length > 0 ? resolvedNoteIds[0] : null,
-          projectId: resolvedProjectIds.length > 0 ? resolvedProjectIds[0] : null,
           isSubAgent: Boolean(payload.isSubAgent),
+          noteId: resolvedNoteIds.length > 0 ? resolvedNoteIds[0] : null,
+          organizationId,
+          planUsageContext,
+          projectId:
+            resolvedProjectIds.length > 0 ? resolvedProjectIds[0] : null,
         },
         userId,
       });
@@ -248,14 +258,14 @@ class ChatContextService {
     }
 
     return {
-      sessionId,
-      selectedAgent,
       authorizedFunctions,
       capabilityRules,
-      resourceAccess,
       conversationHistory,
       resolvedNoteIds,
       resolvedProjectIds,
+      resourceAccess,
+      selectedAgent,
+      sessionId,
       usageRecord,
     };
   }

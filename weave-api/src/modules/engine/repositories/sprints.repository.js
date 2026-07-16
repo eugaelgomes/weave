@@ -8,14 +8,18 @@ class SprintsRepository {
    * @returns {Promise<object>}
    */
   async create(data) {
-    const query = `
-      INSERT INTO project_sprints (
-        project_id, sprint_number, title, goal, status,
-        start_date, end_date, workable_days
+    const query = `      INSERT INTO project_sprints (
+        project_id,
+        sprint_number,
+        title,
+        goal,
+        status,
+        start_date,
+        end_date,
+        workable_days
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
-    `;
+      RETURNING *`;
 
     const result = await pool.query(query, [
       data.projectId,
@@ -37,15 +41,13 @@ class SprintsRepository {
    * @returns {Promise<object|undefined>}
    */
   async getActiveByProject(projectId) {
-    const query = `
-      SELECT *
+    const query = `      SELECT *
       FROM project_sprints
       WHERE project_id = $1
         AND status = 'active'
         AND deleted = false
       ORDER BY sprint_number DESC
-      LIMIT 1
-    `;
+      LIMIT 1`;
 
     const result = await pool.query(query, [projectId]);
     return result.rows[0];
@@ -59,14 +61,12 @@ class SprintsRepository {
    * @returns {Promise<object[]>}
    */
   async getAllByProject(projectId, limit = 20) {
-    const query = `
-      SELECT *
+    const query = `      SELECT *
       FROM project_sprints
       WHERE project_id = $1
         AND deleted = false
       ORDER BY sprint_number DESC
-      LIMIT $2
-    `;
+      LIMIT $2`;
 
     const result = await pool.query(query, [projectId, limit]);
     return result.rows;
@@ -128,9 +128,9 @@ class SprintsRepository {
     }
 
     const sortMap = {
+      end_date: "end_date",
       sprint_number: "sprint_number",
       start_date: "start_date",
-      end_date: "end_date",
     };
     const sortCol = sortMap[sort.field] || "sprint_number";
     const sortDir = sort.order === "asc" ? "ASC" : "DESC";
@@ -170,12 +170,10 @@ class SprintsRepository {
    * @returns {Promise<object|undefined>}
    */
   async getById(sprintId) {
-    const query = `
-      SELECT *
+    const query = `      SELECT *
       FROM project_sprints
       WHERE id = $1 AND deleted = false
-      LIMIT 1
-    `;
+      LIMIT 1`;
 
     const result = await pool.query(query, [sprintId]);
     return result.rows[0];
@@ -188,11 +186,9 @@ class SprintsRepository {
    * @returns {Promise<number>}
    */
   async getNextSprintNumber(projectId) {
-    const query = `
-      SELECT COALESCE(MAX(sprint_number), 0) + 1 AS next_number
+    const query = `      SELECT COALESCE(MAX(sprint_number), 0) + 1 AS next_number
       FROM project_sprints
-      WHERE project_id = $1 AND deleted = false
-    `;
+      WHERE project_id = $1 AND deleted = false`;
 
     const result = await pool.query(query, [projectId]);
     return result.rows[0].next_number;
@@ -205,12 +201,11 @@ class SprintsRepository {
    * @returns {Promise<object|undefined>}
    */
   async activate(sprintId) {
-    const query = `
-      UPDATE project_sprints
-      SET status = 'active', updated_at = NOW()
+    const query = `      UPDATE project_sprints
+      SET status = 'active',
+          updated_at = NOW()
       WHERE id = $1 AND deleted = false
-      RETURNING *
-    `;
+      RETURNING *`;
 
     const result = await pool.query(query, [sprintId]);
     return result.rows[0];
@@ -226,8 +221,7 @@ class SprintsRepository {
    * @returns {Promise<object|undefined>}
    */
   async complete(sprintId, completionData = {}) {
-    const query = `
-      UPDATE project_sprints
+    const query = `      UPDATE project_sprints
       SET status = 'completed',
           completed_at = NOW(),
           summary = COALESCE($2, summary),
@@ -237,8 +231,7 @@ class SprintsRepository {
           END,
           updated_at = NOW()
       WHERE id = $1 AND deleted = false
-          RETURNING *
-            `;
+      RETURNING *`;
 
     const result = await pool.query(query, [
       sprintId,
@@ -255,12 +248,11 @@ class SprintsRepository {
    * @returns {Promise<object|undefined>}
    */
   async cancel(sprintId) {
-    const query = `
-      UPDATE project_sprints
-      SET status = 'cancelled', updated_at = NOW()
+    const query = `      UPDATE project_sprints
+      SET status = 'cancelled',
+          updated_at = NOW()
       WHERE id = $1 AND deleted = false
-      RETURNING *
-    `;
+      RETURNING *`;
 
     const result = await pool.query(query, [sprintId]);
     return result.rows[0];

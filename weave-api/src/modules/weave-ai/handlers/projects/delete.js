@@ -24,7 +24,7 @@ class DeleteProjectHandler {
    * @param {string} context.name - Name of the tool.
    * @returns {Promise<{name: string, result: object, success: boolean}>} The execution result.
    */
-  async execute({ userId, args, organizationId, lang, t, name }) {
+  async execute({ userId, args, organizationId, lang, t: _t, name }) {
     await chatAccessUtil.assertProjectMutationAccess(
       userId,
       String(args.projectId || ""),
@@ -57,10 +57,10 @@ class DeleteProjectHandler {
     return {
       name,
       result: {
-        projectId: args.projectId,
         deleted: Array.isArray(result) && result.length > 0,
+        projectId: args.projectId,
         snapshot: oldProject
-          ? { type: "project_deleted", title: oldProject.title }
+          ? { title: oldProject.title, type: "project_deleted" }
           : undefined,
       },
       success: true,

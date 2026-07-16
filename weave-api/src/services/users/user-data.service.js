@@ -40,7 +40,7 @@ class UserDataService {
       user_preference,
     } = reqBody;
 
-    const result = await withTransaction(async (client) => {
+    const result = await withTransaction(async (_client) => {
       // 1. Process Password Update
       if (currentPassword && newPassword) {
         const match = await bcrypt.compare(
@@ -220,9 +220,9 @@ class UserDataService {
     }
 
     return {
-      updatedUser: { ...result, avatar_url: avatarUrl },
       emailPendingValidation,
       pendingEmail,
+      updatedUser: { ...result, avatar_url: avatarUrl },
     };
   }
 }

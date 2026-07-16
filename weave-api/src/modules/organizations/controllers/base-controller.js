@@ -59,17 +59,17 @@ class OrganizationsBaseController {
   _ensureOrgPermission(organization, permission, res) {
     if (!organization) {
       res.status(404).json({
-        success: false,
         error: "Organization not found",
+        success: false,
       });
       return false;
     }
     const role = organization.member_role;
     if (!role || !orgRoleHasPermission(role, permission)) {
       res.status(403).json({
-        success: false,
-        error: "Insufficient organization permissions",
         code: "ORG_FORBIDDEN",
+        error: "Insufficient organization permissions",
+        success: false,
       });
       return false;
     }
@@ -85,17 +85,17 @@ class OrganizationsBaseController {
   _ensureOrgPermissionAny(organization, permissions, res) {
     if (!organization) {
       res.status(404).json({
-        success: false,
         error: "Organization not found",
+        success: false,
       });
       return false;
     }
     const role = organization.member_role;
     if (!role || !permissions.some((p) => orgRoleHasPermission(role, p))) {
       res.status(403).json({
-        success: false,
-        error: "Insufficient organization permissions",
         code: "ORG_FORBIDDEN",
+        error: "Insufficient organization permissions",
+        success: false,
       });
       return false;
     }

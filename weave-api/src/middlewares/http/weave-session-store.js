@@ -54,9 +54,9 @@ async function hasMetadataColumns() {
 class WeaveSessionStore extends PgSessionStore {
   constructor(options) {
     super({
+      createTableIfMissing: false,
       pool,
-      tableName: "sessions",
-      createTableIfMissing: false, // We manage creation via migration
+      tableName: "sessions", // We manage creation via migration
       ...options,
     });
   }

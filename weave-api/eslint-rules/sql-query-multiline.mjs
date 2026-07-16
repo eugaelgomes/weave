@@ -88,12 +88,14 @@ function formatSqlText(text) {
   const normalized = String(text || "").replace(/\r\n?/g, "\n");
   const rawLines = normalized.split("\n");
 
+  const leadingLines = [];
   while (rawLines.length > 0 && rawLines[0].trim() === "") {
-    rawLines.shift();
+    leadingLines.push(rawLines.shift());
   }
 
+  const trailingLines = [];
   while (rawLines.length > 0 && rawLines[rawLines.length - 1].trim() === "") {
-    rawLines.pop();
+    trailingLines.unshift(rawLines.pop());
   }
 
   const formatted = [];
@@ -120,7 +122,7 @@ function formatSqlText(text) {
     }
   }
 
-  return formatted.join("\n");
+  return [...leadingLines, ...formatted, ...trailingLines].join("\n");
 }
 
 function buildReplacementText(node, formattedText) {
@@ -140,6 +142,7 @@ function buildReplacementText(node, formattedText) {
 export default {
   meta: {
     type: "suggestion",
+    fixable: "code",
     docs: {
       description:
         "Require SQL query strings to be written across multiple lines.",
@@ -157,18 +160,21 @@ export default {
       }
 
       const formattedText = formatSqlText(text);
-      if (
-        formattedText ===
-        String(text || "")
-          .replace(/\r\n?/g, "\n")
-          .trim()
-      ) {
+      const normalizedText = String(text || "").replace(/\r\n?/g, "\n");
+      if (formattedText === normalizedText) {
         return;
       }
 
       context.report({
         node,
         messageId: "multiline",
+        fix(fixer) {
+          if (node.type === "TemplateLiteral" && !canSafelyFixTemplateLiteral(node)) {
+            return null;
+          }
+          const replacementText = buildReplacementText(node, formattedText);
+          return fixer.replaceText(node, replacementText);
+        }
       });
     }
 

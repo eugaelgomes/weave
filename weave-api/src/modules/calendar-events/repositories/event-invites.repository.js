@@ -7,17 +7,17 @@ class EventInvitesRepository {
     }
 
     return {
-      id: row.id,
-      event_id: row.event_id,
-      user_id: row.user_id,
-      email: row.email,
-      role: row.role,
-      status: row.status,
-      external_guest_id: row.external_guest_id,
       created_at: row.created_at,
-      updated_at: row.updated_at,
       deleted: row.deleted,
       deleted_at: row.deleted_at,
+      email: row.email,
+      event_id: row.event_id,
+      external_guest_id: row.external_guest_id,
+      id: row.id,
+      role: row.role,
+      status: row.status,
+      updated_at: row.updated_at,
+      user_id: row.user_id,
     };
   }
 

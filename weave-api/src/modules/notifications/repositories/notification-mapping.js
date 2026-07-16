@@ -9,29 +9,29 @@ function mapNotificationRow(row) {
   }
 
   return {
-    id: row.id,
-    user_id: row.user_id,
-    actor_id: row.actor_id,
     actor: row.actor_id
       ? {
+          avatar_url: row.actor_avatar_url,
+          email: row.actor_email,
           id: row.actor_id,
           name: row.actor_name,
           username: row.actor_username,
-          email: row.actor_email,
-          avatar_url: row.actor_avatar_url,
         }
       : null,
-    type: row.type,
-    entity_type: row.entity_type,
-    entity_id: row.entity_id,
-    title: row.title,
+    actor_id: row.actor_id,
     content: row.content || {},
+    created_at: row.created_at,
+    entity_id: row.entity_id,
+    entity_type: row.entity_type,
+    id: row.id,
+    in_trash: row.in_trash,
     is_read: row.is_read,
     read_at: row.read_at,
-    in_trash: row.in_trash,
+    title: row.title,
     trashed_at: row.trashed_at,
-    created_at: row.created_at,
+    type: row.type,
     updated_at: row.updated_at,
+    user_id: row.user_id,
   };
 }
 

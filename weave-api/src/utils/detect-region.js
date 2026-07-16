@@ -10,18 +10,18 @@ const detectUserRegion = (req) => {
 
   if (!timezone) {
     return {
-      timezone: "UTC",
       countryCode: countryCode || "XX",
       ip: realIp,
       method: "fallback",
+      timezone: "UTC",
     };
   }
 
   return {
-    timezone: timezone,
     countryCode: countryCode,
     ip: realIp,
     method: "cloudflare",
+    timezone: timezone,
   };
 };
 

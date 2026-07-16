@@ -56,14 +56,22 @@ function buildUsageMetrics(usageDetails = {}, planDetails = {}) {
       rawLimit === null || rawLimit === undefined ? null : toNumber(rawLimit);
 
     return {
-      used,
       limit,
-      remaining: computeRemaining(used, limit),
       percentage: computePercentage(used, limit),
+      remaining: computeRemaining(used, limit),
+      used,
     };
   };
 
   return {
+    backups_monthly: metric(
+      USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT,
+      PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
+    ),
+    exports_notes_monthly: metric(
+      USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT,
+      PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY
+    ),
     notes_total: metric(
       USAGE_PATHS.SUMMARY.NOTES_TOTAL,
       PLAN_PATHS.LIMITS.MAX_NOTES
@@ -72,25 +80,17 @@ function buildUsageMetrics(usageDetails = {}, planDetails = {}) {
       USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
       PLAN_PATHS.LIMITS.MAX_PROJECTS
     ),
+    storage_uploaded_mb_monthly: metric(
+      USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB,
+      PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD
+    ),
     team_members_total: metric(
       USAGE_PATHS.SUMMARY.TEAM_MEMBERS_TOTAL,
       PLAN_PATHS.LIMITS.MAX_TEAM_MEMBERS
     ),
-    exports_notes_monthly: metric(
-      USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT,
-      PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY
-    ),
-    backups_monthly: metric(
-      USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT,
-      PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
-    ),
     weave_ai_messages_monthly: metric(
       USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT,
       PLAN_PATHS.WEAVE_AI.CONFIG.MONTHLY_MESSAGES
-    ),
-    storage_uploaded_mb_monthly: metric(
-      USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB,
-      PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD
     ),
   };
 }
@@ -194,11 +194,11 @@ class PlansUsageHistoryController {
 
       const rawHistory =
         await PlansRepository.getIndividualUsageHistoryDetailed({
-          userId,
+          from,
           limit: limit + 1,
           offset,
-          from,
           to,
+          userId,
         });
 
       const hasMore = rawHistory.length > limit;
@@ -209,23 +209,23 @@ class PlansUsageHistoryController {
         const metrics = buildUsageMetrics(usageDetails, {});
 
         return {
-          id: row.id,
-          period_start: row.period_start,
-          period_end: row.period_end,
           closed_at: row.created_at,
+          id: row.id,
+          metrics,
+          percentage_total: computeTotalPercentage(metrics),
+          period_end: row.period_end,
+          period_start: row.period_start,
           plan: {
             id: row.plan_id ? String(row.plan_id) : null,
             name: row.plan_name || null,
           },
-          metrics,
           totals: {
+            ai_messages_period: toNumber(row.total_ai_messages),
+            exports_period: toNumber(row.total_exports),
             notes_created_period: toNumber(row.total_notes_created),
             projects_created_period: toNumber(row.total_projects_created),
-            ai_messages_period: toNumber(row.total_ai_messages),
             storage_uploaded_mb_period: toNumber(row.total_storage_mb),
-            exports_period: toNumber(row.total_exports),
           },
-          percentage_total: computeTotalPercentage(metrics),
         };
       });
 
@@ -239,30 +239,30 @@ class PlansUsageHistoryController {
 
       res.status(200).json({
         current_period: {
-          period_start:
-            PlanUsageManager.getNestedValue(
-              currentUsageDetails,
-              USAGE_PATHS.MONTHLY.PERIOD_START
-            ) || null,
+          as_of: new Date().toISOString(),
+          metrics: currentMetrics,
+          percentage_total: computeTotalPercentage(currentMetrics),
           period_end:
             PlanUsageManager.getNestedValue(
               currentUsageDetails,
               USAGE_PATHS.MONTHLY.PERIOD_END
             ) || null,
+          period_start:
+            PlanUsageManager.getNestedValue(
+              currentUsageDetails,
+              USAGE_PATHS.MONTHLY.PERIOD_START
+            ) || null,
           plan: {
+            client_type: currentUsage?.client_type || null,
             id: currentUsage?.plan_id ? String(currentUsage.plan_id) : null,
             name: currentUsage?.plan_name || null,
-            client_type: currentUsage?.client_type || null,
           },
-          metrics: currentMetrics,
-          percentage_total: computeTotalPercentage(currentMetrics),
-          as_of: new Date().toISOString(),
         },
         history: mappedHistory,
         pagination: {
+          has_more: hasMore,
           limit,
           offset,
-          has_more: hasMore,
           returned: mappedHistory.length,
         },
       });

@@ -1,4 +1,3 @@
-/* eslint-disable no-console, sort-keys */
 const { randomUUID } = require("crypto");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 const chatParserUtil = require("../../utils/chat-parser.util");
@@ -22,23 +21,23 @@ async function chat(req, res) {
     requestId = payload.requestId || randomUUID();
 
     res.writeHead(200, {
-      "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       Connection: "keep-alive",
+      "Content-Type": "text/event-stream",
     });
     res.flushHeaders();
 
     const result = await chatOrchestratorService.orchestrateChat({
-      userId,
-      payload,
-      organizationId,
-      requestId,
       files: req.files,
-      userLanguage,
       onChunk: (chunk) => {
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
         if (typeof res.flush === "function") res.flush();
       },
+      organizationId,
+      payload,
+      requestId,
+      userId,
+      userLanguage,
     });
 
     res.write(`data: ${JSON.stringify({ success: true, ...result })}\n\n`);
@@ -50,15 +49,15 @@ async function chat(req, res) {
     if (error.code === "PLAN_LIMIT_EXCEEDED") {
       if (res.headersSent) {
         res.write(
-          `event: error\ndata: ${JSON.stringify({ success: false, error: { code: "PLAN_LIMIT_EXCEEDED", message: error.message } })}\n\n`
+          `event: error\ndata: ${JSON.stringify({ error: { code: "PLAN_LIMIT_EXCEEDED", message: error.message }, success: false })}\n\n`
         );
         return res.end();
       }
       const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
       return sendPlanLimitExceeded(res, {
-        resource: "weave_ai",
         limit_key: "weave_ai.config.monthly_messages",
         message: error.message,
+        resource: "weave_ai",
       });
     }
 
@@ -70,7 +69,7 @@ async function chat(req, res) {
     const cause = error?.cause;
     const causeSummary =
       cause instanceof Error
-        ? { name: cause.name, message: cause.message, code: cause.code }
+        ? { code: cause.code, message: cause.message, name: cause.name }
         : cause !== null && cause !== undefined && typeof cause === "object"
           ? { message: String(cause.message || cause) }
           : cause !== null && cause !== undefined
@@ -80,36 +79,36 @@ async function chat(req, res) {
     console.error("[weave-ai/chat] request failed", {
       cause: causeSummary,
       code: normalizedError.code,
-      errorCode: error?.code,
-      errorName: error?.name,
+      column: error?.column || null,
       constraint: error?.constraint || null,
       detail: error?.detail || null,
-      table: error?.table || null,
-      column: error?.column || null,
-      originalMessage: error?.message || null,
+      errorCode: error?.code,
+      errorName: error?.name,
       message: normalizedError.message,
+      originalMessage: error?.message || null,
       requestId:
         (typeof req.body?.requestId === "string" && req.body.requestId) ||
         error?.requestId ||
         requestId ||
         null,
       statusCode: normalizedError.statusCode,
+      table: error?.table || null,
     });
 
     if (userId && payload && payload.sessionId) {
       chatRepository
         .saveMessageIdempotent({
-          sessionId: payload.sessionId,
-          userId,
-          organizationId,
-          role: "assistant",
+          agentId: payload.agentId,
           content: null,
-          model: `${payload.model?.name || "unknown"}:${payload.model?.version || "unknown"}`,
-          requestId,
-          status: "error",
           errorCode: normalizedError.code,
           errorMessage: normalizedError.message,
-          agentId: payload.agentId,
+          model: `${payload.model?.name || "unknown"}:${payload.model?.version || "unknown"}`,
+          organizationId,
+          requestId,
+          role: "assistant",
+          sessionId: payload.sessionId,
+          status: "error",
+          userId,
         })
         .catch((err) => {
           console.error("[weave-ai/chat] failed to save error message", err);
@@ -118,17 +117,17 @@ async function chat(req, res) {
 
     if (res.headersSent) {
       res.write(
-        `event: error\ndata: ${JSON.stringify({ success: false, error: { code: normalizedError.code, message: normalizedError.message } })}\n\n`
+        `event: error\ndata: ${JSON.stringify({ error: { code: normalizedError.code, message: normalizedError.message }, success: false })}\n\n`
       );
       return res.end();
     }
 
     return res.status(normalizedError.statusCode).json({
-      success: false,
       error: {
         code: normalizedError.code,
         message: normalizedError.message,
       },
+      success: false,
     });
   }
 }

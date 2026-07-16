@@ -35,7 +35,7 @@ function attachParsedSprints(req) {
     pagination = parsePagination(q.page, q.limit);
   } else {
     const lim = Math.min(parseInt(String(q.limit ?? 20), 10) || 20, 50);
-    pagination = { page: 1, limit: lim, offset: 0 };
+    pagination = { limit: lim, offset: 0, page: 1 };
   }
 
   const sort = parseSort(q.sort, SPRINT_SORT_FIELDS, {
@@ -50,17 +50,17 @@ function attachParsedSprints(req) {
   const statusFilter = statusCsv.filter((s) => allowedSprint.includes(s));
 
   req.parsedQuery = {
-    pagination,
-    sort,
-    useOffsetPagination: hasPaging,
     filters: {
-      status: statusFilter,
+      end_from: parseIsoDateOnly(q.end_from) || parseIsoDateTime(q.end_from),
+      end_to: parseIsoDateOnly(q.end_to) || parseIsoDateTime(q.end_to),
       start_from:
         parseIsoDateOnly(q.start_from) || parseIsoDateTime(q.start_from),
       start_to: parseIsoDateOnly(q.start_to) || parseIsoDateTime(q.start_to),
-      end_from: parseIsoDateOnly(q.end_from) || parseIsoDateTime(q.end_from),
-      end_to: parseIsoDateOnly(q.end_to) || parseIsoDateTime(q.end_to),
+      status: statusFilter,
     },
+    pagination,
+    sort,
+    useOffsetPagination: hasPaging,
   };
 }
 
@@ -86,7 +86,7 @@ function attachParsedReasonings(req) {
     pagination = parsePagination(q.page, q.limit);
   } else {
     const lim = Math.min(parseInt(String(q.limit ?? 20), 10) || 20, 50);
-    pagination = { page: 1, limit: lim, offset: 0 };
+    pagination = { limit: lim, offset: 0, page: 1 };
   }
 
   const sort = parseSort(q.sort, REASONING_SORT_FIELDS, {
@@ -108,22 +108,22 @@ function attachParsedReasonings(req) {
   }
 
   req.parsedQuery = {
-    pagination,
-    sort,
-    useOffsetPagination: hasPaging,
     filters: {
-      sprintId: q.sprintId && isUuid(q.sprintId) ? q.sprintId : null,
+      created_by: q.created_by && isUuid(q.created_by) ? q.created_by : null,
+      from: parseIsoDateTime(q.from),
+      is_dismissed: isDismissed,
+      is_pinned: isPinned,
+      is_read: isRead,
       reasoningType:
         q.reasoningType && typeof q.reasoningType === "string"
           ? q.reasoningType.trim().slice(0, 64)
           : null,
-      from: parseIsoDateTime(q.from),
+      sprintId: q.sprintId && isUuid(q.sprintId) ? q.sprintId : null,
       to: parseIsoDateTime(q.to),
-      is_read: isRead,
-      is_pinned: isPinned,
-      is_dismissed: isDismissed,
-      created_by: q.created_by && isUuid(q.created_by) ? q.created_by : null,
     },
+    pagination,
+    sort,
+    useOffsetPagination: hasPaging,
   };
 }
 
@@ -172,12 +172,12 @@ const validateReasoningParams = [
 ];
 
 module.exports = {
-  ENGINE_SPRINTS_LIST_TRIGGER_KEYS,
-  ENGINE_REASONINGS_LIST_TRIGGER_KEYS,
-  attachParsedSprints,
   attachParsedReasonings,
-  validateGetSprints,
-  validateGetReasonings,
+  attachParsedSprints,
+  ENGINE_REASONINGS_LIST_TRIGGER_KEYS,
+  ENGINE_SPRINTS_LIST_TRIGGER_KEYS,
   validateEngineContextParam,
+  validateGetReasonings,
+  validateGetSprints,
   validateReasoningParams,
 };

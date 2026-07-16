@@ -191,7 +191,7 @@ class ProjectsReadRepository {
       i++;
     }
 
-    return { conditions, params, nextIndex: i };
+    return { conditions, nextIndex: i, params };
   }
 
   /**
@@ -222,11 +222,11 @@ class ProjectsReadRepository {
 
     const sortMap = {
       created_at: "p.created_at",
-      updated_at: "p.updated_at",
-      title: "p.title",
       progress: "p.progress",
       start_date: "p.start_date",
       target_end_date: "p.target_end_date",
+      title: "p.title",
+      updated_at: "p.updated_at",
     };
     const sortCol = sortMap[sort.field] || "p.created_at";
     const sortDir = sort.order === "asc" ? "ASC" : "DESC";
@@ -1242,10 +1242,10 @@ class ProjectsReadRepository {
     }
 
     const sortMap = {
-      updated_at: "n.updated_at",
       created_at: "n.created_at",
       due_date: "n.due_date NULLS LAST",
       title: "n.title",
+      updated_at: "n.updated_at",
     };
     const sortCol = sortMap[sort.field] || "n.updated_at";
     const sortDir = sort.order === "asc" ? "ASC" : "DESC";
@@ -1355,8 +1355,8 @@ class ProjectsReadRepository {
 
     const sortMap = {
       created_at: "pm.created_at",
-      role: "pm.role",
       name: "u.name",
+      role: "pm.role",
     };
     const sortCol = sortMap[sort.field] || "pm.created_at";
     const sortDir = sort.order === "asc" ? "ASC" : "DESC";

@@ -137,6 +137,9 @@ function getEngineProactiveResponseQueueRedisKey() {
  * @readonly
  */
 const REDIS_QUEUE_KEYS = Object.freeze({
+  get AI_REPORT_DELIVERY() {
+    return getAiReportDeliveryQueueRedisKey();
+  },
   get BACKUP_EXPORT() {
     return getBackupExportQueueRedisKey();
   },
@@ -152,48 +155,45 @@ const REDIS_QUEUE_KEYS = Object.freeze({
   get ENGINE_LLM_RESPONSE_PREFIX() {
     return getEngineLlmResponsePrefixRedisKey();
   },
+  get ENGINE_PROACTIVE_RESPONSE() {
+    return getEngineProactiveResponseQueueRedisKey();
+  },
+  get ENGINE_PROACTIVE_TASK() {
+    return getEngineProactiveTaskQueueRedisKey();
+  },
   get NOTE_EMBEDDINGS() {
     return getNoteEmbeddingsQueueRedisKey();
   },
   get PLAN_USAGE() {
     return getPlanUsageQueueRedisKey();
   },
-  get AI_REPORT_DELIVERY() {
-    return getAiReportDeliveryQueueRedisKey();
-  },
   get REASONING_TRIGGER() {
     return getReasoningTriggerQueueRedisKey();
-  },
-  get ENGINE_PROACTIVE_TASK() {
-    return getEngineProactiveTaskQueueRedisKey();
-  },
-  get ENGINE_PROACTIVE_RESPONSE() {
-    return getEngineProactiveResponseQueueRedisKey();
   },
 });
 
 module.exports = {
+  DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY,
   DEFAULT_BACKUP_EXPORT_QUEUE_KEY,
   DEFAULT_DOMAIN_VERIFY_QUEUE_KEY,
   DEFAULT_EMAIL_QUEUE_KEY,
   DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY,
   DEFAULT_ENGINE_LLM_RESPONSE_PREFIX,
+  DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY,
+  DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY,
   DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY,
   DEFAULT_PLAN_USAGE_QUEUE_KEY,
-  DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY,
   DEFAULT_REASONING_TRIGGER_QUEUE_KEY,
-  DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY,
-  DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY,
+  getAiReportDeliveryQueueRedisKey,
   getBackupExportQueueRedisKey,
   getDomainVerifyQueueRedisKey,
   getEmailQueueRedisKey,
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
+  getEngineProactiveResponseQueueRedisKey,
+  getEngineProactiveTaskQueueRedisKey,
   getNoteEmbeddingsQueueRedisKey,
   getPlanUsageQueueRedisKey,
-  getAiReportDeliveryQueueRedisKey,
   getReasoningTriggerQueueRedisKey,
-  getEngineProactiveTaskQueueRedisKey,
-  getEngineProactiveResponseQueueRedisKey,
   REDIS_QUEUE_KEYS,
 };

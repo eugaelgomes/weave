@@ -41,8 +41,8 @@ const getAuthUrl = (userId) => {
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
-    state,
     scope: SCOPES,
+    state,
   });
 };
 
@@ -78,7 +78,7 @@ const createUserOAuth2Client = (tokens) => {
  */
 const getCalendarClient = (tokens) => {
   const client = createUserOAuth2Client(tokens);
-  return google.calendar({ version: "v3", auth: client });
+  return google.calendar({ auth: client, version: "v3" });
 };
 
 /**
@@ -88,8 +88,8 @@ const getCalendarClient = (tokens) => {
  */
 const getCalendarClientWithAuth = (tokens) => {
   const auth = createUserOAuth2Client(tokens);
-  const calendar = google.calendar({ version: "v3", auth });
-  return { calendar, auth };
+  const calendar = google.calendar({ auth, version: "v3" });
+  return { auth, calendar };
 };
 
 module.exports = {

@@ -1,6 +1,7 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
+import sortKeysFix from "eslint-plugin-sort-keys-fix";
 import sqlQueryMultilineRule from "./eslint-rules/sql-query-multiline.mjs";
 
 /** Arquivos .js que o Babel trata como ESM (export) */
@@ -16,6 +17,7 @@ const localPlugins = {
       "sql-query-multiline": sqlQueryMultilineRule,
     },
   },
+  "sort-keys-fix": sortKeysFix,
 };
 
 export default tseslint.config(
@@ -45,13 +47,14 @@ export default tseslint.config(
       semi: ["error", "always"],
 
       eqeqeq: ["error", "always"],
-      "no-console": "warn",
+      "no-console": ["error", { allow: ["warn", "error", "info"] }],
       "no-duplicate-imports": "error",
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
       "no-var": "error",
-      "prefer-const": "warn",
+      "prefer-const": "error",
 
-      "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
+      "sort-keys": "off",
+      "sort-keys-fix/sort-keys-fix": ["error", "asc", { caseSensitive: false, natural: true }],
     },
   },
   {
@@ -97,10 +100,10 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-expressions": "off",
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         { argsIgnorePattern: "^_" },
       ],
-      "no-console": "warn",
+      "no-console": ["error", { allow: ["warn", "error", "info"] }],
       "no-unused-vars": "off",
       quotes: [
         "error",
@@ -108,7 +111,8 @@ export default tseslint.config(
         { avoidEscape: true, allowTemplateLiterals: true },
       ],
       semi: ["error", "always"],
-      "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
+      "sort-keys": "off",
+      "sort-keys-fix/sort-keys-fix": ["error", "asc", { caseSensitive: false, natural: true }],
     },
   }
 );

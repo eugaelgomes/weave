@@ -11,22 +11,31 @@ async function getChatHistory(req, res) {
     const { sessionId, limit, offset } = req.query;
 
     if (sessionId) {
-      const messages = await chatRepository.getSessionMessages(sessionId, userId);
-      return res.json({ success: true, messages });
+      const messages = await chatRepository.getSessionMessages(
+        sessionId,
+        userId
+      );
+      return res.json({ messages, success: true });
     }
 
-    const sessions = await chatRepository.getUserSessions(userId, limit, offset);
-    return res.json({ success: true, sessions });
+    const sessions = await chatRepository.getUserSessions(
+      userId,
+      limit,
+      offset
+    );
+    return res.json({ sessions, success: true });
   } catch (error) {
     const normalizedError = chatFormatterUtil.normalizeApiError(error, {
       code: "HISTORY_FETCH_FAILED",
       message: t.historyFetchFailed,
       statusCode: 500,
     });
-    console.error("[weave-ai/chat] history fetch failed", { error: normalizedError });
+    console.error("[weave-ai/chat] history fetch failed", {
+      error: normalizedError,
+    });
     return res.status(normalizedError.statusCode).json({
-      success: false,
       error: { code: normalizedError.code, message: normalizedError.message },
+      success: false,
     });
   }
 }

@@ -9,28 +9,28 @@ class CreateArtifactHandler {
   async execute({ args, name, userId, organizationId }) {
     try {
       const artifact = await ArtifactsRepository.createArtifact({
-        userId,
+        content: args.blocks || [],
         organizationId,
         title: args.title || "Untitled Document",
         type: args.type || "document",
-        content: args.blocks || [],
+        userId,
       });
 
       return {
         name,
-        success: true,
         result: {
-          message: "Artifact created successfully.",
           artifactId: artifact.id,
+          message: "Artifact created successfully.",
           title: artifact.title,
         },
+        success: true,
       };
     } catch (error) {
       console.error("[CreateArtifactHandler] Error:", error);
       return {
+        error: "Failed to create artifact in the database.",
         name,
         success: false,
-        error: "Failed to create artifact in the database.",
       };
     }
   }

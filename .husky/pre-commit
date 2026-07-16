@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Go to API directory and run lint-staged and typecheck
+cd weave-api
+npx lint-staged
+npm run typecheck

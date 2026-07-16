@@ -20,16 +20,16 @@ class BackupJobsController extends BackupBaseController {
       const job = await backupJobsRepository.getJob(jobId);
       if (!job)
         return res.status(404).json({
-          status: "Not Found",
           error: "Job not found",
           message: "The requested job does not exist or has expired",
+          status: "Not Found",
         });
 
       if (job.userId !== userId) {
         return res.status(403).json({
-          status: "Forbidden",
           error: "Access denied",
           message: "You do not have permission to access this job",
+          status: "Forbidden",
         });
       }
 
@@ -38,19 +38,19 @@ class BackupJobsController extends BackupBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
-        job_id: job.id,
-        message: "Backup status retrieved successfully",
         details: {
           backup_status: job.status,
-          progress: job.progress,
-          created_at: job.createdAt,
-          started_at: job.startedAt,
           completed_at: job.completedAt,
+          created_at: job.createdAt,
           elapsed_time: `${elapsedMinutes} minute${elapsedMinutes !== 1 ? "s" : ""}`,
           error: job.error,
+          progress: job.progress,
           result: job.result,
+          started_at: job.startedAt,
         },
+        job_id: job.id,
+        message: "Backup status retrieved successfully",
+        status: "OK",
       });
     } catch (error) {
       this._handleError(error, res, next);
@@ -73,25 +73,25 @@ class BackupJobsController extends BackupBaseController {
         .slice(0, 10);
 
       res.status(200).json({
-        status: "OK",
-        message: "Backup history retrieved successfully",
-        total: jobs.length,
         details: {
           jobs: jobs.map((job) => ({
-            job_id: job.id,
-            status: job.status,
-            progress: job.progress,
-            created_at: job.createdAt,
             completed_at: job.completedAt,
+            created_at: job.createdAt,
             error: job.error ? job.error.substring(0, 100) : null,
+            job_id: job.id,
+            progress: job.progress,
             result: job.result
               ? {
-                  totalNotes: job.result.totalNotes,
                   fileSize: job.result.fileSize,
+                  totalNotes: job.result.totalNotes,
                 }
               : null,
+            status: job.status,
           })),
         },
+        message: "Backup history retrieved successfully",
+        status: "OK",
+        total: jobs.length,
       });
     } catch (error) {
       this._handleError(error, res, next);

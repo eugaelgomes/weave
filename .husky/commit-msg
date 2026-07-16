@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Go to API directory and run commitlint using the commit message file from the root
+cd weave-api
+npx --no -- commitlint --edit "../$1"

@@ -12,25 +12,25 @@ async function getAvailableModels(req, res) {
 
     let availableModels = allProviders.map((provider) => ({
       id: provider.id,
-      name: provider.name,
-      logoUrl: provider.logoUrl,
       isDefault: provider.isDefault,
+      logoUrl: provider.logoUrl,
       models: provider.models
         .filter((model) => {
           if (isAgentCall) return model.supportedForAgents !== false;
           return true;
         })
         .map((model) => ({
-          id: model.id,
-          name: model.name,
-          version: model.version,
-          description: model.description,
           contextWindow: model.contextWindow,
-          maxOutputTokens: model.maxOutputTokens,
-          features: model.features,
-          tags: model.tags,
           deprecated: model.deprecated,
+          description: model.description,
+          features: model.features,
+          id: model.id,
+          maxOutputTokens: model.maxOutputTokens,
+          name: model.name,
+          tags: model.tags,
+          version: model.version,
         })),
+      name: provider.name,
     }));
 
     if (!includeDeprecations) {
@@ -40,17 +40,19 @@ async function getAvailableModels(req, res) {
       }));
     }
 
-    return res.json({ success: true, providers: availableModels });
+    return res.json({ providers: availableModels, success: true });
   } catch (error) {
     const normalizedError = chatFormatterUtil.normalizeApiError(error, {
       code: "MODELS_FETCH_FAILED",
       message: t.modelsFetchFailed,
       statusCode: 500,
     });
-    console.error("[weave-ai/chat] models fetch failed", { error: normalizedError });
+    console.error("[weave-ai/chat] models fetch failed", {
+      error: normalizedError,
+    });
     return res.status(normalizedError.statusCode).json({
-      success: false,
       error: { code: normalizedError.code, message: normalizedError.message },
+      success: false,
     });
   }
 }

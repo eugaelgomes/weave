@@ -1,8 +1,8 @@
 const ROLE_LABELS = {
-  super_admin: "super admin",
   admin: "admin",
-  member: "member",
   guest: "guest",
+  member: "member",
+  super_admin: "super admin",
   viewer: "viewer",
 };
 
@@ -25,7 +25,7 @@ const ensureObject = (value) => {
   if (typeof value === "string") {
     try {
       return JSON.parse(value);
-    } catch (error) {
+    } catch {
       return {};
     }
   }
@@ -156,12 +156,12 @@ const createBaseContent = (payload, options = {}) => {
     resolvedSummary;
 
   const normalizedContent = {
+    action: options.actionText || null,
+    description: resolvedDescription,
     key: buildContentKey(payload.type, actionKey),
     message: resolvedMessage,
     preview: cleanSentence(rawContent.preview) || resolvedSummary,
     summary: resolvedSummary,
-    description: resolvedDescription,
-    action: options.actionText || null,
   };
 
   const resolvedUrl = options.url || rawContent.url;
@@ -179,9 +179,9 @@ const createBaseContent = (payload, options = {}) => {
 
   if (payload.entityType || payload.entityId || entityName) {
     normalizedContent.entity = {
-      type: payload.entityType || null,
       id: payload.entityId || null,
       name: entityName,
+      type: payload.entityType || null,
     };
   }
 
@@ -229,9 +229,9 @@ const buildOrganizationInviteContent = (payload) => {
 
     return createBaseContent(payload, {
       actionKey,
+      actionText: "Access your organizations to accept or decline the invite.",
       entityName: organizationName,
       message,
-      actionText: "Access your organizations to accept or decline the invite.",
     });
   }
 
@@ -265,9 +265,9 @@ const buildProjectInviteContent = (payload) => {
 
     return createBaseContent(payload, {
       actionKey,
+      actionText: "Open the project to start collaborating.",
       entityName: projectTitle,
       message,
-      actionText: "Open the project to start collaborating.",
     });
   }
 
@@ -306,9 +306,9 @@ const buildNoteSharedContent = (payload) => {
 
     return createBaseContent(payload, {
       actionKey,
+      actionText: "Open the note and start collaborating.",
       entityName: noteTitle,
       message,
-      actionText: "Open the note and start collaborating.",
     });
   }
 
@@ -328,9 +328,9 @@ const buildJobActionContent = (payload) => {
 
     return createBaseContent(payload, {
       actionKey,
+      actionText: "Download the backup within 48 hours to avoid expiration.",
       entityName: payload.content?.job_name || null,
       message,
-      actionText: "Download the backup within 48 hours to avoid expiration.",
       url: payload.content?.download_url,
     });
   }
@@ -339,12 +339,12 @@ const buildJobActionContent = (payload) => {
 };
 
 const builders = {
+  job_action: buildJobActionContent,
+  note_shared: buildNoteSharedContent,
   organization_action: buildOrganizationActionContent,
   organization_invite: buildOrganizationInviteContent,
-  project_invite: buildProjectInviteContent,
   project_action: buildProjectActionContent,
-  note_shared: buildNoteSharedContent,
-  job_action: buildJobActionContent,
+  project_invite: buildProjectInviteContent,
 };
 
 const defaultBuilder = (payload) => createBaseContent(payload);
@@ -367,8 +367,8 @@ const normalizeNotificationPayload = (payload = {}) => {
 
   return {
     ...payload,
-    title: safePayload.title,
     content: normalizedContent,
+    title: safePayload.title,
   };
 };
 

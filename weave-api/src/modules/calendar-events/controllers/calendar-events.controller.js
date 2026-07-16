@@ -348,9 +348,9 @@ class CalendarEventsController {
       const { timeMin, timeMax, items } = req.body;
       const { data } = await calendar.freebusy.query({
         requestBody: {
-          timeMin,
-          timeMax,
           items: items || [{ id: "primary" }],
+          timeMax,
+          timeMin,
         },
       });
       return res.status(200).json({ freebusy: data.calendars });

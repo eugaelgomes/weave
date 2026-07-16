@@ -180,10 +180,10 @@ router.post("/", validate(createNoteSchema, "body"), (req, res, next) => {
 router.put(
   "/:id",
   noteUpdateUpload.fields([
-    { name: "icon", maxCount: 1 },
-    { name: "banner", maxCount: 1 },
-    { name: "files", maxCount: 10 },
-    { name: "documentImages", maxCount: 20 },
+    { maxCount: 1, name: "icon" },
+    { maxCount: 1, name: "banner" },
+    { maxCount: 10, name: "files" },
+    { maxCount: 20, name: "documentImages" },
   ]),
   validate(noteIdParamSchema, "params"),
   validate(updateNoteSchema, "body"),

@@ -10,13 +10,15 @@ async function deleteAgent(req, res) {
     const { id } = req.params;
 
     await agentRepository.deleteAgent(id, userId);
-    res.json({ success: true, message: t.deleteAgentSuccess });
+    res.json({ message: t.deleteAgentSuccess, success: true });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error deleting agent:", error);
-    res.status(500).json({ success: false, error: t.deleteAgentFailed });
+    res.status(500).json({ error: t.deleteAgentFailed, success: false });
   }
 }
 

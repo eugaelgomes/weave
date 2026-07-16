@@ -31,8 +31,7 @@ class ReasoningsReadRepository {
       paramIdx++;
     }
 
-    const query = `
-      SELECT
+    const query = `      SELECT
         r.id,
         r.reasoning_type,
         r.title,
@@ -71,8 +70,7 @@ class ReasoningsReadRepository {
           OR (r.recipient_scope = 'custom' AND r.custom_recipients @> to_jsonb($2::text))
         )
       ORDER BY r.created_at DESC
-      LIMIT $3
-    `;
+      LIMIT $3`;
 
     const result = await pool.query(query, params);
     return result.rows;
@@ -158,8 +156,7 @@ class ReasoningsReadRepository {
     params.push(pagination.offset);
     const offIdx = paramIdx;
 
-    const query = `
-      SELECT
+    const query = `      SELECT
         r.id,
         r.reasoning_type,
         r.title,
@@ -205,8 +202,7 @@ class ReasoningsReadRepository {
           OR (r.recipient_scope = 'custom' AND r.custom_recipients @> to_jsonb($2::text))
         )
       ORDER BY ${sortCol} ${sortDir}
-      LIMIT $${limIdx} OFFSET $${offIdx}
-    `;
+      LIMIT $${limIdx} OFFSET $${offIdx}`;
 
     const result = await pool.query(query, params);
     const rows = result.rows;
@@ -227,8 +223,7 @@ class ReasoningsReadRepository {
    * @returns {Promise<object|undefined>}
    */
   async getContentById(reasoningId) {
-    const query = `
-      SELECT
+    const query = `      SELECT
         rc.*,
         r.title,
         r.reasoning_type,
@@ -237,8 +232,7 @@ class ReasoningsReadRepository {
         r.created_at AS reasoning_created_at
       FROM weave_engine_reasoning_contents rc
       INNER JOIN weave_engine_reasonings r ON r.id = rc.reasoning_id
-      WHERE rc.reasoning_id = $1
-    `;
+      WHERE rc.reasoning_id = $1`;
 
     const result = await pool.query(query, [reasoningId]);
     return result.rows[0];
@@ -251,8 +245,7 @@ class ReasoningsReadRepository {
    * @returns {Promise<object[]>}
    */
   async getActionItemsByReasoning(reasoningId) {
-    const query = `
-      SELECT
+    const query = `      SELECT
         ai.*,
         u.name AS assigned_to_name,
         u.avatar_url AS assigned_to_avatar,
@@ -262,8 +255,7 @@ class ReasoningsReadRepository {
       LEFT JOIN users cb ON cb.user_id = ai.completed_by
       WHERE ai.reasoning_id = $1
         AND ai.deleted = false
-      ORDER BY ai.position ASC
-    `;
+      ORDER BY ai.position ASC`;
 
     const result = await pool.query(query, [reasoningId]);
     return result.rows;

@@ -332,12 +332,12 @@ class ReadNotesRepository extends BaseRepository {
       notes: processedNotes,
       pagination: {
         currentPage: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        totalPages,
+        hasMore: hasNextPage,
         hasNextPage,
         hasPrevPage,
-        hasMore: hasNextPage, // Para compatibilidade com scroll infinito
+        limit: parseInt(limit),
+        total,
+        totalPages, // Para compatibilidade com scroll infinito
       },
     };
   }

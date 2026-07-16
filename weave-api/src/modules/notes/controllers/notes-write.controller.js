@@ -68,13 +68,13 @@ class NotesWriteController extends NotesBaseController {
     });
     return {
       code: "NOTE_CONFLICT",
-      error: "Edit conflict detected",
-      noteId,
+      conflictFields,
       currentRevision:
         latestNote?.revision === undefined || latestNote?.revision === null
           ? null
           : Number(latestNote.revision),
-      conflictFields,
+      error: "Edit conflict detected",
+      noteId,
       serverNote: this._formatNoteResponse(latestNote || {}, [], {
         includeBlocks: false,
       }),
@@ -123,10 +123,10 @@ class NotesWriteController extends NotesBaseController {
 
       if (!canCreate) {
         return sendPlanLimitExceeded(res, {
-          resource: "notes",
-          limit_key: PLAN_PATHS.LIMITS.MAX_NOTES,
           error: "Notes limit reached",
+          limit_key: PLAN_PATHS.LIMITS.MAX_NOTES,
           message: `Your plan (${planDetails.name}) allows only ${planDetails.details.limits.max_notes} notes.`,
+          resource: "notes",
         });
       }
 
@@ -150,9 +150,9 @@ class NotesWriteController extends NotesBaseController {
       }
 
       const resolvedTitle = resolveNoteTitle({
-        title,
-        description,
         blocks: normalizedBlocks,
+        description,
+        title,
       });
       if (!resolvedTitle) {
         return res.status(400).json({
@@ -245,10 +245,10 @@ class NotesWriteController extends NotesBaseController {
 
       if (!canCreate) {
         return sendPlanLimitExceeded(res, {
-          resource: "notes",
-          limit_key: PLAN_PATHS.LIMITS.MAX_NOTES,
           error: "Notes limit reached",
+          limit_key: PLAN_PATHS.LIMITS.MAX_NOTES,
           message: `Your plan (${planDetails.name}) allows only ${planDetails.details.limits.max_notes} notes.`,
+          resource: "notes",
         });
       }
 
@@ -272,10 +272,10 @@ class NotesWriteController extends NotesBaseController {
       }
 
       const resolvedTitle = resolveNoteTitle({
-        title,
-        description,
         blocks: normalizedBlocks,
+        description,
         plainFallback: initialBlockContent,
+        title,
       });
       if (!resolvedTitle) {
         return res.status(400).json({
@@ -317,29 +317,29 @@ class NotesWriteController extends NotesBaseController {
 
       // Assemble the complete note structure with all related table data
       const completeNote = {
-        id: result.note_id,
-        public_id: result.public_note_id || null,
-        user_id: result.user_id,
-        project_id: result.project_id,
-        title: result.title,
-        description: result.description,
-        properties: result.properties || {},
-        tags: result.tags || [],
-        status: result.status,
+        blocks,
         created_at: result.note_created_at,
-        updated_at: result.note_updated_at,
+        description: result.description,
+        id: result.note_id,
+        project_id: result.project_id,
+        properties: result.properties || {},
+        public_id: result.public_note_id || null,
         revision:
           result.note_revision === undefined || result.note_revision === null
             ? 1
             : Number(result.note_revision),
+        status: result.status,
+        tags: result.tags || [],
+        title: result.title,
+        updated_at: result.note_updated_at,
         user: {
+          avatar_url: result.user_avatar_url,
+          email: result.user_email,
           id: result.user_id,
           name: result.user_name,
           username: result.user_username,
-          email: result.user_email,
-          avatar_url: result.user_avatar_url,
         },
-        blocks,
+        user_id: result.user_id,
       };
 
       // Returns the newly created complete note
@@ -355,18 +355,17 @@ class NotesWriteController extends NotesBaseController {
 
       // When multipart/form-data, text fields come as strings
       // Parse properties if it comes as a JSON string
-      let {
+      const {
         title,
         description,
-        tags,
         status,
         deleted,
         project_id,
-        properties,
         priority_id,
         due_date,
         baseRevision,
       } = req.body;
+      let { tags, properties } = req.body;
 
       if (typeof properties === "string") {
         try {
@@ -585,10 +584,10 @@ class NotesWriteController extends NotesBaseController {
 
           if (currentUsageMb + totalUploadSizeMb > totalMonthlyUploadMb) {
             return sendPlanLimitExceeded(res, {
-              resource: "storage",
-              limit_key: PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD,
               error: "Monthly storage limit reached",
+              limit_key: PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD,
               message: `Your plan (${planDetails.name}) allows ${totalMonthlyUploadMb} MB of upload per month. Current usage: ${currentUsageMb.toFixed(2)} MB.`,
+              resource: "storage",
             });
           }
         }
@@ -610,8 +609,8 @@ class NotesWriteController extends NotesBaseController {
           userId
         );
         propertiesUpdate.icon = {
-          path: result.path || result.key || "",
           name: iconFile.originalname,
+          path: result.path || result.key || "",
           type: iconFile.mimetype,
         };
       }
@@ -632,8 +631,8 @@ class NotesWriteController extends NotesBaseController {
           userId
         );
         propertiesUpdate.banner = {
-          path: result.path || result.key || "",
           name: bannerFile.originalname,
+          path: result.path || result.key || "",
           type: bannerFile.mimetype,
         };
       }
@@ -653,8 +652,8 @@ class NotesWriteController extends NotesBaseController {
             );
             return {
               id: result.fileName,
-              path: result.key || result.path || "",
               name: file.originalname,
+              path: result.key || result.path || "",
               type: file.mimetype,
             };
           })
@@ -778,12 +777,12 @@ class NotesWriteController extends NotesBaseController {
       }
 
       formattedNote.access = {
-        isOwner,
-        isCollaborator,
-        hasOrgProjectAccess,
-        canEdit: isOwner || isCollaborator || hasOrgProjectAccess,
         canDelete: isOwner || hasOrgProjectAccess,
+        canEdit: isOwner || isCollaborator || hasOrgProjectAccess,
         canShare: isOwner || hasOrgProjectAccess,
+        hasOrgProjectAccess,
+        isCollaborator,
+        isOwner,
       };
       res.status(200).json(formattedNote);
     } catch (error) {
@@ -847,10 +846,10 @@ class NotesWriteController extends NotesBaseController {
 
         if (currentUsageMb + totalUploadSizeMb > totalMonthlyUploadMb) {
           return sendPlanLimitExceeded(res, {
-            resource: "storage",
-            limit_key: PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD,
             error: "Limite de armazenamento mensal atingido",
+            limit_key: PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD,
             message: `Seu plano (${planDetails.name}) permite ${totalMonthlyUploadMb} MB de upload por mês. Uso atual: ${currentUsageMb.toFixed(2)} MB.`,
+            resource: "storage",
           });
         }
       }

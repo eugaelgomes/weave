@@ -9,9 +9,9 @@ const DEFAULT_VERSION = "v1";
  * @returns {object}
  */
 const buildVersionContext = (version = DEFAULT_VERSION) => ({
-  version,
   internalBasePath: `/api/${version}`,
   publicBasePath: `/api/public/${version}`,
+  version,
 });
 
 /**
@@ -36,6 +36,6 @@ const registerApiRoutes = (app, { version = DEFAULT_VERSION } = {}) => {
 };
 
 module.exports = {
-  registerApiRoutes,
   buildVersionContext,
+  registerApiRoutes,
 };

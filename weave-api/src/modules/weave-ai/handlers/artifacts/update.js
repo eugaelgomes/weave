@@ -16,33 +16,33 @@ class UpdateArtifactHandler {
         args.artifactId,
         userId,
         {
-          title: args.title,
           content: args.blocks,
+          title: args.title,
         }
       );
 
       if (!artifact) {
         return {
+          error: "Artifact not found or you don't have permission.",
           name,
           success: false,
-          error: "Artifact not found or you don't have permission.",
         };
       }
 
       return {
         name,
-        success: true,
         result: {
-          message: "Artifact updated successfully.",
           artifactId: artifact.id,
+          message: "Artifact updated successfully.",
         },
+        success: true,
       };
     } catch (error) {
       console.error("[UpdateArtifactHandler] Error:", error);
       return {
+        error: "Failed to update artifact in the database.",
         name,
         success: false,
-        error: "Failed to update artifact in the database.",
       };
     }
   }

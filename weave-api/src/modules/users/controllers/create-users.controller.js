@@ -27,24 +27,14 @@ class CreateUsersController extends BaseController {
    */
   async createUser(req, res, next) {
     try {
-      const {
-        name,
-        user_name,
-        username,
-        email,
-        password,
-        timezone,
-        private_profile = false,
-        birth_date = null,
-        phone_number = null,
-      } = req.body;
+      const { timezone } = req.body;
 
       if (timezone && !this._isValidTimezone(timezone)) {
         const allTimezones = Intl.supportedValuesOf("timeZone");
         return res.status(400).json({
-          status: "error",
-          message: "Invalid timezone provided.",
           isValidTimezones: allTimezones,
+          message: "Invalid timezone provided.",
+          status: "error",
         });
       }
 
@@ -97,24 +87,24 @@ class CreateUsersController extends BaseController {
       }
 
       return res.status(201).json({
-        status: "OK",
         message: `Welcome to Weave Notes ${user.userName}! Check your email to activate your account.`,
+        redirect: "/auth/",
+        status: "OK",
         user: {
+          avatar_url: profileImageUrl,
+          created_at: user.createdAt,
+          email: user.email,
           id: user.userId,
           name: user.userName,
           username: user.username,
-          email: user.email,
-          avatar_url: profileImageUrl,
-          created_at: user.createdAt,
         },
-        redirect: "/auth/",
       });
     } catch (error) {
       if (error.message === "CORPORATE_DOMAIN_INVITE_REQUIRED") {
         return res.status(403).json({
-          status: "error",
           message:
             "This email belongs to a verified corporate domain. You need an invitation from the organization to create an account.",
+          status: "error",
         });
       }
       console.error("An error occurred during registration:", error);
@@ -173,10 +163,10 @@ class CreateUsersController extends BaseController {
       return res.status(200).json({
         message: "Email verified successfully",
         user: {
-          id: verifiedUser.user_id,
           email: verifiedUser.email,
           email_verified: verifiedUser.email_verified,
           email_verified_at: verifiedUser.email_verified_at,
+          id: verifiedUser.user_id,
         },
       });
     } catch (error) {

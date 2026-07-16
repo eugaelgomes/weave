@@ -42,11 +42,11 @@ function mapPgError(error) {
   if (uniqueField) {
     const payload = buildUniqueConflictPayload(uniqueField);
     return {
-      mapped: true,
-      statusCode: 409,
-      code: payload.code,
-      message: payload.message,
       body: payload,
+      code: payload.code,
+      mapped: true,
+      message: payload.message,
+      statusCode: 409,
     };
   }
 
@@ -54,19 +54,19 @@ function mapPgError(error) {
 
   if (pgCode === "23503") {
     return {
-      mapped: true,
-      statusCode: 400,
       code: ERROR_CODES.VALIDATION_ERROR,
+      mapped: true,
       message: "Referenced resource does not exist or is invalid.",
+      statusCode: 400,
     };
   }
 
   if (pgCode === "22P02") {
     return {
-      mapped: true,
-      statusCode: 400,
       code: ERROR_CODES.VALIDATION_ERROR,
+      mapped: true,
       message: "Invalid identifier format.",
+      statusCode: 400,
     };
   }
 
@@ -82,12 +82,12 @@ function mapPgError(error) {
 function getPgLogContext(error) {
   if (!isPgError(error)) return {};
   return {
-    pgCode: error.code,
+    column: error.column,
     constraint: error.constraint,
     detail: error.detail,
+    pgCode: error.code,
     table: error.table,
-    column: error.column,
   };
 }
 
-module.exports = { mapPgError, getPgLogContext, isPgError };
+module.exports = { getPgLogContext, isPgError, mapPgError };

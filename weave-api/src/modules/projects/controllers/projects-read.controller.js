@@ -11,8 +11,6 @@ const {
   PROJECT_STAGES_LIST_TRIGGER_KEYS,
   PROJECT_NOTES_LIST_TRIGGER_KEYS,
   PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS,
-  PROJECT_SPRINTS_LIST_TRIGGER_KEYS,
-  PROJECT_REASONINGS_LIST_TRIGGER_KEYS,
 } = require("@/modules/projects/projects.validators");
 
 class ProjectsReadController extends ProjectsCoreController {
@@ -101,36 +99,36 @@ class ProjectsReadController extends ProjectsCoreController {
           const formatted = this._formatProjectResponse(project);
           return {
             ...formatted,
-            owner: {
-              id: project.user_id,
-              username: project.owner_username,
-              email: project.owner_email,
-              name: project.owner_name,
-              avatar_url: project.owner_avatar_url,
-            },
             organization: project.organization_id
               ? {
                   id: project.organization_id,
+                  logo_url: project.organization_logo_url,
                   name: project.organization_name,
                   unique_name: project.organization_unique_name,
-                  logo_url: project.organization_logo_url,
                 }
               : null,
+            owner: {
+              avatar_url: project.owner_avatar_url,
+              email: project.owner_email,
+              id: project.user_id,
+              name: project.owner_name,
+              username: project.owner_username,
+            },
           };
         });
 
         return res.status(200).json(
           buildListEnvelope({
             data: formattedProjects,
-            page: pagination.page,
-            limit: pagination.limit,
-            total,
-            sort,
             filters: this._echoFilters({
               ...filtersForRepo,
               include: includeArr,
             }),
             legacyKey: "projects",
+            limit: pagination.limit,
+            page: pagination.page,
+            sort,
+            total,
           })
         );
       }
@@ -146,21 +144,21 @@ class ProjectsReadController extends ProjectsCoreController {
         const formatted = this._formatProjectResponse(project);
         return {
           ...formatted,
-          owner: {
-            id: project.user_id,
-            username: project.owner_username,
-            email: project.owner_email,
-            name: project.owner_name,
-            avatar_url: project.owner_avatar_url,
-          },
           organization: project.organization_id
             ? {
                 id: project.organization_id,
+                logo_url: project.organization_logo_url,
                 name: project.organization_name,
                 unique_name: project.organization_unique_name,
-                logo_url: project.organization_logo_url,
               }
             : null,
+          owner: {
+            avatar_url: project.owner_avatar_url,
+            email: project.owner_email,
+            id: project.user_id,
+            name: project.owner_name,
+            username: project.owner_username,
+          },
         };
       });
 
@@ -189,21 +187,21 @@ class ProjectsReadController extends ProjectsCoreController {
       /** @type {Record<string, unknown>} */
       const formattedProject = {
         ...formatted,
-        owner: {
-          id: project.user_id,
-          username: project.owner_username,
-          email: project.owner_email,
-          name: project.owner_name,
-          avatar_url: project.owner_avatar_url,
-        },
         organization: project.organization_id
           ? {
               id: project.organization_id,
+              logo_url: project.organization_logo_url,
               name: project.organization_name,
               unique_name: project.organization_unique_name,
-              logo_url: project.organization_logo_url,
             }
           : null,
+        owner: {
+          avatar_url: project.owner_avatar_url,
+          email: project.owner_email,
+          id: project.user_id,
+          name: project.owner_name,
+          username: project.owner_username,
+        },
       };
 
       if (include.includes("collaborators")) {
@@ -254,18 +252,18 @@ class ProjectsReadController extends ProjectsCoreController {
       }
 
       const formattedProjects = projects.map((project) => ({
-        id: project.id,
-        title: project.title,
-        description: project.description,
-        properties: project.properties || {},
-        status: project.status,
         created_at: project.created_at,
-        updated_at: project.updated_at,
+        description: project.description,
+        id: project.id,
         owner: {
+          email: project.owner_email,
           id: project.owner_id,
           username: project.owner_username,
-          email: project.owner_email,
         },
+        properties: project.properties || {},
+        status: project.status,
+        title: project.title,
+        updated_at: project.updated_at,
       }));
 
       res.status(200).json({ projects: formattedProjects });
@@ -305,12 +303,12 @@ class ProjectsReadController extends ProjectsCoreController {
         return res.status(200).json(
           buildListEnvelope({
             data: formatted,
-            page: pagination.page,
-            limit: pagination.limit,
-            total,
-            sort,
             filters: this._echoFilters(filters),
             legacyKey: "stages",
+            limit: pagination.limit,
+            page: pagination.page,
+            sort,
+            total,
           })
         );
       }
@@ -347,7 +345,7 @@ class ProjectsReadController extends ProjectsCoreController {
       const { pagination, sort, filters } = req.parsedQuery;
       const effectivePagination = wantsEnvelope
         ? pagination
-        : { page: 1, limit: 500, offset: 0 };
+        : { limit: 500, offset: 0, page: 1 };
 
       const { rows, total } =
         await this.projectsRepository.listProjectCollaboratorsFiltered(
@@ -358,26 +356,26 @@ class ProjectsReadController extends ProjectsCoreController {
         );
 
       const collaborators = rows.map((r) => ({
-        user_id: r.user_id,
-        name: r.name,
-        username: r.username,
-        email: r.email,
-        avatar_url: r.avatar_url,
-        role: r.role,
         added_at: r.added_at,
         added_by: r.added_by,
+        avatar_url: r.avatar_url,
+        email: r.email,
+        name: r.name,
+        role: r.role,
+        user_id: r.user_id,
+        username: r.username,
       }));
 
       if (wantsEnvelope) {
         return res.status(200).json(
           buildListEnvelope({
             data: collaborators,
-            page: effectivePagination.page,
-            limit: effectivePagination.limit,
-            total,
-            sort,
             filters: this._echoFilters(filters),
             legacyKey: "collaborators",
+            limit: effectivePagination.limit,
+            page: effectivePagination.page,
+            sort,
+            total,
           })
         );
       }
@@ -416,7 +414,7 @@ class ProjectsReadController extends ProjectsCoreController {
       const orgWide =
         this._canAccessAllOrganizationProjects(membership) && membership.id;
       const scope = orgWide
-        ? { type: "organization", organizationId: membership.id }
+        ? { organizationId: membership.id, type: "organization" }
         : { type: "member", userId };
 
       if (wantsEnvelope) {
@@ -433,12 +431,12 @@ class ProjectsReadController extends ProjectsCoreController {
         return res.status(200).json(
           buildListEnvelope({
             data: rows,
-            page: pagination.page,
-            limit: pagination.limit,
-            total,
-            sort,
             filters: this._echoFilters(filters),
             legacyKey: "notes",
+            limit: pagination.limit,
+            page: pagination.page,
+            sort,
+            total,
           })
         );
       }
@@ -512,17 +510,17 @@ class ProjectsReadController extends ProjectsCoreController {
 
       const overview = row.overview;
       const formattedOverview = {
-        total: parseInt(overview.total) || 0,
-        owned: parseInt(overview.owned) || 0,
-        collaborating: parseInt(overview.collaborating) || 0,
         active: parseInt(overview.active) || 0,
         by_status: {
-          OPEN: parseInt(overview.open) || 0,
-          IN_PROGRESS: parseInt(overview.in_progress) || 0,
-          PAUSED: parseInt(overview.paused) || 0,
-          COMPLETED: parseInt(overview.completed) || 0,
           ARCHIVED: parseInt(overview.archived) || 0,
+          COMPLETED: parseInt(overview.completed) || 0,
+          IN_PROGRESS: parseInt(overview.in_progress) || 0,
+          OPEN: parseInt(overview.open) || 0,
+          PAUSED: parseInt(overview.paused) || 0,
         },
+        collaborating: parseInt(overview.collaborating) || 0,
+        owned: parseInt(overview.owned) || 0,
+        total: parseInt(overview.total) || 0,
       };
 
       const progress = row.progress;
@@ -534,35 +532,35 @@ class ProjectsReadController extends ProjectsCoreController {
 
       const notes = row.notes;
       const formattedNotes = {
-        total: parseInt(notes.total) || 0,
-        VISIBLE: parseInt(notes.visible) || 0,
         ARCHIVED: parseInt(notes.archived) || 0,
         SECURE: parseInt(notes.secure) || 0,
+        total: parseInt(notes.total) || 0,
+        VISIBLE: parseInt(notes.visible) || 0,
       };
 
       res.status(200).json({
-        overview: formattedOverview,
+        filters_applied: {
+          from: filters.from || null,
+          methodology: filters.methodology || null,
+          parent_only: filters.parent_only,
+          status: filters.status || null,
+          to: filters.to || null,
+        },
         methodology: {
           kanban: parseInt(row.methodology.kanban) || 0,
           scrum: parseInt(row.methodology.scrum) || 0,
         },
-        progress: formattedProgress,
         notes: formattedNotes,
+        overview: formattedOverview,
+        progress: formattedProgress,
         tasks: {
-          total: tasksTotal,
-          done: tasksDone,
-          pending: parseInt(tasks.pending) || 0,
           completion_rate:
             tasksTotal > 0
               ? Math.round((tasksDone / tasksTotal) * 1000) / 10
               : 0,
-        },
-        filters_applied: {
-          status: filters.status || null,
-          methodology: filters.methodology || null,
-          from: filters.from || null,
-          to: filters.to || null,
-          parent_only: filters.parent_only,
+          done: tasksDone,
+          pending: parseInt(tasks.pending) || 0,
+          total: tasksTotal,
         },
       });
     } catch (error) {

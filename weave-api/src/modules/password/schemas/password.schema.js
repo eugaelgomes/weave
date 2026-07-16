@@ -19,8 +19,8 @@ const forgotPasswordSchema = z.object({
  * Validates the request body for reset password.
  */
 const resetPasswordSchema = z.object({
-  token: z.string().min(1, "Token is required"),
   password: z.string().min(1, "Password is required"),
+  token: z.string().min(1, "Token is required"),
 });
 
 module.exports = {

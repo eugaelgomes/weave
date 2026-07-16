@@ -56,14 +56,14 @@ function notesGroupedByStage(
  */
 function serializeNote(note, blocks) {
   const frontmatter = {
-    id: note.id,
-    title: note.title,
-    status: note.status,
-    priority: note.priority_name || "medium",
-    due_date: note.due_date,
-    owner: note.user_name,
     collaborators: note.collaborators?.map((c) => c.name) || [],
+    due_date: note.due_date,
+    id: note.id,
+    owner: note.user_name,
+    priority: note.priority_name || "medium",
+    status: note.status,
     tags: note.resolved_tags?.map((t) => t.name) || [],
+    title: note.title,
   };
 
   const yamlStr = yaml.dump(frontmatter).trim();
@@ -185,7 +185,7 @@ function applyMarks(text, marks) {
 }
 
 module.exports = {
-  serializeNote,
   blocksToMarkdown,
   notesGroupedByStage,
+  serializeNote,
 };

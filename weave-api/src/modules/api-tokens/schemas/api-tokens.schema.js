@@ -11,6 +11,11 @@ const apiTokenParamsSchema = z.object({
  * Validates the request body for creating a new API token.
  */
 const createApiTokenSchema = z.object({
+  expiresAt: z
+    .string()
+    .datetime("Invalid expiration date")
+    .optional()
+    .nullable(),
   name: z
     .string()
     .trim()
@@ -22,11 +27,6 @@ const createApiTokenSchema = z.object({
     .optional()
     .nullable(),
   scopes: z.array(z.string()).optional().nullable(),
-  expiresAt: z
-    .string()
-    .datetime("Invalid expiration date")
-    .optional()
-    .nullable(),
 });
 
 module.exports = {

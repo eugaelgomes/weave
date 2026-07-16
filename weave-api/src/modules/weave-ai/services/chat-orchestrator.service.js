@@ -28,13 +28,13 @@ class ChatOrchestratorService {
   }) {
     // 1. Setup Context and Authorizations
     const contextData = await chatContextService.prepareContext({
-      userId,
-      payload,
-      organizationId,
-      requestId,
       files,
-      userLanguage,
       onChunk,
+      organizationId,
+      payload,
+      requestId,
+      userId,
+      userLanguage,
     });
 
     // Se houve hit de idempotency, retorna imediatamente.
@@ -44,14 +44,14 @@ class ChatOrchestratorService {
 
     // 2. Run ReAct Loop
     return await chatLoopService.executeReActLoop({
-      userId,
-      payload,
-      organizationId,
-      requestId,
-      files,
-      userLanguage,
-      onChunk,
       contextData,
+      files,
+      onChunk,
+      organizationId,
+      payload,
+      requestId,
+      userId,
+      userLanguage,
     });
   }
 }

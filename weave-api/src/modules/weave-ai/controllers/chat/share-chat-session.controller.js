@@ -7,18 +7,27 @@ async function shareChatSession(req, res) {
     const sessionId = req.params.sessionId;
 
     if (!sessionId) {
-      return res.status(400).json({ success: false, error: "Session ID required" });
+      return res
+        .status(400)
+        .json({ error: "Session ID required", success: false });
     }
 
-    const shareToken = await chatRepository.generateShareToken(sessionId, userId);
+    const shareToken = await chatRepository.generateShareToken(
+      sessionId,
+      userId
+    );
     if (!shareToken) {
-      return res.status(404).json({ success: false, error: "Session not found" });
+      return res
+        .status(404)
+        .json({ error: "Session not found", success: false });
     }
 
-    return res.json({ success: true, shareToken });
+    return res.json({ shareToken, success: true });
   } catch (error) {
     console.error("[weave-ai/chat] share session failed", error);
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    return res
+      .status(500)
+      .json({ error: "Internal server error", success: false });
   }
 }
 

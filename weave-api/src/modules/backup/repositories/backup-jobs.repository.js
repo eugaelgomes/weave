@@ -127,17 +127,17 @@ class BackupJobsRepository {
    */
   formatJob(dbJob) {
     return {
+      completedAt: dbJob.completed_at,
+      createdAt: dbJob.created_at,
+      error: dbJob.error,
       id: dbJob.job_id,
+      metadata: dbJob.metadata,
+      progress: dbJob.progress,
+      result: dbJob.result,
+      startedAt: dbJob.started_at,
+      status: dbJob.status,
       type: dbJob.type,
       userId: dbJob.user_id,
-      status: dbJob.status,
-      createdAt: dbJob.created_at,
-      startedAt: dbJob.started_at,
-      completedAt: dbJob.completed_at,
-      progress: dbJob.progress,
-      error: dbJob.error,
-      result: dbJob.result,
-      metadata: dbJob.metadata,
     };
   }
 }

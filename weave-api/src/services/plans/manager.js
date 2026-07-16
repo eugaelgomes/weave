@@ -10,6 +10,7 @@ class PlansManager {
    */
   _sanitizePlanForPublic(details) {
     if (!details || typeof details !== "object") return {};
+    // eslint-disable-next-line no-unused-vars
     const { billing, governance, weave_ai, ...publicFields } = details;
     return publicFields;
   }
@@ -27,10 +28,10 @@ class PlansManager {
 
       return res.status(200).json({
         plans: plans.map((plan) => ({
-          planId: plan.plan_id,
-          name: plan.name,
-          details: this._sanitizePlanForPublic(plan.details),
           createdAt: plan.created_at,
+          details: this._sanitizePlanForPublic(plan.details),
+          name: plan.name,
+          planId: plan.plan_id,
           updatedAt: plan.updated_at,
         })),
       });

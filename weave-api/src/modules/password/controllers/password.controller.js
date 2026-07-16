@@ -24,8 +24,8 @@ class PasswordController {
       // Check if email_verified is true
       if (!userExists.email_verified) {
         return res.status(403).json({
-          message: "Email not verified. Please activate your account first.",
           email_verified: false,
+          message: "Email not verified. Please activate your account first.",
         });
       }
 
@@ -54,9 +54,9 @@ class PasswordController {
 
       // Return response on success
       return res.status(202).json({
-        status: "OK",
         message:
           "Recovery instructions sent to your email. Please check your inbox and spam folder. If you do not receive the email within a few minutes, try again.",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error recovering password:", error);
@@ -102,8 +102,8 @@ class PasswordController {
       );
       await PasswordRepository.deactivateToken(token);
       return res.status(200).json({
-        status: "OK",
         message: "Password updated successfully!",
+        status: "OK",
       });
     } catch (error) {
       return next(fromUnknown(error));

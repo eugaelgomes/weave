@@ -21,17 +21,17 @@ class NotesReadController extends NotesBaseController {
 
       // Process pagination and filter parameters
       const paginationOptions = {
-        page: parseInt(page) || 1,
         limit: Math.min(parseInt(limit) || 10, 50),
+        page: parseInt(page) || 1,
         search: search.trim(),
+        sortBy,
+        sortOrder: sortOrder.toLowerCase(),
         tags: tags
           ? tags
               .split(",")
               .map((tag) => tag.trim())
               .filter(Boolean)
           : [],
-        sortBy,
-        sortOrder: sortOrder.toLowerCase(),
       };
 
       const orgWideOrganizationId =
@@ -58,60 +58,60 @@ class NotesReadController extends NotesBaseController {
       }
 
       const notesWithBlocks = result.notes.map((note) => ({
-        blocks: [],
-        id: note.id,
-        public_id: note.public_note_id || null,
-        title: note.title,
-        description: note.description || null,
-        properties: note.properties || {},
-        tags: note.tags || [] || null,
-        resolved_tags: Array.isArray(note.resolved_tags)
-          ? note.resolved_tags
-          : [],
-        status: note.status || null,
-        due_date: note.due_date ?? null,
-        priority_id: note.priority_id ?? null,
-        priority_name: note.priority_name ?? null,
-        priority_color: note.priority_color ?? null,
-        parent_id: note.parent_id ?? null,
-        created_at: note.created_at,
-        updated_at: note.updated_at,
-        revision:
-          note.revision === undefined || note.revision === null
-            ? null
-            : Number(note.revision),
-        deleted: note.deleted,
+        associated_organization: note.org_id
+          ? {
+              id: note.org_id,
+              logo_url: note.org_logo_url,
+              name: note.org_name,
+              unique_name: note.org_unique_name,
+            }
+          : null,
         associated_project: note.project_id
           ? {
               id: note.project_id,
               name: note.project_name,
+              stage_color: note.project_stage_color || null,
               stage_id: note.project_stage_id || null,
               stage_name: note.project_stage_name || null,
-              stage_color: note.project_stage_color || null,
-            }
-          : null,
-        associated_organization: note.org_id
-          ? {
-              id: note.org_id,
-              name: note.org_name,
-              unique_name: note.org_unique_name,
-              logo_url: note.org_logo_url,
             }
           : null,
         author: {
+          avatar_url: note.user_avatar_url,
+          email: note.user_email,
           id: note.user_id,
           name: note.user_name,
           username: note.user_username,
-          email: note.user_email,
-          avatar_url: note.user_avatar_url,
         },
+        blocks: [],
         collaborators: note.collaborators || [],
+        created_at: note.created_at,
+        deleted: note.deleted,
+        description: note.description || null,
+        due_date: note.due_date ?? null,
+        id: note.id,
+        parent_id: note.parent_id ?? null,
+        priority_color: note.priority_color ?? null,
+        priority_id: note.priority_id ?? null,
+        priority_name: note.priority_name ?? null,
+        properties: note.properties || {},
+        public_id: note.public_note_id || null,
+        resolved_tags: Array.isArray(note.resolved_tags)
+          ? note.resolved_tags
+          : [],
+        revision:
+          note.revision === undefined || note.revision === null
+            ? null
+            : Number(note.revision),
+        status: note.status || null,
+        tags: note.tags || [] || null,
+        title: note.title,
+        updated_at: note.updated_at,
       }));
 
       if (result.pagination) {
         res.status(200).json({
-          pagination: result.pagination,
           notes: notesWithBlocks,
+          pagination: result.pagination,
         });
       } else {
         res.status(200).json({ notes: notesWithBlocks });
@@ -139,57 +139,57 @@ class NotesReadController extends NotesBaseController {
 
       // Assemble the complete note structure
       const completeNote = {
-        id: note.id,
-        public_id: note.public_note_id || null,
-        title: note.title,
-        description: note.description || null,
-        properties: note.properties || {},
-        tags: note.tags || [] || null,
-        status: note.status || null,
-        due_date: note.due_date ?? null,
-        priority_id: note.priority_id ?? null,
-        priority_name: note.priority_name ?? null,
-        priority_color: note.priority_color ?? null,
-        created_at: note.created_at,
-        updated_at: note.updated_at,
-        revision:
-          note.revision === undefined || note.revision === null
-            ? null
-            : Number(note.revision),
-        deleted: note.deleted,
+        access: {
+          canDelete: isOwner || hasOrgProjectAccess,
+          canEdit: isOwner || isCollaborator || hasOrgProjectAccess,
+          canShare: isOwner || hasOrgProjectAccess,
+          hasOrgProjectAccess,
+          isCollaborator,
+          isOwner,
+        },
+        associated_organization: note.org_id
+          ? {
+              id: note.org_id,
+              logo_url: note.org_logo_url,
+              name: note.org_name,
+              unique_name: note.org_unique_name,
+            }
+          : null,
         associated_project: note.project_id
           ? {
               id: note.project_id,
               name: note.project_name,
+              stage_color: note.project_stage_color || null,
               stage_id: note.project_stage_id || null,
               stage_name: note.project_stage_name || null,
-              stage_color: note.project_stage_color || null,
             }
           : null,
-        associated_organization: note.org_id
-          ? {
-              id: note.org_id,
-              name: note.org_name,
-              unique_name: note.org_unique_name,
-              logo_url: note.org_logo_url,
-            }
-          : null,
+        blocks,
+        collaborators: note.collaborators || [],
+        created_at: note.created_at,
+        deleted: note.deleted,
+        description: note.description || null,
+        due_date: note.due_date ?? null,
+        id: note.id,
+        priority_color: note.priority_color ?? null,
+        priority_id: note.priority_id ?? null,
+        priority_name: note.priority_name ?? null,
+        properties: note.properties || {},
+        public_id: note.public_note_id || null,
+        revision:
+          note.revision === undefined || note.revision === null
+            ? null
+            : Number(note.revision),
+        status: note.status || null,
+        tags: note.tags || [] || null,
+        title: note.title,
+        updated_at: note.updated_at,
         user: {
+          avatar_url: note.user_avatar_url,
+          email: note.user_email,
           id: note.user_id,
           name: note.user_name,
           username: note.user_username,
-          email: note.user_email,
-          avatar_url: note.user_avatar_url,
-        },
-        collaborators: note.collaborators || [],
-        blocks,
-        access: {
-          isOwner,
-          isCollaborator,
-          hasOrgProjectAccess,
-          canEdit: isOwner || isCollaborator || hasOrgProjectAccess,
-          canDelete: isOwner || hasOrgProjectAccess,
-          canShare: isOwner || hasOrgProjectAccess,
         },
       };
 
@@ -212,13 +212,13 @@ class NotesReadController extends NotesBaseController {
       );
 
       const formattedStats = {
+        mostUsedTags: (stats.top_tags || []).map((tag) => ({
+          count: parseInt(tag.count) || 0,
+          tag: tag.tag_name,
+        })),
+        statusDistribution: stats.status_distribution || {},
         totalNotes: parseInt(stats.total_notes) || 0,
         totalTags: parseInt(stats.unique_tags_count) || 0,
-        statusDistribution: stats.status_distribution || {},
-        mostUsedTags: (stats.top_tags || []).map((tag) => ({
-          tag: tag.tag_name,
-          count: parseInt(tag.count) || 0,
-        })),
       };
 
       res.status(200).json(formattedStats);

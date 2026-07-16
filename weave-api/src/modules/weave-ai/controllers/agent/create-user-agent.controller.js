@@ -1,7 +1,13 @@
 const agentRepository = require("@/modules/weave-ai/repositories/agents.repository");
-const { normalizeAgentPersonality, formatAgentResponse } = require("@/modules/weave-ai/utils/normalize");
+const {
+  normalizeAgentPersonality,
+  formatAgentResponse,
+} = require("@/modules/weave-ai/utils/normalize");
 const { getI18n, getLangFromReq } = require("../../utils/weave-ai-i18n.util");
-const { validateAuthentication, processKnowledgeFileUploads } = require("./agent.helpers");
+const {
+  validateAuthentication,
+  processKnowledgeFileUploads,
+} = require("./agent.helpers");
 
 async function createUserAgent(req, res) {
   const userLanguage = getLangFromReq(req);
@@ -9,39 +15,68 @@ async function createUserAgent(req, res) {
   try {
     const userId = validateAuthentication(req);
     const {
-      name, description, instructions, role, tone, language, avatar_url, tags,
-      model_provider, model_name, tools, rules, project_id,
+      name,
+      description,
+      instructions,
+      role,
+      tone,
+      language,
+      avatar_url,
+      tags,
+      model_provider,
+      model_name,
+      tools,
+      rules,
+      project_id,
     } = req.body;
 
     const personality = normalizeAgentPersonality({
-      instructions, role, tone, language, avatar_url,
+      avatar_url,
+      instructions,
+      language,
+      model_name,
+      model_provider,
+      role,
+      rules: rules
+        ? typeof rules === "string"
+          ? JSON.parse(rules)
+          : rules
+        : [],
       tags: tags ? (typeof tags === "string" ? JSON.parse(tags) : tags) : [],
-      model_provider, model_name,
-      tools: tools ? typeof tools === "string" ? JSON.parse(tools) : tools : [],
-      rules: rules ? typeof rules === "string" ? JSON.parse(rules) : rules : [],
+      tone,
+      tools: tools
+        ? typeof tools === "string"
+          ? JSON.parse(tools)
+          : tools
+        : [],
     });
 
     if (req.files && req.files.length > 0) {
-      const knowledgeFiles = await processKnowledgeFileUploads(req.files, userId);
+      const knowledgeFiles = await processKnowledgeFileUploads(
+        req.files,
+        userId
+      );
       personality.capabilities.knowledge_base.enabled = true;
       personality.capabilities.knowledge_base.sources = knowledgeFiles;
     }
 
     const newAgent = await agentRepository.createAgent(userId, {
-      name,
       description: description || null,
-      projectId: project_id || null,
       isActive: true,
+      name,
       personality,
+      projectId: project_id || null,
     });
 
-    res.json({ success: true, agent: formatAgentResponse(newAgent) });
+    res.json({ agent: formatAgentResponse(newAgent), success: true });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error creating agent:", error);
-    res.status(500).json({ success: false, error: t.createAgentFailed });
+    res.status(500).json({ error: t.createAgentFailed, success: false });
   }
 }
 

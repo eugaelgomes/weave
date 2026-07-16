@@ -76,7 +76,8 @@ class ReasoningsInteractionsRepository {
       INSERT INTO weave_engine_reasoning_interactions (${allColumns.join(", ")})
       VALUES (${allPlaceholders})
       ON CONFLICT (reasoning_id, user_id)
-      DO UPDATE SET ${conflictUpdates.join(", ")}, updated_at = NOW()
+      DO UPDATE SET ${fields.map((f) => `${f} = EXCLUDED.${f}`).join(", ")},
+      updated_at = NOW()
       RETURNING *
     `;
 

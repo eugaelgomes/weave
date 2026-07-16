@@ -253,8 +253,8 @@ export class PDFService {
                 .font("Courier")
                 .fontSize(10)
                 .text(block.text, indent + padding, doc.y + padding, {
-                  width: availableWidth - padding * 2,
                   lineGap: 2,
+                  width: availableWidth - padding * 2,
                 });
 
               doc.moveDown(2);
@@ -271,8 +271,8 @@ export class PDFService {
                 .font("Helvetica")
                 .fontSize(11)
                 .text(block.text || "", indent, doc.y, {
-                  width: availableWidth,
                   align: "justify",
+                  width: availableWidth,
                 });
               doc.moveDown(0.8);
             }
@@ -340,8 +340,8 @@ export class PDFService {
               .fillColor("#333333")
               .font("Helvetica")
               .text(collab.username, currentX + 45, currentY + 18, {
-                width: cardWidth - 50,
                 ellipsis: true,
+                width: cardWidth - 50,
               });
 
             currentX += cardWidth + 10;

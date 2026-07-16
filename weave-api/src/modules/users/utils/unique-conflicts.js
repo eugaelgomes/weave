@@ -25,14 +25,14 @@ const getUniqueFieldMessage = (field) => {
  */
 const buildUniqueConflictPayload = (field) => ({
   code: "USER_UNIQUE_CONFLICT",
-  field,
-  message: getUniqueFieldMessage(field),
   conflicts: {
     [field]: {
       available: false,
       reason: "already_in_use",
     },
   },
+  field,
+  message: getUniqueFieldMessage(field),
 });
 
 /**
@@ -110,8 +110,8 @@ const getUniqueFieldFromPgError = (error) => {
 
 module.exports = {
   buildUniqueConflictPayload,
-  normalizeEmail,
-  normalizeUsername,
-  normalizePhoneNumber,
   getUniqueFieldFromPgError,
+  normalizeEmail,
+  normalizePhoneNumber,
+  normalizeUsername,
 };

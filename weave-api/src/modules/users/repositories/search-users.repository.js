@@ -47,8 +47,8 @@ class SearchUsersRepository extends BaseRepository {
 
     const availability = {
       email: { available: true },
-      username: { available: true },
       phone_number: { available: true },
+      username: { available: true },
     };
 
     const conditions = [];

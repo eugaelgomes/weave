@@ -52,7 +52,7 @@ function splitNoteIdentifiers(identifiers) {
       publicIds.push(id);
     }
   }
-  return { uuidIds, publicIds };
+  return { publicIds, uuidIds };
 }
 
 /**
@@ -79,7 +79,7 @@ function buildNotesBulkDeleteWhere(identifiers) {
     throw new Error("Nenhum identificador de nota válido recebido.");
   }
 
-  return { sql: parts.join(" OR "), params };
+  return { params, sql: parts.join(" OR ") };
 }
 
 /**
@@ -148,7 +148,7 @@ module.exports = {
   buildNotesBulkDeleteWhere,
   isPublicNoteId,
   isUuidNoteId,
-  resolveNoteIdToUuid,
   resolveNoteIdsToUuids,
+  resolveNoteIdToUuid,
   splitNoteIdentifiers,
 };

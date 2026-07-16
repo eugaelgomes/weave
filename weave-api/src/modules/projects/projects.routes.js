@@ -189,7 +189,7 @@ router.post(
   "/:projectId/stages/:stageId/tasks",
   standardTrafficLimiter,
   requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
-  noteUpdateUpload.fields([{ name: "files", maxCount: 10 }]),
+  noteUpdateUpload.fields([{ maxCount: 10, name: "files" }]),
   ProjectsUpdateController.createTaskInStage.bind(ProjectsUpdateController)
 );
 
@@ -197,7 +197,7 @@ router.patch(
   "/:projectId/tasks/:noteId",
   standardTrafficLimiter,
   requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
-  noteUpdateUpload.fields([{ name: "files", maxCount: 10 }]),
+  noteUpdateUpload.fields([{ maxCount: 10, name: "files" }]),
   ProjectsUpdateController.patchTaskInProject.bind(ProjectsUpdateController)
 );
 

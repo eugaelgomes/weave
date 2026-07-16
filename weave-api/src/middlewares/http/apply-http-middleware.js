@@ -80,16 +80,16 @@ function configureGlobalMiddlewares(app) {
 
   app.use(
     helmet({
-      hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", process.env.TRUSTED_CDN || "'self'"],
           objectSrc: ["'none'"],
+          scriptSrc: ["'self'", process.env.TRUSTED_CDN || "'self'"],
           upgradeInsecureRequests: [],
         },
       },
       frameguard: { action: "deny" },
+      hsts: { includeSubDomains: true, maxAge: 31536000, preload: true },
       noSniff: true,
       referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     })

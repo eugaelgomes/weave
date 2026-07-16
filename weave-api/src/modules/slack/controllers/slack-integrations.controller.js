@@ -1,4 +1,3 @@
-/* eslint-disable no-console -- integration errors */
 const OrganizationsBaseController = require("@/modules/organizations/controllers/base-controller");
 const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
 const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/mutate-slack-integrations.repository");

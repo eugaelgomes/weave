@@ -80,10 +80,10 @@ class ProjectsCreateController extends ProjectsCoreController {
 
       if (!canCreate) {
         return sendPlanLimitExceeded(res, {
-          resource: "projects",
-          limit_key: PLAN_PATHS.LIMITS.MAX_PROJECTS,
           error: "Limite de projetos atingido",
+          limit_key: PLAN_PATHS.LIMITS.MAX_PROJECTS,
           message: `Seu plano (${planDetails.name}) permite apenas ${maxProjects} projetos.`,
+          resource: "projects",
         });
       }
 
@@ -117,11 +117,11 @@ class ProjectsCreateController extends ProjectsCoreController {
       }
 
       const payload = {
-        title,
         description,
         methodology,
-        status: projectStatus,
         parent_project_id,
+        status: projectStatus,
+        title,
       };
       const { projectData, stagesData } = normalizeNewProject(
         payload,
@@ -166,9 +166,9 @@ class ProjectsCreateController extends ProjectsCoreController {
 
           if (autoMembers.length > 0) {
             const membersToInsert = autoMembers.map((m) => ({
-              userId: m.user_id,
-              role: m.project_role,
               addedBy: userId,
+              role: m.project_role,
+              userId: m.user_id,
             }));
 
             await this.projectsRepository.bulkAddProjectMembers(
@@ -240,10 +240,10 @@ class ProjectsCreateController extends ProjectsCoreController {
 
       if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
         return sendPlanLimitExceeded(res, {
-          resource: "project_collaborators",
-          limit_key: "limits.max_collaborators_per_project",
           error: "Limite de colaboradores atingido",
+          limit_key: "limits.max_collaborators_per_project",
           message: `Seu plano (${planDetails.name}) permite apenas ${maxCollaborators} colaboradores por projeto.`,
+          resource: "project_collaborators",
         });
       }
 
@@ -296,8 +296,8 @@ class ProjectsCreateController extends ProjectsCoreController {
       }
 
       res.status(201).json({
-        message: "Colaborador adicionado com sucesso",
         collaborators: result[0].collaborators,
+        message: "Colaborador adicionado com sucesso",
       });
     } catch (error) {
       this._handleError(error, res, next);

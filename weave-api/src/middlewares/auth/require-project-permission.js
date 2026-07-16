@@ -127,7 +127,6 @@ function requireProjectPermission(permission) {
 
       return next();
     } catch (err) {
-      // eslint-disable-next-line no-console -- unexpected auth/membership/repo errors
       console.error("[requireProjectPermission]", err);
       return res.status(500).json({
         code: "INTERNAL_ERROR",
@@ -139,6 +138,6 @@ function requireProjectPermission(permission) {
 }
 
 module.exports = {
-  requireProjectPermission,
   PROJECT_PERMISSIONS,
+  requireProjectPermission,
 };

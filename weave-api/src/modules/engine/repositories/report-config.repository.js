@@ -8,8 +8,7 @@ class ReportConfigRepository {
    * @returns {Promise<object|undefined>}
    */
   async getByProjectId(projectId) {
-    const query = `
-      SELECT
+    const query = `      SELECT
         rc.*,
         ps.sprint_number AS current_sprint_number,
         ps.title AS current_sprint_title,
@@ -19,8 +18,7 @@ class ReportConfigRepository {
       FROM project_ai_report_configs rc
       LEFT JOIN project_sprints ps ON ps.id = rc.current_sprint_id AND ps.deleted = false
       WHERE rc.project_id = $1 AND rc.deleted = false
-      LIMIT 1
-    `;
+      LIMIT 1`;
 
     const result = await pool.query(query, [projectId]);
     return result.rows[0];
@@ -35,22 +33,41 @@ class ReportConfigRepository {
    * @returns {Promise<object>}
    */
   async upsert(projectId, userId, config) {
-    const query = `
-      INSERT INTO project_ai_report_configs (
-        project_id, user_id, enabled,
-        default_sprint_duration_days, default_workable_days, auto_create_next_sprint,
-        enable_sprint_kickoff, enable_daily_standup, enable_sprint_review,
+    const query = `      INSERT INTO project_ai_report_configs (
+        project_id,
+        user_id,
+        enabled,
+        default_sprint_duration_days,
+        default_workable_days,
+        auto_create_next_sprint,
+        enable_sprint_kickoff,
+        enable_daily_standup,
+        enable_sprint_review,
         report_time_utc,
-        channels, recipient_scope, custom_recipients,
-        current_sprint_id, next_report_at, reasoning_instructions
+        channels,
+        recipient_scope,
+        custom_recipients,
+        current_sprint_id,
+        next_report_at,
+        reasoning_instructions
       )
       VALUES (
-        $1, $2, $3,
-        $4, $5, $6,
-        $7, $8, $9,
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
         $10,
-        $11, $12, $13,
-        $14, $15, COALESCE($16, '{}'::jsonb)
+        $11,
+        $12,
+        $13,
+        $14,
+        $15,
+        COALESCE($16, '{}'::jsonb)
       )
       ON CONFLICT (project_id)
       DO UPDATE SET
@@ -73,8 +90,7 @@ class ReportConfigRepository {
           project_ai_report_configs.reasoning_instructions
         ),
         updated_at = NOW()
-      RETURNING *
-    `;
+      RETURNING *`;
 
     const result = await pool.query(query, [
       projectId,
@@ -130,7 +146,8 @@ class ReportConfigRepository {
 
     const query = `
       UPDATE project_ai_report_configs
-      SET ${fields.join(", ")}, updated_at = NOW()
+      SET ${fields.join(", ")},
+      updated_at = NOW()
       WHERE id = $1 AND deleted = false
       RETURNING *
     `;
@@ -146,11 +163,11 @@ class ReportConfigRepository {
    * @returns {Promise<boolean>}
    */
   async delete(projectId) {
-    const query = `
-      UPDATE project_ai_report_configs
-      SET deleted = true, deleted_at = NOW(), enabled = false
-      WHERE project_id = $1
-    `;
+    const query = `      UPDATE project_ai_report_configs
+      SET deleted = true,
+      deleted_at = NOW(),
+      enabled = false
+      WHERE project_id = $1`;
 
     await pool.query(query, [projectId]);
     return true;
@@ -163,8 +180,7 @@ class ReportConfigRepository {
    * @returns {Promise<object[]>}
    */
   async getDueConfigs() {
-    const query = `
-      SELECT
+    const query = `      SELECT
         rc.*,
         ps.id AS sprint_id,
         ps.sprint_number,
@@ -181,8 +197,7 @@ class ReportConfigRepository {
       WHERE rc.deleted = false
         AND rc.enabled = true
         AND rc.next_report_at IS NOT NULL
-        AND rc.next_report_at <= NOW()
-    `;
+        AND rc.next_report_at <= NOW()`;
 
     const result = await pool.query(query);
     return result.rows;

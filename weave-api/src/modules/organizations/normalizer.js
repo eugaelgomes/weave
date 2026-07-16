@@ -6,44 +6,21 @@ const {
 } = require("@/modules/organizations/organization-role-policy");
 
 const PREDEFINED_PROPERTIES = Object.freeze({
-  theme: {
-    type: "string",
-    default: "light",
-    allowed: ["light", "dark"],
-    description: "Interface theme",
-  },
-  language: {
-    type: "string",
-    default: "en-US",
-    allowed: ["pt-BR", "en-US", "es-ES", "fr-FR"],
-    description: "Default language",
-  },
-  timezone: {
-    type: "string",
-    default: "America/Sao_Paulo",
-    description: "Time zone",
-  },
   allowPublicNotes: {
-    type: "boolean",
     default: false,
     description: "Allows public notes",
+    type: "boolean",
   },
-  maxMembers: {
-    type: "number",
-    default: 10,
-    min: 1,
-    max: 10000,
-    description: "Members limit",
-  },
-  maxProjects: {
-    type: "number",
-    default: 5,
-    min: 1,
-    max: 100,
-    description: "Projects limit",
+  branding: {
+    default: {
+      customDomain: null,
+      primaryColor: "#ffffff",
+      secondaryColor: "#c4c4c4",
+    },
+    description: "Visual identity",
+    type: "object",
   },
   features: {
-    type: "object",
     default: {
       aiAgent: false,
       backup: true,
@@ -51,24 +28,47 @@ const PREDEFINED_PROPERTIES = Object.freeze({
       passwordManager: false,
     },
     description: "Active features",
-  },
-  branding: {
     type: "object",
-    default: {
-      primaryColor: "#ffffff",
-      secondaryColor: "#c4c4c4",
-      customDomain: null,
-    },
-    description: "Visual identity",
+  },
+  language: {
+    allowed: ["pt-BR", "en-US", "es-ES", "fr-FR"],
+    default: "en-US",
+    description: "Default language",
+    type: "string",
+  },
+  maxMembers: {
+    default: 10,
+    description: "Members limit",
+    max: 10000,
+    min: 1,
+    type: "number",
+  },
+  maxProjects: {
+    default: 5,
+    description: "Projects limit",
+    max: 100,
+    min: 1,
+    type: "number",
   },
   notifications: {
-    type: "object",
     default: {
+      digest: "weekly",
       email: true,
       push: false,
-      digest: "weekly",
     },
     description: "Notification preferences",
+    type: "object",
+  },
+  theme: {
+    allowed: ["light", "dark"],
+    default: "light",
+    description: "Interface theme",
+    type: "string",
+  },
+  timezone: {
+    default: "America/Sao_Paulo",
+    description: "Time zone",
+    type: "string",
   },
 });
 
@@ -177,30 +177,34 @@ const validRoles = Object.freeze(Object.values(ORG_ROLES));
 
 const orgDataResponse = (organization) => {
   return {
-    id: organization.id,
-    public_id: organization.public_id || null,
-    org_name: organization.org_name,
-    unique_name: organization.unique_name,
-    logo_url: organization.logo_url,
     banner_url: organization.banner_url,
-    description: organization.description,
-    settings: organization.settings || {},
     created_at: organization.created_at,
-    updated_at: organization.updated_at,
     deleted: organization.deleted,
+    description: organization.description,
+    id: organization.id,
+    logo_url: organization.logo_url,
+    org_name: organization.org_name,
+    public_id: organization.public_id || null,
+    settings: organization.settings || {},
+    unique_name: organization.unique_name,
+    updated_at: organization.updated_at,
   };
 };
 
 module.exports = {
-  validRoles,
-  normalizeOrganizationName,
-  suggestUniqueOrganizationName,
   generateUniqueOrganizationName,
-  normalizeOrganizationProperties,
-  updateOrganizationProperties,
   getDefaultOrganizationProperties,
   getPropertiesSchema,
-  predefinedProperties: PREDEFINED_PROPERTIES,
+  normalizeOrganizationName,
+  normalizeOrganizationProperties,
   // Org data formatter
   orgDataResponse,
+
+  predefinedProperties: PREDEFINED_PROPERTIES,
+
+  suggestUniqueOrganizationName,
+
+  updateOrganizationProperties,
+
+  validRoles,
 };

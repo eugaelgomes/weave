@@ -19,9 +19,20 @@ class BackupSummaryController extends BackupBaseController {
       const rawData = await FetchBackupDataRepository.getAllData(userId);
 
       const summary = {
-        total_notes: rawData.length,
-        owned_notes: rawData.filter((n) => n.owner_id === userId).length,
         collaborated_notes: rawData.filter((n) => n.owner_id !== userId).length,
+        last_updated:
+          rawData.length > 0
+            ? Math.max(...rawData.map((n) => new Date(n.updated_at)))
+            : null,
+        newest_note:
+          rawData.length > 0
+            ? Math.max(...rawData.map((n) => new Date(n.created_at)))
+            : null,
+        oldest_note:
+          rawData.length > 0
+            ? Math.min(...rawData.map((n) => new Date(n.created_at)))
+            : null,
+        owned_notes: rawData.filter((n) => n.owner_id === userId).length,
         total_blocks: rawData.reduce(
           (sum, n) => sum + (n.blocks?.filter((b) => !b.deleted).length || 0),
           0
@@ -34,18 +45,7 @@ class BackupSummaryController extends BackupBaseController {
                 .map((c) => c.collaborator_id) || []
           )
         ).size,
-        oldest_note:
-          rawData.length > 0
-            ? Math.min(...rawData.map((n) => new Date(n.created_at)))
-            : null,
-        newest_note:
-          rawData.length > 0
-            ? Math.max(...rawData.map((n) => new Date(n.created_at)))
-            : null,
-        last_updated:
-          rawData.length > 0
-            ? Math.max(...rawData.map((n) => new Date(n.updated_at)))
-            : null,
+        total_notes: rawData.length,
       };
 
       const notesByMonth = {};
@@ -66,11 +66,7 @@ class BackupSummaryController extends BackupBaseController {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       res.status(200).json({
-        status: "OK",
-        message: "Backup summary generated successfully",
-        generated_at: new Date().toISOString(),
         details: {
-          summary,
           notes_by_month: notesByMonth,
           recent_activity: {
             notes_created: rawData.filter(
@@ -80,7 +76,11 @@ class BackupSummaryController extends BackupBaseController {
               (n) => new Date(n.updated_at) > thirtyDaysAgo
             ).length,
           },
+          summary,
         },
+        generated_at: new Date().toISOString(),
+        message: "Backup summary generated successfully",
+        status: "OK",
       });
     } catch (error) {
       this._handleError(error, res, next);

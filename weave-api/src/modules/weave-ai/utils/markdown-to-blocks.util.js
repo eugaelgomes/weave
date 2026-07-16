@@ -56,11 +56,11 @@ function markdownToBlocks(markdown) {
 
       blocks.push({
         id: newBlockId(),
-        type: "code",
         properties: {
-          text: codeLines.join("\n"),
           attrs: { language },
+          text: codeLines.join("\n"),
         },
+        type: "code",
       });
       continue;
     }
@@ -79,8 +79,8 @@ function markdownToBlocks(markdown) {
     ) {
       blocks.push({
         id: newBlockId(),
-        type: "divider",
         properties: {},
+        type: "divider",
       });
       i++;
       continue;
@@ -91,11 +91,11 @@ function markdownToBlocks(markdown) {
     if (headingMatch) {
       blocks.push({
         id: newBlockId(),
-        type: "heading",
         properties: {
-          text: headingMatch[2].trim(),
           attrs: { level: headingMatch[1].length },
+          text: headingMatch[2].trim(),
         },
+        type: "heading",
       });
       i++;
       continue;
@@ -110,11 +110,11 @@ function markdownToBlocks(markdown) {
         if (!tm) break;
         blocks.push({
           id: newBlockId(),
-          type: "todo",
           properties: {
-            text: tm[2].trim(),
             attrs: { checked: tm[1].toLowerCase() === "x" },
+            text: tm[2].trim(),
           },
+          type: "todo",
         });
         i++;
       }
@@ -130,19 +130,19 @@ function markdownToBlocks(markdown) {
         if (!bm) break;
         children.push({
           id: newBlockId(),
-          type: "paragraph",
           properties: { text: bm[1].trim() },
+          type: "paragraph",
         });
         i++;
       }
       blocks.push({
-        id: newBlockId(),
-        type: "list",
-        properties: {
-          text: children[0]?.properties?.text || "",
-          attrs: { ordered: false },
-        },
         children,
+        id: newBlockId(),
+        properties: {
+          attrs: { ordered: false },
+          text: children[0]?.properties?.text || "",
+        },
+        type: "list",
       });
       continue;
     }
@@ -156,19 +156,19 @@ function markdownToBlocks(markdown) {
         if (!om) break;
         children.push({
           id: newBlockId(),
-          type: "paragraph",
           properties: { text: om[1].trim() },
+          type: "paragraph",
         });
         i++;
       }
       blocks.push({
-        id: newBlockId(),
-        type: "list",
-        properties: {
-          text: children[0]?.properties?.text || "",
-          attrs: { ordered: true },
-        },
         children,
+        id: newBlockId(),
+        properties: {
+          attrs: { ordered: true },
+          text: children[0]?.properties?.text || "",
+        },
+        type: "list",
       });
       continue;
     }
@@ -185,8 +185,8 @@ function markdownToBlocks(markdown) {
       }
       blocks.push({
         id: newBlockId(),
-        type: "quote",
         properties: { text: quoteParts.join("\n") },
+        type: "quote",
       });
       continue;
     }
@@ -194,8 +194,8 @@ function markdownToBlocks(markdown) {
     // ── Paragraph (default) ─────────────────────────────────────────
     blocks.push({
       id: newBlockId(),
-      type: "paragraph",
       properties: { text: line.trim() },
+      type: "paragraph",
     });
     i++;
   }

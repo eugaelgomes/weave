@@ -12,7 +12,7 @@ const configureShutdown = (server) => {
    * @param {string} signal - The signal received
    */
   const gracefulShutdown = async (signal) => {
-    console.log(`${signal} signal received: closing HTTP server`);
+    console.info(`${signal} signal received: closing HTTP server`);
 
     const shutdownTimeout = setTimeout(() => {
       console.error("Graceful shutdown timeout, forcing exit");
@@ -26,10 +26,10 @@ const configureShutdown = (server) => {
           else resolve();
         });
       });
-      console.log("HTTP server closed");
+      console.info("HTTP server closed");
 
       await pool.end();
-      console.log("Database connections closed");
+      console.info("Database connections closed");
 
       clearTimeout(shutdownTimeout);
       await Sentry.close(2000);

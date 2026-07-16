@@ -1,4 +1,3 @@
-/* eslint-disable sort-keys */
 /**
  * @typedef {Object} AppPreferencesNotifications
  * @property {boolean} email
@@ -94,51 +93,10 @@
  * @type {AppPreferences}
  */
 const defaultAppPreferences = {
-  notifications: {
-    email: true,
-    push: true,
-    browser: true,
-    sound: true,
-    collaborationInvites: true,
-    projectUpdates: true,
-    mentionsAndComments: true,
-  },
-  editor: {
-    fontSize: 14,
-    fontFamily: "Inter, system-ui, sans-serif",
-    lineHeight: 1.6,
-    autoSave: true,
-    autoSaveDelay: 2000, // milliseconds
-    spellCheck: true,
-    syntaxHighlighting: true,
-  },
-  Display: {
-    density: "comfortable", // compact, comfortable, spacious
-    sidebarPosition: "left", // left, right
-    showLineNumbers: false,
-    showWordCount: true,
-    compactMode: false,
-  },
-  language: {
-    interface: "pt-BR",
-    spellCheckLanguage: "pt-BR",
-    dateFormat: "DD/MM/YYYY",
-    timeFormat: "24h", // 12h, 24h
-  },
-  privacy: {
-    shareUsageData: false,
-    showOnlineStatus: true,
-    allowAnalytics: false,
-  },
-  collaboration: {
-    defaultPermission: "view", // view, edit
-    autoAcceptInvites: false,
-    showCollaboratorCursors: true,
-  },
   ai: {
-    enabled: true,
     autoSuggestions: true,
     contextAwareAssistance: true,
+    enabled: true,
     historyRetention: 30, // days
   },
   backup: {
@@ -146,9 +104,56 @@ const defaultAppPreferences = {
     backupFrequency: "daily", // realtime, daily, weekly, manual
     retentionPeriod: 30, // days
   },
+  collaboration: {
+    // view, edit
+    autoAcceptInvites: false,
+    defaultPermission: "view",
+    showCollaboratorCursors: true,
+  },
+  Display: {
+    compactMode: false,
+
+    density: "comfortable",
+
+    // left, right
+    showLineNumbers: false,
+
+    showWordCount: true,
+    // compact, comfortable, spacious
+    sidebarPosition: "left",
+  },
+  editor: {
+    autoSave: true,
+    autoSaveDelay: 2000,
+    fontFamily: "Inter, system-ui, sans-serif",
+    fontSize: 14,
+    lineHeight: 1.6, // milliseconds
+    spellCheck: true,
+    syntaxHighlighting: true,
+  },
+  language: {
+    dateFormat: "DD/MM/YYYY",
+    interface: "pt-BR",
+    spellCheckLanguage: "pt-BR",
+    timeFormat: "24h", // 12h, 24h
+  },
+  notifications: {
+    browser: true,
+    collaborationInvites: true,
+    email: true,
+    mentionsAndComments: true,
+    projectUpdates: true,
+    push: true,
+    sound: true,
+  },
+  privacy: {
+    allowAnalytics: false,
+    shareUsageData: false,
+    showOnlineStatus: true,
+  },
   shortcuts: {
-    enabled: true,
     customShortcuts: {},
+    enabled: true,
   },
 };
 
@@ -161,30 +166,6 @@ const defaultAppPreferences = {
  */
 function normalizeAppPreferences(userPreferences = {}) {
   return {
-    notifications: {
-      ...defaultAppPreferences.notifications,
-      ...(userPreferences.notifications || {}),
-    },
-    editor: {
-      ...defaultAppPreferences.editor,
-      ...(userPreferences.editor || {}),
-    },
-    Display: {
-      ...defaultAppPreferences.Display,
-      ...(userPreferences.Display || userPreferences.display || {}),
-    },
-    language: {
-      ...defaultAppPreferences.language,
-      ...(userPreferences.language || {}),
-    },
-    privacy: {
-      ...defaultAppPreferences.privacy,
-      ...(userPreferences.privacy || {}),
-    },
-    collaboration: {
-      ...defaultAppPreferences.collaboration,
-      ...(userPreferences.collaboration || {}),
-    },
     ai: {
       ...defaultAppPreferences.ai,
       ...(userPreferences.ai || {}),
@@ -192,6 +173,30 @@ function normalizeAppPreferences(userPreferences = {}) {
     backup: {
       ...defaultAppPreferences.backup,
       ...(userPreferences.backup || {}),
+    },
+    collaboration: {
+      ...defaultAppPreferences.collaboration,
+      ...(userPreferences.collaboration || {}),
+    },
+    Display: {
+      ...defaultAppPreferences.Display,
+      ...(userPreferences.Display || userPreferences.display || {}),
+    },
+    editor: {
+      ...defaultAppPreferences.editor,
+      ...(userPreferences.editor || {}),
+    },
+    language: {
+      ...defaultAppPreferences.language,
+      ...(userPreferences.language || {}),
+    },
+    notifications: {
+      ...defaultAppPreferences.notifications,
+      ...(userPreferences.notifications || {}),
+    },
+    privacy: {
+      ...defaultAppPreferences.privacy,
+      ...(userPreferences.privacy || {}),
     },
     shortcuts: {
       ...defaultAppPreferences.shortcuts,

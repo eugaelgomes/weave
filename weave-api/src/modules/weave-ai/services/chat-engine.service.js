@@ -39,7 +39,7 @@ subscriberClient.on("message", (channel, message) => {
         callback(parsed.chunk);
       }
     }
-  } catch (e) {}
+  } catch {}
 });
 
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(

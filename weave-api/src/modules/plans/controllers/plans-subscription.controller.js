@@ -29,21 +29,21 @@ class PlansSubscriptionController {
       );
 
       return res.status(200).json({
+        plan_details: effective.plan_details,
         subscription: {
+          cancel_at_period_end: subscription?.cancel_at_period_end || false,
+          current_period_end: subscription?.current_period_end || null,
+          current_period_start: subscription?.current_period_start || null,
           plan_id: effective.plan_id,
           plan_name: effective.plan_name,
           plan_version: effective.plan_version,
-          subscriber_type: effective.subscriber_type,
-          subscriber_id: effective.subscriber_id,
-          status: subscription?.status || "active",
           provider: subscription?.provider || "internal",
-          current_period_start: subscription?.current_period_start || null,
-          current_period_end: subscription?.current_period_end || null,
-          cancel_at_period_end: subscription?.cancel_at_period_end || false,
-          trial_start: subscription?.trial_start || null,
+          status: subscription?.status || "active",
+          subscriber_id: effective.subscriber_id,
+          subscriber_type: effective.subscriber_type,
           trial_end: subscription?.trial_end || null,
+          trial_start: subscription?.trial_start || null,
         },
-        plan_details: effective.plan_details,
       });
     } catch (err) {
       console.error("[PlansSubscriptionController.getSubscription]", err);
@@ -191,8 +191,8 @@ class PlansSubscriptionController {
       );
 
       return res.status(200).json({
-        message: "Cancellation scheduled at end of current period",
         current_period_end: subscription.current_period_end,
+        message: "Cancellation scheduled at end of current period",
       });
     } catch (err) {
       console.error("[PlansSubscriptionController.cancelSubscription]", err);
@@ -251,19 +251,19 @@ class PlansSubscriptionController {
 
     const checks = [
       {
-        usage: "usage_summary.notes_total",
-        limit: "limits.max_notes",
         label: "notes",
+        limit: "limits.max_notes",
+        usage: "usage_summary.notes_total",
       },
       {
-        usage: "usage_summary.projects_total",
-        limit: "limits.max_projects",
         label: "projects",
+        limit: "limits.max_projects",
+        usage: "usage_summary.projects_total",
       },
       {
-        usage: "usage_summary.team_members_total",
-        limit: "limits.max_team_members",
         label: "team members",
+        limit: "limits.max_team_members",
+        usage: "usage_summary.team_members_total",
       },
     ];
 

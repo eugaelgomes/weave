@@ -11,24 +11,24 @@ const createDomainSchema = z.object({
  * Validates the request body for updating SSO settings.
  */
 const updateSsoSettingsSchema = z.object({
-  provider: z.literal("saml", {
-    errorMap: () => ({
-      message: "Currently only SAML providers are supported",
-    }),
-  }),
+  enabled: z.boolean().optional(),
   metadata: z
     .object({
-      entityId: z.string().trim().min(1, "entityId is required"),
-      ssoUrl: z.string().trim().optional(),
       acsUrl: z.string().trim().optional(),
-      sloUrl: z.string().trim().optional().nullable(),
       certificate: z.string().trim().min(1, "certificate is required"),
+      entityId: z.string().trim().min(1, "entityId is required"),
+      sloUrl: z.string().trim().optional().nullable(),
+      ssoUrl: z.string().trim().optional(),
     })
     .refine((data) => data.ssoUrl || data.acsUrl, {
       message: "ssoUrl or acsUrl is required",
       path: ["ssoUrl"],
     }),
-  enabled: z.boolean().optional(),
+  provider: z.literal("saml", {
+    errorMap: () => ({
+      message: "Currently only SAML providers are supported",
+    }),
+  }),
 });
 
 module.exports = {

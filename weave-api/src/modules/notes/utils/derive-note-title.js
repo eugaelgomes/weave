@@ -93,7 +93,7 @@ function resolveNoteTitle(input, maxLen = DEFAULT_MAX_TITLE_LEN) {
 
 module.exports = {
   DEFAULT_MAX_TITLE_LEN,
-  firstLineUpTo,
   deriveTitleFromBlocks,
+  firstLineUpTo,
   resolveNoteTitle,
 };

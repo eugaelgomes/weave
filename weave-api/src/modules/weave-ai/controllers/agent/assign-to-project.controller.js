@@ -11,17 +11,23 @@ async function assignToProject(req, res) {
     const { id } = req.params;
     const { projectId } = req.body;
 
-    const updatedAgent = await agentRepository.assignToProject(id, userId, projectId);
+    const updatedAgent = await agentRepository.assignToProject(
+      id,
+      userId,
+      projectId
+    );
     if (!updatedAgent) {
-      return res.status(404).json({ success: false, error: t.agentNotFound });
+      return res.status(404).json({ error: t.agentNotFound, success: false });
     }
-    res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
+    res.json({ agent: formatAgentResponse(updatedAgent), success: true });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error assigning agent to project:", error);
-    res.status(500).json({ success: false, error: t.assignProjectFailed });
+    res.status(500).json({ error: t.assignProjectFailed, success: false });
   }
 }
 

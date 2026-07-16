@@ -10,12 +10,11 @@ const CreateUsersRepository = require("@/modules/users/repositories/create-users
 const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
-const DeleteUsersRepository = require("@/modules/users/repositories/delete-users.repository");
-const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
+
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
 const spacesService = require("@/services/storage");
 const bcrypt = require("bcrypt");
-const crypto = require("crypto");
+
 const {
   send_organization_invite,
 } = require("@/services/email/templates/invite-member");
@@ -23,8 +22,7 @@ const {
   send_organization_invite_accepted,
 } = require("@/services/email/templates/invite-member-accepted");
 const { getUserEmailLocale } = require("@/services/email/i18n");
-const { validRoles } = require("../normalizer");
-const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
+
 const {
   ORG_ROLES,
 } = require("@/modules/organizations/organization-role-policy");
@@ -33,12 +31,6 @@ const {
   getUniqueFieldFromPgError,
 } = require("@/modules/users/utils/unique-conflicts");
 
-const PROJECT_MEMBER_ROLES = [
-  "PROJECT_MANAGER",
-  "CONTRIBUTOR",
-  "COMMENTER",
-  "VIEWER",
-];
 const MAX_SUPER_ADMINS = 3;
 
 class OrganizationMembersController extends OrganizationsBaseController {
@@ -129,9 +121,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
-        message: "Role updated successfully",
         data: { role },
+        message: "Role updated successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error updating member role:", error);
@@ -156,7 +148,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (!(await this._ensureCanManageMembers(currentOrg, res))) {
@@ -165,8 +157,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       if (String(currentOrg.user_id) === String(memberId)) {
         return res.status(400).json({
-          success: false,
           error: "Cannot remove the organization owner",
+          success: false,
         });
       }
 
@@ -182,9 +174,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
         ["ADMIN", "SUPER_ADMIN"].includes(targetMember.role)
       ) {
         return res.status(400).json({
-          success: false,
           error:
             "Cannot remove an administrator. Change role to MEMBER before removing.",
+          success: false,
         });
       }
 
@@ -196,13 +188,13 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!removed) {
         return res
           .status(404)
-          .json({ success: false, error: "Member not found" });
+          .json({ error: "Member not found", success: false });
       }
 
       res.status(200).json({
-        status: "OK",
-        message: "Member removed successfully",
         data: removed,
+        message: "Member removed successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error removing member:", error);
@@ -225,7 +217,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
       if (!currentOrg) {
         return res
           .status(404)
-          .json({ success: false, error: "Organization not found" });
+          .json({ error: "Organization not found", success: false });
       }
 
       if (
@@ -243,8 +235,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
-        organization_id: currentOrg.id,
         count: members.length,
         count_by_role: members.reduce((acc, member) => {
           acc[member.role] = (acc[member.role] || 0) + 1;
@@ -254,42 +244,44 @@ class OrganizationMembersController extends OrganizationsBaseController {
           acc[member.status] = (acc[member.status] || 0) + 1;
           return acc;
         }, {}),
-
         list_org_members: members.map((member) => ({
           member_data: {
-            id: member.user_id,
-            name: member.name,
-            username: member.username,
-            email: member.email,
-            avatar_url: member.avatar_url || null,
-            membership: {
-              role: member.role,
-              status: member.status,
-              created_at: member.created_at,
-              updated_at: member.updated_at,
-            },
             activity: {
-              notes_count: parseInt(member.notes_count, 10) || 0,
-              projects: member.projects || [],
               areas: member.areas || [],
               last_login_at: member.last_login_at || null,
+              notes_count: parseInt(member.notes_count, 10) || 0,
+              projects: member.projects || [],
             },
+            avatar_url: member.avatar_url || null,
+            email: member.email,
+            id: member.user_id,
             invited_by: member.invited_by
               ? {
+                  avatar_url: member.inviter_avatar_url || null,
                   id: member.invited_by,
                   name: member.inviter_name,
                   username: member.inviter_username,
-                  avatar_url: member.inviter_avatar_url || null,
                 }
               : null,
+            membership: {
+              created_at: member.created_at,
+              role: member.role,
+              status: member.status,
+              updated_at: member.updated_at,
+            },
+            name: member.name,
+            username: member.username,
           },
         })),
+        organization_id: currentOrg.id,
+
+        status: "OK",
       });
     } catch (error) {
       console.error("Error fetching members:", error);
       res
         .status(500)
-        .json({ status: "ERROR", error: "Error fetching members" });
+        .json({ error: "Error fetching members", status: "ERROR" });
     }
   }
 
@@ -329,10 +321,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
       ) {
         return;
       }
-
-      const isGlobalRole =
-        normalizedRole === ORG_ROLES.ADMIN ||
-        normalizedRole === ORG_ROLES.SUPER_ADMIN;
 
       const validTargetAreas = [];
       for (const tArea of target_areas) {
@@ -410,15 +398,15 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       res.status(201).json({
-        status: "OK",
-        message: "Invite sent successfully.",
         data: {
-          invite_id: invite.invite_id,
           email: invite.email,
-          role: invite.role,
           expires_at: invite.expires_at,
+          invite_id: invite.invite_id,
+          role: invite.role,
           target_areas: invite.target_areas,
         },
+        message: "Invite sent successfully.",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error inviting member:", error);
@@ -477,19 +465,19 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const has_account = existingUsers.some((u) => u.email === invite.email);
 
       return res.status(200).json({
-        status: "OK",
         data: {
-          org_name: invite.org_name,
-          org_logo_url: invite.logo_url
-            ? spacesService.getFileUrl(invite.logo_url)
-            : null,
           email: invite.email,
-          role: invite.role,
           expires_at: invite.expires_at,
           has_account,
           invited_name: invite.name || null,
+          org_logo_url: invite.logo_url
+            ? spacesService.getFileUrl(invite.logo_url)
+            : null,
+          org_name: invite.org_name,
+          role: invite.role,
           target_areas: invite.target_areas || [],
         },
+        status: "OK",
       });
     } catch (error) {
       console.error("Error previewing invite:", error);
@@ -505,7 +493,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
    */
   async acceptInvite(req, res) {
     try {
-      let { token, name, username, password } = req.body;
+      const { name, username, password } = req.body;
+      let { token } = req.body;
       const authUserId = req.user?.userId;
 
       // Extract the UUID part from the token to be forgiving of extra garbage characters
@@ -569,11 +558,11 @@ class OrganizationMembersController extends OrganizationsBaseController {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         const createdUser = await CreateUsersRepository.createUser({
-          name,
-          username,
           email: invite.email,
+          name,
           password: hashedPassword,
           private_profile: false,
+          username,
         });
 
         if (!createdUser || !createdUser[0]) {
@@ -680,8 +669,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       res.status(200).json({
-        status: "OK",
-        message: "Account activated and invite accepted successfully!",
         data: {
           organization: {
             id: invite.organization_id,
@@ -690,6 +677,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
           role: invite.role,
           target_areas: invite.target_areas || [],
         },
+        message: "Account activated and invite accepted successfully!",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error accepting invite:", error?.message || error);
@@ -731,8 +720,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
       );
 
       res.status(200).json({
-        status: "OK",
         data: invites,
+        status: "OK",
       });
     } catch (error) {
       console.error("Error fetching invites:", error);
@@ -776,8 +765,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
       await this.organizationsRepository.deleteOrgInvite(invite_id);
 
       res.status(200).json({
-        status: "OK",
         message: "Invite canceled successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error canceling invite:", error);
@@ -843,9 +832,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       res.status(200).json({
-        status: "OK",
-        message: "Invite resent successfully",
         data: updatedInvite,
+        message: "Invite resent successfully",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error resending invite:", error);
@@ -878,8 +867,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const inviterLocale = await getUserEmailLocale({ userId: authUserId });
 
       const results = {
-        successful: [],
         failed: [],
+        successful: [],
       };
 
       for (const inviteData of invites) {
@@ -960,9 +949,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       res.status(201).json({
-        status: "OK",
-        message: "Bulk invite processed",
         data: results,
+        message: "Bulk invite processed",
+        status: "OK",
       });
     } catch (error) {
       console.error("Error in bulk invite:", error);

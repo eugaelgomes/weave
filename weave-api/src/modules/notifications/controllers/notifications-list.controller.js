@@ -13,7 +13,7 @@ class NotificationsListController extends NotificationsBaseController {
     const page = Math.max(parseInt(query.page, 10) || 1, 1);
     const offset = (page - 1) * limit;
 
-    return { limit, page, offset };
+    return { limit, offset, page };
   }
 
   _normalizeFilter(rawFilter) {
@@ -46,14 +46,14 @@ class NotificationsListController extends NotificationsBaseController {
 
       const { notifications, total } =
         await this.notificationsRepository.listUserNotifications({
-          userId,
+          entityType: req.query.entity_type,
           filter,
           limit,
           offset,
-          type: req.query.type,
-          entityType: req.query.entity_type,
-          search: req.query.search,
           order,
+          search: req.query.search,
+          type: req.query.type,
+          userId,
         });
 
       const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
@@ -61,8 +61,8 @@ class NotificationsListController extends NotificationsBaseController {
       res.status(200).json({
         notifications,
         pagination: {
-          page,
           limit,
+          page,
           total,
           total_pages: totalPages,
         },

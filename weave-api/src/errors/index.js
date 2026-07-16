@@ -4,9 +4,9 @@ const { mapPgError, getPgLogContext } = require("@/errors/pg-error-mapper");
 
 module.exports = {
   AppError,
-  fromUnknown,
-  ERROR_CODES,
   DEFAULT_MESSAGES,
-  mapPgError,
+  ERROR_CODES,
+  fromUnknown,
   getPgLogContext,
+  mapPgError,
 };

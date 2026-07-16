@@ -53,11 +53,11 @@ async function verifyDomainToken(domainName, expectedToken) {
   const isVerified = combined.some((record) => record === normalizedToken);
 
   return {
-    isVerified,
     checkedHosts: [
       { host: challengeHost, records: challengeRecords },
       { host: domainName, records: apexRecords },
     ],
+    isVerified,
   };
 }
 

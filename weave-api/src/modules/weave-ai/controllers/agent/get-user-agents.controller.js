@@ -10,19 +10,22 @@ async function getUserAgents(req, res) {
     const userId = validateAuthentication(req);
     const filters = {};
     if (req.query.projectId) filters.projectId = req.query.projectId;
-    if (req.query.isActive !== undefined) filters.isActive = req.query.isActive === "true";
+    if (req.query.isActive !== undefined)
+      filters.isActive = req.query.isActive === "true";
     if (req.query.search) filters.search = req.query.search;
 
     const rawAgents = await agentRepository.getUserAgents(userId, filters);
     const agents = rawAgents.map((agent) => formatAgentResponse(agent));
 
-    res.json({ success: true, agents });
+    res.json({ agents, success: true });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error fetching agents:", error);
-    res.status(500).json({ success: false, error: t.fetchAgentsFailed });
+    res.status(500).json({ error: t.fetchAgentsFailed, success: false });
   }
 }
 

@@ -11,17 +11,25 @@ async function shareAgent(req, res) {
     const { id } = req.params;
     const { sharedWith } = req.body;
 
-    const updatedAgent = await agentRepository.shareAgent(id, userId, sharedWith);
+    const updatedAgent = await agentRepository.shareAgent(
+      id,
+      userId,
+      sharedWith
+    );
     if (!updatedAgent) {
-      return res.status(404).json({ success: false, error: t.agentNotFoundOrNoPermission });
+      return res
+        .status(404)
+        .json({ error: t.agentNotFoundOrNoPermission, success: false });
     }
-    res.json({ success: true, agent: formatAgentResponse(updatedAgent) });
+    res.json({ agent: formatAgentResponse(updatedAgent), success: true });
   } catch (error) {
     if (error.statusCode === 401) {
-      return res.status(401).json({ success: false, error: error.message || t.unauthenticated });
+      return res
+        .status(401)
+        .json({ error: error.message || t.unauthenticated, success: false });
     }
     console.error("Error sharing agent:", error);
-    res.status(500).json({ success: false, error: t.shareAgentFailed });
+    res.status(500).json({ error: t.shareAgentFailed, success: false });
   }
 }
 

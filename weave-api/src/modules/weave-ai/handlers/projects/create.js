@@ -6,7 +6,6 @@
  * - `@/modules/projects/repositories/projects-create.repository`: For saving the new project and its initial stages.
  */
 const projectsCreateRepository = require("@/modules/projects/repositories/projects-create.repository");
-const { PROJECT_STATUS } = require("@/utils/patterns/product-patterns");
 
 class CreateProjectHandler {
   /**
@@ -21,7 +20,7 @@ class CreateProjectHandler {
    * @param {string} context.name - Name of the tool being executed.
    * @returns {Promise<{name: string, result: object, success: boolean}>} The execution result payload.
    */
-  async execute({ userId, args, organizationId, lang, t, name }) {
+  async execute({ userId, args, organizationId, lang: _lang, t, name }) {
     if (!args.title || !args.title.trim()) {
       throw new Error(t.invalidTitle || "Project title is required.");
     }
@@ -39,24 +38,24 @@ class CreateProjectHandler {
     }
 
     const projectData = {
-      user_id: userId,
-      organization_id: organizationId || null,
-      title: args.title.trim(),
       description: args.description || null,
       methodology: "KANBAN",
-      status: status,
-      properties: {},
+      organization_id: organizationId || null,
       parent_project_id: null,
+      properties: {},
+      status: status,
+      title: args.title.trim(),
+      user_id: userId,
     };
 
     const stagesData = [
-      { name: "Backlog", position: 0, color: "#E2E8F0", properties: {} },
-      { name: "To Do", position: 1, color: "#E2E8F0", properties: {} },
-      { name: "Doing", position: 2, color: "#E2E8F0", properties: {} },
+      { color: "#E2E8F0", name: "Backlog", position: 0, properties: {} },
+      { color: "#E2E8F0", name: "To Do", position: 1, properties: {} },
+      { color: "#E2E8F0", name: "Doing", position: 2, properties: {} },
       {
+        color: "#E2E8F0",
         name: "Done",
         position: 3,
-        color: "#E2E8F0",
         properties: { is_done: true },
       },
     ];
@@ -75,16 +74,16 @@ class CreateProjectHandler {
 
       // Auto-add creator as project owner
       await projectsCreateRepository.bulkAddProjectMembers(newProject.id, [
-        { userId: userId, role: "PROJECT_MANAGER", addedBy: userId },
+        { addedBy: userId, role: "PROJECT_MANAGER", userId: userId },
       ]);
 
       return {
         name,
         result: {
-          projectId: newProject.id,
-          publicProjectId: newProject.public_project_id,
           created: true,
           message: "Project created successfully.",
+          projectId: newProject.id,
+          publicProjectId: newProject.public_project_id,
         },
         success: true,
       };

@@ -22,7 +22,7 @@ class DeleteNoteHandler {
    * @param {string} context.name - Name of the tool.
    * @returns {Promise<{name: string, result: object, success: boolean}>} The execution result.
    */
-  async execute({ userId, args, organizationId, lang, t, name }) {
+  async execute({ userId, args, organizationId, lang, name }) {
     const internalNoteId = await chatAccessUtil.assertNoteMutationAccess(
       userId,
       String(args.noteId || ""),
@@ -37,9 +37,9 @@ class DeleteNoteHandler {
     return {
       name,
       result: {
-        noteId: args.noteId,
-        internalId: internalNoteId,
         deleted: rowCount > 0,
+        internalId: internalNoteId,
+        noteId: args.noteId,
       },
       success: true,
     };

@@ -14,10 +14,10 @@
 function sendPlanLimitExceeded(res, payload) {
   return res.status(403).json({
     code: "PLAN_LIMIT_EXCEEDED",
-    resource: payload.resource,
-    limit_key: payload.limit_key,
     error: payload.error || "Plan limit exceeded",
+    limit_key: payload.limit_key,
     message: payload.message,
+    resource: payload.resource,
   });
 }
 

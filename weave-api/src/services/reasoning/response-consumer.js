@@ -15,7 +15,7 @@ class ReasoningResponseConsumer {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    console.log(
+    console.info(
       `[Reasoning Consumer] Listening for engine responses on: ${this.responseQueueKey}`
     );
 
@@ -42,49 +42,49 @@ class ReasoningResponseConsumer {
       console.warn(
         "[Reasoning Consumer] Received unsuccessful response or missing reasoning",
         {
-          success,
           projectId: reasoning?.projectId,
+          success,
         }
       );
       return;
     }
 
-    console.log(
+    console.info(
       `[Reasoning Consumer] Persisting reasoning for project: ${reasoning.projectId}`
     );
 
     try {
       const created = await reasoningsRepository.create({
-        projectId: reasoning.projectId,
-        sprintId: reasoning.sprintId,
-        triggeredBy: reasoning.triggeredBy,
-        reasoningType: reasoning.reasoningType,
-        title: reasoning.title,
         content: {
-          outputMarkdown: content.outputMarkdown,
-          outputRaw: content.outputRaw,
-          outputMetadata: content.outputMetadata,
+          actionItems: content.actionItems || [],
           inputContext: content.inputContext,
           inputPrompt: content.inputPrompt,
           inputSystemMessage: content.inputSystemMessage,
-          actionItems: content.actionItems || [],
+          outputMarkdown: content.outputMarkdown,
+          outputMetadata: content.outputMetadata,
+          outputRaw: content.outputRaw,
         },
         options: {
-          reportConfigId: reasoning.reportConfigId,
-          organizationId: reasoning.organizationId,
-          providerUsed: reasoning.providerUsed,
-          modelUsed: reasoning.modelUsed,
-          safetyLabel: safety.label,
-          safetyReason: safety.reason,
-          safetyBlocked: safety.blocked,
-          processingTimeMs: reasoning.processingTimeMs,
-          recipientScope: reasoning.recipientScope,
           customRecipients: reasoning.customRecipients,
           expiresAt: reasoning.expiresAt,
+          modelUsed: reasoning.modelUsed,
+          organizationId: reasoning.organizationId,
+          processingTimeMs: reasoning.processingTimeMs,
+          providerUsed: reasoning.providerUsed,
+          recipientScope: reasoning.recipientScope,
+          reportConfigId: reasoning.reportConfigId,
+          safetyBlocked: safety.blocked,
+          safetyLabel: safety.label,
+          safetyReason: safety.reason,
         },
+        projectId: reasoning.projectId,
+        reasoningType: reasoning.reasoningType,
+        sprintId: reasoning.sprintId,
+        title: reasoning.title,
+        triggeredBy: reasoning.triggeredBy,
       });
 
-      console.log(
+      console.info(
         `[Reasoning Consumer] Reasoning persisted with ID: ${created.id}`
       );
 
@@ -102,21 +102,21 @@ class ReasoningResponseConsumer {
     const queueKey = getAiReportDeliveryQueueRedisKey();
 
     const emailJob = {
-      type: "ai_report_delivery",
       payload: {
-        reasoningId: reasoning.id,
-        projectId: reasoning.project_id,
-        sprintId: reasoning.sprint_id,
-        reasoningType: reasoning.reasoning_type,
-        title: reasoning.title,
-        outputMarkdown: content.outputMarkdown,
-        recipientScope: reasoning.recipient_scope,
         customRecipients: reasoning.custom_recipients,
+        outputMarkdown: content.outputMarkdown,
+        projectId: reasoning.project_id,
+        reasoningId: reasoning.id,
+        reasoningType: reasoning.reasoning_type,
+        recipientScope: reasoning.recipient_scope,
+        sprintId: reasoning.sprint_id,
+        title: reasoning.title,
       },
+      type: "ai_report_delivery",
     };
 
     await redis.rpush(queueKey, JSON.stringify(emailJob));
-    console.log(
+    console.info(
       `[Reasoning Consumer] AI report delivery job dispatched for reasoning: ${reasoning.id}`
     );
   }

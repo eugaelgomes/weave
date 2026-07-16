@@ -1,4 +1,3 @@
-/* eslint-disable no-console -- intentional observability logging */
 const LogApiRequestsRepository = require("@/modules/api-tokens/repositories/log-api-requests.repository");
 
 /**
@@ -32,20 +31,20 @@ function logPublicApiRequest(req, res, next) {
 
     void LogApiRequestsRepository.insert({
       apiTokenId: req.apiToken?.id ?? null,
-      userId: req.user?.userId ?? null,
-      organizationId: req.user?.organizationId ?? null,
-      httpMethod: req.method,
-      path: req.originalUrl ?? req.path,
       apiVersion: req.apiVersion ?? "v1",
-      scopesRequired: res.locals?.scopesRequired ?? null,
-      statusCode: res.statusCode,
       durationMs,
       errorCode,
-      requestId: req.requestId ?? null,
+      httpMethod: req.method,
       ipAddress: req.clientIp ?? null,
-      userAgent: req.headers["user-agent"] ?? null,
+      organizationId: req.user?.organizationId ?? null,
       originHeader: req.headers["origin"] ?? null,
+      path: req.originalUrl ?? req.path,
       refererHeader: req.headers["referer"] ?? null,
+      requestId: req.requestId ?? null,
+      scopesRequired: res.locals?.scopesRequired ?? null,
+      statusCode: res.statusCode,
+      userAgent: req.headers["user-agent"] ?? null,
+      userId: req.user?.userId ?? null,
     }).catch((err) => {
       // Never break the response for a logging failure.
       console.error(

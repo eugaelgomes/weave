@@ -1,5 +1,4 @@
 const session = require("express-session");
-const { pool } = require("@/database/connection");
 const { detectSameSitePolicy } = require("@/config/allowed-origins");
 const { WeaveSessionStore } = require("./weave-session-store");
 
@@ -15,9 +14,9 @@ const sameSite = isProduction ? detectSameSitePolicy() : "lax";
 
 const sessionCookie = {
   httpOnly: true,
-  secure: isProduction ? true : false,
-  sameSite,
   maxAge: 1000 * 60 * 60 * 24,
+  sameSite,
+  secure: isProduction ? true : false,
 };
 
 if (sessionCookieDomain) {
@@ -25,13 +24,13 @@ if (sessionCookieDomain) {
 }
 
 const sessionConfig = {
-  store: new WeaveSessionStore(),
-  name: "auth.sid",
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  rolling: true,
   cookie: sessionCookie,
+  name: "auth.sid",
+  resave: false,
+  rolling: true,
+  saveUninitialized: false,
+  secret: process.env.SESSION_SECRET,
+  store: new WeaveSessionStore(),
 };
 
 const sessionMiddleware = session(sessionConfig);

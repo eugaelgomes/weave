@@ -88,17 +88,17 @@ class GithubOauthController extends AuthBaseController {
 
       const userResponse = await axios.get("https://api.github.com/user", {
         headers: {
-          Authorization: `Bearer ${access_token}`,
           Accept: "application/vnd.github.v3+json",
+          Authorization: `Bearer ${access_token}`,
           "User-Agent": "Weave-Notes",
         },
       });
       // Schema for GitHub's /user endpoint
       const githubUserSchema = z.object({
+        avatar_url: z.string().url().optional(),
         id: z.number().int().positive(),
         login: z.string().min(1),
         name: z.string().nullable().optional(),
-        avatar_url: z.string().url().optional(),
       });
 
       // Schema for a single email entry from GitHub's /user/emails endpoint
@@ -120,8 +120,8 @@ class GithubOauthController extends AuthBaseController {
         "https://api.github.com/user/emails",
         {
           headers: {
-            Authorization: `Bearer ${access_token}`,
             Accept: "application/vnd.github.v3+json",
+            Authorization: `Bearer ${access_token}`,
             "User-Agent": "Weave-Notes-App",
           },
         }
