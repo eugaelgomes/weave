@@ -4,7 +4,7 @@ const {
   configureGlobalMiddlewares,
 } = require("@/middlewares/http/apply-http-middleware");
 const { errorHandler } = require("@/middlewares/errors/error-handler");
-const { registerApiRoutes } = require("./routes");
+const { registerApiRoutes } = require("@/routes/weave.routes");
 
 const app = express();
 

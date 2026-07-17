@@ -49,6 +49,7 @@
     "@aws-sdk/client-s3": "^3.892.0",
     "@aws-sdk/s3-request-presigner": "^3.893.0",
     "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@sentry/node": "^10.53.1",
     "@sentry/profiling-node": "^10.53.1",
     "axios": "^1.7.8",
@@ -81,7 +82,8 @@
     "sharp": "^0.33.0",
     "ts-node": "^10.9.2",
     "uuid": "^14.0.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",

@@ -9,16 +9,65 @@ const { z } = require("zod");
  *      before being attached to `req.user`.
  */
 const jwtPayloadSchema = z.object({
-  email: z.string().email(),
-  org_default_area_id: z.string().uuid().nullable(),
-  org_default_area_role: z.string().nullable(),
-  org_default_area_slug: z.string().nullable(),
-  org_id: z.string().uuid().nullable(),
-  org_member_role: z.string().nullable(),
-  org_unique_name: z.string().nullable(),
-  plan_id: z.string().uuid().nullable(),
-  userId: z.string().uuid("Invalid userId in JWT payload."),
-  username: z.string().min(1),
+  email: z
+    .string()
+    .email()
+    .describe("O endereço de e-mail associado à conta do usuário autenticado."),
+  org_default_area_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .describe(
+      "O identificador único (UUID) da área de trabalho (workspace) padrão do usuário na organização, caso exista."
+    ),
+  org_default_area_role: z
+    .string()
+    .nullable()
+    .describe(
+      "O papel ou nível de permissão (role) do usuário dentro da área de trabalho padrão."
+    ),
+  org_default_area_slug: z
+    .string()
+    .nullable()
+    .describe(
+      "O identificador legível (slug) da área de trabalho padrão do usuário."
+    ),
+  org_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .describe(
+      "O identificador único (UUID) da organização principal vinculada à sessão do usuário."
+    ),
+  org_member_role: z
+    .string()
+    .nullable()
+    .describe(
+      "O papel do usuário (role) dentro da organização, determinando suas permissões organizacionais."
+    ),
+  org_unique_name: z
+    .string()
+    .nullable()
+    .describe(
+      "O nome exclusivo (slug/username) da organização associada à sessão."
+    ),
+  plan_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .describe(
+      "O identificador (UUID) do plano de assinatura ativo associado ao usuário ou à organização."
+    ),
+  userId: z
+    .string()
+    .uuid("Invalid userId in JWT payload.")
+    .describe(
+      "O identificador único (UUID) do usuário autenticado no sistema."
+    ),
+  username: z
+    .string()
+    .min(1)
+    .describe("O nome de usuário único do usuário autenticado."),
 });
 
 /**

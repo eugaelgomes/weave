@@ -28,6 +28,15 @@ const configureShutdown = (server) => {
       });
       console.info("HTTP server closed");
 
+      // Close all active MCP SSE sessions
+      try {
+        const { closeAllSessions } = require("@/routes/v1/mcp.routes");
+        closeAllSessions();
+        console.info("MCP SSE sessions closed");
+      } catch (e) {
+        console.error("Error closing MCP SSE sessions:", e);
+      }
+
       await pool.end();
       console.info("Database connections closed");
 

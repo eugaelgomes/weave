@@ -109,6 +109,42 @@ class ArtifactsRepository {
     const result = await pool.query(query, values);
     return result.rows[0] || null;
   }
+  /**
+   * Retrieves a list of artifacts for the user.
+   *
+   * @param {string} userId - User UUID
+   * @param {number} limit - Pagination limit
+   * @param {number} offset - Pagination offset
+   * @returns {Promise<Object[]>}
+   */
+  async listArtifacts(userId, limit = 20, offset = 0) {
+    const query = `
+      SELECT *
+      FROM ai_artifacts
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+    const result = await pool.query(query, [userId, limit, offset]);
+    return result.rows;
+  }
+
+  /**
+   * Deletes an artifact if it belongs to the user.
+   *
+   * @param {string} id - Artifact UUID
+   * @param {string} userId - User UUID
+   * @returns {Promise<boolean>} True if deleted, false otherwise
+   */
+  async deleteArtifact(id, userId) {
+    const query = `
+      DELETE FROM ai_artifacts
+      WHERE id = $1 AND user_id = $2
+      RETURNING id
+    `;
+    const result = await pool.query(query, [id, userId]);
+    return (result.rowCount ?? 0) > 0;
+  }
 }
 
 module.exports = new ArtifactsRepository();
