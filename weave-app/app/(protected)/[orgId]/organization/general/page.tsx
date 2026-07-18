@@ -36,6 +36,28 @@ const WorkspacePage = () => {
     handleRestoreOrganization,
   } = useOrganizationSettingsPage();
 
+  React.useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === "#organization/image/logo") {
+        setEditingImage("logo");
+        setIsEditingInfo(false);
+      } else if (hash === "#organization/image/banner") {
+        setEditingImage("banner");
+        setIsEditingInfo(false);
+      } else if (hash === "#organization/info/edit") {
+        setIsEditingInfo(true);
+        setEditingImage(null);
+      } else {
+        setIsEditingInfo(false);
+        setEditingImage(null);
+      }
+    };
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [setEditingImage, setIsEditingInfo]);
+
   if (!hasOrganization && !organization?.deleted) {
     return (
       <WorkspacePageShell description={t.organizationGeneral.description}>
@@ -131,7 +153,11 @@ const WorkspacePage = () => {
               ? getStorageUrl(organization?.logo_url || "")
               : getStorageUrl(organization?.banner_url || "")
           }
-          onClose={() => setEditingImage(null)}
+          onClose={() => {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+            setEditingImage(null);
+          }}
           onSave={handleUpdateImage}
           loading={loading}
         />

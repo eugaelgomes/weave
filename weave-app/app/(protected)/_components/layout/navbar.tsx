@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X, Sun, Moon, Search, CircleUserRound, Bell } from "lucide-react";
@@ -11,7 +10,6 @@ import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useNotification } from "@/app/_contexts/notification-context";
 
-import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 import { cn } from "@/lib/utils";
 
 /** Mobile navbar icons — same language as collapsed sidebar rows (rounded-md, soft hover). */
@@ -21,87 +19,6 @@ const navIconMobileShellClass =
 /** Desktop search + user chip: bordered surface (no shadow). */
 const navbarElevatedSurfaceClass =
   "bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10";
-
-// --- Custom Hooks
-
-const useKeyboardShortcut = (key: string, callback: () => void) => {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === key.toLowerCase()) {
-        e.preventDefault();
-        callback();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [key, callback]);
-};
-
-const useClickOutside = (refs: React.RefObject<HTMLElement | null>[], callback: () => void) => {
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      const isOutside = refs.every((ref) => ref.current && !ref.current.contains(target));
-
-      if (isOutside) {
-        callback();
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [refs, callback]);
-};
-
-// --- Formatters ---
-
-const formatters = {
-  getDisplayName: (user: User, fallback: string) => {
-    const name = user?.user_name?.trim() || fallback;
-    const parts = name.split(" ");
-    return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : parts[0];
-  },
-  getUsername: (user: User, fallback: string) => {
-    return user?.username || user?.email?.split("@")[0] || fallback;
-  },
-};
-
-// --- Sub-componentes ---
-
-const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "xs" | "sm" | "md" | "lg" }) => {
-  const { t } = useLanguage();
-  const sizeClasses = {
-    xs: "h-[26px] w-[26px]",
-    sm: "h-8 w-8",
-    md: "h-10 w-10",
-    lg: "h-12 w-12",
-  };
-
-  return (
-    <figure
-      className={cn(
-        sizeClasses[size],
-        "relative flex-shrink-0 overflow-hidden rounded-full border border-gray-200/70 bg-gray-100 transition-all duration-300 dark:border-gray-700 dark:bg-gray-800"
-      )}
-      aria-label={t.navbar.avatarOf.replace("{name}", user?.user_name || t.common.user)}
-    >
-      {user?.avatar_url ? (
-        <Image
-          src={user.avatar_url}
-          alt={t.navbar.avatarOf.replace("{name}", user.user_name || t.common.user)}
-          fill
-          className="rounded-full object-cover"
-          sizes={size === "xs" ? "28px" : size === "sm" ? "32px" : size === "md" ? "40px" : "48px"}
-        />
-      ) : (
-        <CircleUserRound
-          className="h-full w-full text-gray-600 dark:text-gray-400"
-          strokeWidth={1.5}
-        />
-      )}
-    </figure>
-  );
-};
 
 const NotificationsLink = ({
   ariaLabel,
@@ -144,73 +61,6 @@ const NotificationsLink = ({
   );
 };
 
-interface UserMenuProps {
-  user: User;
-  t: ReturnType<typeof useLanguage>["t"];
-  onClose: () => void;
-  onLogout: () => void;
-}
-
-const UserMenuContent = ({ user, t, onClose, onLogout }: UserMenuProps) => (
-  <nav aria-label={t.navbar.userMenuNav} className="flex flex-col overflow-hidden">
-    <header className="bg-brand-yellow/5 dark:border-surface-dark-border-strong flex items-center gap-3 border-b border-gray-200 px-4 py-3 dark:bg-[#1d1d1b]">
-      <UserAvatar user={user} size="md" />
-      <div className="min-w-0 flex-1">
-        <p className="dark:text-brand-yellow truncate text-sm font-bold text-gray-900">
-          {user?.user_name || t.common.user}
-        </p>
-        <p className="truncate text-[9px] font-medium text-gray-500 dark:text-gray-400">
-          @{formatters.getUsername(user, t.common.username)}
-        </p>
-      </div>
-    </header>
-
-    <menu className="m-0 flex list-none flex-col gap-1 p-2">
-      <li>
-        <Link
-          href={
-            user?.org_public_id
-              ? `/${user.org_public_id}/settings`
-              : user?.public_id
-                ? `/${user.public_id}/settings`
-                : "/settings"
-          }
-          onClick={onClose}
-          className="block rounded-md px-4 py-2.5 text-xs font-medium text-gray-900 hover:bg-black/5 dark:text-gray-100 dark:hover:bg-white/5"
-        >
-          {t.navbar.accountSettings}
-        </Link>
-      </li>
-
-      <li>
-        <a
-          href={process.env.NEXT_PUBLIC_BLOG_URL || "https://blog.weavenotes.app/about"}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={onClose}
-          className="block rounded-md px-4 py-2.5 text-xs font-medium text-gray-900 hover:bg-black/5 dark:text-gray-100 dark:hover:bg-white/5"
-        >
-          {t.navbar.aboutSystem}
-        </a>
-      </li>
-
-      <hr className="dark:border-surface-dark-border my-1 border-t border-gray-200" />
-
-      <li>
-        <button
-          onClick={() => {
-            onLogout();
-            onClose();
-          }}
-          className="w-full rounded-md px-4 py-2.5 text-left text-xs font-semibold text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-        >
-          {t.navbar.logout}
-        </button>
-      </li>
-    </menu>
-  </nav>
-);
-
 // --- Principal ---
 
 interface NavbarProps {
@@ -223,25 +73,11 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  const desktopMenuRef = useRef<HTMLDivElement>(null);
-  const mobileMenuRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => setMounted(true), []);
-
-  useKeyboardShortcut("k", () => setIsSearchOpen(true));
-  useClickOutside([desktopMenuRef, mobileMenuRef], () => setIsMenuOpen(false));
-
-  useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMenuOpen]);
-
+      
+    
+  
+    
+  
   const handleThemeToggle = useCallback(() => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
@@ -306,27 +142,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
             {/* Centro: respiro no mobile (1fr); busca + notificações no desktop */}
             {authenticated && user ? (
               <section className="flex min-h-0 w-full min-w-0 items-center justify-center px-1 md:px-2">
-                <div className="hidden w-full max-w-md items-center gap-2 md:flex">
-                  <button
-                    type="button"
-                    onClick={() => setIsSearchOpen(true)}
-                    className={cn(
-                      "group flex w-full min-w-0 items-center gap-2.5 rounded-full bg-gray-100 px-3 py-1 transition-all hover:bg-sky-800/10 dark:bg-zinc-800 dark:hover:bg-sky-800/15"
-                    )}
-                    aria-label={t.navbar.searchSystem}
-                    title={t.navbar.searchSystem}
-                  >
-                    <Search
-                      className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-gray-400 dark:text-gray-300 dark:group-hover:text-gray-400"
-                      strokeWidth={1.75}
-                    />
-                    <span className="flex-1 text-left text-[11px] text-gray-400 dark:text-gray-400">
-                      {t.navbar.searchPlaceholder}
-                    </span>
-                    <kbd className="items-bottom flex gap-1 rounded px-1.5 font-sans text-[10px] font-medium text-gray-600 dark:text-gray-300">
-                      <span>⌘</span>K
-                    </kbd>
-                  </button>
+                <div className="hidden w-full max-w-md items-center justify-end gap-2 md:flex">
                   <NotificationsLink ariaLabel={t.nav.notifications} surface="desktop" />
                 </div>
               </section>
@@ -338,16 +154,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
             <section className="flex shrink-0 items-center justify-end gap-0.5 justify-self-end md:gap-2">
               {authenticated && user && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setIsSearchOpen(true)}
-                    className={cn(navIconMobileShellClass, "md:hidden")}
-                    aria-label={t.navbar.openSearch}
-                    title={t.navbar.openSearch}
-                  >
-                    <Search className="h-4 w-4" strokeWidth={1.75} />
-                  </button>
-
+                  
                   <NotificationsLink
                     ariaLabel={t.nav.notifications}
                     className="md:hidden"
@@ -367,32 +174,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                     {theme === "light" ? <Moon size={14} /> : <Sun size={14} />}
                   </button>
 
-                  <div className="relative self-center" ref={desktopMenuRef}>
-                    <button
-                      type="button"
-                      onClick={() => setIsMenuOpen((prev) => !prev)}
-                      aria-expanded={isMenuOpen}
-                      aria-haspopup="menu"
-                      aria-label={t.navbar.openUserMenu}
-                      title={t.navbar.openUserMenu}
-                      className="focus-visible:ring-brand-yellow/50 flex shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-85 focus-visible:ring-2 focus-visible:outline-none active:opacity-75"
-                    >
-                      <UserAvatar user={user} size="xs" />
-                    </button>
-
-                    {isMenuOpen && (
-                      <div className="absolute top-full right-0 z-50 mt-2 hidden w-72 origin-top-right sm:block">
-                        <div className="dark:border-surface-dark-border-strong overflow-hidden rounded-md border border-gray-200/60 bg-white dark:bg-[#1d1d1b]">
-                          <UserMenuContent
-                            user={user}
-                            t={t}
-                            onClose={() => setIsMenuOpen(false)}
-                            onLogout={logout}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  
                 </>
               )}
             </section>
@@ -400,46 +182,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
         </nav>
       </header>
 
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-
-      {/* Modal Mobile */}
-      {isMenuOpen &&
-        mounted &&
-        createPortal(
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:hidden">
-            <div
-              className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm"
-              onClick={() => setIsMenuOpen(false)}
-              aria-hidden="true"
-            />
-
-            <dialog
-              ref={mobileMenuRef}
-              open
-              className="dark:border-surface-dark-border-strong relative z-[111] m-0 flex w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white dark:bg-[#1d1d1b]"
-            >
-              <div className="max-h-[75vh] overflow-y-auto">
-                <UserMenuContent
-                  user={user!}
-                  t={t}
-                  onClose={() => setIsMenuOpen(false)}
-                  onLogout={logout}
-                />
-              </div>
-
-              <footer className="dark:border-surface-dark-border-strong border-t border-neutral-200 bg-white p-3 dark:bg-[#1d1d1b]">
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-200/50 py-2.5 text-xs font-bold text-neutral-900 active:scale-95 dark:bg-neutral-800 dark:text-neutral-100"
-                >
-                  <X className="h-3.5 w-3.5" strokeWidth={2} />
-                  {t.navbar.closeMenu}
-                </button>
-              </footer>
-            </dialog>
-          </div>,
-          document.body
-        )}
+      
     </>
   );
 };

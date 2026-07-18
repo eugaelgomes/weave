@@ -40,6 +40,21 @@ export default function InvitesPage() {
   };
 
   useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === "#organization/invite") {
+        setShowInviteModal(true);
+      } else {
+        setShowInviteModal(false);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  useEffect(() => {
     if (showInviteModal) fetchAreas(true).catch(() => {});
   }, [showInviteModal, fetchAreas]);
 
@@ -59,6 +74,8 @@ export default function InvitesPage() {
         "success",
         t.organizationMembers.inviteSuccess.replace("{email}", payload.email)
       );
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
       setShowInviteModal(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t.organizationMembers.inviteError;
@@ -140,7 +157,7 @@ export default function InvitesPage() {
             {userCanManage ? (
               <button
                 type="button"
-                onClick={() => setShowInviteModal(true)}
+                onClick={() => { window.location.hash = "#organization/invite"; }}
                 className="bg-brand-primary-500 flex shrink-0 items-center justify-center gap-2 self-stretch rounded-md px-3 py-2 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-[0.98] sm:self-auto sm:py-1.5"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
@@ -218,7 +235,11 @@ export default function InvitesPage() {
 
       <OrganizationInviteModal
         isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
+        onClose={() => {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          setShowInviteModal(false);
+        }}
         onInvite={handleInvite}
         loading={loadingAction}
         areas={areas}

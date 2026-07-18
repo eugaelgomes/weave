@@ -301,6 +301,21 @@ export default function MembersPage() {
   const assignSuperAdminInRoleModal = showSuperAdminWorkspaceRole;
 
   useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      setShowInviteModal(hash === "#organization/invite");
+      
+      // Clear member edit/remove if hash changes from them (optional enhancement, but keeping simple for now)
+      if (hash === "#organization/member/edit") {
+         // we need the member, so setting it purely from hash is hard without ID
+      }
+    };
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  useEffect(() => {
     if (showInviteModal) fetchAreas(true).catch(() => {});
   }, [showInviteModal, fetchAreas]);
 
@@ -360,6 +375,8 @@ export default function MembersPage() {
         "success",
         t.organizationMembers.inviteSuccess.replace("{email}", payload.email)
       );
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
       setShowInviteModal(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t.organizationMembers.inviteError;
@@ -479,7 +496,7 @@ export default function MembersPage() {
             {userCanManage ? (
               <button
                 type="button"
-                onClick={() => setShowInviteModal(true)}
+                onClick={() => { window.location.hash = "#organization/invite" }}
                 className="bg-brand-primary-500 flex shrink-0 items-center justify-center gap-2 self-stretch rounded-md px-3 py-2 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-[0.98] sm:self-auto sm:py-1.5"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
@@ -642,7 +659,10 @@ export default function MembersPage() {
                           <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                             <button
                               type="button"
-                              onClick={() => setMemberToEdit(member)}
+                              onClick={() => {
+                                setMemberToEdit(member);
+                                window.location.hash = `#organization/member/edit`;
+                              }}
                               className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20"
                               title={t.organizationMembers.editRoleTitle}
                             >
@@ -650,7 +670,10 @@ export default function MembersPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setMemberToRemove(member)}
+                              onClick={() => {
+                                setMemberToRemove(member);
+                                window.location.hash = `#organization/member/remove`;
+                              }}
                               className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
                               title={t.organizationMembers.removeMemberTitle}
                             >
@@ -670,7 +693,11 @@ export default function MembersPage() {
 
       <OrganizationInviteModal
         isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
+        onClose={() => {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          setShowInviteModal(false);
+        }}
         onInvite={handleInvite}
         loading={loadingAction}
         areas={areas}
@@ -678,7 +705,11 @@ export default function MembersPage() {
       />
       <RoleManageModal
         isOpen={!!memberToEdit}
-        onClose={() => setMemberToEdit(null)}
+        onClose={() => {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          setMemberToEdit(null);
+        }}
         currentMember={memberToEdit}
         onUpdate={handleUpdateRole}
         loading={loadingAction}
@@ -687,13 +718,21 @@ export default function MembersPage() {
 
       <ModalBase
         isOpen={!!memberToRemove}
-        onClose={() => setMemberToRemove(null)}
+        onClose={() => {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          setMemberToRemove(null);
+        }}
         title={t.organizationMembers.removeMemberTitle}
         footer={
           <>
             <button
               type="button"
-              onClick={() => setMemberToRemove(null)}
+              onClick={() => {
+                window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+                setMemberToRemove(null);
+              }}
               className="px-3 py-1.5 text-xs text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
             >
               {t.organizationMembers.cancel}

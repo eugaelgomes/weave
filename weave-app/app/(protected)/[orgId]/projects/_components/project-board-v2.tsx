@@ -226,6 +226,7 @@ function NoteCard({
   isStageDone?: boolean;
 }) {
   const [activeModal, setActiveModal] = useState<TaskModalKind | null>(null);
+  const activeModalRef = useRef<TaskModalKind | null>(null);
   const [dateDraft, setDateDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -233,6 +234,28 @@ function NoteCard({
   const dueDate = note.properties?.due_date || note.due_date;
   const collaboratorList = Array.isArray(note.collaborators) ? note.collaborators : [];
   const canWrite = Boolean(onPatchTask);
+
+  useEffect(() => {
+    activeModalRef.current = activeModal;
+  }, [activeModal]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const match = hash.match(/^#(attachments|date|priority|tags|collaborators)\/(.+)$/);
+      if (match && match[2] === String(note.id)) {
+        if (activeModalRef.current !== match[1] && match[1] === "date") {
+          setDateDraft(toDateInputValue(dueDate));
+        }
+        setActiveModal(match[1] as TaskModalKind);
+      } else {
+        setActiveModal(null);
+      }
+    };
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [note.id, dueDate]);
 
   const contentSnippet = useMemo(() => {
     const raw =
@@ -303,14 +326,12 @@ function NoteCard({
   const stopDrag = (event: React.SyntheticEvent) => event.stopPropagation();
 
   const openModal = (kind: TaskModalKind) => {
-    if (kind === "date") {
-      setDateDraft(toDateInputValue(dueDate));
-    }
-    setActiveModal(kind);
+    window.location.hash = `${kind}/${note.id}`;
   };
 
   const closeModal = () => {
-    setActiveModal(null);
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
     setSaving(false);
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useLayoutEffect, useState } from "react";
-import Navbar from "@/app/(protected)/_components/layout/navbar";
+
 import Sidebar from "@/app/(protected)/_components/layout/sidebar";
 import WeaveAi from "@/app/(protected)/_components/layout/WeaveAi";
 import { cn } from "@/lib/utils";
@@ -91,15 +91,12 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
 
         {/* Mobile Sidebar modal stays outside the regular flow but inside relative/fixed positioning */}
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl md:mt-1 md:mr-1 md:mb-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <div
             className={cn(
-              "dark:border-surface-dark-border dark:shadow-surface-dark-md flex w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] dark:bg-zinc-900 dark:ring-white/[0.03]"
+              "flex w-full min-w-0 flex-1 flex-col overflow-hidden"
             )}
           >
-            <div className="shrink-0 border-b border-neutral-100 dark:border-neutral-800">
-              <Navbar onToggleSidebar={toggleSidebar} isCollapsed={isCollapsed} />
-            </div>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-1.5">
               <div

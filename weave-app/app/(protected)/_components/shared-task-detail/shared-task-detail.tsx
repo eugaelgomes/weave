@@ -338,6 +338,18 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
   const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
 
   useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      setShowShareModal(hash === "#share");
+      setShowTagModal(hash === "#tags");
+      setShowRelationModal(hash === "#relations");
+    };
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  useEffect(() => {
     editingTitleRef.current = editingTitle;
   }, [editingTitle]);
 
@@ -1472,7 +1484,8 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
         setNote((prev) => (prev ? { ...prev, collaborators: updatedNote.collaborators } : null));
       }
 
-      setShowShareModal(false);
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
       setSearchTerm("");
       setSearchResults([]);
     } catch (error) {
@@ -1530,7 +1543,8 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
     // Otimista
     setNote((prev) => (prev ? { ...prev, tags: updatedTags } : null));
     setNewTag("");
-    setShowTagModal(false);
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
 
     try {
       await saveAndApply({ tags: updatedTags });
@@ -1723,7 +1737,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
               </button>
             )}
             <button
-              onClick={() => setShowTagModal(true)}
+              onClick={() => { window.location.hash = "tags"; }}
               className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 dark:border-surface-dark-border-muted flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
               title="Gerenciar tags"
             >
@@ -1731,7 +1745,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
               Tags
             </button>
             <button
-              onClick={() => setShowRelationModal(true)}
+              onClick={() => { window.location.hash = "relations"; }}
               className="dark:hover:bg-brand-primary-500/5 dark:hover:text-brand-primary-500 dark:border-surface-dark-border-muted flex items-center gap-1 rounded-md border border-dashed border-neutral-300 px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:border-yellow-500 hover:bg-yellow-50 hover:text-yellow-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
               title="Gerenciar relações"
             >
@@ -1755,7 +1769,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
           onChangeColor={handleChangeColor}
           onDelete={handleDelete}
           onExport={handleExportNote}
-          onShare={() => setShowShareModal(true)}
+          onShare={() => { window.location.hash = "share"; }}
           onToggleColorPicker={() => setShowColorPicker(!showColorPicker)}
           setShowColorPicker={setShowColorPicker}
           showColorPicker={showColorPicker}
@@ -2232,7 +2246,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
                             )}
                             {note.access?.canShare && (
                               <button
-                                onClick={() => setShowShareModal(true)}
+                                onClick={() => { window.location.hash = "share"; }}
                                 className="dark:hover:text-brand-primary-500 dark:border-surface-dark-border-muted rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                 title="Adicionar colaborador"
                               >
@@ -2298,7 +2312,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
                             )}
                             {note.access?.canEdit && (
                               <button
-                                onClick={() => setShowRelationModal(true)}
+                                onClick={() => { window.location.hash = "relations"; }}
                                 className="dark:hover:text-brand-primary-500 dark:border-surface-dark-border-muted rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                 title="Adicionar relação"
                               >
@@ -2356,7 +2370,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
                             )}
                             {note.access?.canEdit && (
                               <button
-                                onClick={() => setShowTagModal(true)}
+                                onClick={() => { window.location.hash = "tags"; }}
                                 className="dark:hover:text-brand-primary-500 dark:border-surface-dark-border-muted rounded-md border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-400 transition-colors hover:border-yellow-500 hover:text-yellow-600 dark:text-neutral-500 dark:hover:border-yellow-500/50"
                                 title="Adicionar tag"
                               >
@@ -2719,7 +2733,10 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
         <NoteShareModal
           isOpen={showShareModal}
           isSearching={isSearching}
-          onClose={() => setShowShareModal(false)}
+          onClose={() => {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          }}
           onSearchUsers={(value) => {
             setSearchTerm(value);
             handleSearchUsers(value);
@@ -2734,7 +2751,8 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
           isOpen={showRelationModal}
           note={note}
           onClose={() => {
-            setShowRelationModal(false);
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
             setRelationSearchTerm("");
           }}
           onRelationSearchTermChange={setRelationSearchTerm}
@@ -2747,7 +2765,10 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
           newTag={newTag}
           note={note}
           onAddTag={handleAddTag}
-          onClose={() => setShowTagModal(false)}
+          onClose={() => {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          }}
           onNewTagChange={setNewTag}
           onRemoveTag={handleRemoveTag}
         />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 
 import { useParams } from "next/navigation";
 
@@ -87,6 +87,13 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
       onNoteUpdated: options.onNoteUpdated,
       onNoteDeleted: options.onNoteDeleted,
     });
+    
+    // Set URL hash
+    if (options.noteId) {
+      window.location.hash = `#task/${options.noteId}`;
+    } else if (mode === "create") {
+      window.location.hash = `#task/create`;
+    }
   }, []);
 
   const closeModal = useCallback(() => {
@@ -97,6 +104,50 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
       return initialState;
     });
     setCallbacks({});
+    
+    // Clear hash if it is related to task
+    if (window.location.hash.startsWith("#task")) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+  }, [orgId]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith("#task/")) {
+        const id = hash.replace("#task/", "");
+        if (id && id !== "create") {
+          setState((prev) => prev.isOpen && prev.noteId === id ? prev : {
+            ...initialState,
+            isOpen: true,
+            mode: "view",
+            noteId: id,
+          });
+        } else if (id === "create") {
+          setState((prev) => prev.isOpen && prev.mode === "create" ? prev : {
+            ...initialState,
+            isOpen: true,
+            mode: "create",
+          });
+        }
+      } else {
+        // If hash is cleared and modal is open (and it was opened via hash), we should close it
+        setState((prev) => {
+          if (prev.isOpen) {
+            if (prev.projectPublicId) {
+              syncProjectTaskUrl(orgId, prev.projectPublicId, null, true);
+            }
+            return initialState;
+          }
+          return prev;
+        });
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, [orgId]);
 
   const viewNote = useCallback(

@@ -1,6 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
+import { UserAvatar } from "@/app/(protected)/_components/layout/user-menu";
+import SettingsModal from "@/app/(protected)/_components/modals/settings/settings-modal";
+
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/app/_contexts/auth-context";
@@ -22,22 +27,22 @@ const fredoka = Fredoka({
   weight: ["700"],
 });
 import {
-  Home,
-  Workflow,
   X,
-  FileText,
   Frown,
   MessageSquare,
   ChevronRight,
   Bot,
   Building2,
-  Waypoints,
-  Settings,
-  CircleHelp,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 import { ProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
 import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
+import { AnimatedHomeIcon } from "./icons/animated/AnimatedHomeIcon";
+import { AnimatedNotesIcon } from "./icons/animated/AnimatedNotesIcon";
+import { AnimatedProjectsIcon } from "./icons/animated/AnimatedProjectsIcon";
+import { AnimatedFlowsIcon } from "./icons/animated/AnimatedFlowsIcon";
+import { AnimatedSettingsIcon } from "./icons/animated/AnimatedSettingsIcon";
 
 const SidebarToggleIcon = ({ className }: { className?: string }) => {
   return (
@@ -54,6 +59,36 @@ const SidebarToggleIcon = ({ className }: { className?: string }) => {
       />
     </svg>
   );
+};
+
+
+const useKeyboardShortcut = (key: string, callback: () => void) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === key.toLowerCase()) {
+        e.preventDefault();
+        callback();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [key, callback]);
+};
+
+const useClickOutside = (refs: React.RefObject<HTMLElement | null>[], callback: () => void) => {
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      const isOutside = refs.every((ref) => ref.current && !ref.current.contains(target));
+
+      if (isOutside) {
+        callback();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [refs, callback]);
 };
 
 // ---------------------------------------------------------------------------
@@ -155,12 +190,12 @@ function NavItem({
         >
           {isRoot ? (
             /* Raiz: usa o icon-rail fixo para manter alinhamento no collapse */
-            <span className={NAV_ICON_RAIL_CLASS}>
+            <span className={cn(NAV_ICON_RAIL_CLASS, "transition-transform duration-200 group-hover:scale-110")}>
               <Icon
                 className={cn(
                   iconSize,
                   "shrink-0 transition-colors",
-                  active ? "text-slate-950 dark:text-white" : "text-slate-950 dark:text-gray-400"
+                  active ? "text-slate-950 dark:text-white" : "text-slate-950 dark:text-white group-hover:text-slate-950"
                 )}
               />
               {isCollapsed && item.badge !== undefined && item.badge > 0 ? (
@@ -172,10 +207,10 @@ function NavItem({
             <Icon
               className={cn(
                 iconSize,
-                "shrink-0 transition-colors",
+                "shrink-0 transition-all duration-200 group-hover:scale-110",
                 showActiveHighlight
                   ? "text-slate-950 dark:text-white"
-                  : "text-gray-800 dark:text-gray-400"
+                  : "text-gray-800 dark:text-white group-hover:text-slate-950"
               )}
             />
           )}
@@ -216,13 +251,13 @@ function NavItem({
                 : t.nav.expandItem.replace("{label}", item.label)
             }
             className={cn(
-              "focus-visible:ring-brand-yellow/50 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-black/5 hover:text-gray-700 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-400 dark:hover:bg-white/6",
+              "group focus-visible:ring-brand-yellow/50 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-black/5 hover:text-gray-700 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-400 dark:hover:bg-white/6",
               isRoot ? "flex size-6" : "ml-1 flex size-5"
             )}
           >
             <ChevronRight
               className={cn(
-                "shrink-0 transition-transform duration-200",
+                "shrink-0 transition-transform duration-200 group-hover:scale-110",
                 isRoot ? "size-3.5" : "size-3",
                 isExpanded ? "text-brand-yellow rotate-90" : "text-gray-500 dark:text-gray-400"
               )}
@@ -268,7 +303,7 @@ interface RecentItemsProps {
     id: string;
     public_id?: string | null;
     title: string;
-    icon?: LucideIcon;
+    icon?: React.ElementType<any>;
     projectIcon?: any;
     projectColor?: string | null;
   }[];
@@ -317,7 +352,7 @@ function RecentItems({
                   title={item.title}
                   className="group flex min-w-0 flex-1 items-center gap-2"
                 >
-                  <span className={NAV_ICON_RAIL_CLASS}>
+                  <span className={cn(NAV_ICON_RAIL_CLASS, "transition-transform duration-200 group-hover:scale-110")}>
                     {item.projectIcon !== undefined ? (
                       <ProjectIcon icon={item.projectIcon} color={item.projectColor} size="sm" />
                     ) : ItemIcon ? (
@@ -326,7 +361,7 @@ function RecentItems({
                           "size-4 shrink-0 transition-colors",
                           active
                             ? "text-slate-950 dark:text-white"
-                            : "text-gray-800 dark:text-gray-400"
+                            : "text-gray-800 dark:text-white group-hover:text-slate-950"
                         )}
                       />
                     ) : null}
@@ -350,31 +385,54 @@ function RecentItems({
 }
 
 // ---------------------------------------------------------------------------
-// SidebarFooter — link de ajuda
+// SidebarBottomActions
 // ---------------------------------------------------------------------------
 
-interface SidebarFooterProps {
+interface SidebarBottomActionsProps {
   isCollapsed: boolean;
-  helpLabel: string;
+  user: any;
+  t: any;
+  logout: () => void;
 }
 
-function SidebarFooter({ isCollapsed, helpLabel }: SidebarFooterProps) {
+function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomActionsProps) {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      setIsSettingsOpen(hash.startsWith('#settings'));
+      setIsSearchOpen(hash.startsWith('#search'));
+    };
+    
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  useKeyboardShortcut("k", () => {
+    window.location.hash = '#search';
+  });
+
   return (
-    <div className="shrink-0 px-1 pt-1 pb-1.5">
-      <a
-        href={SUPPORT_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        title={helpLabel}
-        aria-label={helpLabel}
+    <div className="shrink-0 px-1 pt-1 pb-1.5 flex flex-col gap-0.5">
+      <button
+        type="button"
+        onClick={() => { window.location.hash = '#search'; }}
+        title={t.navbar?.searchSystem || "Pesquisar"}
+        aria-label={t.navbar?.searchSystem || "Pesquisar"}
         className={cn(
           NAV_ROW_CLASS,
-          "gap-2 px-2",
+          "group gap-2 px-2",
           "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
         )}
       >
-        <span className={NAV_ICON_RAIL_CLASS}>
-          <CircleHelp className="size-4 shrink-0 text-gray-800 dark:text-gray-400" />
+        <span className={cn(NAV_ICON_RAIL_CLASS, "transition-transform duration-200 group-hover:scale-110")}>
+          <Search className="size-4 shrink-0 transition-colors text-gray-800 dark:text-white group-hover:text-slate-950" />
         </span>
         <span
           className={cn(
@@ -382,19 +440,73 @@ function SidebarFooter({ isCollapsed, helpLabel }: SidebarFooterProps) {
             isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100"
           )}
         >
-          <span className="truncate">{helpLabel}</span>
+          <span className="truncate">{t.navbar?.searchSystem || "Pesquisar"}</span>
+          {!isCollapsed && (
+            <kbd className="ml-auto items-bottom flex gap-1 rounded px-1.5 font-sans text-[10px] font-medium text-gray-600 dark:text-gray-300">
+              <span>⌘</span>K
+            </kbd>
+          )}
         </span>
-      </a>
+      </button>
+
+      <div className="relative w-full">
+        <button
+          type="button"
+          onClick={() => { window.location.hash = '#settings/me'; }}
+          title={t.navbar?.accountSettings || "Configurações"}
+          aria-label={t.navbar?.accountSettings || "Configurações"}
+          className={cn(
+            NAV_ROW_CLASS,
+            "group gap-2 px-2",
+            "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
+          )}
+        >
+          <span className={cn(NAV_ICON_RAIL_CLASS, "transition-transform duration-200 group-hover:scale-110")}>
+            <UserAvatar user={user} size="sm" />
+          </span>
+          <span
+            className={cn(
+              COLLAPSED_LABEL_CLASS,
+              isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100"
+            )}
+          >
+            <span className="truncate">{user?.user_name || t.common?.user || "Usuário"}</span>
+          </span>
+        </button>
+      </div>
+
+      <SearchModal 
+        isOpen={isSearchOpen} 
+        onClose={() => {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          setIsSearchOpen(false);
+        }} 
+      />
+      
+      {mounted && (
+        <SettingsModal 
+          isOpen={isSettingsOpen} 
+          onClose={() => {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
+            setIsSettingsOpen(false);
+          }} 
+        />
+      )}
+
     </div>
   );
 }
+
+
 
 // ---------------------------------------------------------------------------
 // Sidebar — componente principal
 // ---------------------------------------------------------------------------
 
 const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarProps) => {
-  const { authenticated, user } = useAuth();
+  const { authenticated, user, logout } = useAuth();
   const { t } = useLanguage();
   const { unreadCount } = useNotification();
   const pathname = usePathname();
@@ -423,7 +535,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     id: proj.id,
     public_id: proj.public_id,
     title: proj.title || t.common.untitled,
-    icon: Workflow,
+    icon: AnimatedProjectsIcon,
     projectIcon: proj.icon,
     projectColor: proj.color,
   }));
@@ -436,25 +548,23 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       : "";
 
   const navigationItems: NavigationItem[] = [
-    { path: `${orgPrefix}/home`, icon: Home, label: t.nav.home },
+    { path: `${orgPrefix}/home`, icon: AnimatedHomeIcon, label: t.nav.home },
     {
       path: `${orgPrefix}/weave-ai/chat`,
       icon: AiFredokaIcon,
       label: t.nav.weaveAi,
     },
-    { path: `${orgPrefix}/notes`, icon: FileText, label: t.nav.notes },
+    { path: `${orgPrefix}/notes`, icon: AnimatedNotesIcon, label: t.nav.notes },
     {
       path: `${orgPrefix}/projects`,
-      icon: Workflow,
+      icon: AnimatedProjectsIcon,
       label: t.nav.projects,
     },
     {
       path: `${orgPrefix}/weave-flow`,
-      icon: Waypoints,
+      icon: AnimatedFlowsIcon,
       label: t.nav.weaveFlow,
     },
-    // { path: "/documents", icon: FileText, label: t.nav.documents },
-    { path: `${orgPrefix}/settings`, icon: Settings, label: t.nav.settingsLabel },
     ...(hasOrg
       ? [
           {
@@ -480,7 +590,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   ];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col text-gray-700 transition-colors duration-300 dark:text-gray-300">
+    <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200/80 text-gray-700 transition-colors duration-300 dark:border-white/10 dark:text-gray-300">
       {/* Header mobile */}
       <div className="flex items-center justify-between p-3 lg:hidden">
         <div className="flex items-center gap-2">
@@ -571,7 +681,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
           />
         </div>
 
-        <SidebarFooter isCollapsed={isCollapsed} helpLabel={t.footer.help} />
+        <SidebarBottomActions isCollapsed={isCollapsed} user={user} t={t} logout={logout} />
       </div>
     </div>
   );

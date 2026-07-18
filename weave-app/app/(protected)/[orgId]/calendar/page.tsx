@@ -207,9 +207,24 @@ export function CalendarPreview({
 
   const [view, setView] = useState<ViewType>("week");
   const [viewEventModal, setViewEventModal] = useState<UnifiedCalendarEvent | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [eventToEdit, setEventToEdit] = useState<UnifiedCalendarEvent | null>(null);
   const [viewEventInvites, setViewEventInvites] = useState<any[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [eventToEdit, setEventToEdit] = useState<EventInput | null>(null);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      setIsCreateModalOpen(hash.startsWith("#calendar/create") || hash.startsWith("#calendar/edit"));
+      if (!hash.startsWith("#calendar/edit") && eventToEdit) {
+        setEventToEdit(null);
+      }
+    };
+    
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [eventToEdit]);
+
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -527,7 +542,7 @@ export function CalendarPreview({
                 key={`week-head-${dayIndex}`}
                 onClick={() => {
                   setSelectedDate(date);
-                  setIsCreateModalOpen(true);
+                  window.location.hash = "#calendar/create";
                 }}
                 className={`cursor-pointer px-1 py-1 text-center transition-colors ${
                   isToday
@@ -643,7 +658,7 @@ export function CalendarPreview({
                   selectedWithTime.setHours(clickHour, 0, 0, 0);
 
                   setSelectedDate(selectedWithTime);
-                  setIsCreateModalOpen(true);
+                  window.location.hash = "#calendar/create";
                 }}
                 className={`relative z-10 h-full transition-colors ${
                   isToday
@@ -830,7 +845,7 @@ export function CalendarPreview({
                     const selected = new Date(currentDate);
                     selected.setHours(hour, 0, 0, 0);
                     setSelectedDate(selected);
-                    setIsCreateModalOpen(true);
+                    window.location.hash = "#calendar/create";
                   }}
                   className={`dark:border-surface-dark-border absolute right-0 left-0 cursor-pointer border-b border-neutral-200 ${
                     isCurrentHour
@@ -1010,7 +1025,7 @@ export function CalendarPreview({
             <button
               onClick={() => {
                 setEventToEdit(event);
-                setIsCreateModalOpen(true);
+                window.location.hash = "#calendar/edit";
                 setViewEventModal(null);
               }}
               className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
@@ -1215,7 +1230,7 @@ export function CalendarPreview({
               )}
 
               <button
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={() => { window.location.hash = "#calendar/create"; }}
                 className="flex items-center justify-center gap-0.5 rounded border border-amber-200 bg-amber-500 px-1.5 py-0.5 text-[8.5px] font-bold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-95 dark:border-amber-600 dark:hover:bg-amber-500"
                 type="button"
               >
@@ -1238,7 +1253,8 @@ export function CalendarPreview({
       <CreateEventModal
         isOpen={isCreateModalOpen}
         onClose={() => {
-          setIsCreateModalOpen(false);
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
           setTimeout(() => setEventToEdit(null), 300);
         }}
         eventToEdit={eventToEdit}
