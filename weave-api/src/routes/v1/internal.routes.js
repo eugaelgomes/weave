@@ -25,7 +25,6 @@ const weaveAiRoutes = require("@/modules/weave-ai/weave-ai.routes");
 const slackRoutes = require("@/modules/slack/slack.routes");
 const engineRoutes = require("@/modules/engine/engine.routes");
 const artifactsRoutes = require("@/modules/artifacts/artifacts.routes");
-const { mcpRouter } = require("./mcp.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -151,7 +150,6 @@ const routeRegistry = [
   { basePath: "/slack", handler: slackRoutes },
   { basePath: "/engine", handler: engineRoutes },
   { basePath: "/artifacts", handler: artifactsRoutes },
-  { basePath: "/mcp", handler: mcpRouter },
 ];
 
 /**

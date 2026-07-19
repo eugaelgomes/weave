@@ -1,0 +1,128 @@
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { logger } from "../logger";
+
+export interface ExecutionContext {
+  userId: string | number;
+  organizationId?: string | number | null;
+}
+
+export class MCPClient {
+  private executionContext: ExecutionContext;
+  private client: Client | null;
+  private transport: SSEClientTransport | null;
+
+  constructor(executionContext: ExecutionContext) {
+    this.executionContext = executionContext;
+    this.client = null;
+    this.transport = null;
+  }
+
+  async connect(): Promise<void> {
+    if (this.client) {
+      return;
+    }
+
+    const apiUrl = process.env.WEAVE_API_URL || "http://localhost:3000";
+    const sseUrl = new URL("/api/service/v1/mcp/sse", apiUrl).toString();
+
+    const headers = {
+      "x-weave-service-secret": process.env.INTERNAL_SERVICE_SECRET || "",
+      "x-weave-user-id": String(this.executionContext.userId || ""),
+      "x-weave-org-id": String(this.executionContext.organizationId || ""),
+    };
+
+    this.transport = new SSEClientTransport(
+      new URL(sseUrl),
+      {
+        eventSourceInit: {
+          headers,
+        } as any,
+        requestInit: {
+          headers,
+        }
+      }
+    );
+
+    this.client = new Client(
+      {
+        name: "weave-engine",
+        version: "1.0.0",
+      },
+      {
+        capabilities: {},
+      }
+    );
+
+    try {
+      await this.client.connect(this.transport);
+      logger.info("Connected to MCP Server via SSE for execution context", {
+        userId: this.executionContext.userId,
+      });
+    } catch (error: any) {
+      logger.error("Failed to connect to MCP Server", { error: error.message });
+      throw error;
+    }
+  }
+
+  async getTools(): Promise<any[]> {
+    await this.connect();
+    if (!this.client) {
+      throw new Error("MCP Client not connected");
+    }
+    const result = await this.client.listTools();
+    
+    // Transform MCP tools format to OpenAI function schemas
+    return result.tools.map(tool => ({
+      type: "function",
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.inputSchema,
+      }
+    }));
+  }
+
+  async executeTool(name: string, args: any): Promise<any> {
+    await this.connect();
+    if (!this.client) {
+      throw new Error("MCP Client not connected");
+    }
+    const result = await this.client.callTool({
+      name,
+      arguments: args,
+    });
+    
+    return result;
+  }
+
+  async close(): Promise<void> {
+    if (this.client) {
+      try {
+        await this.client.close();
+      } catch (error: any) {
+        logger.warn("Error closing MCP client", { error: error.message });
+      }
+      this.client = null;
+      this.transport = null;
+    }
+  }
+}
+
+// Simple connection pool for reusability if needed, mapped by userId + orgId
+const clientsPool = new Map<string, MCPClient>();
+
+/**
+ * Gets or creates an MCPClient for the given execution context.
+ * For now, we instantiate a new client, but can pool them to improve performance.
+ */
+export async function getMCPClient(executionContext: ExecutionContext): Promise<MCPClient> {
+  const key = `${executionContext.userId}-${executionContext.organizationId || 'none'}`;
+  if (clientsPool.has(key)) {
+    return clientsPool.get(key) as MCPClient;
+  }
+
+  const client = new MCPClient(executionContext);
+  clientsPool.set(key, client);
+  return client;
+}

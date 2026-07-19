@@ -11,6 +11,7 @@ const DEFAULT_VERSION = "v1";
 const buildVersionContext = (version = DEFAULT_VERSION) => ({
   internalBasePath: `/api/${version}`,
   mcpBasePath: `/api/${version}/mcp`,
+  serviceBasePath: `/api/service/${version}`,
   publicBasePath: `/api/public/${version}`,
   version,
 });
@@ -26,7 +27,7 @@ const registerApiRoutes = (app, { version = DEFAULT_VERSION } = {}) => {
 
   const { createInternalRouter } = require(`./${version}/internal.routes`);
   const { createPublicRouter } = require(`./${version}/public.routes`);
-  const { createMCPRouter } = require(`./${version}/mcp.routes`);
+  const { createMCPRouter, createServiceMCPRouter } = require(`./${version}/mcp.routes`);
 
   const internalRouter = createInternalRouter({ version: context.version });
   const publicRouter = createPublicRouter({ version: context.version });
@@ -34,6 +35,9 @@ const registerApiRoutes = (app, { version = DEFAULT_VERSION } = {}) => {
   app.use(context.internalBasePath, internalRouter);
   app.use(context.publicBasePath, publicRouter);
   app.use(context.mcpBasePath, createMCPRouter({ version: context.version }));
+  
+  const serviceMCPRouter = createServiceMCPRouter();
+  app.use(`${context.serviceBasePath}/mcp`, serviceMCPRouter);
 
   return context;
 };

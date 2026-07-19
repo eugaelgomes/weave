@@ -1,14 +1,15 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
-import pluginN from "eslint-plugin-n";
+import tseslint from "typescript-eslint";
 import sortKeysFix from "eslint-plugin-sort-keys-fix";
+import pluginN from "eslint-plugin-n";
 
-export default [
+export default tseslint.config(
   {
-    ignores: ["node_modules/**"],
+    ignores: ["dist/**", "node_modules/**"],
   },
   {
-    files: ["**/*.{js,cjs}"],
+    files: ["**/*.{js,cjs,mjs}"],
     ...pluginJs.configs.recommended,
     plugins: {
       n: pluginN,
@@ -28,12 +29,11 @@ export default [
       quotes: [
         "error",
         "double",
-        { allowTemplateLiterals: true, avoidEscape: true },
+        { avoidEscape: true, allowTemplateLiterals: true },
       ],
       semi: ["error", "always"],
 
       eqeqeq: ["error", "always"],
-      // "no-console": "warn",
       "no-duplicate-imports": "error",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "no-var": "error",
@@ -51,4 +51,43 @@ export default [
       "n/no-unpublished-require": "off",
     },
   },
-];
+  {
+    files: ["**/*.ts"],
+    extends: [
+      pluginJs.configs.recommended,
+      ...tseslint.configs.recommended,
+    ],
+    plugins: {
+      n: pluginN,
+      "sort-keys-fix": sortKeysFix,
+    },
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_" },
+      ],
+      "no-unused-vars": "off",
+      quotes: [
+        "error",
+        "double",
+        { avoidEscape: true, allowTemplateLiterals: true },
+      ],
+      semi: ["error", "always"],
+      "sort-keys-fix/sort-keys-fix": [
+        "warn",
+        "asc",
+        { caseSensitive: false, natural: true },
+      ],
+      "eol-last": ["error", "always"],
+      "no-trailing-spaces": "error",
+    },
+  }
+);
