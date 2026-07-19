@@ -201,9 +201,6 @@ export default function ProjectsCarousel({
                   : t.home.carousel.methodologyKanban;
               const updatedAt = formatDate(project.lastModified);
               const signal = signalsByProjectPublicId.get(project.public_id || "");
-              const accentColor =
-                project.color && /^#[0-9A-Fa-f]{3,8}$/i.test(project.color) ? project.color : null;
-
               const counterParts: string[] = [];
               if ((project.subprojectsCount ?? 0) > 0) {
                 counterParts.push(
@@ -278,8 +275,7 @@ export default function ProjectsCarousel({
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    className={`group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:shadow-surface-dark-sm dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-2.5 font-normal shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:bg-[#1d1d1b] ${accentColor ? "border-l-2" : ""}`}
-                    style={accentColor ? { borderLeftColor: accentColor } : undefined}
+                    className="group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:shadow-surface-dark-sm dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-2.5 font-normal shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:bg-[#1d1d1b]"
                   >
                     <div className="flex flex-1 flex-col">
                       <div className="mb-1.5 flex flex-shrink-0 items-start justify-between gap-1.5">

@@ -132,10 +132,6 @@ export default function NotesCarousel({
                 : false;
 
               const hasProjectContext = Boolean(note.project_name || note.stage_name);
-              const stageHex =
-                note.stage_color && /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(note.stage_color)
-                  ? note.stage_color
-                  : null;
               const priorityHex =
                 note.priority_color &&
                 /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(note.priority_color)
@@ -204,9 +200,6 @@ export default function NotesCarousel({
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center text-left sm:w-[220px] sm:snap-start"
                 >
                   <div
-                    style={
-                      stageHex ? { borderLeftColor: stageHex, borderLeftWidth: "4px" } : undefined
-                    }
                     className={`group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:shadow-surface-dark-sm dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-2.5 font-normal shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:bg-[#1d1d1b] ${note.done ? "opacity-90" : ""}`}
                   >
                     <div className="flex flex-1 flex-col">
