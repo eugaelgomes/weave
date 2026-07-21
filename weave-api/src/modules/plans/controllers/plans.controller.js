@@ -113,12 +113,12 @@ class PlanUsageManager {
   }
 
   /**
-   * Increments AI usage (messages and optionally tokens)
+   * Increments AI usage (messages, tokens, reasoning, and files)
    */
-  async consumeAiMessage(usageId, tokens = 0) {
+  async consumeAiMessage(usageId, { tokens = 0, reasoningLevel = "none", filesCount = 0 } = {}) {
     return enqueuePlanUsageJob({
       operation: "consume_ai_message",
-      payload: { tokens },
+      payload: { filesCount, reasoningLevel, tokens },
       usageId,
     });
   }
@@ -224,7 +224,14 @@ class PlanUsageManager {
         current_period_start: startDate.toISOString(),
         exports: { backups_count: 0, notes_count: 0 },
         storage: { files_count: 0, total_uploaded_mb: 0 },
-        weave_ai: { messages_sent: 0, tokens_estimated: 0 },
+        weave_ai: {
+          files_analyzed: 0,
+          messages_sent: 0,
+          reasoning_high_sent: 0,
+          reasoning_low_sent: 0,
+          reasoning_medium_sent: 0,
+          tokens_estimated: 0
+        },
       },
       usage_summary: {
         notes_total: 0,

@@ -261,9 +261,15 @@ class ChatLoopService {
     });
 
     if (usageRecord?.id) {
+      const filesCount = files?.length || 0;
+      const reasoningLevel = payload.model?.reasoningLevel || "none";
       PlanUsageManager.consumeAiMessage(
         usageRecord.id,
-        tokenUsage.totalTokens || 0
+        {
+          filesCount,
+          reasoningLevel,
+          tokens: tokenUsage.totalTokens || 0
+        }
       ).catch((err) => {
         console.error(
           "[weave-ai/chat] failed to enqueue AI usage consumption",

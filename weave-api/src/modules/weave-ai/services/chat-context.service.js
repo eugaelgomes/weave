@@ -60,6 +60,46 @@ class ChatContextService {
           limitError.statusCode = 403;
           throw limitError;
         }
+
+        const aiConfig = planDetails.weave_ai?.config || {};
+
+        // Model Validation
+        if (Array.isArray(aiConfig.available_models) && aiConfig.available_models.length > 0) {
+          if (!aiConfig.available_models.includes(payload.model.name)) {
+            const modelError = new Error(
+              `The model ${payload.model.name} is not available in your current plan.`
+            );
+            modelError.code = "PLAN_LIMIT_EXCEEDED";
+            modelError.statusCode = 403;
+            throw modelError;
+          }
+        }
+
+        // Reasoning Level Validation
+        if (payload.model.reasoningLevel && payload.model.reasoningLevel !== "none") {
+          const REASONING_WEIGHTS = { high: 3, low: 1, medium: 2, none: 0 };
+          const maxLevel = aiConfig.max_reasoning_level || "none";
+          if (REASONING_WEIGHTS[payload.model.reasoningLevel] > REASONING_WEIGHTS[maxLevel]) {
+            const reasoningError = new Error(
+              `Your plan does not support reasoning level '${payload.model.reasoningLevel}'. Maximum allowed is '${maxLevel}'.`
+            );
+            reasoningError.code = "PLAN_LIMIT_EXCEEDED";
+            reasoningError.statusCode = 403;
+            throw reasoningError;
+          }
+        }
+
+        // File Inputs Validation
+        const maxFileInputs = aiConfig.max_file_inputs || 0;
+        const numFiles = Array.isArray(files) ? files.length : 0;
+        if (numFiles > maxFileInputs) {
+          const fileError = new Error(
+            `Your plan allows a maximum of ${maxFileInputs} file inputs per message, but ${numFiles} were provided.`
+          );
+          fileError.code = "PLAN_LIMIT_EXCEEDED";
+          fileError.statusCode = 403;
+          throw fileError;
+        }
       }
     }
 

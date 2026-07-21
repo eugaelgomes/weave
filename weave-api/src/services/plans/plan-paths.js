@@ -79,10 +79,30 @@ const PLAN_STRUCTURE = {
 
       default_model: "",
 
-      // Limite de mensagens de IA por mês
-      max_tokens_per_message: 0,
+
+
+
+// Número máximo de arquivos que podem ser anexados por mensagem
+max_file_inputs: 0,
+
+
+
+
+
+
+// Janela de contexto em mensagens
+// Nível máximo de raciocínio permitido (ex: 'none', 'low', 'medium', 'high')
+max_reasoning_level: "none",
+
+
+
+
+// Limite de mensagens de IA por mês
+max_tokens_per_message: 0,
+
+
       // Modelos disponíveis para o plano
-      monthly_messages: 0, // Janela de contexto em mensagens
+monthly_messages: 0,
     },
     enabled: false,
     features: [], // Features de IA (summarization, creation, edit, chat, code_review)
@@ -135,6 +155,8 @@ const PLAN_PATHS = {
       AVAILABLE_MODELS: "weave_ai.config.available_models",
       CONTEXT_WINDOW: "weave_ai.config.context_window_messages",
       DEFAULT_MODEL: "weave_ai.config.default_model",
+      MAX_FILE_INPUTS: "weave_ai.config.max_file_inputs",
+      MAX_REASONING_LEVEL: "weave_ai.config.max_reasoning_level",
       MAX_TOKENS: "weave_ai.config.max_tokens_per_message",
       MONTHLY_MESSAGES: "weave_ai.config.monthly_messages",
     },
@@ -167,7 +189,11 @@ const USAGE_PATHS = {
       TOTAL_UPLOADED_MB: "monthly_cycle.storage.total_uploaded_mb",
     },
     WEAVE_AI: {
+      FILES_ANALYZED: "monthly_cycle.weave_ai.files_analyzed",
       MESSAGES_SENT: "monthly_cycle.weave_ai.messages_sent",
+      REASONING_HIGH_SENT: "monthly_cycle.weave_ai.reasoning_high_sent",
+      REASONING_LOW_SENT: "monthly_cycle.weave_ai.reasoning_low_sent",
+      REASONING_MEDIUM_SENT: "monthly_cycle.weave_ai.reasoning_medium_sent",
       TOKENS_ESTIMATED: "monthly_cycle.weave_ai.tokens_estimated",
     },
   },

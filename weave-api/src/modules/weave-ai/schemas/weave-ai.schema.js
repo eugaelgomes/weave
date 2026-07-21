@@ -287,6 +287,13 @@ const chatPayloadSchema = z
             .describe(
               "The name of the model to use for this chat request, such as gpt-4o."
             ),
+          reasoningLevel: z
+            .enum(["none", "low", "medium", "high"])
+            .optional()
+            .default("none")
+            .describe(
+              "The reasoning level to apply for the model (if supported by the model)."
+            ),
           version: z
             .string()
             .min(1)
