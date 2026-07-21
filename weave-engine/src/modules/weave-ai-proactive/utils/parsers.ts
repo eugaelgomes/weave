@@ -1,25 +1,18 @@
-/**
- * @param {unknown} data
- * @returns {string}
- */
-function extractText(data) {
+export function extractText(data: unknown): string {
   if (typeof data === "string") {
     return data.trim();
   }
 
+  const obj = data as Record<string, unknown> | undefined;
   const text =
-    data?.text ||
-    data?.content ||
-    (typeof data?.response === "string" ? data.response : "");
+    obj?.text ||
+    obj?.content ||
+    (typeof obj?.response === "string" ? obj.response : "");
 
   return String(text || "").trim();
 }
 
-/**
- * @param {string} value
- * @returns {object|null}
- */
-function safeJsonParse(value) {
+export function safeJsonParse(value: unknown): Record<string, unknown> | null {
   if (!value) {
     return null;
   }
@@ -27,7 +20,7 @@ function safeJsonParse(value) {
   try {
     return JSON.parse(value);
   } catch {
-    const match = value.match(/\{[\s\S]*\}/);
+    const match = String(value).match(/\{[\s\S]*\}/);
     if (!match) {
       return null;
     }
@@ -39,19 +32,9 @@ function safeJsonParse(value) {
   }
 }
 
-/**
- * @param {string} content
- * @returns {string}
- */
-function compactText(content) {
+export function compactText(content: unknown): string {
   return String(content || "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 500);
 }
-
-module.exports = {
-  compactText,
-  extractText,
-  safeJsonParse,
-};

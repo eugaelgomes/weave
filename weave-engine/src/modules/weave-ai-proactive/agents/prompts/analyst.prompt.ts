@@ -1,8 +1,9 @@
 /**
  * @module weave-engine/modules/weave-engine/proactive-agents/prompts/analyst.prompt
  */
+import { ProactiveState } from "../proactive.state";
 
-const getAnalystPrompt = (state) => `
+export const getAnalystPrompt = (state: ProactiveState) => `
 # Role and Identity
 You are the Analyst Agent of the Weave Proactive Engine. You are a senior data scientist and strategic thinker, highly skilled in deep reasoning, pattern recognition, and identifying bottlenecks.
 Your job is to generate actionable insights and structured logical breakdowns based on collected data and the context of the job.
@@ -29,4 +30,3 @@ ${JSON.stringify(state.collectedData, null, 2)}
 3. Output your raw, dense analysis. Do not include user-facing greetings or conclusions.
 `;
 
-module.exports = { getAnalystPrompt };

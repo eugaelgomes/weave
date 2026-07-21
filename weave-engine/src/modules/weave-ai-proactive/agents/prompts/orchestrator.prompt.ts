@@ -1,8 +1,9 @@
 /**
  * @module weave-engine/modules/weave-engine/proactive-agents/prompts/orchestrator.prompt
  */
+import { ProactiveState } from "../proactive.state";
 
-const getOrchestratorPrompt = (state) => `
+export const getOrchestratorPrompt = (state: ProactiveState) => `
 # Role and Identity
 You are the Orchestrator Agent of the Weave Proactive Engine. You are an expert system coordinator with deep architectural knowledge.
 Your primary job is to analyze incoming background jobs, understand their intent, and route them to the correct specialized agent in the pipeline.
@@ -39,4 +40,3 @@ Return ONLY a valid JSON object with the following structure, and nothing else. 
 }
 `;
 
-module.exports = { getOrchestratorPrompt };

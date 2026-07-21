@@ -1,12 +1,29 @@
 /**
  * @module weave-engine/modules/weave-ai-chat/agents/nodes/orchestrator.node
  */
-const {
-  callAIProvider,
-} = require("../../../../services/llm/llm-provider.client");
-const { logger } = require("../../../../services/logger");
+import { callAIProvider } from "../../../../llm-conectors/llm-provider.client";
+import { logger } from "../../../../config/logger";
 
-function buildOrchestratorPrompt(availableAgents = []) {
+interface Agent {
+  id: string;
+  name?: string;
+  description?: string;
+}
+
+interface OrchestratorState {
+  availableAgents?: Agent[];
+  executionContext?: {
+    onChunk?: (chunk: Record<string, unknown>) => void;
+  };
+  jobContext?: {
+    model?: string;
+    systemMessage?: string;
+  };
+  messages?: unknown[];
+  providerUsed?: string | null;
+}
+
+function buildOrchestratorPrompt(availableAgents: Agent[] = []): string {
   const customAgentsList = availableAgents
     .map(
       (a) =>
@@ -28,7 +45,7 @@ Example: {"agent": "project_manager"}
 `;
 }
 
-async function orchestratorNode(state) {
+export async function orchestratorNode(state: OrchestratorState) {
   logger.info("Chat Orchestrator node running");
 
   if (state.executionContext && state.executionContext.onChunk) {
@@ -58,9 +75,9 @@ async function orchestratorNode(state) {
 
     let activeAgent = "general_assistant";
     try {
-      const resultText = data.text || data.content || data;
+      const resultText = typeof data === "string" ? data : (data as Record<string, unknown>).text || (data as Record<string, unknown>).content;
       // Strip any markdown formatting just in case
-      const cleanJson = resultText
+      const cleanJson = String(resultText)
         .replace(/```json/g, "")
         .replace(/```/g, "")
         .trim();
@@ -75,10 +92,12 @@ async function orchestratorNode(state) {
       if (validAgents.includes(parsed.agent)) {
         activeAgent = parsed.agent;
       }
-    } catch (parseError) {
+    } catch (parseError: unknown) {
+      const errorMsg = parseError instanceof Error ? parseError.message : "Unknown error";
+      const responseText = typeof data === "string" ? data : (data as Record<string, unknown>).text || (data as Record<string, unknown>).content;
       logger.warn(
         "Orchestrator failed to parse JSON, falling back to general_assistant",
-        { error: parseError.message, response: data.text }
+        { error: errorMsg, response: responseText }
       );
     }
 
@@ -95,10 +114,10 @@ async function orchestratorNode(state) {
       activeAgent,
       providerUsed: provider || state.providerUsed,
     };
-  } catch (error) {
-    logger.error("Chat Orchestrator node error", { error: error.message });
-    return { activeAgent: "general_assistant", errors: [error.message] };
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    logger.error("Chat Orchestrator node error", { error: errorMsg });
+    return { activeAgent: "general_assistant", errors: [errorMsg] };
   }
 }
 
-module.exports = { orchestratorNode };

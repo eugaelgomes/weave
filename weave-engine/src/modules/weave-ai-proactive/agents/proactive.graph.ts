@@ -2,14 +2,16 @@
  * @module weave-engine/modules/weave-engine/proactive-agents/proactive.graph
  * @description Compiles the proactive multi-agent StateGraph.
  */
-const { StateGraph, END } = require("../../../utils/state-graph");
-const { orchestratorNode } = require("./nodes/orchestrator.node");
-const { researcherNode } = require("./nodes/researcher.node");
-const { analystNode } = require("./nodes/analyst.node");
-const { writerNode } = require("./nodes/writer.node");
+import { StateGraph, END } from "@/utils/state-graph";
+import { orchestratorNode } from "./nodes/orchestrator.node";
+import { researcherNode } from "./nodes/researcher.node";
+import { analystNode } from "./nodes/analyst.node";
+import { writerNode } from "./nodes/writer.node";
+
+import { ProactiveState } from "./proactive.state";
 
 // Conditional routing function from the orchestrator
-const routeFromOrchestrator = (state) => {
+const routeFromOrchestrator = (state: ProactiveState) => {
   return state.nextNode || "writer"; // Default to writer if something is missing
 };
 
@@ -29,6 +31,4 @@ const proactiveGraph = new StateGraph()
   .addEdge("writer", END) // Writer is the final step
   .compile();
 
-module.exports = {
-  proactiveGraph,
-};
+export { proactiveGraph };

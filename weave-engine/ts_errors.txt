@@ -1,0 +1,158 @@
+src/app.ts(72,33): error TS2339: Property 'parseRawJob' does not exist on type '{}'.
+src/app.ts(128,23): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/chat.graph.ts(6,34): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts' is not a module.
+src/modules/weave-ai-chat/agents/chat.graph.ts(7,36): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts' is not a module.
+src/modules/weave-ai-chat/agents/chat.graph.ts(8,36): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts' is not a module.
+src/modules/weave-ai-chat/agents/chat.graph.ts(9,38): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts' is not a module.
+src/modules/weave-ai-chat/agents/chat.graph.ts(10,34): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts' is not a module.
+src/modules/weave-ai-chat/agents/chat.graph.ts(11,34): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts' is not a module.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(5,3): error TS2451: Cannot redeclare block-scoped variable 'callAIProvider'.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(7,9): error TS2451: Cannot redeclare block-scoped variable 'logger'.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(9,3): error TS2451: Cannot redeclare block-scoped variable 'getInternalToolDefinitions'.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(18,35): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(52,50): error TS7006: Parameter 'tc' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(52,54): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(70,41): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(77,19): error TS2339: Property 'messages' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(78,19): error TS2339: Property 'pendingToolCalls' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(85,19): error TS2339: Property 'messages' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(86,19): error TS2339: Property 'finalResponse' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(100,56): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/contextualizer.node.ts(101,23): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(5,3): error TS2451: Cannot redeclare block-scoped variable 'callAIProvider'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(7,9): error TS2451: Cannot redeclare block-scoped variable 'logger'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(9,3): error TS2451: Cannot redeclare block-scoped variable 'getInternalToolDefinitions'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(12,35): error TS7006: Parameter 'agent' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(40,33): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(43,6): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(87,50): error TS7006: Parameter 'tc' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(87,54): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(105,41): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(112,19): error TS2339: Property 'messages' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(113,19): error TS2339: Property 'pendingToolCalls' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(120,19): error TS2339: Property 'messages' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(121,19): error TS2339: Property 'finalResponse' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(135,55): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/dynamic-agent.node.ts(136,23): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(5,3): error TS2451: Cannot redeclare block-scoped variable 'callAIProvider'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(7,9): error TS2451: Cannot redeclare block-scoped variable 'logger'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(9,3): error TS2451: Cannot redeclare block-scoped variable 'getInternalToolDefinitions'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(18,37): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(52,50): error TS7006: Parameter 'tc' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(52,54): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(70,41): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(77,19): error TS2339: Property 'messages' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(78,19): error TS2339: Property 'pendingToolCalls' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(85,19): error TS2339: Property 'messages' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(86,19): error TS2339: Property 'finalResponse' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(100,59): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/general-assistant.node.ts(101,23): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(5,3): error TS2451: Cannot redeclare block-scoped variable 'callAIProvider'.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(7,9): error TS2451: Cannot redeclare block-scoped variable 'logger'.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(13,17): error TS2339: Property 'id' does not exist on type 'never'.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(13,27): error TS2339: Property 'name' does not exist on type 'never'.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(13,57): error TS2339: Property 'description' does not exist on type 'never'.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(31,33): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(73,47): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(81,18): error TS18046: 'parseError' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(99,59): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/orchestrator.node.ts(100,57): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(5,3): error TS2451: Cannot redeclare block-scoped variable 'callAIProvider'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(7,9): error TS2451: Cannot redeclare block-scoped variable 'logger'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(9,3): error TS2451: Cannot redeclare block-scoped variable 'getInternalToolDefinitions'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(19,35): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(53,50): error TS7006: Parameter 'tc' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(53,54): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(71,41): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(78,19): error TS2339: Property 'messages' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(79,19): error TS2339: Property 'pendingToolCalls' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(86,19): error TS2339: Property 'messages' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(87,19): error TS2339: Property 'finalResponse' does not exist on type '{ providerUsed: any; }'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(101,57): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/project-manager.node.ts(102,23): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(4,9): error TS2451: Cannot redeclare block-scoped variable 'logger'.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(17,29): error TS7006: Parameter 'output' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(17,37): error TS7006: Parameter 'maxLength' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(55,33): error TS7006: Parameter 'state' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(65,9): error TS7034: Variable 'newMessages' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(68,56): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(72,6): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(78,32): error TS7006: Parameter 'tc' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/nodes/tool-executor.node.ts(134,48): error TS7005: Variable 'newMessages' implicitly has an 'any[]' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(2,3): error TS2451: Cannot redeclare block-scoped variable 'estimateTokens'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(3,3): error TS2451: Cannot redeclare block-scoped variable 'formatRole'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(4,3): error TS2451: Cannot redeclare block-scoped variable 'formatServerTime'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(5,3): error TS2451: Cannot redeclare block-scoped variable 'summarizeDocument'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(9,3): error TS2451: Cannot redeclare block-scoped variable 'projectsSprintsCapability'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(11,9): error TS2451: Cannot redeclare block-scoped variable 'notesTasksCapability'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(13,3): error TS2451: Cannot redeclare block-scoped variable 'organizationAdminCapability'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(15,9): error TS2451: Cannot redeclare block-scoped variable 'ecosystemCapability'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(17,3): error TS2451: Cannot redeclare block-scoped variable 'sandboxArtifactsCapability'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(26,29): error TS7006: Parameter 'basePrompt' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(26,41): error TS7006: Parameter '_context' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(46,32): error TS7006: Parameter 'basePrompt' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(46,44): error TS7006: Parameter 'context' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(76,36): error TS7006: Parameter 'basePrompt' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(76,48): error TS7006: Parameter 'context' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(94,42): error TS7006: Parameter 'member' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(108,34): error TS7006: Parameter 'basePrompt' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(108,46): error TS7006: Parameter 'context' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(127,17): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(164,32): error TS7006: Parameter 'basePrompt' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(164,44): error TS7006: Parameter 'projects' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(184,15): error TS7006: Parameter 'stage' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(198,15): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(230,29): error TS7006: Parameter 'basePrompt' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(230,41): error TS7006: Parameter 'notes' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(283,23): error TS2339: Property 'indexedProjects' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(286,57): error TS2339: Property 'indexedNotes' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(289,37): error TS2339: Property 'popularTags' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(290,23): error TS2339: Property 'popularTags' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(292,48): error TS2339: Property 'popularTags' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(295,25): error TS2339: Property 'projectInfo' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(296,75): error TS2339: Property 'projectInfo' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(317,23): error TS2339: Property 'indexedProjects' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(320,57): error TS2339: Property 'indexedNotes' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(323,37): error TS2339: Property 'popularTags' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(324,23): error TS2339: Property 'popularTags' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(326,48): error TS2339: Property 'popularTags' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(329,25): error TS2339: Property 'projectInfo' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/builder.ts(330,75): error TS2339: Property 'projectInfo' does not exist on type '{}'.
+src/modules/weave-ai-chat/agents/prompts/capabilities/ecosystem.ts(1,7): error TS2451: Cannot redeclare block-scoped variable 'ecosystemCapability'.
+src/modules/weave-ai-chat/agents/prompts/capabilities/notes-tasks.ts(1,7): error TS2451: Cannot redeclare block-scoped variable 'notesTasksCapability'.
+src/modules/weave-ai-chat/agents/prompts/capabilities/organization-admin.ts(1,7): error TS2451: Cannot redeclare block-scoped variable 'organizationAdminCapability'.
+src/modules/weave-ai-chat/agents/prompts/capabilities/projects-sprints.ts(1,7): error TS2451: Cannot redeclare block-scoped variable 'projectsSprintsCapability'.
+src/modules/weave-ai-chat/agents/prompts/capabilities/sandbox-artifacts.ts(1,7): error TS2451: Cannot redeclare block-scoped variable 'sandboxArtifactsCapability'.
+src/modules/weave-ai-chat/agents/prompts/index.ts(19,8): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/prompts/builder.ts' is not a module.
+src/modules/weave-ai-chat/agents/prompts/index.ts(21,35): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/prompts/utils.ts' is not a module.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(6,5): error TS7034: Variable 'encoderInstance' implicitly has type 'any' in some locations where its type cannot be determined.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(9,8): error TS7005: Variable 'encoderInstance' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(22,10): error TS2451: Cannot redeclare block-scoped variable 'estimateTokens'.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(22,25): error TS7006: Parameter 'text' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(40,10): error TS2451: Cannot redeclare block-scoped variable 'summarizeDocument'.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(40,28): error TS7006: Parameter 'rawDocument' implicitly has an 'any' type.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(76,10): error TS2451: Cannot redeclare block-scoped variable 'formatServerTime'.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(115,10): error TS2451: Cannot redeclare block-scoped variable 'formatRole'.
+src/modules/weave-ai-chat/agents/prompts/utils.ts(115,21): error TS7006: Parameter 'role' implicitly has an 'any' type.
+src/modules/weave-ai-chat/chat.processor.ts(360,11): error TS2322: Type '({ content: any; role: string; } | null)[]' is not assignable to type '{ content: any; role: string; }[]'.
+  Type '{ content: any; role: string; } | null' is not assignable to type '{ content: any; role: string; }'.
+    Type 'null' is not assignable to type '{ content: any; role: string; }'.
+src/modules/weave-ai-chat/chat.processor.ts(380,30): error TS18046: 'finalState' is of type 'unknown'.
+src/modules/weave-ai-chat/chat.processor.ts(381,33): error TS18046: 'finalState' is of type 'unknown'.
+src/modules/weave-ai-chat/chat.processor.ts(384,13): error TS18046: 'finalState' is of type 'unknown'.
+src/modules/weave-ai-chat/chat.processor.ts(385,23): error TS18046: 'finalState' is of type 'unknown'.
+src/modules/weave-ai-chat/chat.processor.ts(388,30): error TS18046: 'finalState' is of type 'unknown'.
+src/modules/weave-ai-chat/engines/smart-response.engine.ts(61,5): error TS2322: Type '{}' is not assignable to type 'string'.
+src/modules/weave-ai-chat/engines/thinking.engine.ts(10,42): error TS2306: File '/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/agents/prompts/builder.ts' is not a module.
+src/modules/weave-ai-chat/engines/thinking.engine.ts(56,5): error TS2322: Type '{} | null' is not assignable to type 'string | null'.
+  Type '{}' is not assignable to type 'string'.
+src/modules/weave-ai-proactive/agents/nodes/analyst.node.ts(31,49): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-proactive/agents/nodes/analyst.node.ts(32,23): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-proactive/agents/nodes/orchestrator.node.ts(28,34): error TS2339: Property 'match' does not exist on type '{}'.
+src/modules/weave-ai-proactive/agents/nodes/orchestrator.node.ts(44,54): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-proactive/agents/nodes/orchestrator.node.ts(46,23): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-proactive/agents/nodes/researcher.node.ts(36,32): error TS7006: Parameter 'action' implicitly has an 'any' type.
+src/modules/weave-ai-proactive/agents/nodes/researcher.node.ts(60,52): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-proactive/agents/nodes/researcher.node.ts(61,23): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-proactive/agents/nodes/writer.node.ts(36,48): error TS18046: 'error' is of type 'unknown'.
+src/modules/weave-ai-proactive/agents/nodes/writer.node.ts(37,23): error TS18046: 'error' is of type 'unknown'.

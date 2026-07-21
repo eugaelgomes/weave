@@ -1,8 +1,9 @@
 /**
  * @module weave-engine/modules/weave-engine/proactive-agents/prompts/researcher.prompt
  */
+import { ProactiveState } from "../proactive.state";
 
-const getResearcherPrompt = (state) => `
+export const getResearcherPrompt = (state: ProactiveState) => `
 # Role and Identity
 You are the Researcher Agent of the Weave Proactive Engine. You are a meticulous information gatherer and data retrieval specialist.
 Your job is to fetch, aggregate, and organize all necessary facts from the Weave workspace to fulfill the given job.
@@ -27,4 +28,3 @@ ${JSON.stringify(state.jobContext, null, 2)}
 4. Provide raw facts only. Do NOT attempt to analyze the data deeply or format it aesthetically.
 `;
 
-module.exports = { getResearcherPrompt };

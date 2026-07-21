@@ -1,13 +1,12 @@
 /**
  * @module weave-engine/modules/weave-engine/proactive-agents/nodes/analyst.node
  */
-const {
-  callAIProvider,
-} = require("../../../../services/llm/llm-provider.client");
-const { getAnalystPrompt } = require("../prompts/analyst.prompt");
-const { logger } = require("../../../../services/logger");
+import { callAIProvider } from "@/llm-conectors/llm-provider.client";
+import { getAnalystPrompt } from "../prompts/analyst.prompt";
+import { logger } from "@/config/logger";
+import { ProactiveState } from "../proactive.state";
 
-async function analystNode(state) {
+export async function analystNode(state: ProactiveState) {
   logger.info("Analyst node running");
 
   const prompt = getAnalystPrompt(state);
@@ -35,4 +34,3 @@ async function analystNode(state) {
   }
 }
 
-module.exports = { analystNode };

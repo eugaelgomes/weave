@@ -1,8 +1,9 @@
 /**
  * @module weave-engine/modules/weave-engine/proactive-agents/prompts/writer.prompt
  */
+import { ProactiveState } from "../proactive.state";
 
-const getWriterPrompt = (state) => `
+export const getWriterPrompt = (state: ProactiveState) => `
 # Role and Identity
 You are the Writer Agent of the Weave Proactive Engine. You are an expert copywriter, technical author, and UX content specialist.
 Your job is to take raw analysis or data and transform it into a beautifully formatted, highly readable, and user-friendly Markdown report.
@@ -30,4 +31,3 @@ ${state.analysisResult || "No analysis provided. Use the job context directly."}
 4. Output ONLY the final Markdown content that will be sent to the user. Do not include phrases like "Here is the report:" or "I have finished writing:".
 `;
 
-module.exports = { getWriterPrompt };

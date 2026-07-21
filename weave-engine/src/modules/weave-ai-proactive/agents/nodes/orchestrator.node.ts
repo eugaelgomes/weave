@@ -1,13 +1,12 @@
 /**
  * @module weave-engine/modules/weave-engine/proactive-agents/nodes/orchestrator.node
  */
-const {
-  callAIProvider,
-} = require("../../../../services/llm/llm-provider.client");
-const { getOrchestratorPrompt } = require("../prompts/orchestrator.prompt");
-const { logger } = require("../../../../services/logger");
+import { callAIProvider } from "@/llm-conectors/llm-provider.client";
+import { getOrchestratorPrompt } from "../prompts/orchestrator.prompt";
+import { logger } from "@/config/logger";
+import { ProactiveState } from "../proactive.state";
 
-async function orchestratorNode(state) {
+export async function orchestratorNode(state: ProactiveState) {
   logger.info("Orchestrator node running", { iterations: state.iterations });
 
   const prompt = getOrchestratorPrompt(state);
@@ -49,4 +48,3 @@ async function orchestratorNode(state) {
   }
 }
 
-module.exports = { orchestratorNode };

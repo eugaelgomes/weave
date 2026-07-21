@@ -4,11 +4,11 @@
  * ahead of the main ReAct loop execution.
  *
  * Dependencies:
- * - `../prompts/agent-prompts`: For system prompt construction.
+ * - `../prompts/builder`: For system prompt construction.
  * - `../../../services/llm/llm-provider.client`: To execute the thinking generation.
  */
-const { buildEngineSystemMessage } = require("../agents/prompts/agent-prompts");
-const { callAIProvider } = require("../../../services/llm/llm-provider.client");
+import { buildEngineSystemMessage } from "../agents/prompts/builder";
+import { callAIProvider } from "@/llm-conectors/llm-provider.client";
 
 const CONTENT_GENERATION_KEYWORDS =
   /\b(research|edit|rewrite|rebuild|write|create content|detail|explain|summarize|elaborate|rich|history|about)\b/i;
@@ -25,12 +25,17 @@ const CONTENT_GENERATION_KEYWORDS =
  * @param {string} params.model - The requested LLM model.
  * @returns {Promise<string|null>} The generated text, or null if thinking phase is skipped.
  */
-async function processThinkingPhase({
+export async function processThinkingPhase({
   allowEdit,
   enrichedContext,
   message,
   model,
-}) {
+}: {
+  allowEdit: boolean;
+  enrichedContext: Record<string, unknown>;
+  message: string;
+  model: string;
+}): Promise<string | null> {
   if (!allowEdit || !CONTENT_GENERATION_KEYWORDS.test(message)) {
     return null;
   }
@@ -53,7 +58,3 @@ async function processThinkingPhase({
     return null;
   }
 }
-
-module.exports = {
-  processThinkingPhase,
-};

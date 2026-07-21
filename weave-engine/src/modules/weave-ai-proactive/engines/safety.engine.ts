@@ -1,7 +1,7 @@
-const { z } = require("zod");
-const { logger } = require("../../../services/logger");
-const { callAIProvider } = require("../../../services/llm/llm-provider.client");
-const { extractText, safeJsonParse } = require("../utils/parsers");
+import { z } from "zod";
+import { logger } from "@/config/logger";
+import { callAIProvider } from "@/llm-conectors/llm-provider.client";
+import { extractText, safeJsonParse } from "../utils/parsers";
 
 const SAFETY_RECHECK_MODEL = process.env.WEAVE_PROACTIVE_SAFETY_MODEL || null;
 
@@ -20,7 +20,7 @@ class SafetyEngine {
    * @param {{ content: string }} primaryResult - The output generated in the primary pass.
    * @returns {Promise<{ label: "safe"|"review"|"unsafe", reason: string, sanitizedText: string }>} The safety evaluation result.
    */
-  async runSafetyRecheck(job, primaryResult) {
+  async runSafetyRecheck(job: Record<string, unknown>, primaryResult: Record<string, unknown>) {
     const safetyPrompt = [
       "You are a safety reviewer for proactive AI output.",
       "Return ONLY valid JSON with keys:",
@@ -61,9 +61,9 @@ class SafetyEngine {
           sanitizedText: validation.data.sanitizedText.trim(),
         };
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn("Proactive safety re-check failed, applying fallback", {
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       });
     }
 
@@ -81,7 +81,10 @@ class SafetyEngine {
    * @param {{ label: "safe"|"review"|"unsafe", reason: string, sanitizedText: string }} safetyCheck - The evaluation result.
    * @returns {{ success: boolean, data: { content: string, providerUsed: string|null }, safety: { checked: true, label: string, blocked: boolean, reason: string } }} The final safe payload.
    */
-  applySafetyPolicy(primaryResult, safetyCheck) {
+  applySafetyPolicy(
+    primaryResult: Record<string, unknown>,
+    safetyCheck: { label: string; reason?: string; sanitizedText?: string }
+  ) {
     const isUnsafe = safetyCheck.label === "unsafe";
     const safeContent = isUnsafe
       ? "Content blocked by safety review."
@@ -105,4 +108,4 @@ class SafetyEngine {
   }
 }
 
-module.exports = new SafetyEngine();
+export default new SafetyEngine();

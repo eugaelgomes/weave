@@ -1,15 +1,11 @@
 /**
  * @module weave-engine/modules/weave-ai-chat/agents/nodes/dynamic-agent.node
  */
-const {
-  callAIProvider,
-} = require("../../../../services/llm/llm-provider.client");
-const { logger } = require("../../../../services/logger");
-const {
-  getInternalToolDefinitions,
-} = require("../../../../tools/tool-dispatcher");
+import { callAIProvider } from "../../../../llm-conectors/llm-provider.client";
+import { logger } from "../../../../config/logger";
+import { getInternalToolDefinitions } from "../../../../llm-conectors/mcp-tools";
 
-function extractAgentInstructions(agent) {
+function extractAgentInstructions(agent: Record<string, unknown> | null | undefined) {
   if (!agent || typeof agent !== "object") {
     return "";
   }
@@ -37,10 +33,10 @@ function extractAgentInstructions(agent) {
   return lines.join("\n");
 }
 
-async function dynamicAgentNode(state) {
+export async function dynamicAgentNode(state: Record<string, unknown>) {
   const activeAgentId = state.activeAgent;
   const agent = (state.availableAgents || []).find(
-    (a) => a.id === activeAgentId
+    (a: Record<string, unknown>) => a.id === activeAgentId
   );
 
   if (!agent) {
@@ -79,12 +75,12 @@ async function dynamicAgentNode(state) {
         `\n\n[Agent]: ${agentInstructions}`,
     });
 
-    const stateUpdate = {
+    const stateUpdate: Record<string, unknown> = {
       providerUsed: provider || state.providerUsed,
     };
 
     if (data.type === "function_call" && data.toolCalls) {
-      const toolCallsArray = data.toolCalls.map((tc, idx) => {
+      const toolCallsArray = data.toolCalls.map((tc: Record<string, unknown>, idx: number) => {
         return {
           extra_content: tc.extra_content,
           function: {
@@ -102,7 +98,7 @@ async function dynamicAgentNode(state) {
         content: null,
         rawParts: data.rawParts,
         role: "assistant",
-        tool_calls: toolCallsArray.map((t) => ({
+        tool_calls: toolCallsArray.map((t: Record<string, unknown>) => ({
           function: t.function,
           id: t.id,
           ...(t.extra_content ? { extra_content: t.extra_content } : {}),
@@ -131,10 +127,9 @@ async function dynamicAgentNode(state) {
     }
 
     return stateUpdate;
-  } catch (error) {
-    logger.error("Dynamic Agent node error", { error: error.message });
-    return { errors: [error.message] };
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    logger.error("Dynamic Agent node error", { error: errMessage });
+    return { errors: [errMessage] };
   }
 }
-
-module.exports = { dynamicAgentNode };

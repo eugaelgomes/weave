@@ -88,7 +88,7 @@ interface NormalizedFile {
  * @param {any} rawFile
  * @returns {{name: string, mimeType: string, base64Data: string}|null}
  */
-function normalizeFileInput(rawFile: any): NormalizedFile | null {
+function normalizeFileInput(rawFile: Record<string, unknown>): NormalizedFile | null {
   if (!rawFile || typeof rawFile !== "object") {
     return null;
   }
@@ -134,7 +134,7 @@ function normalizeFileInput(rawFile: any): NormalizedFile | null {
  * @param {any} files
  * @returns {Array<{name: string, mimeType: string, base64Data: string}>}
  */
-function normalizeFiles(files: any): NormalizedFile[] {
+function normalizeFiles(files: unknown[]): NormalizedFile[] {
   if (!Array.isArray(files) || files.length === 0) {
     return [];
   }
@@ -165,7 +165,7 @@ async function callGenericApi(
   prompt: string,
   systemMessage: string,
   config: ProviderConfig,
-  options: any = {},
+  options: Record<string, unknown> = {},
   modelName?: string
 ): Promise<ProviderResponse> {
   if (!config.apiKey) {
@@ -198,7 +198,7 @@ async function callGenericApi(
   }
 
   const normalizedFiles = normalizeFiles(options.files);
-  const userContent: any[] = [];
+  const userContent: Record<string, unknown>[] = [];
   if (prompt) {
     userContent.push({ text: prompt, type: "text" });
   }
@@ -260,7 +260,7 @@ async function callGenericApi(
     });
   }
 
-  const messages: any[] = [
+  const messages: Record<string, unknown>[] = [
     {
       content: systemMessage,
       role: "system",
@@ -268,8 +268,8 @@ async function callGenericApi(
   ];
 
   if (Array.isArray(options.messages)) {
-    const sanitizedMessages = options.messages.map((msg: any) => {
-      const cleanMsg: any = {
+    const sanitizedMessages = (options.messages as Record<string, unknown>[]).map((msg: Record<string, unknown>) => {
+      const cleanMsg: Record<string, unknown> = {
         role: msg.role,
       };
 
@@ -278,7 +278,7 @@ async function callGenericApi(
       }
 
       if (msg.role === "assistant" && msg.tool_calls) {
-        cleanMsg.tool_calls = msg.tool_calls.map((tc: any) => ({
+        cleanMsg.tool_calls = (msg.tool_calls as Record<string, unknown>[]).map((tc: Record<string, unknown>) => ({
           function: {
             arguments: tc.function.arguments,
             name: tc.function.name,
@@ -316,7 +316,7 @@ async function callGenericApi(
     });
   }
 
-  const payload: any = {
+  const payload: Record<string, unknown> = {
     messages,
     model: modelName || config.model,
     temperature: config.temperature,
@@ -330,8 +330,8 @@ async function callGenericApi(
   }
 
   if (options.allowEdit && options.functions) {
-    payload.tools = options.functions.map((fn: any) => {
-      const fnDef = fn.function || fn;
+    payload.tools = (options.functions as Record<string, unknown>[]).map((fn: Record<string, unknown>) => {
+      const fnDef = (fn.function || fn) as Record<string, unknown>;
       return {
         function: {
           description: fnDef.description,
@@ -353,8 +353,8 @@ async function callGenericApi(
     });
 
     let fullContent = "";
-    let finalUsage: any = null;
-    let finalToolCalls: any[] | null = null;
+    let finalUsage: Record<string, unknown> | null = null;
+    let finalToolCalls: Record<string, unknown>[] | null = null;
     let streamBuffer = "";
 
     for await (const chunk of response.data) {
@@ -464,7 +464,7 @@ async function callGenericApi(
             if (parsed.usage) {
               finalUsage = parsed.usage;
             }
-          } catch {}
+          } catch { /* ignore */ }
         }
       }
     }
@@ -481,7 +481,7 @@ async function callGenericApi(
               const fixed = str.split("}{")[0] + "}";
               return JSON.parse(fixed);
             }
-          } catch {}
+          } catch { /* ignore */ }
           return {};
         }
       };
@@ -495,7 +495,7 @@ async function callGenericApi(
         text: null,
         toolCallId: toolCall.id,
         toolCalls: finalToolCalls.map((tc) => {
-          const mapped: any = {
+          const mapped: Record<string, unknown> = {
             arguments: safeParse(tc.function.arguments),
             id: tc.id,
             name: tc.function.name,
@@ -564,8 +564,8 @@ async function callGenericApi(
       },
       text: null,
       toolCallId: toolCall.id,
-      toolCalls: message.tool_calls.map((tc: any) => {
-        const mapped: any = {
+      toolCalls: message.tool_calls.map((tc: Record<string, unknown>) => {
+        const mapped: Record<string, unknown> = {
           arguments: safeParse(tc.function.arguments),
           id: tc.id,
           name: tc.function.name,
@@ -597,7 +597,7 @@ async function callProviderWithRetry(
   model: string,
   prompt: string,
   systemMessage: string,
-  options: any = {},
+  options: Record<string, unknown> = {},
   retryCount = 0
 ): Promise<ProviderResponse> {
   const config = getProviderConfig(provider);
@@ -614,14 +614,16 @@ async function callProviderWithRetry(
     }
 
     throw new Error(`Unsupported LLM provider: ${provider}`);
-  } catch (error: any) {
-    if (error.response && error.response.data) {
-      if (typeof error.response.data.on === "function") {
+  } catch (error: unknown) {
+    const err = error as Record<string, unknown>;
+    if (err.response && (err.response as Record<string, unknown>).data) {
+      const responseData = (err.response as Record<string, unknown>).data as Record<string, unknown>;
+      if (typeof responseData.on === "function") {
         let errorBody = "";
-        error.response.data.on("data", (chunk: any) => {
-          errorBody += chunk.toString();
+        responseData.on("data", (chunk: unknown) => {
+          errorBody += (chunk as { toString(): string }).toString();
         });
-        error.response.data.on("end", () => {
+        responseData.on("end", () => {
           console.error(
             "[LLM ERROR] Provider API returned (stream):",
             errorBody
@@ -630,7 +632,7 @@ async function callProviderWithRetry(
       } else {
         console.error(
           "[LLM ERROR] Provider API returned:",
-          JSON.stringify(error.response.data, null, 2)
+          JSON.stringify(err.response.data, null, 2)
         );
       }
     }
@@ -669,7 +671,7 @@ function resolveModelName(modelName: string): string {
 }
 
 export interface CallAIProviderParams {
-  options?: any;
+  options?: Record<string, unknown>;
   prompt: string;
   model: string;
   systemMessage: string;
@@ -710,11 +712,12 @@ export async function callAIProvider({
       options
     );
     return { data, model: resolvedModel, provider: primaryProvider };
-  } catch (error: any) {
-    if (!error.code) {
-      error.code = "ENGINE_PROVIDER_CALL_FAILED";
+  } catch (error: unknown) {
+    const err = error as Record<string, unknown>;
+    if (!err.code) {
+      err.code = "ENGINE_PROVIDER_CALL_FAILED";
     }
-    throw error;
+    throw err;
   }
 }
 

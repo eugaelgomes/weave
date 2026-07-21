@@ -1,13 +1,12 @@
 /**
  * @module weave-engine/modules/weave-engine/proactive-agents/nodes/writer.node
  */
-const {
-  callAIProvider,
-} = require("../../../../services/llm/llm-provider.client");
-const { getWriterPrompt } = require("../prompts/writer.prompt");
-const { logger } = require("../../../../services/logger");
+import { callAIProvider } from "@/llm-conectors/llm-provider.client";
+import { getWriterPrompt } from "../prompts/writer.prompt";
+import { logger } from "@/config/logger";
+import { ProactiveState } from "../proactive.state";
 
-async function writerNode(state) {
+export async function writerNode(state: ProactiveState) {
   logger.info("Writer node running");
 
   const prompt = getWriterPrompt(state);
@@ -40,4 +39,3 @@ async function writerNode(state) {
   }
 }
 
-module.exports = { writerNode };

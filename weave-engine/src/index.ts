@@ -1,16 +1,12 @@
 import "./instrument";
-import { validateEnv, env } from "./enviroments";
-import { logger } from "./services/logger";
+import { validateEnv, env } from "@/config/enviroments";
+import { logger } from "@/config/logger";
 import {
   registerShutdownHandler,
   setupGracefulShutdown,
-} from "./services/graceful-shutdown";
-import redis from "./services/cache/redis.client";
-import {
-  closeDatabase,
-  connectDatabase,
-} from "./services/database/postgres.client";
-import queueRouter from "./router/index";
+} from "@/config/shutdown";
+import redis from "@/queues/redis.client";
+import queueRouter from "@/app";
 import * as Sentry from "@sentry/node";
 
 async function bootstrap() {
@@ -19,9 +15,8 @@ async function bootstrap() {
   validateEnv();
   logger.info("Environment validated");
 
-  await connectDatabase();
-  queueRouter.start().catch((err: any) => {
-    logger.error("QueueRouter loop failed fatally", { error: err.message });
+  queueRouter.start().catch((err: unknown) => {
+    logger.error("QueueRouter loop failed fatally", { error: (err as Error).message });
   });
 
   registerShutdownHandler("queue-router", async () => {
@@ -29,9 +24,6 @@ async function bootstrap() {
   });
   registerShutdownHandler("redis", async () => {
     await redis.quit();
-  });
-  registerShutdownHandler("database", async () => {
-    await closeDatabase();
   });
   registerShutdownHandler("sentry", async () => {
     await Sentry.close(2000);
@@ -42,10 +34,11 @@ async function bootstrap() {
 
 setupGracefulShutdown();
 
-bootstrap().catch((err: any) => {
+bootstrap().catch((err: unknown) => {
   logger.error("Failed to start weave-engine", {
-    error: err.message,
-    stack: err.stack,
+    error: (err as Error).message,
+    stack: (err as Error).stack,
   });
   process.exitCode = 1;
 });
+

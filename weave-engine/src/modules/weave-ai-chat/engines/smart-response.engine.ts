@@ -5,7 +5,7 @@
  * Dependencies:
  * - `../../providers/llm-provider.client`: To generate the summary.
  */
-const { callAIProvider } = require("../../../services/llm/llm-provider.client");
+import { callAIProvider } from "@/llm-conectors/llm-provider.client";
 
 /**
  * Takes the raw JSON result of a tool execution and translates it into a concise,
@@ -19,15 +19,21 @@ const { callAIProvider } = require("../../../services/llm/llm-provider.client");
  * @param {string} params.systemMessage - The base system context.
  * @returns {Promise<string>} The generated natural language summary.
  */
-async function generateSmartResponse({
+export async function generateSmartResponse({
   executionResult,
   functionName,
   model,
   originalMessage,
   systemMessage,
-}) {
+}: {
+  executionResult: Record<string, unknown>;
+  functionName: unknown;
+  model: string;
+  originalMessage: string;
+  systemMessage: string;
+}): Promise<string> {
   const normalizedFunctionName =
-    typeof functionName === "string" ? functionName : functionName?.name;
+    typeof functionName === "string" ? functionName : (functionName as Record<string, unknown>)?.name;
 
   const summaryPrompt = `
 Context: The user requested "${originalMessage}".
@@ -57,7 +63,3 @@ Instructions:
     return "**Action executed successfully.**\n\n(Technical details hidden for brevity)";
   }
 }
-
-module.exports = {
-  generateSmartResponse,
-};

@@ -1,13 +1,12 @@
 /**
  * @module weave-engine/modules/weave-engine/proactive-agents/nodes/researcher.node
  */
-const {
-  executeAgenticTask,
-} = require("../../../weave-ai-chat/engines/reasoning.engine");
-const { getResearcherPrompt } = require("../prompts/researcher.prompt");
-const { logger } = require("../../../../services/logger");
+import { executeAgenticTask } from "../../../weave-ai-chat/engines/reasoning.engine";
+import { getResearcherPrompt } from "../prompts/researcher.prompt";
+import { logger } from "@/config/logger";
+import { ProactiveState } from "../proactive.state";
 
-async function researcherNode(state) {
+export async function researcherNode(state: ProactiveState) {
   logger.info("Researcher node running");
 
   const systemMessage = getResearcherPrompt(state);
@@ -64,4 +63,3 @@ async function researcherNode(state) {
   }
 }
 
-module.exports = { researcherNode };

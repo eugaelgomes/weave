@@ -1,11 +1,11 @@
 /**
  * @module weave-engine/modules/weave-ai-chat/agents/nodes/tool-executor.node
  */
-const { logger } = require("../../../../services/logger");
+const { logger } = require("../../../../config/logger");
 const {
   isInternalTool,
   executeInternalTool,
-} = require("../../../../tools/tool-dispatcher");
+} = require("../../../../llm-conectors/mcp-tools");
 
 /**
  * Intelligently truncates a tool output to prevent breaking JSON structures when sending it back to the LLM.

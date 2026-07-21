@@ -7,4 +7,4 @@
  * - index.js: Main entrypoint for exports.
  */
 
-module.exports = require(".");
+export * from "./index";

@@ -7,12 +7,6 @@
  * - `./engines/thinking.engine.js`
  * - `./engines/smart-response.engine.js`
  */
-const { executeAgenticTask } = require("./react.engine");
-const { processThinkingPhase } = require("./thinking.engine");
-const { generateSmartResponse } = require("./smart-response.engine");
-
-module.exports = {
-  executeAgenticTask,
-  generateSmartResponse,
-  processThinkingPhase,
-};
+export { executeAgenticTask } from "./react.engine";
+export { processThinkingPhase } from "./thinking.engine";
+export { generateSmartResponse } from "./smart-response.engine";

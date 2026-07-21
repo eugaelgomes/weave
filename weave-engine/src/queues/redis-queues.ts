@@ -10,7 +10,7 @@ import {
   getEngineProactiveResponseQueueRedisKey,
   getEngineProactiveTaskQueueRedisKey,
   getEngineSubagentRequestQueueRedisKey,
-} from "./redis-queue-keys";
+} from "@/queues/redis-queue-keys";
 
 export interface RedisQueueConfig {
   description: string;

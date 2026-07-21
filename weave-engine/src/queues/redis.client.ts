@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { logger } from "../logger";
+import { logger } from "@/config/logger";
 
 const redis = new Redis(process.env.REDIS_URL || "", {
   enableReadyCheck: false,

@@ -1,16 +1,16 @@
-import { logger } from "../services/logger";
+import { logger } from "../config/logger";
 
 export const END = "__END__";
 
-export type StateNodeAction<State extends Record<string, any> = Record<string, any>> = (
+export type StateNodeAction<State extends Record<string, unknown> = Record<string, unknown>> = (
   state: State
 ) => Promise<Partial<State>> | Partial<State>;
 
-export type StateConditionFn<State extends Record<string, any> = Record<string, any>> = (
+export type StateConditionFn<State extends Record<string, unknown> = Record<string, unknown>> = (
   state: State
 ) => Promise<string> | string;
 
-export class StateGraph<State extends Record<string, any> = Record<string, any>> {
+export class StateGraph<State extends Record<string, unknown> = Record<string, unknown>> {
   private nodes: Map<string, StateNodeAction<State>>;
   private edges: Map<string, string>;
   private conditionalEdges: Map<string, StateConditionFn<State>>;
@@ -121,13 +121,14 @@ export class StateGraph<State extends Record<string, any> = Record<string, any>>
           ...stateUpdate,
           iterations,
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         logger.error(`StateGraph execution error at node '${currentNode}'`, {
-          error: error.message,
+          error: errorMessage,
         });
-        const stateWithErrors = currentState as any;
-        stateWithErrors.errors = stateWithErrors.errors || [];
-        stateWithErrors.errors.push(`[Node: ${currentNode}] ${error.message}`);
+        const stateWithErrors = currentState as Record<string, unknown>;
+        stateWithErrors.errors = Array.isArray(stateWithErrors.errors) ? stateWithErrors.errors : [];
+        (stateWithErrors.errors as string[]).push(`[Node: ${currentNode}] ${errorMessage}`);
         break; // Stop execution on error
       }
 
@@ -151,9 +152,9 @@ export class StateGraph<State extends Record<string, any> = Record<string, any>>
       logger.warn("StateGraph execution hit max iterations limit", {
         maxIterations,
       });
-      const stateWithErrors = currentState as any;
-      stateWithErrors.errors = stateWithErrors.errors || [];
-      stateWithErrors.errors.push(
+      const stateWithErrors = currentState as Record<string, unknown>;
+      stateWithErrors.errors = Array.isArray(stateWithErrors.errors) ? stateWithErrors.errors : [];
+      (stateWithErrors.errors as string[]).push(
         `Execution stopped after ${maxIterations} iterations (max limit).`
       );
     }

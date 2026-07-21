@@ -109,14 +109,11 @@ const engineSystemPrompt = `${engineSystemContext}\n\n${engineBehaviorInstructio
 
 Task: Execute background tasks, orchestrate tools, and generate strictly structured content based on context.`;
 
-module.exports = {
+export {
   basePersonality,
-  behaviorInstructions: chatBehaviorInstructions,
-
+  chatBehaviorInstructions as behaviorInstructions,
   chatSystemPrompt,
-
-  // Expose these for backwards compatibility if needed, mapping to chat for now
-  defaultSystemPrompt: chatSystemPrompt,
+  chatSystemPrompt as defaultSystemPrompt,
   engineSystemPrompt,
-  systemContext: chatSystemContext,
+  chatSystemContext as systemContext,
 };

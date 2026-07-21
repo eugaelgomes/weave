@@ -1,4 +1,4 @@
-import { logger } from "./logger";
+import { logger } from "@/config/logger";
 
 type ShutdownHandler = () => Promise<void> | void;
 
@@ -28,8 +28,8 @@ async function gracefulShutdown(signal: string): Promise<void> {
       logger.info(`Shutting down: ${name}`);
       await handler();
       logger.info(`${name} shutdown complete`);
-    } catch (error: any) {
-      logger.error(`Error shutting down ${name}`, { error: error.message });
+    } catch (error: unknown) {
+      logger.error(`Error shutting down ${name}`, { error: (error as Error).message });
     }
   }
 

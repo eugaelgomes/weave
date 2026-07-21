@@ -1,21 +1,21 @@
 /**
  * @module weave-engine/modules/weave-ai-chat/engines/react.engine
  * @deprecated This engine is being replaced by the new StateGraph-based multi-agent orchestration
- *             located in `../agents/chat.graph.js`. Do not use for new implementations.
+ *             located in `../agents/chat.graph.ts`. Do not use for new implementations.
  * @description Implements the core ReAct (Reasoning and Acting) autonomous loop.
  * This engine iteratively calls the LLM, executes local internal tools, and feeds the results back
  * until a final text answer is reached or an external API tool is requested.
  *
  * Dependencies:
  * - `../../providers/llm-provider.client`: To call the LLM model.
- * - `../../tools/tool-dispatcher`: To evaluate and execute internal functions.
+ * - `../../llm-conectors/mcp-tools`: To evaluate and execute internal functions.
  */
-const { callAIProvider } = require("../../../services/llm/llm-provider.client");
-const {
+import { callAIProvider } from "@/llm-conectors/llm-provider.client";
+import {
   isInternalTool,
   executeInternalTool,
   getInternalToolDefinitions,
-} = require("../../../tools/tool-dispatcher");
+} from "@/llm-conectors/mcp-tools";
 
 const MAX_REACT_ITERATIONS = Number.parseInt(
   process.env.WEAVE_ENGINE_MAX_REACT_ITERATIONS || "4",
@@ -33,7 +33,7 @@ const MAX_AGENTIC_DURATION_MS = Number.parseInt(
  * @param {number} maxLength - The maximum string length allowed.
  * @returns {string} The safely truncated string.
  */
-function truncateToolOutput(output, maxLength) {
+function truncateToolOutput(output: unknown, maxLength: number): string {
   if (typeof output === "string") {
     if (output.length <= maxLength) return output;
     return (
@@ -88,20 +88,30 @@ function truncateToolOutput(output, maxLength) {
  * @param {object} [params.executionContext={}] - Workspace context (userId, organizationId, language).
  * @returns {Promise<{data: object, providerUsed: string, executedActions: Array, functions?: Array}>} Result payload.
  */
-async function executeAgenticTask({
+export async function executeAgenticTask({
   allowEdit,
-  allowWebSearch,
+  _allowWebSearch,
   files,
   functions,
   message,
   model,
   systemMessage,
   conversationHistory = [],
-  executionContext = {},
-}) {
+  executionContext = {} as Record<string, unknown>,
+}: {
+  allowEdit: boolean;
+  _allowWebSearch: boolean;
+  files: unknown[];
+  functions: unknown[];
+  message: string;
+  model: string;
+  systemMessage: string;
+  conversationHistory?: unknown[];
+  executionContext?: Record<string, unknown>;
+}): Promise<Record<string, unknown>> {
   let iterations = 0;
   const startedAt = Date.now();
-  const executedActions = [];
+  const executedActions: Record<string, unknown>[] = [];
 
   // Combine internal engine tools with API tools
   const availableFunctions = [...(functions || [])];
@@ -111,7 +121,7 @@ async function executeAgenticTask({
     );
   }
 
-  const currentOptions = {
+  const currentOptions: Record<string, unknown> = {
     allowEdit,
     files,
     functions: availableFunctions.length > 0 ? availableFunctions : undefined,
@@ -126,8 +136,8 @@ async function executeAgenticTask({
   });
 
   let currentPrompt = ""; // The message is now in messages history, no need for prompt
-  let providerUsed = null;
-  const failureCounts = {};
+  let providerUsed: unknown = null;
+  const failureCounts: Record<string, number> = {};
 
   const maxDurationMs =
     executionContext.maxDurationMs || MAX_AGENTIC_DURATION_MS;
@@ -162,7 +172,7 @@ async function executeAgenticTask({
     currentPrompt = ""; // Clear prompt after first turn, history handles the rest
 
     if (data.type === "function_call" && data.toolCalls) {
-      const toolCallsArray = data.toolCalls.map((tc, idx) => {
+      const toolCallsArray = data.toolCalls.map((tc: Record<string, unknown>, idx: number) => {
         return {
           extra_content: tc.extra_content,
           function: {
@@ -181,26 +191,26 @@ async function executeAgenticTask({
         content: null,
         rawParts: data.rawParts,
         role: "assistant",
-        tool_calls: toolCallsArray.map((t) => ({
+        tool_calls: toolCallsArray.map((t: Record<string, unknown>) => ({
           function: t.function,
           id: t.id,
           ...(t.extra_content ? { extra_content: t.extra_content } : {}),
         })),
       });
 
-      const internalCalls = toolCallsArray.filter((t) =>
-        isInternalTool(t.function.name)
+      const internalCalls = toolCallsArray.filter((t: Record<string, unknown>) =>
+        isInternalTool((t.function as Record<string, unknown>).name as string)
       );
       const externalCalls = toolCallsArray.filter(
-        (t) => !isInternalTool(t.function.name)
+        (t: Record<string, unknown>) => !isInternalTool((t.function as Record<string, unknown>).name as string)
       );
 
       if (internalCalls.length > 0 && externalCalls.length === 0) {
         // Execute all internal tools in parallel to minimize latency overhead
         const results = await Promise.all(
-          internalCalls.map(async (tc) => {
-            const fnName = tc.function.name;
-            const fnArgs = tc.rawArgs;
+          internalCalls.map(async (tc: Record<string, unknown>) => {
+            const fnName = (tc.function as Record<string, unknown>).name as string;
+            const fnArgs = tc.rawArgs as Record<string, unknown>;
             if (executionContext.onChunk) {
               executionContext.onChunk({
                 name: fnName,
@@ -223,9 +233,10 @@ async function executeAgenticTask({
                 });
               }
               return { error: null, result, tc };
-            } catch (err) {
+            } catch (err: unknown) {
+              const errorMessage = (err as Error).message;
               if (executionContext.onChunk) {
-                executionContext.onChunk({
+                (executionContext.onChunk as (chunk: Record<string, unknown>) => void)({
                   name: fnName,
                   status: "completed",
                   success: false,
@@ -233,7 +244,7 @@ async function executeAgenticTask({
                 });
               }
               return {
-                error: err.message || "Tool execution failed",
+                error: errorMessage || "Tool execution failed",
                 result: null,
                 tc,
               };
@@ -245,8 +256,8 @@ async function executeAgenticTask({
         let failingToolName = null;
 
         for (const { tc, result, error } of results) {
-          const fnName = tc.function.name;
-          const fnArgs = tc.rawArgs;
+          const fnName = (tc.function as Record<string, unknown>).name as string;
+          const fnArgs = tc.rawArgs as Record<string, unknown>;
 
           if (error) {
             const signature = `${fnName}:${JSON.stringify(fnArgs)}`;
@@ -338,10 +349,10 @@ async function executeAgenticTask({
               type: "action_state",
             });
           }
-        } catch (err) {
-          error = err.message || "Tool execution failed";
+        } catch (err: unknown) {
+          error = (err as Error).message || "Tool execution failed";
           if (executionContext.onChunk) {
-            executionContext.onChunk({
+            (executionContext.onChunk as (chunk: Record<string, unknown>) => void)({
               name: fnName,
               status: "completed",
               success: false,
@@ -428,7 +439,3 @@ async function executeAgenticTask({
     providerUsed,
   };
 }
-
-module.exports = {
-  executeAgenticTask,
-};

@@ -121,6 +121,10 @@ const USAGE_PATHS = {
     WEAVE_AI: {
       MESSAGES_SENT: "monthly_cycle.weave_ai.messages_sent",
       TOKENS_ESTIMATED: "monthly_cycle.weave_ai.tokens_estimated",
+      FILES_ANALYZED: "monthly_cycle.weave_ai.files_analyzed",
+      REASONING_LOW_SENT: "monthly_cycle.weave_ai.reasoning_low_sent",
+      REASONING_MEDIUM_SENT: "monthly_cycle.weave_ai.reasoning_medium_sent",
+      REASONING_HIGH_SENT: "monthly_cycle.weave_ai.reasoning_high_sent",
     },
   },
   SUMMARY: {

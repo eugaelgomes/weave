@@ -4,8 +4,8 @@
  * Maps function names to their concrete action implementations and schemas using MCP.
  */
 
-import { logger } from "./logger";
-import { getMCPClient, ExecutionContext } from "./mcp/mcp.client";
+import { logger } from "../config/logger";
+import { getMCPClient, ExecutionContext } from "../config/mcp.client";
 
 /**
  * Evaluates whether a given tool name is registered as an internal execution target.
@@ -14,7 +14,7 @@ import { getMCPClient, ExecutionContext } from "./mcp/mcp.client";
  * @param {string} functionName - The name of the tool call requested by the LLM.
  * @returns {boolean} True if the tool is handled by the internal engine.
  */
-export function isInternalTool(functionName: string): boolean {
+export function isInternalTool(_functionName: string): boolean {
   // We delegate tool validation to the MCP server.
   return true;
 }
@@ -29,33 +29,33 @@ export function isInternalTool(functionName: string): boolean {
  */
 export async function executeInternalTool(
   functionName: string,
-  args: any,
+  args: Record<string, unknown>,
   executionContext: ExecutionContext
-): Promise<any> {
+): Promise<unknown> {
   logger.info(`Executing tool via MCP: ${functionName}`);
   try {
     const client = await getMCPClient(executionContext);
     const result = await client.executeTool(functionName, args);
-    
+
     // Process MCP result format
     if (result.isError) {
-      return { error: result.content.map((c: any) => c.text).join("\n") };
+      return { error: result.content.map((c: { text?: string }) => c.text || "").join("\n") };
     }
 
     if (result.content && result.content.length > 0) {
       try {
         return JSON.parse(result.content[0].text);
-      } catch (e) {
+      } catch {
         return result.content[0].text;
       }
     }
-    
+
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`MCP tool ${functionName} failed`, {
-      error: error.message,
+      error: (error as Error).message,
     });
-    return { error: error.message };
+    return { error: (error as Error).message };
   }
 }
 
@@ -67,12 +67,12 @@ export async function executeInternalTool(
  */
 export async function getInternalToolDefinitions(
   executionContext: ExecutionContext
-): Promise<Array<any>> {
+): Promise<Array<unknown>> {
   try {
     const client = await getMCPClient(executionContext);
     return await client.getTools();
-  } catch (error: any) {
-    logger.error("Failed to fetch tools from MCP server", { error: error.message });
+  } catch (error: unknown) {
+    logger.error("Failed to fetch tools from MCP server", { error: (error as Error).message });
     return [];
   }
 }

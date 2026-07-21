@@ -107,6 +107,9 @@ class PlansUsageProcessor {
 
       if (operation === "consume_ai_message") {
         const tokens = Number(payload.tokens || 0);
+        const reasoningLevel = payload.reasoningLevel || "none";
+        const filesCount = Number(payload.filesCount || 0);
+
         await this.incrementUsage(
           usageId,
           USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT,
@@ -119,6 +122,22 @@ class PlansUsageProcessor {
             tokens
           );
         }
+        
+        if (reasoningLevel && reasoningLevel !== "none") {
+          const reasoningPath = USAGE_PATHS.MONTHLY.WEAVE_AI[`REASONING_${reasoningLevel.toUpperCase()}_SENT`];
+          if (reasoningPath) {
+            await this.incrementUsage(usageId, reasoningPath, 1);
+          }
+        }
+
+        if (filesCount > 0) {
+          await this.incrementUsage(
+            usageId,
+            USAGE_PATHS.MONTHLY.WEAVE_AI.FILES_ANALYZED,
+            filesCount
+          );
+        }
+
         return;
       }
 

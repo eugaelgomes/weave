@@ -1,13 +1,9 @@
 /**
  * @module weave-engine/modules/weave-ai-chat/agents/nodes/general-assistant.node
  */
-const {
-  callAIProvider,
-} = require("../../../../services/llm/llm-provider.client");
-const { logger } = require("../../../../services/logger");
-const {
-  getInternalToolDefinitions,
-} = require("../../../../tools/tool-dispatcher");
+import { callAIProvider } from "../../../../llm-conectors/llm-provider.client";
+import { logger } from "../../../../config/logger";
+import { getInternalToolDefinitions } from "../../../../llm-conectors/mcp-tools";
 
 const GENERAL_ASSISTANT_SYSTEM_PROMPT = `
 You are the General Assistant Agent for Weave. 
@@ -15,7 +11,7 @@ You handle casual conversation, generic web searches, or tasks that don't fit in
 Answer the user's questions clearly, accurately, and politely.
 `;
 
-async function generalAssistantNode(state) {
+export async function generalAssistantNode(state: Record<string, unknown>) {
   logger.info("General Assistant node running");
 
   if (state.executionContext && state.executionContext.onChunk) {
@@ -44,12 +40,12 @@ async function generalAssistantNode(state) {
         GENERAL_ASSISTANT_SYSTEM_PROMPT,
     });
 
-    const stateUpdate = {
+    const stateUpdate: Record<string, unknown> = {
       providerUsed: provider || state.providerUsed,
     };
 
     if (data.type === "function_call" && data.toolCalls) {
-      const toolCallsArray = data.toolCalls.map((tc, idx) => {
+      const toolCallsArray = data.toolCalls.map((tc: Record<string, unknown>, idx: number) => {
         return {
           extra_content: tc.extra_content,
           function: {
@@ -67,7 +63,7 @@ async function generalAssistantNode(state) {
         content: null,
         rawParts: data.rawParts,
         role: "assistant",
-        tool_calls: toolCallsArray.map((t) => ({
+        tool_calls: toolCallsArray.map((t: Record<string, unknown>) => ({
           function: t.function,
           id: t.id,
           ...(t.extra_content ? { extra_content: t.extra_content } : {}),
@@ -96,10 +92,9 @@ async function generalAssistantNode(state) {
     }
 
     return stateUpdate;
-  } catch (error) {
-    logger.error("General Assistant node error", { error: error.message });
-    return { errors: [error.message] };
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    logger.error("General Assistant node error", { error: errMessage });
+    return { errors: [errMessage] };
   }
 }
-
-module.exports = { generalAssistantNode };

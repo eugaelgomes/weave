@@ -12,22 +12,22 @@
  * - `weave-engine/src/index.js`: Instantiated at startup to begin background processing.
  */
 
-const { z } = require("zod");
-const redis = require("../../services/cache/redis.client");
-const { REDIS_QUEUES } = require("../../services/cache/redis-queues");
-const { logger } = require("../../services/logger");
-const { buildChatSystemMessage } = require("./agents/prompts/agent-prompts");
-const { buildEntityContext } = require("../../utils/entity-context.loader");
-const {
+import { z } from "zod";
+import redis from "@/queues/redis.client";
+import { REDIS_QUEUES } from "@/queues/redis-queues";
+import { logger } from "@/config/logger";
+import { buildChatSystemMessage } from "@/modules/weave-ai-chat/agents/prompts/agent-prompts";
+import { buildEntityContext } from "@/utils/entity-context.loader";
+import {
   generateSmartResponse,
   processThinkingPhase,
-} = require("./engines/reasoning.engine");
-const { buildChatGraph } = require("./agents/chat.graph");
-const { callAIProvider } = require("../../services/llm/llm-provider.client");
-const {
+} from "@/modules/weave-ai-chat/engines/reasoning.engine";
+import { buildChatGraph } from "@/modules/weave-ai-chat/agents/chat.graph";
+import { callAIProvider } from "@/llm-conectors/llm-provider.client";
+import {
   isEngineComposeSurface,
   buildEngineComposePromptOverlay,
-} = require("./utils/compose-prompt");
+} from "@/modules/weave-ai-chat/utils/compose-prompt";
 
 const RESPONSE_TTL_SECONDS = 60;
 const CHAT_HISTORY_MAX_MESSAGES = Number.parseInt(
@@ -67,8 +67,8 @@ const jobEnvelopeSchema = z
     requestId: z
       .string()
       .trim()
-      .catch(null)
-      .default(null)
+      .catch(null as unknown as string)
+      .default(null as unknown as string)
       .transform((v) => (v === "" ? null : v)),
     responseQueueKey: z.string().trim().min(1),
     taskType: z
@@ -80,7 +80,7 @@ const jobEnvelopeSchema = z
   })
   .passthrough();
 
-function resolveOrganizationId(payload = {}, context = {}) {
+function resolveOrganizationId(payload: Record<string, unknown> = {}, context: Record<string, unknown> = {}) {
   return (
     payload.organizationId ||
     payload.organization_id ||
@@ -99,6 +99,9 @@ function resolveOrganizationId(payload = {}, context = {}) {
  * Parses jobs, validates envelopes, and executes the requested AI task type.
  */
 class LlmQueueProcessor {
+  isRunning: boolean;
+  queueName: string;
+
   constructor() {
     this.isRunning = false;
     this.queueName = REDIS_QUEUES.ENGINE_LLM_REQUESTS.key;
@@ -112,12 +115,12 @@ class LlmQueueProcessor {
    * @returns {object} The parsed job object.
    * @throws {Error} If parsing or schema validation fails.
    */
-  parseRawJob(rawPayload) {
-    let parsedJob;
+  parseRawJob(rawPayload: string) {
+    let parsedJob: unknown;
     try {
       parsedJob = JSON.parse(rawPayload);
-    } catch (error) {
-      throw new Error(`Invalid JSON payload: ${error.message}`);
+    } catch (error: unknown) {
+      throw new Error(`Invalid JSON payload: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     const validation = jobEnvelopeSchema.safeParse(parsedJob);
@@ -140,7 +143,7 @@ class LlmQueueProcessor {
    * @param {string} [job.taskType] - The specific AI task (e.g. 'chat_v2_process').
    * @returns {Promise<void>}
    */
-  async processJob(job) {
+  async processJob(job: Record<string, unknown>) {
     const {
       payload = {},
       responseQueueKey,
@@ -225,15 +228,16 @@ class LlmQueueProcessor {
    * @param {string} taskType - The task that threw the error.
    * @returns {{ code: string, message: string, taskType: string }} Normalized error payload.
    */
-  normalizeTaskError(error, taskType) {
+  normalizeTaskError(error: unknown, taskType: string) {
+    const err = error as Record<string, unknown>;
     return {
       code:
-        typeof error?.code === "string" && error.code
-          ? error.code
+        typeof err?.code === "string" && err.code
+          ? err.code
           : "ENGINE_TASK_FAILED",
       message:
-        typeof error?.message === "string" && error.message
-          ? error.message
+        typeof err?.message === "string" && err.message
+          ? err.message
           : "Engine task failed",
       taskType,
     };
@@ -245,7 +249,7 @@ class LlmQueueProcessor {
    * @param {object} deadLetterPayload - The failure details and original job data.
    * @returns {Promise<void>}
    */
-  async pushDeadLetter(deadLetterPayload) {
+  async pushDeadLetter(deadLetterPayload: Record<string, unknown>) {
     await redis.rpush(
       ENGINE_DEAD_LETTER_QUEUE_KEY,
       JSON.stringify({
@@ -263,10 +267,10 @@ class LlmQueueProcessor {
    * @param {string} requestId - The ID of the request for streaming.
    * @returns {Promise<object>} The resulting data from the execution.
    */
-  async executeTask(taskType, payload, requestId) {
+  async executeTask(taskType: string, payload: Record<string, unknown>, requestId: string | null) {
     switch (taskType) {
       case "build_system_message": {
-        const additionalContext = payload.additionalContext || {};
+        const additionalContext = (payload.additionalContext || {}) as Record<string, unknown>;
         const organizationId = resolveOrganizationId(
           payload,
           additionalContext
@@ -328,7 +332,7 @@ class LlmQueueProcessor {
             language:
               payload.userLanguage || payload.context?.userLanguage || "en-US",
             maxDurationMs: ENGINE_CHAT_TASK_TIMEOUT_MS,
-            onChunk: (chunk) => {
+            onChunk: (chunk: string) => {
               if (requestId && redis) {
                 redis
                   .publish(`stream:${requestId}`, JSON.stringify({ chunk }))
@@ -367,7 +371,7 @@ class LlmQueueProcessor {
           new Promise((_, reject) => {
             // Safety timeout to prevent permanently stalled agent loops from hanging the queue worker
             setTimeout(() => {
-              const timeoutError = new Error("Engine chat task timeout");
+              const timeoutError = new Error("Engine chat task timeout") as Error & { code?: string };
               timeoutError.code = "ENGINE_CHAT_TASK_TIMEOUT";
               reject(timeoutError);
             }, ENGINE_CHAT_TASK_TIMEOUT_MS + 2000); // Give the inner loop time to exit gracefully
@@ -401,7 +405,7 @@ class LlmQueueProcessor {
     }
   }
 
-  async buildChatV2SystemMessage(payload = {}) {
+  async buildChatV2SystemMessage(payload: Record<string, unknown> = {}) {
     const noteIds = Array.isArray(payload.noteIds) ? payload.noteIds : [];
     const projectIds = Array.isArray(payload.projectIds)
       ? payload.projectIds
@@ -409,7 +413,7 @@ class LlmQueueProcessor {
     const files = Array.isArray(payload.files) ? payload.files : [];
     const organizationId = resolveOrganizationId(
       payload,
-      payload.context || {}
+      (payload.context as Record<string, unknown>) || {}
     );
     const entityContext = await buildEntityContext({
       noteIds,
@@ -419,22 +423,22 @@ class LlmQueueProcessor {
     });
 
     const baseMessage = buildChatSystemMessage({
-      ...payload.context,
+      ...(payload.context as object),
       indexedNotes: entityContext.indexedNotes,
       indexedProjects: entityContext.indexedProjects,
       noteIds,
       organizationInfo: entityContext.organizationInfo,
       organizationMembers: entityContext.organizationMembers,
       projectIds,
-      userLanguage: payload.userLanguage || payload.context?.userLanguage,
+      userLanguage: payload.userLanguage || (payload.context as Record<string, unknown>)?.userLanguage,
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
-    const noteDocumentContract = payload?.context?.noteDocumentContract || null;
+    const noteDocumentContract = (payload?.context as Record<string, unknown>)?.noteDocumentContract || null;
     const composeOverlay =
       isEngineComposeSurface(payload.context) ||
       payload.useCase === "engine_compose" ||
-      payload.context?.useCase === "engine_compose"
-        ? `\n\n${buildEngineComposePromptOverlay(payload.context || {})}`
+      (payload.context as Record<string, unknown>)?.useCase === "engine_compose"
+        ? `\n\n${buildEngineComposePromptOverlay((payload.context as Record<string, unknown>) || {})}`
         : "";
 
     const fileSummary =
@@ -442,7 +446,7 @@ class LlmQueueProcessor {
         ? "none"
         : files
             .map(
-              (file, index) =>
+              (file: Record<string, unknown>, index: number) =>
                 `${index + 1}. ${file.name || "file"} (${file.mimeType || "bin"}, ${file.sizeBytes || 0}B)`
             )
             .join("\n  ");
@@ -479,16 +483,16 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
    * @param {object|null|undefined} agent - The custom AI agent database record.
    * @returns {string} Formatted instructions string.
    */
-  extractAgentInstructions(agent) {
+  extractAgentInstructions(agent: Record<string, unknown> | null | undefined) {
     if (!agent || typeof agent !== "object") {
       return "";
     }
 
-    const personality = agent.personality || {};
-    const persona = personality.persona || {};
-    const metadata = personality.metadata || {};
-    const behavior = personality.behavior || {};
-    const systemInstructions = behavior.system_instructions || {};
+    const personality = (agent.personality as Record<string, unknown>) || {};
+    const persona = (personality.persona as Record<string, unknown>) || {};
+    const metadata = (personality.metadata as Record<string, unknown>) || {};
+    const behavior = (personality.behavior as Record<string, unknown>) || {};
+    const systemInstructions = (behavior.system_instructions as Record<string, unknown>) || {};
     const contextText = systemInstructions.context || "";
     const rules = Array.isArray(systemInstructions.rules)
       ? systemInstructions.rules.filter(Boolean).join(" | ")
@@ -514,7 +518,7 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
    * @param {number} maxLength - The maximum character length.
    * @returns {string} The safely truncated content.
    */
-  intelligentTruncate(content, maxLength) {
+  intelligentTruncate(content: string, maxLength: number) {
     if (!content || content.length <= maxLength) {
       return content;
     }
@@ -549,14 +553,15 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
    * @param {unknown} rawHistory - Array of previous chat messages.
    * @returns {Array<{role: "user"|"assistant", content: string}>} The sanitized context window.
    */
-  normalizeConversationHistory(rawHistory) {
+  normalizeConversationHistory(rawHistory: unknown) {
     if (!Array.isArray(rawHistory) || rawHistory.length === 0) {
       return [];
     }
 
     return rawHistory
       .slice(-CHAT_HISTORY_MAX_MESSAGES)
-      .map((entry) => {
+      .map((entryRaw: unknown) => {
+        const entry = entryRaw as Record<string, unknown>;
         const role =
           entry?.role === "tool"
             ? "tool"
@@ -598,7 +603,7 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
    * @param {Array<{role: "user"|"assistant", content: string}>} history - Normalized history.
    * @returns {string} The serialized prompt string.
    */
-  serializeConversationHistory(history = []) {
+  serializeConversationHistory(history: Record<string, unknown>[] = []) {
     if (!Array.isArray(history) || history.length === 0) {
       return "No prior messages in this session.";
     }
@@ -629,4 +634,5 @@ Respond clearly.${agentInstructions ? `\n\n[Agent]: ${agentInstructions}` : ""}`
   }
 }
 
-module.exports = new LlmQueueProcessor();
+const chatProcessor = new LlmQueueProcessor();
+export default chatProcessor;

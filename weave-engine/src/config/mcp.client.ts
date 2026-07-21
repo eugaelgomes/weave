@@ -1,6 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { logger } from "../logger";
+import { logger } from "@/config/logger";
 
 export interface ExecutionContext {
   userId: string | number;
@@ -27,9 +27,9 @@ export class MCPClient {
     const sseUrl = new URL("/api/service/v1/mcp/sse", apiUrl).toString();
 
     const headers = {
+      "x-weave-org-id": String(this.executionContext.organizationId || ""),
       "x-weave-service-secret": process.env.INTERNAL_SERVICE_SECRET || "",
       "x-weave-user-id": String(this.executionContext.userId || ""),
-      "x-weave-org-id": String(this.executionContext.organizationId || ""),
     };
 
     this.transport = new SSEClientTransport(
@@ -37,7 +37,7 @@ export class MCPClient {
       {
         eventSourceInit: {
           headers,
-        } as any,
+        } as Record<string, unknown>,
         requestInit: {
           headers,
         }
@@ -59,40 +59,40 @@ export class MCPClient {
       logger.info("Connected to MCP Server via SSE for execution context", {
         userId: this.executionContext.userId,
       });
-    } catch (error: any) {
-      logger.error("Failed to connect to MCP Server", { error: error.message });
+    } catch (error: unknown) {
+      logger.error("Failed to connect to MCP Server", { error: (error as Error).message });
       throw error;
     }
   }
 
-  async getTools(): Promise<any[]> {
+  async getTools(): Promise<Record<string, unknown>[]> {
     await this.connect();
     if (!this.client) {
       throw new Error("MCP Client not connected");
     }
     const result = await this.client.listTools();
-    
+
     // Transform MCP tools format to OpenAI function schemas
     return result.tools.map(tool => ({
-      type: "function",
       function: {
-        name: tool.name,
         description: tool.description,
+        name: tool.name,
         parameters: tool.inputSchema,
-      }
+      },
+      type: "function"
     }));
   }
 
-  async executeTool(name: string, args: any): Promise<any> {
+  async executeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
     await this.connect();
     if (!this.client) {
       throw new Error("MCP Client not connected");
     }
     const result = await this.client.callTool({
-      name,
       arguments: args,
+      name,
     });
-    
+
     return result;
   }
 
@@ -100,8 +100,8 @@ export class MCPClient {
     if (this.client) {
       try {
         await this.client.close();
-      } catch (error: any) {
-        logger.warn("Error closing MCP client", { error: error.message });
+      } catch (error: unknown) {
+        logger.warn("Error closing MCP client", { error: (error as Error).message });
       }
       this.client = null;
       this.transport = null;
@@ -117,7 +117,7 @@ const clientsPool = new Map<string, MCPClient>();
  * For now, we instantiate a new client, but can pool them to improve performance.
  */
 export async function getMCPClient(executionContext: ExecutionContext): Promise<MCPClient> {
-  const key = `${executionContext.userId}-${executionContext.organizationId || 'none'}`;
+  const key = `${executionContext.userId}-${executionContext.organizationId || "none"}`;
   if (clientsPool.has(key)) {
     return clientsPool.get(key) as MCPClient;
   }

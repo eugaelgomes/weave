@@ -91,14 +91,14 @@ export const openaiConfig: ProviderConfig = {
 };
 
 export interface CacheConfig {
-  cacheKey: (provider: string, prompt: string, context: any) => string;
+  cacheKey: (provider: string, prompt: string, context: Record<string, unknown>) => string;
   enabled: boolean;
   maxSize: number;
   ttl: number;
 }
 
 export const cacheConfig: CacheConfig = {
-  cacheKey: (provider: string, prompt: string, context: any) => {
+  cacheKey: (provider: string, prompt: string, context: Record<string, unknown>) => {
     const hash = crypto.createHash("sha256");
     hash.update(`${provider}-${prompt}-${JSON.stringify(context)}`);
     return hash.digest("hex");

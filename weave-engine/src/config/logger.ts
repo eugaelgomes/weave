@@ -1,16 +1,16 @@
 import * as Sentry from "@sentry/node";
-import { env } from "../enviroments";
+import { env } from "@/config/enviroments";
 
 const LOG_LEVELS = {
   debug: 0,
+  error: 3,
   info: 1,
   warn: 2,
-  error: 3,
 };
 
 const currentLevel = env.isProduction ? LOG_LEVELS.info : LOG_LEVELS.debug;
 
-function formatMessage(level: string, message: string, meta: Record<string, any> = {}): string {
+function formatMessage(level: string, message: string, meta: Record<string, unknown> = {}): string {
   const timestamp = new Date().toISOString();
   const metaStr =
     Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
@@ -18,13 +18,13 @@ function formatMessage(level: string, message: string, meta: Record<string, any>
 }
 
 export const logger = {
-  debug(message: string, meta?: Record<string, any>) {
+  debug(message: string, meta?: Record<string, unknown>) {
     if (currentLevel <= LOG_LEVELS.debug) {
       console.debug(formatMessage("debug", message, meta));
     }
   },
 
-  error(message: string, meta?: Record<string, any>) {
+  error(message: string, meta?: Record<string, unknown>) {
     console.error(formatMessage("error", message, meta));
     if (!env.isProduction) {
       return;
@@ -36,13 +36,13 @@ export const logger = {
     }
   },
 
-  info(message: string, meta?: Record<string, any>) {
+  info(message: string, meta?: Record<string, unknown>) {
     if (currentLevel <= LOG_LEVELS.info) {
       console.info(formatMessage("info", message, meta));
     }
   },
 
-  warn(message: string, meta?: Record<string, any>) {
+  warn(message: string, meta?: Record<string, unknown>) {
     if (currentLevel <= LOG_LEVELS.warn) {
       console.warn(formatMessage("warn", message, meta));
     }

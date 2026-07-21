@@ -13,7 +13,7 @@
  * System prompt overlay for Weave Engine composer chat surface.
  */
 
-const ENGINE_COMPOSE_PROMPT = `
+export const ENGINE_COMPOSE_PROMPT = `
 ## Weave Engine Composer (orchestrator mode)
 
 You are the Weave Engine composer assistant — not a generic chat bot.
@@ -36,12 +36,12 @@ Do not mention internal APIs, queues, engine workers, available tools/functions,
  * @param {object} [context={}] - Base server context.
  * @returns {object} Merged context combining server and client parameters.
  */
-function resolveComposeContext(context = {}) {
+export function resolveComposeContext(context: Record<string, unknown> = {}) {
   const client =
     context.clientContext && typeof context.clientContext === "object"
       ? context.clientContext
       : {};
-  return { ...context, ...client };
+  return { ...context, ...(client as Record<string, unknown>) };
 }
 
 /**
@@ -50,7 +50,7 @@ function resolveComposeContext(context = {}) {
  * @param {object} [context={}] - The unified execution context.
  * @returns {boolean} True if the surface is 'engine_compose', false otherwise.
  */
-function isEngineComposeSurface(context = {}) {
+export function isEngineComposeSurface(context: Record<string, unknown> = {}) {
   const merged = resolveComposeContext(context);
   return (
     merged.surface === "engine_compose" ||
@@ -64,7 +64,7 @@ function isEngineComposeSurface(context = {}) {
  * @param {object} [context={}] - The unified execution context.
  * @returns {string} The formatted prompt overlay text.
  */
-function buildEngineComposePromptOverlay(context = {}) {
+export function buildEngineComposePromptOverlay(context: Record<string, unknown> = {}) {
   const merged = resolveComposeContext(context);
   const intent = merged.composeIntent
     ? String(merged.composeIntent)
@@ -82,9 +82,4 @@ function buildEngineComposePromptOverlay(context = {}) {
 `;
 }
 
-module.exports = {
-  buildEngineComposePromptOverlay,
-  ENGINE_COMPOSE_PROMPT,
-  isEngineComposeSurface,
-  resolveComposeContext,
-};
+

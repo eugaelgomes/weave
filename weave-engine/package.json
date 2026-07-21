@@ -43,14 +43,12 @@
     "ioredis": "^5.10.1",
     "js-tiktoken": "^1.0.21",
     "pdf-parse": "^2.4.5",
-    "pg": "^8.20.0",
     "sentry": "^0.31.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@types/node": "^26.1.1",
-    "@types/pg": "^8.20.0",
     "eslint": "^9.9.0",
     "eslint-plugin-n": "^18.1.0",
     "eslint-plugin-sort-keys-fix": "^1.1.2",
@@ -59,6 +57,7 @@
     "nodemon": "^3.1.4",
     "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0"
   }

@@ -8,7 +8,18 @@
  * @param {object} jobContext - The raw job payload from Redis.
  * @returns {object} The initialized state.
  */
-function createInitialState(jobContext) {
+export interface ProactiveState {
+  analysisResult: string;
+  collectedData: unknown[];
+  errors: string[];
+  finalOutput: string;
+  iterations: number;
+  jobContext: Record<string, unknown>;
+  nextNode: string;
+  providerUsed: string | null;
+}
+
+export function createInitialState(jobContext: Record<string, unknown>): ProactiveState {
   return {
     analysisResult: "",
 
@@ -30,6 +41,3 @@ function createInitialState(jobContext) {
   };
 }
 
-module.exports = {
-  createInitialState,
-};

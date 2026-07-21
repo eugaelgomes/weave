@@ -2,16 +2,16 @@
  * @module weave-engine/modules/weave-ai-chat/agents/chat.graph
  * @description Compiles the multi-agent StateGraph for Chat interactions.
  */
-const { StateGraph, END } = require("../../../utils/state-graph");
-const { orchestratorNode } = require("./nodes/orchestrator.node");
-const { contextualizerNode } = require("./nodes/contextualizer.node");
-const { projectManagerNode } = require("./nodes/project-manager.node");
-const { generalAssistantNode } = require("./nodes/general-assistant.node");
-const { toolExecutorNode } = require("./nodes/tool-executor.node");
-const { dynamicAgentNode } = require("./nodes/dynamic-agent.node");
+import { StateGraph, END } from "../../../utils/state-graph";
+import { orchestratorNode } from "./nodes/orchestrator.node";
+import { contextualizerNode } from "./nodes/contextualizer.node";
+import { projectManagerNode } from "./nodes/project-manager.node";
+import { generalAssistantNode } from "./nodes/general-assistant.node";
+import { toolExecutorNode } from "./nodes/tool-executor.node";
+import { dynamicAgentNode } from "./nodes/dynamic-agent.node";
 
 // Conditional routing function from the orchestrator
-const routeFromOrchestrator = (state) => {
+const routeFromOrchestrator = (state: Record<string, unknown>) => {
   if (state.errors && state.errors.length > 0) return END;
 
   // The orchestrator sets the activeAgent property
@@ -24,7 +24,7 @@ const routeFromOrchestrator = (state) => {
 };
 
 // Conditional routing function from agents
-const routeFromAgent = (state) => {
+const routeFromAgent = (state: Record<string, unknown>) => {
   if (state.errors && state.errors.length > 0) return END;
 
   // If the agent requested a tool call that hasn't been executed yet
@@ -42,7 +42,7 @@ const routeFromAgent = (state) => {
 };
 
 // Tool executor routes back to the active agent
-const routeFromToolExecutor = (state) => {
+const routeFromToolExecutor = (state: Record<string, unknown>) => {
   if (state.errors && state.errors.length > 0) return END;
 
   // Route back to whoever called the tools
@@ -56,7 +56,7 @@ const routeFromToolExecutor = (state) => {
 /**
  * Builds and returns the compiled StateGraph for chat processing.
  */
-function buildChatGraph() {
+export function buildChatGraph() {
   const graph = new StateGraph();
 
   // 1. Add Nodes
@@ -83,6 +83,4 @@ function buildChatGraph() {
   return graph.compile();
 }
 
-module.exports = {
-  buildChatGraph,
-};
+

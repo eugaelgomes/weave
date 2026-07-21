@@ -1,0 +1,91 @@
+
+> weave-engine@1.0.0 lint
+> eslint "src/**/*.{js,ts}"
+
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/app.ts
+  52:18  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/config/logger.ts
+  13:77  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/config/mcp.client.ts
+   40:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   62:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/config/shutdown.ts
+  31:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/llm-conectors/llm-provider.client.ts
+   91:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  168:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  201:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  263:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  271:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  272:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  281:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  319:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  333:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  356:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  357:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  467:19  error  Empty block statement                     no-empty
+  484:19  error  Empty block statement                     no-empty
+  498:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  567:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  568:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  600:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  617:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  621:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  672:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  713:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/llm-conectors/llm.client.ts
+   94:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/llm-conectors/mcp-tools.ts
+  48:16  warning  '_e' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/engines/react.engine.ts
+   36:37  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   93:3   warning  'allowWebSearch' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  100:28  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  104:10  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  105:14  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  109:25  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  110:22  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  111:13  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  114:26  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  124:25  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  139:21  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  175:54  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  194:44  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  201:55  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  205:13  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  211:40  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  236:27  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  351:23  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/engines/smart-response.engine.ts
+  29:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/engines/thinking.engine.ts
+  35:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/gaelgomes/projetos/theweave/weave-engine/src/modules/weave-ai-chat/utils/compose-prompt.ts
+  39:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 62 problems (59 errors, 3 warnings)
+
