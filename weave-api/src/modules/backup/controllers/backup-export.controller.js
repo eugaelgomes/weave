@@ -3,7 +3,7 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 const { enqueueBackupExportJob } = require("@/services/queue/queue-controller");
 
 /**

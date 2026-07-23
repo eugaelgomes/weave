@@ -13,9 +13,9 @@ const {
   resolveNoteTitle,
   deriveTitleFromBlocks,
 } = require("@/modules/notes/utils/derive-note-title");
-const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
-const { PLAN_PATHS } = require("@/services/plans/plan-paths");
-const { resolveProjectIdToUuid } = require("@/utils/project-id-lookup");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
+const { PLAN_PATHS } = require("@/modules/plans/utils/plan-paths.util");
+const { resolveProjectIdToUuid } = require("@/modules/projects/utils/project-id-lookup.util");
 
 /**
  * Creation, update, and deletion of notes.

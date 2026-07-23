@@ -16,7 +16,7 @@ const chatAccessUtil = require("../../utils/chat-access.util");
 
 const { markdownToBlocks } = require("../../utils/markdown-to-blocks.util");
 const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
-const { WORKSPACE_SHARE_DENIED } = require("@/utils/workspace-share-guard");
+const { WORKSPACE_SHARE_DENIED } = require("@/modules/organizations/utils/workspace-share-guard.util");
 const {
   normalizeBlocksTree,
   newBlockId,

@@ -1,5 +1,5 @@
 const BaseRepository = require("./base.repository");
-const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
+const { resolveNoteIdToUuid } = require("../utils/note-id-lookup.util");
 
 /**
  * Colaboradores em notas.

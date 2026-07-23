@@ -31,7 +31,7 @@ class AgentDelegationService {
     _files = []
   ) {
     if (!chatOrchestratorService) {
-      chatOrchestratorService = require("./chat-orchestrator.service");
+      chatOrchestratorService = require("./chat-orchestrator.util");
     }
 
     const subSessionId = randomUUID();

@@ -1,6 +1,6 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 
-const { USAGE_PATHS } = require("@/services/plans/plan-paths");
+const { USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 
 class PlansManager {
   /**

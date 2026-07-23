@@ -6,7 +6,7 @@
  * Dependencies:
  * - `@/modules/notes/notes.repository`: For fetching note access summaries and collaborator data.
  * - `@/modules/projects/repositories/projects-read.repository`: For project scope and role checks.
- * - `@/utils/note-id-lookup`: To resolve public UUIDs to internal DB UUIDs.
+ * - `@/modules/notes/utils/note-id-lookup.util`: To resolve public UUIDs to internal DB UUIDs.
  * - `./weave-ai-i18n.util`: For localized error messages.
  *
  * Used by:
@@ -17,7 +17,7 @@ const projectsReadRepository = require("@/modules/projects/repositories/projects
 const {
   PROJECT_WRITE_CAPABLE_ROLES,
 } = require("@/modules/projects/project-role-policy");
-const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
+const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 const { getI18n } = require("./weave-ai-i18n.util");
 
 /**

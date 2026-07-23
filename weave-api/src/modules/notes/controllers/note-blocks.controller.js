@@ -11,7 +11,7 @@ const {
 const {
   resolveNoteIdToUuid,
   buildNoteIdWhereClause,
-} = require("@/utils/note-id-lookup");
+} = require("@/modules/notes/utils/note-id-lookup.util");
 
 /**
  * CRUD and reordering of blocks (`note_blocks`).

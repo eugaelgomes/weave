@@ -10,7 +10,7 @@ const { validate } = require("@/middlewares/validation/validate");
 const {
   commentFilesUpload,
   noteUpdateUpload,
-} = require("@/utils/data/note-upload");
+} = require("./utils/note-upload.util");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,

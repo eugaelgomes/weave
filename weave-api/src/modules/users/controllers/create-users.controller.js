@@ -1,6 +1,6 @@
 const spacesService = require("@/services/storage");
 const BaseController = require("./base.controller");
-const CreateUsersService = require("@/services/users/create-users.service");
+const CreateUsersService = require("@/modules/users/utils/create-users.util");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const {
   buildUniqueConflictPayload,

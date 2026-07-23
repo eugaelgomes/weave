@@ -1,7 +1,7 @@
 const { z } = require("zod");
 const {
   ORGANIZATION_BUSINESS_ROLES,
-} = require("@/modules/organizations/services/organization-creation-steps.service");
+} = require("@/modules/organizations/utils/organization-creation-steps.util");
 
 /**
  * Validates the request body for saving organization creation step 1.

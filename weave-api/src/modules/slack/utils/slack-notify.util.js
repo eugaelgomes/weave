@@ -1,7 +1,7 @@
 const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
 const {
   chatPostMessage,
-} = require("@/services/integrations/slack/slack.client");
+} = require("./slack-client.util");
 
 /**
  * Sends a plain-text notification to the organization's default Slack channel when configured.

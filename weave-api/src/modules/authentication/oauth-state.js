@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
-const cookieHelper = require("@/utils/cookie-helper");
+const cookieHelper = require("./utils/cookie-helper.util");
 const secretsService = require("@/services/secrets");
 
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;

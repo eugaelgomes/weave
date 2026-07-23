@@ -1,5 +1,5 @@
 const BaseController = require("./base.controller");
-const SearchUsersService = require("@/services/users/search-users.service");
+const SearchUsersService = require("@/modules/users/utils/search-users.util");
 
 /**
  * Public user search by term (min 3 chars), excluding the requester.

@@ -2,8 +2,8 @@ const { v5: uuidv5 } = require("uuid");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
 const chatFormatterUtil = require("../utils/chat-formatter.util");
-const chatEngineService = require("./chat-engine.service");
-const chatFunctionsService = require("./chat-functions.service");
+const chatEngineService = require("./chat-engine.util");
+const chatFunctionsService = require("./chat-functions.util");
 const { getLocalChatI18n } = require("../utils/weave-ai-i18n.util");
 
 class ChatLoopService {

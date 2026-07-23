@@ -18,13 +18,13 @@ const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
 
-const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
 const {
   respondIfWorkspaceShareDenied,
-} = require("@/utils/workspace-share-guard");
+} = require("@/modules/organizations/utils/workspace-share-guard.util");
 const { resolveNoteTitle } = require("@/modules/notes/utils/derive-note-title");
 // Removed redis and queue keys
-const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
+const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**

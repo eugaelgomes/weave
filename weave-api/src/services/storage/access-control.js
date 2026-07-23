@@ -1,5 +1,5 @@
 const { rowCount } = require("@/database/connection");
-const { buildNoteIdWhereClause } = require("@/utils/note-id-lookup");
+const { buildNoteIdWhereClause } = require("@/modules/notes/utils/note-id-lookup.util");
 
 class StorageAccessError extends Error {
   constructor(

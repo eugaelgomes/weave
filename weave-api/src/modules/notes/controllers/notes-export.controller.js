@@ -1,9 +1,9 @@
 const NotesBaseController = require("./base.controller");
 const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
-const { PLAN_PATHS } = require("@/services/plans/plan-paths");
-const { PDFService } = require("@/modules/notes/services/pdf.service");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
+const { PLAN_PATHS } = require("@/modules/plans/utils/plan-paths.util");
+const { PDFService } = require("../utils/pdf-export.util");
 
 /**
  * Export note to PDF.

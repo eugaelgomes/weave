@@ -5,11 +5,11 @@ const {
 } = require("@/utils/patterns/product-patterns");
 const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
-const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
 const {
   respondIfWorkspaceShareDenied,
-} = require("@/utils/workspace-share-guard");
+} = require("@/modules/organizations/utils/workspace-share-guard.util");
 const { normalizeNewProject } = require("../normalizer");
 const {
   ASSIGNABLE_PROJECT_ROLES,

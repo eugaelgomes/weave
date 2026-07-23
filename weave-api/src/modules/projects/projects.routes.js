@@ -12,8 +12,8 @@ const {
   requireProjectPermission,
   PROJECT_PERMISSIONS,
 } = require("@/middlewares/auth/require-project-permission");
-const { projectUpdateUpload } = require("@/utils/data/project-upload");
-const { noteUpdateUpload } = require("@/utils/data/note-upload");
+const { projectUpdateUpload } = require("@/modules/projects/utils/project-upload.util");
+const { noteUpdateUpload } = require("@/modules/notes/utils/note-upload.util");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,

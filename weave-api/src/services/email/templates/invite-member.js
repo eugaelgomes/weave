@@ -8,7 +8,7 @@ const {
   resolveEmailLocale,
   t,
 } = require("@/services/email/i18n");
-const { buildAuthInviteUrl } = require("@/utils/frontend-url");
+const { buildAuthInviteUrl } = require("../utils/frontend-url");
 
 /**
  * @param {string} invitedEmail

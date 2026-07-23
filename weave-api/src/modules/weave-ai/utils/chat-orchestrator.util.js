@@ -10,8 +10,8 @@
  * Used by:
  * - `weave-ai/controllers/chat.controller.js`: Primary entrypoint for HTTP requests.
  */
-const chatContextService = require("./chat-context.service");
-const chatLoopService = require("./chat-loop.service");
+const chatContextService = require("./chat-context.util");
+const chatLoopService = require("./chat-loop.util");
 
 class ChatOrchestratorService {
   /**

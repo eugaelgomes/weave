@@ -1,7 +1,7 @@
 const { fromUnknown } = require("@/errors");
 const calendarEventsRepository = require("@/modules/calendar-events/repositories/calendar-events.repository");
 const GoogleOauthTokensRepository = require("@/modules/webhooks/repositories/google-oauth-tokens.repository");
-const googleService = require("@/hooks/google/google-calendar");
+const googleService = require("@/modules/calendar-events/utils/google-calendar.util");
 
 const {
   parseDate,
@@ -10,8 +10,8 @@ const {
   buildGoogleEventBody,
   normalizeUpdateFields,
 } = require("../normalizer");
-const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
-const { resolveProjectIdToUuid } = require("@/utils/project-id-lookup");
+const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
+const { resolveProjectIdToUuid } = require("@/modules/projects/utils/project-id-lookup.util");
 
 class CalendarEventsController {
   constructor() {

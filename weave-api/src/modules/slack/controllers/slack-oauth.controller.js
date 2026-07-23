@@ -8,11 +8,12 @@ const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/
 const {
   issueSlackInstallState,
   verifySlackInstallState,
-} = require("@/services/integrations/slack/slack-oauth-state");
+} = require("@/modules/slack/utils/slack-oauth-state.util");
 const {
   buildAuthorizeUrl,
   exchangeOAuthCode,
-} = require("@/services/integrations/slack/slack.client");
+  conversationsInfo,
+} = require("@/modules/slack/utils/slack-client.util");
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 

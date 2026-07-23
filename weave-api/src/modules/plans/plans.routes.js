@@ -1,6 +1,6 @@
 const express = require("express");
 
-const PlansManager = require("@/services/plans/manager");
+const PlansManager = require("@/modules/plans/utils/plans-manager.util");
 const PlansMeController = require("@/modules/plans/controllers/plans-me.controller");
 const PlansUsageHistoryController = require("@/modules/plans/controllers/plans-usage-history.controller");
 const PlansSubscriptionController = require("@/modules/plans/controllers/plans-subscription.controller");

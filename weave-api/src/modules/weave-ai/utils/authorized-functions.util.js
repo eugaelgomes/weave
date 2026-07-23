@@ -5,11 +5,11 @@ const {
   getAvailableFunctionNames,
   getFunctionSchema,
   toOpenAIFormat,
-} = require("@/utils/ai-function-schemas");
+} = require("./ai-function-schemas.util");
 const {
   getOwnershipRules,
   isFunctionForbidden,
-} = require("@/utils/ai-security-policies");
+} = require("./ai-security-policies.util");
 
 /**
  * @param {object} params

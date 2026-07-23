@@ -1,6 +1,6 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 
 /**
  * Authenticated, minimal plan + usage snapshot for web clients (polling / gates).

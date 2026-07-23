@@ -5,10 +5,10 @@ const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
 const projectsCollaboratorsRepository = require("@/modules/projects/repositories/projects-collaborators.repository");
-const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
 const {
   respondIfWorkspaceShareDenied,
-} = require("@/utils/workspace-share-guard");
+} = require("@/modules/organizations/utils/workspace-share-guard.util");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 
 class ProjectsCollaboratorsCreateController extends ProjectsCoreController {

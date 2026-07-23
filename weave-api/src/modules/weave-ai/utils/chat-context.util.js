@@ -2,12 +2,12 @@ const chatRepository = require("@/modules/weave-ai/repositories/chat.repository"
 const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/services/plans/plan-paths");
-const { resolveAuthorizedFunctions } = require("@/utils/authorized-functions");
-const { resolveNoteIdsToUuids } = require("@/utils/note-id-lookup");
-const { resolveProjectIdsToUuids } = require("@/utils/project-id-lookup");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
+const { resolveAuthorizedFunctions } = require("@/modules/weave-ai/utils/authorized-functions.util");
+const { resolveNoteIdsToUuids } = require("@/modules/notes/utils/note-id-lookup.util");
+const { resolveProjectIdsToUuids } = require("@/modules/projects/utils/project-id-lookup.util");
 const chatFormatterUtil = require("../utils/chat-formatter.util");
-const chatEngineService = require("./chat-engine.service");
+const chatEngineService = require("./chat-engine.util");
 const { getI18n } = require("../utils/weave-ai-i18n.util");
 
 const CHAT_CONTEXT_MAX_MESSAGES = Number.parseInt(

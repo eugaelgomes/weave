@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const { AppError } = require("@/errors/app-error");
 const AuthBaseController = require("./base.controller");
 const SigninRepository = require("@/modules/authentication/repositories/signin.repository");
-const authLogs = require("@/utils/system-logs/auth-logs");
+const authLogs = require("../utils/auth-logs.util");
 const storageFileUtils = require("@/utils/data/presign-storage-files");
 const {
   buildJwtPayload,

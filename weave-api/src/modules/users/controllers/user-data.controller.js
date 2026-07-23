@@ -2,9 +2,9 @@ const BaseController = require("./base.controller");
 const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const { presignObjectFields } = require("@/utils/data/presign-storage-files");
-const updateProfileLogs = require("@/utils/system-logs/update-profile-logs");
+const updateProfileLogs = require("../utils/update-profile-logs.util");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
-const UserDataService = require("@/services/users/user-data.service");
+const UserDataService = require("@/modules/users/utils/user-data.util");
 const {
   buildUniqueConflictPayload,
   normalizeEmail,

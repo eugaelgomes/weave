@@ -5,7 +5,7 @@ const {
 const {
   buildNoteIdWhereClause,
   buildNotesBulkDeleteWhere,
-} = require("@/utils/note-id-lookup");
+} = require("../utils/note-id-lookup.util");
 
 /**
  * Atualização e exclusão lógica de notas.

@@ -1,6 +1,6 @@
 const { randomUUID } = require("crypto");
 const redis = require("./connection");
-const { resolveNoteIdToUuid } = require("@/utils/note-id-lookup");
+const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 const {
   getBackupExportQueueRedisKey,
   getDomainVerifyQueueRedisKey,

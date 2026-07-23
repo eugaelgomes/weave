@@ -4,7 +4,7 @@ const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/
 const {
   conversationsInfo,
   authRevoke,
-} = require("@/services/integrations/slack/slack.client");
+} = require("@/modules/slack/utils/slack-client.util");
 
 /**
  * Slack integration settings for the active organization.

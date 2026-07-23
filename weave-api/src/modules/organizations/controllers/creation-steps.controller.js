@@ -9,7 +9,7 @@ const {
 } = require("@/modules/organizations/normalizer");
 const {
   OrganizationCreationStepsService,
-} = require("@/modules/organizations/services/organization-creation-steps.service");
+} = require("@/modules/organizations/utils/organization-creation-steps.util");
 
 /**
  * @typedef {import('express').Request} Request

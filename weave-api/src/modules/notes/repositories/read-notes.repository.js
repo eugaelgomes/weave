@@ -1,5 +1,5 @@
 const BaseRepository = require("./base.repository");
-const { buildNoteIdWhereClause } = require("@/utils/note-id-lookup");
+const { buildNoteIdWhereClause } = require("../utils/note-id-lookup.util");
 
 /**
  * Leitura de notas, estatísticas e processamento de URLs.

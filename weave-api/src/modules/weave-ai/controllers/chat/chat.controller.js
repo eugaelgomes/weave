@@ -2,7 +2,7 @@ const { randomUUID } = require("crypto");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 const chatParserUtil = require("../../utils/chat-parser.util");
 const chatFormatterUtil = require("../../utils/chat-formatter.util");
-const chatOrchestratorService = require("../../services/chat-orchestrator.service");
+const chatOrchestratorService = require("../../utils/chat-orchestrator.util");
 const { getI18n, getLangFromReq } = require("../../utils/weave-ai-i18n.util");
 
 async function chat(req, res) {
@@ -53,7 +53,7 @@ async function chat(req, res) {
         );
         return res.end();
       }
-      const { sendPlanLimitExceeded } = require("@/utils/plan-limit-http");
+      const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
       return sendPlanLimitExceeded(res, {
         limit_key: "weave_ai.config.monthly_messages",
         message: error.message,

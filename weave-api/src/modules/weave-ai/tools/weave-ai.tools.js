@@ -1,5 +1,5 @@
 const agentsRepository = require("../repositories/agents.repository");
-const chatOrchestratorService = require("../services/chat-orchestrator.service");
+const chatOrchestratorService = require("../utils/chat-orchestrator.util");
 const {
   listUserAgentsSchema,
   createUserAgentSchema,

@@ -1,6 +1,6 @@
 const { executeQuery } = require("@/database/connection");
 
-class authLogs {
+class AuthLogs {
   static #formatLogMetadata(req, status = "success", extraDetails = {}) {
     return {
       client: {
@@ -29,7 +29,6 @@ class authLogs {
     `;
 
     const logMetadata = this.#formatLogMetadata(req, status, details);
-
     const logType = String(type).trim().toUpperCase();
 
     try {
@@ -42,4 +41,4 @@ class authLogs {
   }
 }
 
-module.exports = authLogs;
+module.exports = AuthLogs;
