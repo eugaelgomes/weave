@@ -44,6 +44,7 @@ const env = {
   email: {
     contactEmail: process.env.CONTACT_EMAIL,
     from: process.env.EMAIL_FROM,
+    logoUrl: process.env.EMAIL_LOGO_URL,
     resendApiKey: process.env.RESEND_API_KEY,
   },
   isDevelopment: process.env.NODE_ENV !== "production",

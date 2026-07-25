@@ -2,8 +2,6 @@
  * Email i18n — keep in sync with weave-api/src/services/email/i18n/
  */
 
-const { executeQuery } = require("../../database/connection");
-
 const ptBR = require("./locales/pt-BR");
 const enUS = require("./locales/en-US");
 const esES = require("./locales/es-ES");
@@ -82,40 +80,6 @@ function getReportTypeLabel(locale, reportType) {
 }
 
 /**
- * @param {object} [params]
- * @param {string|number} [params.userId]
- * @param {string} [params.email]
- * @returns {Promise<EmailLocale>}
- */
-async function getUserEmailLocale({ userId, email } = {}) {
-  if (!userId && !email) {
-    return DEFAULT_LOCALE;
-  }
-
-  const rows = await executeQuery(
-    `
-      SELECT user_preference
-      FROM users
-      WHERE deleted = false
-        AND (
-          ($1::uuid IS NOT NULL AND user_id = $1::uuid)
-          OR ($2::text IS NOT NULL AND LOWER(email) = LOWER($2::text))
-        )
-      LIMIT 1
-    `,
-    [userId || null, email || null]
-  );
-
-  const prefs = rows[0]?.user_preference;
-  const interfaceLocale =
-    prefs && typeof prefs === "object" && prefs.language
-      ? prefs.language.interface
-      : undefined;
-
-  return resolveEmailLocale(interfaceLocale);
-}
-
-/**
  * @param {EmailLocale} locale
  * @param {string|Date} value
  * @param {Intl.DateTimeFormatOptions} [options]
@@ -150,7 +114,6 @@ module.exports = {
   formatDateForLocale,
   getReportTypeLabel,
   getRoleLabel,
-  getUserEmailLocale,
   localeFromUserPreference,
   resolveEmailLocale,
   t,

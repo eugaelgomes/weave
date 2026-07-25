@@ -5,6 +5,11 @@ const { DEV_SENDER, normalizeSenderFrom } = require("./sender-name");
 
 let mailServiceInstance = null;
 
+/**
+ * @param {string|string[]} value
+ * @param {string} fieldName
+ * @returns {string[]|undefined}
+ */
 function normalizeRecipients(value, fieldName) {
   if (!value) {
     return undefined;
@@ -25,19 +30,47 @@ function normalizeRecipients(value, fieldName) {
   throw new Error(`Campo de email inválido: ${fieldName}`);
 }
 
+/**
+ * Creates a Mail Service instance using Resend or a Noop Mail Service if disabled.
+ *
+ * @returns {{ sendMail: (mailOptions?: object) => Promise<{ id: string }> }}
+ */
 function createMailService() {
   if (mailServiceInstance) {
     return mailServiceInstance;
   }
 
   if (!env.email.resendApiKey) {
-    logger.warn("RESEND_API_KEY not configured, email service disabled");
-    return null;
+    logger.warn("RESEND_API_KEY not configured, email service disabled (using NoopMailService)");
+    mailServiceInstance = {
+      async sendMail(mailOptions = {}) {
+        logger.warn("[NoopMailService] Email send skipped: RESEND_API_KEY is missing", {
+          subject: mailOptions.subject,
+          to: mailOptions.to,
+        });
+        return { id: "noop-disabled-id" };
+      },
+    };
+    return mailServiceInstance;
   }
 
   const resend = new Resend(env.email.resendApiKey);
 
   mailServiceInstance = {
+    /**
+     * Sends an email via Resend API
+     *
+     * @param {object} mailOptions
+     * @param {string|string[]} mailOptions.to
+     * @param {string} mailOptions.subject
+     * @param {string} [mailOptions.html]
+     * @param {string} [mailOptions.text]
+     * @param {string} [mailOptions.from]
+     * @param {string|string[]} [mailOptions.cc]
+     * @param {string|string[]} [mailOptions.bcc]
+     * @param {string|string[]} [mailOptions.replyTo]
+     * @returns {Promise<object>}
+     */
     async sendMail(mailOptions = {}) {
       const {
         bcc,
