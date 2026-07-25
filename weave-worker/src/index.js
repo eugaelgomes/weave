@@ -1,8 +1,9 @@
 require("./instrument");
-const { validateEnv, env } = require("./config");
-const { logger, setupGracefulShutdown, registerShutdownHandler } = require("./lib");
+const { validateEnv, env } = require("./config/enviroment");
+const { logger } = require("./config/logger");
+const { setupGracefulShutdown, registerShutdownHandler } = require("./config/graceful-shutdown");
 const { closePool } = require("./database/connection");
-const { initializeJobs } = require("./jobs");
+const { initializeJobs } = require("./app");
 
 async function bootstrap() {
   logger.info("weave-worker starting", { env: env.NODE_ENV });

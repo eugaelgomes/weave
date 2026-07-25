@@ -1,5 +1,6 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
+import sortKeysFix from "eslint-plugin-sort-keys-fix";
 
 export default [
   {
@@ -8,6 +9,9 @@ export default [
   {
     files: ["**/*.{js,cjs}"],
     ...pluginJs.configs.recommended,
+    plugins: {
+      "sort-keys-fix": sortKeysFix,
+    },
     languageOptions: {
       globals: {
         ...globals.node,
@@ -29,7 +33,7 @@ export default [
       "no-var": "error",
       "prefer-const": "warn",
 
-      "sort-keys": ["warn", "asc", { caseSensitive: false, natural: true }],
+      "sort-keys-fix/sort-keys-fix": ["warn", "asc", { caseSensitive: false, natural: true }],
     },
   },
 ];

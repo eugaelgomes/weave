@@ -1,0 +1,181 @@
+/** @type {Record<string, string>} */
+module.exports = {
+  "aiReport.cta": "Ver relatório completo",
+  "aiReport.footer":
+    "Este relatório foi gerado automaticamente pela IA do Weave.",
+  "aiReport.intro":
+    "O Weave Engine gerou um novo relatório para o projeto {projectTitle}.",
+  "aiReport.preheader": "Novo {reportType} para {projectTitle}",
+  "aiReport.sprintSuffix": " (Sprint {sprintNumber})",
+  "backup.cta": "Baixar backup",
+  "backup.info":
+    "Este link expira em {hours} hora(s) ({expiresLabel}) e pode ser usado uma única vez.",
+  "backup.intro1": "Seu backup de dados foi processado com sucesso.",
+  "backup.intro2": "Use o botão abaixo para baixar o arquivo.",
+  "backup.outro":
+    "Mantenha este arquivo em segurança e faça o download em um local confiável.",
+  "backup.preheader": "Seu backup está pronto para download.",
+  "backup.subject": "Seu backup está pronto para download",
+  "backup.subtitle": "Exportação de dados",
+  "backup.title": "Backup pronto para download",
+  "collab.cta": "Abrir nota",
+  "collab.intro": "{ownerName} adicionou você como colaborador(a).",
+
+  "collab.outro":
+    "Se você não esperava este convite de {ownerName}, pode ignorar este e-mail.",
+  "collab.permission":
+    "Permissão de colaboração ativa para visualizar e editar.",
+  "collab.preheader": "Você foi adicionado(a) como colaborador de uma nota.",
+  "collab.subject": "Nova colaboração: {noteName}",
+  "collab.subtitle": "Compartilhamento de nota",
+  "collab.title": "Nova colaboração em nota",
+  "common.autoFooter":
+    "Este e-mail foi enviado automaticamente. Por favor, não responda.",
+  "common.brandName": "Weave",
+  "common.content": "Conteúdo",
+  "common.contentNotesBlocks": "notas e blocos ativos",
+
+  "common.ctaHint":
+    "Use o botão no e-mail para continuar (abra no navegador se necessário).",
+  "common.currentEmail": "E-mail atual",
+  "common.dueDate": "Prazo",
+  "common.format": "Formato",
+  "common.formatCsv": "CSV (Excel/Google Sheets)",
+  "common.greetingFallback": "usuário",
+  "common.newEmail": "Novo e-mail",
+  "common.note": "Nota",
+  "common.organization": "Organização",
+
+  "common.project": "Projeto",
+  "common.role": "Cargo",
+  "common.username": "Usuário",
+  "deleteMessage.bodyDetail":
+    "Todos os dados vinculados foram apagados de forma definitiva.",
+  "deleteMessage.bodyUser": "Usuário removido",
+  "deleteMessage.footer":
+    "Você recebeu este e-mail como confirmação da exclusão da sua conta.",
+  "deleteMessage.intro":
+    "Sua conta no Weave foi excluída permanentemente conforme solicitado.",
+  "deleteMessage.outro":
+    "Se você não reconhece esta ação, entre em contato com nosso suporte imediatamente.",
+  "deleteMessage.preheader": "Sua conta foi excluída com sucesso.",
+
+  "deleteMessage.subject": "Conta excluída com sucesso — Weave",
+  "deleteMessage.subtitle": "Confirmação de exclusão",
+  "deleteMessage.title": "Conta excluída",
+  "deleteRequest.bodyDetail":
+    "Após a confirmação, dados e configurações serão removidos definitivamente.",
+  "deleteRequest.cta": "Confirmar exclusão da conta",
+  "deleteRequest.footer":
+    "Você recebeu este e-mail porque uma solicitação de exclusão foi feita para esta conta.",
+  "deleteRequest.info": "Este link expira em 7 dias ({expiration}).",
+  "deleteRequest.intro1":
+    "Recebemos uma solicitação para excluir permanentemente sua conta.",
+  "deleteRequest.intro2": "Se deseja continuar, confirme no botão abaixo.",
+  "deleteRequest.outro":
+    "Se você não solicitou essa exclusão, ignore este e-mail e considere alterar sua senha.",
+  "deleteRequest.preheader": "Confirmação de exclusão de conta.",
+
+  "deleteRequest.subject": "Confirmação de exclusão de conta — Weave",
+  "deleteRequest.subtitle": "Ação irreversível",
+  "deleteRequest.title": "Confirmar exclusão de conta",
+  "dueReminder.cta": "Abrir nota",
+  "dueReminder.info": "Recomendamos revisar a nota hoje para evitar atrasos.",
+  "dueReminder.intro": "A nota \"{noteTitle}\" vence amanhã ({dueDateLabel}).",
+  "dueReminder.preheader": "Lembrete de prazo da sua nota.",
+  "dueReminder.subject": "Lembrete: prazo amanhã — {noteTitle}",
+  "dueReminder.subtitle": "Vencimento da nota",
+
+  "dueReminder.title": "Lembrete de prazo",
+  "dueReminder.untitled": "Nota",
+  "invite.cta": "Aceitar convite",
+  "invite.info": "Este convite expira em 7 dias.",
+  "invite.intro":
+    "{inviterName} convidou você para entrar na organização {organizationName}.",
+  "invite.preheader": "Convite para participar de uma organização.",
+  "invite.subject": "Convite para {organizationName} — Weave",
+
+  "invite.subtitle": "Convite para organização",
+  "invite.title": "Você foi convidado(a)",
+  "inviteAccepted.cta": "Ir para Home",
+  "inviteAccepted.feature1": "Criar notas e organizar ideias com blocos.",
+  "inviteAccepted.feature2":
+    "Trabalhar em projetos com etapas, prioridades e prazos.",
+  "inviteAccepted.feature3": "Compartilhar conteúdo e colaborar com seu time.",
+  "inviteAccepted.feature4":
+    "Centralizar arquivos, links e contexto em um só lugar.",
+  "inviteAccepted.featuresIntro": "No Weave você pode:",
+  "inviteAccepted.intro1":
+    "Seu acesso foi confirmado e você já pode usar o Weave.",
+  "inviteAccepted.intro2":
+    "Aqui você centraliza planejamento, execução e colaboração em um único lugar.",
+  "inviteAccepted.preheader": "Convite aceito com sucesso.",
+  "inviteAccepted.subject": "Bem-vindo a {organizationName} — Weave",
+
+  "inviteAccepted.subtitle": "Sua conta está pronta para uso",
+  "inviteAccepted.title": "Bem-vindo(a) a {organizationName}",
+  "project.cta": "Acessar projetos",
+  "project.footer":
+    "Você recebeu este e-mail porque foi adicionado a um projeto no Weave.",
+  "project.intro":
+    "{addedByName} adicionou você como colaborador(a) no projeto abaixo.",
+  "project.outro":
+    "Agora você pode visualizar e colaborar no projeto normalmente.",
+  "project.preheader": "Você foi adicionado(a) a um projeto.",
+  "project.subject":
+    "{firstName}, você foi adicionado ao projeto \"{projectName}\"",
+  "project.subtitle": "Colaboração em projetos",
+
+  "project.title": "Novo projeto compartilhado com você",
+  "project.untitled": "Sem título",
+  "reportType.analysis": "Análise",
+  "reportType.daily_standup": "Daily Standup",
+  "reportType.deadline_alert": "Alerta de prazo",
+  "reportType.default": "Relatório IA",
+  "reportType.sprint_kickoff": "Sprint Kickoff",
+  "reportType.sprint_review": "Sprint Review",
+
+  "rescue.cta": "Redefinir senha",
+  "rescue.info": "Este link expira em 1 hora.",
+  "rescue.intro1":
+    "Recebemos uma solicitação para redefinir a senha da sua conta.",
+  "rescue.intro2":
+    "Se você fez essa solicitação, use o botão abaixo para continuar.",
+  "rescue.outro":
+    "Se você não solicitou esta alteração, ignore este e-mail. Nenhuma mudança será realizada.",
+  "rescue.preheader": "Solicitação de redefinição de senha.",
+  "rescue.subject": "Redefinição de senha — Weave",
+  "rescue.subtitle": "Segurança da conta",
+  "rescue.title": "Redefinição de senha",
+
+  "reset.cta": "Confirmar novo e-mail",
+  "reset.info": "Este link expira em 1 hora.",
+  "reset.intro1":
+    "Recebemos uma solicitação para alterar o e-mail da sua conta.",
+  "reset.intro2": "Use o botão abaixo para validar essa alteração.",
+  "reset.outro": "Se você não solicitou essa alteração, ignore este e-mail.",
+  "reset.preheader": "Valide a mudança de e-mail da sua conta.",
+  "reset.subject": "Validação de mudança de e-mail — Weave",
+  "reset.subtitle": "Segurança da conta",
+
+  "reset.title": "Confirmação de mudança de e-mail",
+  "role.admin": "Administrador",
+  "role.guest": "Convidado",
+  "role.member": "Membro",
+  "role.owner": "Proprietário",
+
+  "role.super_admin": "Super administrador",
+  "role.viewer": "Visualizador",
+  "welcome.cta": "Ativar conta",
+  "welcome.footer": "Você recebeu este e-mail porque criou uma conta no Weave.",
+  "welcome.info": "Este link expira em 7 dias.",
+  "welcome.intro1": "Sua conta foi criada com sucesso.",
+
+  "welcome.intro2":
+    "Para começar a usar a plataforma, confirme seu e-mail no botão abaixo.",
+  "welcome.outro1": "Se você não se cadastrou, ignore este e-mail.",
+  "welcome.preheader": "Ative sua conta no Weave.",
+  "welcome.subject": "Bem-vindo ao Weave — Ative sua conta",
+  "welcome.subtitle": "Ativação de conta",
+  "welcome.title": "Bem-vindo(a) ao Weave",
+};

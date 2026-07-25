@@ -7,9 +7,12 @@ on:
     paths:
       - "weave-engine/**"
       - "weave-worker/**"
-      - "compose.engine.yml"
-      - "compose.worker.yml"
+      - "deploy/engine/**"
+      - "deploy/worker/**"
       - ".github/workflows/deploy-engine-and-worker.yml"
+      - ".github/workflows/_ci-node.yml"
+      - ".github/workflows/_build-docker.yml"
+      - ".github/workflows/_deploy-ssh.yml"
   workflow_dispatch:
 
 permissions:
@@ -22,95 +25,43 @@ concurrency:
 
 jobs:
   validate-engine:
-    name: Validate engine
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: weave-engine
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: weave-engine/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check
-        run: npm run check
+    name: Validate Engine
+    uses: ./.github/workflows/_ci-node.yml
+    with:
+      working_directory: weave-engine
+      command: npm run check
 
   validate-worker:
-    name: Validate worker
+    name: Validate Worker
+    uses: ./.github/workflows/_ci-node.yml
+    with:
+      working_directory: weave-worker
+      command: npm run check
+
+  build-engine-image:
+    name: Build Engine Image
+    needs: validate-engine
+    uses: ./.github/workflows/_build-docker.yml
+    with:
+      context: ./weave-engine
+      file: ./weave-engine/Dockerfile
+      image_name: ghcr.io/${{ github.repository_owner }}/weave-engine
+    secrets: inherit
+
+  build-worker-image:
+    name: Build Worker Image
+    needs: validate-worker
+    uses: ./.github/workflows/_build-docker.yml
+    with:
+      context: ./weave-worker
+      file: ./weave-worker/Dockerfile
+      image_name: ghcr.io/${{ github.repository_owner }}/weave-worker
+    secrets: inherit
+
+  deploy-validation:
+    name: Deploy Validation
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: weave-worker
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: weave-worker/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check
-        run: npm run check
-
-  build-images:
-    name: Build & Push Docker Images
-    runs-on: ubuntu-latest
-    needs: [validate-engine, validate-worker]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push engine image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./weave-engine
-          file: ./weave-engine/Dockerfile
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/weave-engine:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push worker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./weave-worker
-          file: ./weave-worker/Dockerfile
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/weave-worker:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    name: Deploy engine & worker
-    runs-on: ubuntu-latest
-    needs: build-images
+    needs: [build-engine-image, build-worker-image]
     if: github.ref == 'refs/heads/main'
 
     steps:
@@ -120,84 +71,65 @@ jobs:
           ENGINE_REMOTE_USER: ${{ secrets.ENGINE_REMOTE_USER }}
           ENGINE_SSH_PRIVATE_KEY: ${{ secrets.ENGINE_SSH_PRIVATE_KEY }}
           ENGINE_APP_DIR: ${{ secrets.ENGINE_APP_DIR }}
+          DOPPLER_TOKEN_WEAVE_ENGINE: ${{ secrets.DOPPLER_TOKEN_WEAVE_ENGINE }}
+          DOPPLER_TOKEN_WEAVE_WORKER: ${{ secrets.DOPPLER_TOKEN_WEAVE_WORKER }}
         run: |
           set -e
           [ -n "$ENGINE_REMOTE_HOST" ] || { echo "Missing secret: ENGINE_REMOTE_HOST" >&2; exit 1; }
           [ -n "$ENGINE_REMOTE_USER" ] || { echo "Missing secret: ENGINE_REMOTE_USER" >&2; exit 1; }
           [ -n "$ENGINE_SSH_PRIVATE_KEY" ] || { echo "Missing secret: ENGINE_SSH_PRIVATE_KEY" >&2; exit 1; }
           [ -n "$ENGINE_APP_DIR" ] || { echo "Missing secret: ENGINE_APP_DIR" >&2; exit 1; }
+          [ -n "$DOPPLER_TOKEN_WEAVE_ENGINE" ] || { echo "Missing secret: DOPPLER_TOKEN_WEAVE_ENGINE" >&2; exit 1; }
+          [ -n "$DOPPLER_TOKEN_WEAVE_WORKER" ] || { echo "Missing secret: DOPPLER_TOKEN_WEAVE_WORKER" >&2; exit 1; }
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.ENGINE_REMOTE_HOST }}
-          username: ${{ secrets.ENGINE_REMOTE_USER }}
-          key: ${{ secrets.ENGINE_SSH_PRIVATE_KEY }}
-          script: |
-            set -e
+  deploy-action:
+    name: Execute Deploy
+    needs: deploy-validation
+    uses: ./.github/workflows/_deploy-ssh.yml
+    with:
+      scp_source: "deploy/engine,deploy/worker"
+      scp_target: ${{ secrets.ENGINE_APP_DIR }}
+      scp_strip_components: 1
+      ssh_script: |
+        set -e
+        APP_DIR="${{ secrets.ENGINE_APP_DIR }}"
+        cd "$APP_DIR"
 
-            APP_DIR="${{ secrets.ENGINE_APP_DIR }}"
-            if [ -z "$APP_DIR" ]; then
-              echo "ENGINE_APP_DIR is not set" >&2
-              exit 1
-            fi
+        [ -f /etc/profile ] && . /etc/profile
+        [ -f "$HOME/.profile" ] && . "$HOME/.profile"
+        export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
 
-            REPO_URL="https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            mkdir -p "$APP_DIR"
-            cd "$APP_DIR"
-            if [ -d ".git" ]; then
-              git remote set-url origin "$REPO_URL"
-            else
-              git init
-              git remote add origin "$REPO_URL"
-            fi
-            git fetch origin
-            git checkout -B main origin/main
-            git reset --hard origin/main
+        if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+          COMPOSE="docker compose"
+        elif command -v docker-compose >/dev/null 2>&1; then
+          COMPOSE="docker-compose"
+        else
+          echo "Docker not found or Compose plugin missing." >&2
+          exit 127
+        fi
 
-            # Non-interactive SSH often skips login PATH (e.g. Docker in /usr/local or snap).
-            [ -f /etc/profile ] && . /etc/profile
-            [ -f "$HOME/.profile" ] && . "$HOME/.profile"
-            export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
+        export GHCR_OWNER="${{ github.repository_owner }}"
 
-            if [ ! -f .env ] && [ ! -f weave-engine/.env ]; then
-              echo "Need .env or weave-engine/.env on VM (DOPPLER_TOKEN / runtime secrets)." >&2
-              exit 1
-            fi
+        echo "▶ Deploying engine..."
+        cd "$APP_DIR/engine"
+        export DOPPLER_TOKEN="${{ secrets.DOPPLER_TOKEN_WEAVE_ENGINE }}"
+        $COMPOSE pull
+        $COMPOSE up -d
 
-            # Authenticate with GHCR
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        echo "▶ Deploying worker..."
+        cd "$APP_DIR/worker"
+        export DOPPLER_TOKEN="${{ secrets.DOPPLER_TOKEN_WEAVE_WORKER }}"
+        $COMPOSE pull
+        $COMPOSE up -d
 
-            if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-              COMPOSE="docker compose"
-            elif command -v docker-compose >/dev/null 2>&1; then
-              COMPOSE="docker-compose"
-            else
-              echo "Docker not found or Compose plugin missing. On the server, install Docker Engine" >&2
-              echo "and ensure 'docker compose' works for this SSH user (same as in an interactive shell)." >&2
-              exit 127
-            fi
+        if command -v timeout > /dev/null 2>&1; then
+          timeout 60s docker image prune -f || true
+        fi
 
-            echo "▶ Pulling images..."
-            $COMPOSE -f compose.engine.yml pull
-            $COMPOSE -f compose.worker.yml pull
-
-            echo "▶ Deploying engine..."
-            $COMPOSE -f compose.engine.yml up -d
-
-            echo "▶ Deploying worker..."
-            $COMPOSE -f compose.worker.yml up -d
-
-            echo "▶ Reloading Caddy proxy (if running)..."
-            $COMPOSE -f compose.server.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
-
-            # Keep cleanup bounded so deploy does not hit SSH action timeout.
-            if command -v timeout > /dev/null 2>&1; then
-              timeout 60s docker image prune -f || true
-              timeout 60s docker builder prune -f || true
-            else
-              echo "Skipping Docker prune: 'timeout' command not available."
-            fi
-
-            echo "✔ Engine & Worker deployed successfully."
+        echo "✔ Engine & Worker deployed successfully."
+    secrets:
+      remote_host: ${{ secrets.ENGINE_REMOTE_HOST }}
+      remote_user: ${{ secrets.ENGINE_REMOTE_USER }}
+      ssh_private_key: ${{ secrets.ENGINE_SSH_PRIVATE_KEY }}

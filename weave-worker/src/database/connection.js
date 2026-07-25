@@ -1,9 +1,22 @@
 const { Pool } = require("pg");
-const { databaseConfig } = require("../config");
-const { logger } = require("../lib");
+const { logger } = require("../config/logger");
+const { env } = require("../config/enviroment");
+
+const databaseConfig = {
+  connectionTimeoutMillis: 5000,
+  database: env.database.name,
+  host: env.database.host,
+  idleTimeoutMillis: 30000,
+  max: 5,
+  password: env.database.password,
+  port: env.database.port,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+  user: env.database.user,
+};
 
 const pool = new Pool(databaseConfig);
-
 pool.on("error", (err) => {
   logger.error("Unexpected database pool error", { error: err.message });
 });
