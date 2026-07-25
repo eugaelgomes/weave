@@ -5,13 +5,13 @@
 const {
   buildMailTemplate,
   escapeHtml,
-} = require("../template");
+} = require("../base-template");
 const {
   formatDateForLocale,
   localeFromUserPreference,
   resolveEmailLocale,
   t,
-} = require("../i18n");
+} = require("../i18n/locales.translator");
 
 /**
  * @param {object} params

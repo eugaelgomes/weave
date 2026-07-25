@@ -2,8 +2,8 @@
  * Email layout — keep in sync with weave-api/src/services/email/mail-template.js
  */
 
-const { env } = require("../../config/enviroment");
-const { t, resolveEmailLocale } = require("./i18n");
+const { env } = require("../config/enviroment");
+const { t, resolveEmailLocale } = require("./i18n/locales.translator");
 const { getEmailLogoSrc } = require("./email-logo");
 
 const contactEmail = env.email.contactEmail;

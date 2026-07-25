@@ -1,7 +1,8 @@
 const { Resend } = require("resend");
 const redis = require("../../queues/queue-client");
 const { getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
-const { DEV_SENDER, normalizeSenderFrom } = require("./sender-name");
+const { DEV_SENDER, normalizeSenderFrom } = require("../../mail/sender-name");
+const { logger } = require("../../config/logger");
 
 class EmailProcessor {
   constructor() {
@@ -14,12 +15,12 @@ class EmailProcessor {
     this.isRunning = true;
 
     if (!process.env.RESEND_API_KEY) {
-      console.warn("[Email Processor] RESEND_API_KEY is not defined. Email queue processor will exit.");
+      logger.warn("[Email Processor] RESEND_API_KEY is not defined. Email queue processor will exit.");
       return;
     }
 
     const queueName = getEmailQueueRedisKey();
-    console.log(`[Email Processor] Listening for jobs on list: ${queueName}`);
+    logger.info(`[Email Processor] Listening for jobs on list: ${queueName}`);
 
     while (this.isRunning) {
       try {
@@ -32,7 +33,7 @@ class EmailProcessor {
         }
 
       } catch (error) {
-        console.error("[Email Processor] Error waiting for jobs or processing:", error);
+        logger.error("[Email Processor] Error waiting for jobs or processing", { error });
         // small timeout to avoid tight loop on errors
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
@@ -42,7 +43,7 @@ class EmailProcessor {
   async processJob(jobData) {
     const { payload } = jobData;
 
-    console.log(`[Email Processor] Processing email job to: ${payload.to.join(", ")}`);
+    logger.info(`[Email Processor] Processing email job to: ${payload.to.join(", ")}`);
 
     try {
       const outbound = {
@@ -59,7 +60,7 @@ class EmailProcessor {
         /domain|verify|verified/i.test(errorMessage);
 
       if (shouldRetryWithOnboardingSender) {
-        console.log(`[Email Processor] Retrying email with onboarding sender...`);
+        logger.info("[Email Processor] Retrying email with onboarding sender...");
         ({ data, error } = await this.resend.emails.send({
           ...outbound,
           from: DEV_SENDER,
@@ -70,15 +71,15 @@ class EmailProcessor {
         const details = [error.message, error.name, error.statusCode]
           .filter(Boolean)
           .join(" | ");
-        console.error(`[Email Processor] Resend API Error on job to ${payload.to.join(", ")}:`, details);
+        logger.error(`[Email Processor] Resend API Error on job to ${payload.to.join(", ")}: ${details}`, { error });
         return false;
       }
 
-      console.log(`[Email Processor] Email successfully sent to ${payload.to.join(", ")}. Status ID:`, data?.id);
+      logger.info(`[Email Processor] Email successfully sent to ${payload.to.join(", ")}. Status ID: ${data?.id}`);
       return true;
 
     } catch (error) {
-      console.error(`[Email Processor] Error processing email job for ${payload.to?.join(", ")}:`, error);
+      logger.error(`[Email Processor] Error processing email job for ${payload.to?.join(", ")}`, { error });
       return false;
     }
   }

@@ -1,9 +1,9 @@
 const { executeQuery } = require("../../database/connection");
 const { logger } = require("../../config/logger");
-const { createMailService } = require("./sender");
+const { createMailService } = require("../../mail/sender");
 const {
   buildDueReminderTemplate,
-} = require("./templates/due-reminder");
+} = require("../../mail/templates/template.due-reminder");
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 

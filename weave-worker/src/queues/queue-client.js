@@ -1,4 +1,5 @@
 const Redis = require("ioredis");
+const { logger } = require("../config/logger");
 
 const redis = new Redis(process.env.REDIS_URL, {
   enableReadyCheck: false,
@@ -6,7 +7,7 @@ const redis = new Redis(process.env.REDIS_URL, {
 });
 
 redis.on("error", (error) => {
-  console.error("[Redis] Config error:", error);
+  logger.error("[Redis] Config error", { error });
 });
 
 module.exports = redis;

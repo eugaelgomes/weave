@@ -21,7 +21,6 @@ class SprintContextBuilder {
    */
   async build(config) {
     const projectId = config.project_id;
-    const sprintId = config.sprint_id;
 
     const [project, stages, notes, members] = await Promise.all([
       this._fetchProject(projectId),

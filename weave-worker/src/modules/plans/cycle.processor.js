@@ -1,6 +1,9 @@
 const { getConnection } = require("../../database/connection");
 const { logger } = require("../../config/logger");
 const { USAGE_PATHS } = require("./paths");
+const redis = require("../../queues/queue-client");
+const { getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
+const { buildCycleSummaryTemplate } = require("../../mail/templates/template.cycle-summary");
 
 const CYCLE_CHECK_INTERVAL_MS = 60 * 1000;
 const DUE_CYCLE_BATCH_SIZE = 100;
@@ -187,22 +190,88 @@ class PlansCycleProcessor {
         ]
       );
 
+      // Resolve Subscription Data
+      const { rows: subsRows } = await client.query(
+        `SELECT id, plan_id, cancel_at_period_end, status, current_period_end, current_period_start, provider 
+         FROM subscriptions 
+         WHERE subscriber_type = $1 AND subscriber_id = $2 
+           AND status IN ('active', 'past_due', 'trialing') 
+         ORDER BY updated_at DESC LIMIT 1`,
+        [current.subscriber_type, current.subscriber_id]
+      );
+      const sub = subsRows[0];
       const now = new Date();
-      const nextPeriodEnd = new Date(now);
-      nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+
+      // Sync date drift & wait for external gateway
+      if (sub && sub.provider !== "internal" && new Date(sub.current_period_end) <= now) {
+         if (sub.status === "past_due") {
+            const gracePeriodEnd = new Date(sub.current_period_end);
+            gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 3);
+            if (now > gracePeriodEnd) {
+               sub.cancel_at_period_end = true; // Trigger downgrade
+            } else {
+               await client.query("ROLLBACK");
+               return; // Still in grace period, wait for gateway to fix it
+            }
+         } else {
+            await client.query("ROLLBACK");
+            return; // Wait for gateway webhook
+         }
+      }
+
+      // Internal grace period
+      if (sub && sub.provider === "internal" && sub.status === "past_due") {
+         const gracePeriodEnd = new Date(sub.current_period_end);
+         gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 3);
+         if (now > gracePeriodEnd) {
+            sub.cancel_at_period_end = true;
+         }
+      }
+
       const effectivePlan = await this.resolveEffectivePlanForSubscriber(client, {
         currentPlanId: current.plan_id,
         subscriberId: current.subscriber_id,
         subscriberType: current.subscriber_type,
-      });
+      }, sub);
+
+      // Now determine next cycle dates
+      let nextPeriodStart = now;
+      let nextPeriodEnd = new Date(now);
+
+      if (sub && !sub.cancel_at_period_end) {
+         if (sub.provider === "internal") {
+            nextPeriodStart = new Date(sub.current_period_end || now);
+            nextPeriodEnd = new Date(sub.current_period_end || now);
+
+            const interval = effectivePlan.snapshot?.metadata?.interval || "month";
+            if (interval === "year") {
+               nextPeriodEnd.setFullYear(nextPeriodEnd.getFullYear() + 1);
+            } else {
+               nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+            }
+
+            await client.query(
+               `UPDATE subscriptions SET current_period_end = $1, current_period_start = $2, updated_at = NOW() WHERE id = $3`,
+               [nextPeriodEnd, nextPeriodStart, sub.id]
+            );
+         } else {
+            nextPeriodStart = new Date(sub.current_period_start);
+            nextPeriodEnd = new Date(sub.current_period_end);
+         }
+      } else {
+         nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+      }
 
       const updatedDetails = {
         ...oldDetails,
         monthly_cycle: {
           current_period_end: nextPeriodEnd.toISOString(),
-          current_period_start: now.toISOString(),
+          current_period_start: nextPeriodStart.toISOString(),
           exports: { backups_count: 0, notes_count: 0 },
-          storage: { files_count: 0, total_uploaded_mb: 0 },
+          storage: {
+            files_count: oldDetails.monthly_cycle?.storage?.files_count || 0,
+            total_uploaded_mb: oldDetails.monthly_cycle?.storage?.total_uploaded_mb || 0,
+          },
           weave_ai: { messages_sent: 0, tokens_estimated: 0 },
         },
       };
@@ -251,6 +320,37 @@ class PlansCycleProcessor {
       );
 
       await client.query("COMMIT");
+
+      // Dispatch cycle summary email
+      try {
+        const userResult = await client.query(`SELECT email, name FROM users WHERE user_id = $1`, [current.user_id]);
+        if (userResult.rows.length > 0) {
+          const user = userResult.rows[0];
+          const { html, subject, text } = buildCycleSummaryTemplate({
+            aiMessages,
+            name: user.name,
+            nextPeriodEnd: nextPeriodEnd.toISOString(),
+            notesTotal,
+            planName: effectivePlan.snapshot?.name || "Free",
+            projectsTotal,
+            totalExports,
+          });
+
+          const payload = {
+            payload: {
+              from: "The Weave <updates@weavenotes.app>",
+              html,
+              subject,
+              text,
+              to: [user.email],
+            }
+          };
+          await redis.lpush(getEmailQueueRedisKey(), JSON.stringify(payload));
+        }
+      } catch (emailErr) {
+        logger.error("Failed to enqueue cycle summary email", { error: emailErr.message });
+      }
+
     } catch (error) {
       await client.query("ROLLBACK");
       logger.error("Failed to rollover plan usage cycle", {
@@ -270,7 +370,8 @@ class PlansCycleProcessor {
    */
   async resolveEffectivePlanForSubscriber(
     client,
-    { subscriberType, subscriberId, currentPlanId }
+    { subscriberType, subscriberId, currentPlanId },
+    subOverride = null
   ) {
     if (!subscriberType || !subscriberId) {
       const fallback = await this.getPlanById(client, currentPlanId);
@@ -281,20 +382,22 @@ class PlansCycleProcessor {
       };
     }
 
-    const { rows: subsRows } = await client.query(
-      `
-        SELECT plan_id, cancel_at_period_end, status
-        FROM subscriptions
-        WHERE subscriber_type = $1
-          AND subscriber_id = $2
-          AND status IN ('active', 'past_due', 'trialing')
-        ORDER BY updated_at DESC
-        LIMIT 1
-      `,
-      [subscriberType, subscriberId]
-    );
-
-    const sub = subsRows[0];
+    let sub = subOverride;
+    if (!sub) {
+      const { rows: subsRows } = await client.query(
+        `
+          SELECT plan_id, cancel_at_period_end, status
+          FROM subscriptions
+          WHERE subscriber_type = $1
+            AND subscriber_id = $2
+            AND status IN ('active', 'past_due', 'trialing')
+          ORDER BY updated_at DESC
+          LIMIT 1
+        `,
+        [subscriberType, subscriberId]
+      );
+      sub = subsRows[0];
+    }
     if (sub?.cancel_at_period_end) {
       logger.info("Subscription cancel_at_period_end triggered", {
         subscriberId,

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const Sentry = require("@sentry/node");
 const { env } = require("../config/enviroment");
 

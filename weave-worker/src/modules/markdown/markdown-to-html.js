@@ -85,7 +85,6 @@ function markdownToHtml(markdown) {
   const htmlParts = [];
   let inCodeBlock = false;
   let codeBlockContent = [];
-  let codeBlockLang = "";
   let inList = false;
   let listItems = [];
   let listOrdered = false;
@@ -115,7 +114,6 @@ function markdownToHtml(markdown) {
       if (!inCodeBlock) {
         flushList();
         inCodeBlock = true;
-        codeBlockLang = trimmed.slice(3).trim();
         codeBlockContent = [];
         continue;
       } else {

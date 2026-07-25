@@ -2,8 +2,8 @@ const redis = require("../../queues/queue-client");
 const { getAiReportDeliveryQueueRedisKey, getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
 const { executeQuery } = require("../../database/connection");
 const { logger } = require("../../config/logger");
-const { buildAiReportEmail } = require("../notifications/templates/ai-report");
-const { localeFromUserPreference } = require("../notifications/i18n");
+const { buildAiReportEmail } = require("../../mail/templates/template.ai-report");
+const { localeFromUserPreference } = require("../../mail/i18n/locales.translator");
 
 class AiReportDeliveryProcessor {
   constructor() {

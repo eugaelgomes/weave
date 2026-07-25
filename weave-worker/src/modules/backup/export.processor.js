@@ -3,10 +3,10 @@ const redis = require("../../queues/queue-client");
 const { executeQuery } = require("../../database/connection");
 const { logger } = require("../../config/logger");
 const storageService = require("../storage");
-const { createMailService } = require("../notifications/sender");
+const { createMailService } = require("../../mail/sender");
 const {
   buildBackupEmailPayload,
-} = require("../notifications/templates/backup-notification");
+} = require("../../mail/templates/template.backup-notification");
 const { getBackupExportQueueRedisKey } = require("../../queues/queue-queue-keys");
 
 class BackupExportProcessor {

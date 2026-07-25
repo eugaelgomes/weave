@@ -2,7 +2,7 @@
  * Email i18n — keep in sync with weave-api/src/services/email/i18n/
  */
 
-const { executeQuery } = require("../../../database/connection");
+const { executeQuery } = require("../../database/connection");
 
 const ptBR = require("./locales/pt-BR");
 const enUS = require("./locales/en-US");

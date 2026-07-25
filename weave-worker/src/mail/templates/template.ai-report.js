@@ -2,10 +2,10 @@
  * AI Report Email Template
  */
 
-const { buildMailTemplate } = require("../template");
-const { markdownToHtml } = require("../../markdown/markdown-to-html");
-const { env } = require("../../../config/enviroment");
-const { getReportTypeLabel, resolveEmailLocale, t } = require("../i18n");
+const { buildMailTemplate } = require("../base-template");
+const { markdownToHtml } = require("../../modules/markdown/markdown-to-html");
+const { env } = require("../../config/enviroment");
+const { getReportTypeLabel, resolveEmailLocale, t } = require("../i18n/locales.translator");
 
 /**
  * @param {object} options
