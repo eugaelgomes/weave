@@ -12,7 +12,6 @@ const {
 const {
   buildAuthorizeUrl,
   exchangeOAuthCode,
-  conversationsInfo,
 } = require("@/modules/slack/utils/slack-client.util");
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";

@@ -6,13 +6,9 @@ const PlansRepository = require("@/modules/plans/repositories/plans.repository")
 const {
   collabMail,
 } = require("@/services/email/templates/note-collab-notification");
-const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
 const {
-  assertNoteWorkspaceShareAllowed,
-} = require("@/modules/organizations/utils/workspace-share-guard.util");
-const {
-  notifyCollaboratorAdded,
-} = require("@/modules/slack/utils/slack-notify.util");
+  sendPlanLimitExceeded,
+} = require("@/modules/plans/utils/plan-limit-http.util");
 
 const APP_FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 

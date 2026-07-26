@@ -8,10 +8,39 @@ const {
   verifyInternalService,
 } = require("@/middlewares/security/verify-internal-service");
 const { configureServerForUser } = require("@/config/mcp");
+const redisPublisher = require("@/services/queue/connection");
+
+// Create a dedicated Redis subscriber connection for MCP events
+const redisSubscriber = redisPublisher.duplicate();
 
 // Store active SSE sessions
 // Map<sessionId, { transport: SSEServerTransport, server: Server }>
 const sessions = new Map();
+
+// Global Redis Listener for distributed MCP messages
+redisSubscriber.on("message", async (channel, message) => {
+  if (channel.startsWith("mcp-session:")) {
+    const sessionId = channel.substring("mcp-session:".length);
+    const session = sessions.get(sessionId);
+
+    // Se a sessão existir neste node, injetamos a mensagem
+    if (session) {
+      try {
+        const parsed = JSON.parse(message);
+        if (session.transport.handleMessage) {
+          await session.transport.handleMessage(parsed);
+        } else if (session.transport.onmessage) {
+          session.transport.onmessage(parsed);
+        }
+      } catch (err) {
+        console.error(
+          `[MCP Redis Error] Failed to process message for session ${sessionId}:`,
+          err
+        );
+      }
+    }
+  }
+});
 
 const handleSSE = async (req, res, messagesPathPrefix) => {
   try {
@@ -19,6 +48,10 @@ const handleSSE = async (req, res, messagesPathPrefix) => {
 
     // Create a new server instance scoped to the user context
     const server = configureServerForUser(req.user);
+
+    // Disable proxy buffering for Caddy/Nginx & keep connection alive
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
 
     // Create the SSE transport with the return URL for POST messages
     const sseTransport = new SSEServerTransport(
@@ -28,17 +61,30 @@ const handleSSE = async (req, res, messagesPathPrefix) => {
 
     sessions.set(sessionId, { server, transport: sseTransport });
 
+    // Inscreve no Redis para escutar mensagens direcionadas a esta sessão
+    const redisChannel = `mcp-session:${sessionId}`;
+    await redisSubscriber.subscribe(redisChannel).catch((err) => {
+      console.error(
+        `[MCP Error] Failed to subscribe to Redis channel ${redisChannel}:`,
+        err
+      );
+    });
+
     // Connect the server to the transport
     await server.connect(sseTransport);
 
-    // Cleanup when the connection is closed by the client
+    // Cleanup with a grace period when the connection is closed by the client
+    // Cloud clients (Notion, Microsoft Foundry) may close the GET stream right after receiving the endpoint
     res.on("close", () => {
-      sessions.delete(sessionId);
-      try {
-        if (typeof server.close === "function") server.close();
-      } catch {
-        // Ignored
-      }
+      setTimeout(() => {
+        sessions.delete(sessionId);
+        redisSubscriber.unsubscribe(redisChannel).catch(() => {});
+        try {
+          if (typeof server.close === "function") server.close();
+        } catch {
+          // Ignored
+        }
+      }, 60000); // 60 seconds grace period
     });
   } catch (error) {
     console.error("[MCP Error] Failed to initialize SSE connection:", error);
@@ -57,19 +103,43 @@ const handleMessages = async (req, res) => {
 
   const session = sessions.get(sessionId);
 
-  if (!session) {
-    return res.status(404).send("SSE session not found or already closed.");
-  }
+  if (session) {
+    // A sessão está na RAM deste container! Processa localmente.
+    try {
+      await session.transport.handlePostMessage(req, res);
+    } catch (error) {
+      console.error(
+        `[MCP Error] Error handling post message for session ${sessionId}:`,
+        error
+      );
+      if (!res.headersSent) {
+        res.status(500).send("Internal server error.");
+      }
+    }
+  } else {
+    // A sessão NÃO está neste container. Publica no Redis para chegar no container correto.
+    try {
+      const payload =
+        typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+      const redisChannel = `mcp-session:${sessionId}`;
 
-  try {
-    await session.transport.handlePostMessage(req, res);
-  } catch (error) {
-    console.error(
-      `[MCP Error] Error handling post message for session ${sessionId}:`,
-      error
-    );
-    if (!res.headersSent) {
-      res.status(500).send("Internal server error.");
+      const receivers = await redisPublisher.publish(redisChannel, payload);
+
+      // Se 0 containers receberam, a sessão não existe em lugar nenhum
+      if (receivers === 0) {
+        return res.status(404).send("SSE session not found or already closed.");
+      }
+
+      // Responde ao Foundry que a mensagem foi enfileirada com sucesso
+      return res.status(202).send("Accepted");
+    } catch (error) {
+      console.error(
+        `[MCP Error] Failed to publish message for session ${sessionId}:`,
+        error
+      );
+      if (!res.headersSent) {
+        res.status(500).send("Internal server error.");
+      }
     }
   }
 };

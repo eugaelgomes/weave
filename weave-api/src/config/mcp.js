@@ -126,14 +126,32 @@ function registerHandlers(server, registry) {
     try {
       const tool = registry.tools[request.params.name];
       if (!tool) {
-        throw new Error(`Tool not found: ${request.params.name}`);
+        return {
+          content: [
+            {
+              text: `Error: Tool not found '${request.params.name}'`,
+              type: "text",
+            },
+          ],
+          isError: true,
+        };
       }
 
       const parsedArgs = tool.schema.parse(request.params.arguments);
       return await tool.handler(parsedArgs);
     } catch (error) {
       console.error(`[Error executing tool ${request.params.name}]:`, error);
-      throw new Error(`Internal error executing tool ${request.params.name}`);
+
+      // Retorna o erro graciosamente para a IA ler e corrigir, sem quebrar o json-rpc
+      return {
+        content: [
+          {
+            text: `Failed to execute tool '${request.params.name}'. Reason: ${error.message}`,
+            type: "text",
+          },
+        ],
+        isError: true,
+      };
     }
   });
 
