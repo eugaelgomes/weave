@@ -97,6 +97,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Validate deploy secrets
         env:
           ENGINE_REMOTE_HOST: ${{ secrets.ENGINE_REMOTE_HOST }}
