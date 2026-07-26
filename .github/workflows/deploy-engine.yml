@@ -84,7 +84,7 @@ jobs:
           context: ./weave-engine
           file: ./weave-engine/Dockerfile
           push: true
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
