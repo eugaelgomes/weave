@@ -78,9 +78,12 @@ class ProactiveQueueProcessor {
 
     try {
       const initialState = createInitialState(job);
-      const finalState = await proactiveGraph.run(initialState, {
-        maxIterations: 7,
-      });
+      const finalState = (await proactiveGraph.run(
+        initialState as unknown as Record<string, unknown>,
+        {
+          maxIterations: 7,
+        }
+      )) as any;
 
       const initialResult = {
         content:
@@ -131,10 +134,10 @@ class ProactiveQueueProcessor {
       };
 
       logger.info("Proactive job finished with safety re-check", {
-        blocked: finalPayload.safety.blocked,
+        blocked: (finalPayload as any).safety?.blocked,
         jobType,
         processingTimeMs,
-        safetyLabel: finalPayload.safety.label,
+        safetyLabel: (finalPayload as any).safety?.label,
       });
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -204,9 +207,9 @@ class ProactiveQueueProcessor {
       };
     }
 
-    if (job.payload && typeof job.payload === "object" && job.payload.content) {
+    if (job.payload && typeof job.payload === "object" && (job.payload as Record<string, unknown>).content) {
       return {
-        content: String(job.payload.content).trim(),
+        content: String((job.payload as Record<string, unknown>).content).trim(),
         providerUsed: null,
         raw: job.payload,
       };

@@ -53,7 +53,8 @@ export async function processThinkingPhase({
       prompt: message,
       systemMessage: generationSystemMessage,
     });
-    return data.text || data.content || null;
+    const d = data as any;
+    return d.text || d.content || null;
   } catch {
     return null;
   }

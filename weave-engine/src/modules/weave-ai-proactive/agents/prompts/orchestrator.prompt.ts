@@ -22,10 +22,10 @@ Your primary job is to analyze incoming background jobs, understand their intent
 ${JSON.stringify(state.jobContext, null, 2)}
 
 # User Message
-${state.message || "N/A"}
+${(state.jobContext as any)?.message || (state as any).message || "N/A"}
 
 # Conversation History
-${JSON.stringify(state.conversationHistory || [], null, 2)}
+${JSON.stringify((state.jobContext as any)?.conversationHistory || (state as any).conversationHistory || [], null, 2)}
 
 # Available Next Steps
 1. "researcher": Select this if the job requires fetching fresh data from the workspace (e.g., read notes, list projects, check tasks, perform web searches) before analysis can begin.

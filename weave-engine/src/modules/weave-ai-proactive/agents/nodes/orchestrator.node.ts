@@ -13,14 +13,15 @@ export async function orchestratorNode(state: ProactiveState) {
 
   try {
     const { data, provider } = await callAIProvider({
-      model: state.jobContext.model || null,
+      model: (state.jobContext?.model as string) || null,
       options: { allowEdit: false },
       prompt,
       systemMessage:
         "You are a JSON-only decision engine. Always return valid JSON.",
     });
 
-    let resultText = data.text || data.content || data;
+    const d = data as any;
+    let resultText = d?.text || d?.content || data;
     if (typeof resultText !== "string") {
       resultText = JSON.stringify(resultText);
     }
@@ -41,10 +42,11 @@ export async function orchestratorNode(state: ProactiveState) {
       nextNode: decision.nextNode,
       providerUsed: provider || state.providerUsed,
     };
-  } catch (error) {
-    logger.error("Orchestrator node error", { error: error.message });
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    logger.error("Orchestrator node error", { error: errMessage });
     // Default fallback to writer if it fails to decide
-    return { errors: [error.message], nextNode: "writer" };
+    return { errors: [errMessage], nextNode: "writer" };
   }
 }
 

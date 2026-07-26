@@ -17,10 +17,16 @@ export function safeJsonParse(value: unknown): Record<string, unknown> | null {
     return null;
   }
 
+  if (typeof value === "object") {
+    return value as Record<string, unknown>;
+  }
+
+  const strValue = String(value);
+
   try {
-    return JSON.parse(value);
+    return JSON.parse(strValue);
   } catch {
-    const match = String(value).match(/\{[\s\S]*\}/);
+    const match = strValue.match(/\{[\s\S]*\}/);
     if (!match) {
       return null;
     }

@@ -35,18 +35,24 @@ export async function executeInternalTool(
   logger.info(`Executing tool via MCP: ${functionName}`);
   try {
     const client = await getMCPClient(executionContext);
-    const result = await client.executeTool(functionName, args);
+    const rawResult = await client.executeTool(functionName, args);
+    const result = rawResult as { isError?: boolean; content?: Array<{ text?: string }> } | null | undefined;
 
     // Process MCP result format
+    if (!result) {
+      return { error: "No response from MCP tool" };
+    }
+
     if (result.isError) {
-      return { error: result.content.map((c: { text?: string }) => c.text || "").join("\n") };
+      return { error: (result.content || []).map((c: { text?: string }) => c.text || "").join("\n") };
     }
 
     if (result.content && result.content.length > 0) {
+      const firstText = result.content[0].text || "";
       try {
-        return JSON.parse(result.content[0].text);
+        return JSON.parse(firstText);
       } catch {
-        return result.content[0].text;
+        return firstText;
       }
     }
 

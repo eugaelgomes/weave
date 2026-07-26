@@ -1,20 +1,13 @@
-/**
- * @module weave-engine/modules/weave-ai-chat/agents/nodes/tool-executor.node
- */
-const { logger } = require("../../../../config/logger");
-const {
+import { logger } from "../../../../config/logger";
+import {
   isInternalTool,
   executeInternalTool,
-} = require("../../../../llm-conectors/mcp-tools");
+} from "../../../../llm-conectors/mcp-tools";
 
 /**
  * Intelligently truncates a tool output to prevent breaking JSON structures when sending it back to the LLM.
- *
- * @param {any} output - The output to truncate.
- * @param {number} maxLength - The maximum string length allowed.
- * @returns {string} The safely truncated string.
  */
-function truncateToolOutput(output, maxLength) {
+function truncateToolOutput(output: any, maxLength: number): string {
   if (typeof output === "string") {
     if (output.length <= maxLength) return output;
     return (
@@ -52,7 +45,7 @@ function truncateToolOutput(output, maxLength) {
   );
 }
 
-async function toolExecutorNode(state) {
+export async function toolExecutorNode(state: any) {
   logger.info("Tool Executor node running");
 
   if (!state.pendingToolCalls || state.pendingToolCalls.length === 0) {
@@ -62,20 +55,20 @@ async function toolExecutorNode(state) {
   const executedActions = state.executedActions
     ? [...state.executedActions]
     : [];
-  const newMessages = [];
+  const newMessages: any[] = [];
 
   // Extract external tool calls (if any)
-  const internalCalls = state.pendingToolCalls.filter((t) =>
+  const internalCalls = state.pendingToolCalls.filter((t: any) =>
     isInternalTool(t.function.name)
   );
   const externalCalls = state.pendingToolCalls.filter(
-    (t) => !isInternalTool(t.function.name)
+    (t: any) => !isInternalTool(t.function.name)
   );
 
   if (internalCalls.length > 0 && externalCalls.length === 0) {
     // Execute all internal tools in parallel to minimize latency overhead
     const results = await Promise.all(
-      internalCalls.map(async (tc) => {
+      internalCalls.map(async (tc: any) => {
         const fnName = tc.function.name;
         const fnArgs = tc.rawArgs;
 
@@ -88,17 +81,17 @@ async function toolExecutorNode(state) {
           });
         }
 
-        const result = await executeInternalTool(
+        const result = (await executeInternalTool(
           fnName,
           fnArgs,
           state.executionContext
-        );
+        )) as any;
 
         if (state.executionContext && state.executionContext.onChunk) {
           state.executionContext.onChunk({
             name: fnName,
             status: "completed",
-            success: !result.error,
+            success: !result?.error,
             type: "action_state",
           });
         }
@@ -106,7 +99,7 @@ async function toolExecutorNode(state) {
         executedActions.push({
           arguments: fnArgs,
           name: fnName,
-          result: result.error || "success",
+          result: result?.error || "success",
         });
 
         return {
@@ -154,5 +147,3 @@ async function toolExecutorNode(state) {
 
   return { pendingToolCalls: [] };
 }
-
-module.exports = { toolExecutorNode };

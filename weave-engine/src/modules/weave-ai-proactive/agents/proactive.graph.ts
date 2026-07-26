@@ -8,20 +8,20 @@ import { researcherNode } from "./nodes/researcher.node";
 import { analystNode } from "./nodes/analyst.node";
 import { writerNode } from "./nodes/writer.node";
 
-import { ProactiveState } from "./proactive.state";
 
 // Conditional routing function from the orchestrator
-const routeFromOrchestrator = (state: ProactiveState) => {
-  return state.nextNode || "writer"; // Default to writer if something is missing
+const routeFromOrchestrator = (state: Record<string, unknown>) => {
+  const s = state as any;
+  return s.nextNode || "writer"; // Default to writer if something is missing
 };
 
 // Compile the graph
 const proactiveGraph = new StateGraph()
   // Add nodes
-  .addNode("orchestrator", orchestratorNode)
-  .addNode("researcher", researcherNode)
-  .addNode("analyst", analystNode)
-  .addNode("writer", writerNode)
+  .addNode("orchestrator", orchestratorNode as any)
+  .addNode("researcher", researcherNode as any)
+  .addNode("analyst", analystNode as any)
+  .addNode("writer", writerNode as any)
 
   // Add edges
   .setEntryPoint("orchestrator")

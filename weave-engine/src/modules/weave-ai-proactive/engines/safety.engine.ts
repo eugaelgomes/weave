@@ -39,7 +39,7 @@ class SafetyEngine {
 
     try {
       const { data } = await callAIProvider({
-        model: SAFETY_RECHECK_MODEL || job.model || null,
+        model: SAFETY_RECHECK_MODEL || (job as any).model || null,
         options: {
           allowEdit: false,
         },

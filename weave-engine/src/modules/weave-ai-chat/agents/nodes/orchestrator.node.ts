@@ -65,7 +65,7 @@ export async function orchestratorNode(state: OrchestratorState) {
       model: state.jobContext?.model || null,
       options: {
         allowEdit: false,
-        messages: state.messages || [],
+        messages: (state.messages || []) as any[],
       },
       prompt:
         "Based on the conversation, which agent should handle this request? Respond strictly in JSON.",

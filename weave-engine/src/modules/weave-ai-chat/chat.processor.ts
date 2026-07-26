@@ -144,14 +144,12 @@ class LlmQueueProcessor {
    * @returns {Promise<void>}
    */
   async processJob(job: Record<string, unknown>) {
-    const {
-      payload = {},
-      responseQueueKey,
-      taskType = "provider_call",
-      requestId = null,
-      attempts = 0,
-      createdAt = null,
-    } = job;
+    const payload = (job.payload || {}) as Record<string, unknown>;
+    const responseQueueKey = job.responseQueueKey as string;
+    const taskType = (job.taskType as string) || "provider_call";
+    const requestId = (job.requestId as string) || null;
+    const attempts = (job.attempts as number) || 0;
+    const createdAt = (job.createdAt as string) || null;
 
     if (!responseQueueKey) {
       logger.warn("Engine LLM job discarded: missing response queue key");
@@ -276,10 +274,10 @@ class LlmQueueProcessor {
           additionalContext
         );
         const entityContext = await buildEntityContext({
-          noteIds: payload.noteIds || additionalContext.noteIds,
-          organizationId,
-          projectIds: payload.projectIds || additionalContext.projectIds,
-          userId: payload.userId || additionalContext.userId,
+          noteIds: (payload.noteIds as string[]) || (additionalContext.noteIds as string[]),
+          organizationId: organizationId as string | null,
+          projectIds: (payload.projectIds as string[]) || (additionalContext.projectIds as string[]),
+          userId: (payload.userId as string) || (additionalContext.userId as string),
         });
 
         return {
@@ -290,14 +288,14 @@ class LlmQueueProcessor {
             organizationInfo: entityContext.organizationInfo,
             organizationMembers: entityContext.organizationMembers,
             userLanguage:
-              payload.userLanguage || additionalContext.userLanguage,
+              (payload.userLanguage as string) || (additionalContext.userLanguage as string),
           }),
         };
       }
 
       case "generate_smart_response":
         return {
-          smartResponse: await generateSmartResponse(payload),
+          smartResponse: await generateSmartResponse(payload as any),
         };
 
       case "get_few_shot_examples":
@@ -307,12 +305,12 @@ class LlmQueueProcessor {
 
       case "process_thinking_phase":
         return {
-          generatedContent: await processThinkingPhase(payload),
+          generatedContent: await processThinkingPhase(payload as any),
         };
 
       case "provider_call":
       default: {
-        const { data, provider: providerUsed } = await callAIProvider(payload);
+        const { data, provider: providerUsed } = await callAIProvider(payload as any);
         return {
           ...data,
           providerUsed,
@@ -330,7 +328,7 @@ class LlmQueueProcessor {
           executedActions: [],
           executionContext: {
             language:
-              payload.userLanguage || payload.context?.userLanguage || "en-US",
+              payload.userLanguage || (payload.context as any)?.userLanguage || "en-US",
             maxDurationMs: ENGINE_CHAT_TASK_TIMEOUT_MS,
             onChunk: (chunk: string) => {
               if (requestId && redis) {
@@ -341,8 +339,8 @@ class LlmQueueProcessor {
             },
             organizationId:
               payload.organizationId ||
-              payload.context?.organizationId ||
-              payload.context?.organization_id ||
+              (payload.context as any)?.organizationId ||
+              (payload.context as any)?.organization_id ||
               null,
             userId: payload.userId || null,
           },
@@ -359,14 +357,14 @@ class LlmQueueProcessor {
 
         if (conversationHistory.length > 0) {
           initialState.messages = [
-            ...conversationHistory,
+            ...(conversationHistory as any[]),
             ...initialState.messages,
           ];
         }
 
         const graph = buildChatGraph();
 
-        const finalState = await Promise.race([
+        const finalState: any = await Promise.race([
           graph.run(initialState, { maxIterations: MAX_GRAPH_ITERATIONS }),
           new Promise((_, reject) => {
             // Safety timeout to prevent permanently stalled agent loops from hanging the queue worker
@@ -417,9 +415,9 @@ class LlmQueueProcessor {
     );
     const entityContext = await buildEntityContext({
       noteIds,
-      organizationId,
+      organizationId: organizationId as string | null,
       projectIds,
-      userId: payload.userId,
+      userId: payload.userId as string,
     });
 
     const baseMessage = buildChatSystemMessage({
@@ -430,12 +428,12 @@ class LlmQueueProcessor {
       organizationInfo: entityContext.organizationInfo,
       organizationMembers: entityContext.organizationMembers,
       projectIds,
-      userLanguage: payload.userLanguage || (payload.context as Record<string, unknown>)?.userLanguage,
+      userLanguage: (payload.userLanguage as string) || ((payload.context as Record<string, unknown>)?.userLanguage as string),
     });
-    const agentInstructions = this.extractAgentInstructions(payload.agent);
+    const agentInstructions = this.extractAgentInstructions(payload.agent as any);
     const noteDocumentContract = ((payload?.context as Record<string, unknown>)?.noteDocumentContract || null) as (Record<string, unknown> & { allowedBlockTypes?: string[] }) | null;
     const composeOverlay =
-      isEngineComposeSurface(payload.context) ||
+      isEngineComposeSurface(payload.context as any) ||
       payload.useCase === "engine_compose" ||
       (payload.context as Record<string, unknown>)?.useCase === "engine_compose"
         ? `\n\n${buildEngineComposePromptOverlay((payload.context as Record<string, unknown>) || {})}`
@@ -459,7 +457,7 @@ class LlmQueueProcessor {
 - noteIds: ${noteIds.length > 0 ? noteIds.join(",") : "none"}
 - projectIds: ${projectIds.length > 0 ? projectIds.join(",") : "none"}
 - orgId: ${organizationId || "unknown"}
-- lang: ${payload.userLanguage || payload.context?.userLanguage || "unknown"}
+- lang: ${payload.userLanguage || (payload.context as Record<string, unknown>)?.userLanguage || "unknown"}
 - allowEdit: ${payload.allowEdit ? "true" : "false"}
 - files: ${files.length === 0 ? "none" : `\n  ${fileSummary}`}
 ${

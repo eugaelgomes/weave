@@ -13,13 +13,14 @@ export async function analystNode(state: ProactiveState) {
 
   try {
     const { data, provider } = await callAIProvider({
-      model: state.jobContext.model || null,
+      model: (state.jobContext?.model as string) || null,
       options: { allowEdit: false },
       prompt,
       systemMessage: "You are the Analyst. You do deep reasoning.",
     });
 
-    const resultText = data.text || data.content || data;
+    const d = data as any;
+    const resultText = d?.text || d?.content || data;
 
     return {
       analysisResult:
@@ -28,9 +29,10 @@ export async function analystNode(state: ProactiveState) {
           : JSON.stringify(resultText),
       providerUsed: provider || state.providerUsed,
     };
-  } catch (error) {
-    logger.error("Analyst node error", { error: error.message });
-    return { errors: [error.message] };
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    logger.error("Analyst node error", { error: errMessage });
+    return { errors: [errMessage] };
   }
 }
 

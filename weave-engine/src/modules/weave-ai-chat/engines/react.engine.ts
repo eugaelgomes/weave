@@ -117,7 +117,7 @@ export async function executeAgenticTask({
   const availableFunctions = [...(functions || [])];
   if (allowEdit) {
     availableFunctions.push(
-      ...(await getInternalToolDefinitions(executionContext))
+      ...(await getInternalToolDefinitions(executionContext as any))
     );
   }
 
@@ -130,7 +130,7 @@ export async function executeAgenticTask({
   };
 
   // Add the initial user message to history immediately so it persists across ReAct loops
-  currentOptions.messages.push({
+  (currentOptions.messages as any[]).push({
     content: message,
     role: "user",
   });
@@ -140,14 +140,14 @@ export async function executeAgenticTask({
   const failureCounts: Record<string, number> = {};
 
   const maxDurationMs =
-    executionContext.maxDurationMs || MAX_AGENTIC_DURATION_MS;
+    (executionContext.maxDurationMs as number) || MAX_AGENTIC_DURATION_MS;
 
   // Primary ReAct While Loop
   // Continues until MAX_REACT_ITERATIONS is hit, time limit expires, or a final answer is returned.
   while (iterations < MAX_REACT_ITERATIONS) {
     if (Date.now() - startedAt >= maxDurationMs) {
       const isPt =
-        executionContext.language &&
+        typeof executionContext.language === "string" &&
         executionContext.language.toLowerCase().startsWith("pt");
       const msg = isPt
         ? "Atingi o limite de tempo interno da ferramenta e precisei parar o raciocínio. Fique à vontade para me pedir para continuar!"
@@ -187,9 +187,9 @@ export async function executeAgenticTask({
       });
 
       // Add assistant tool_call message to history
-      currentOptions.messages.push({
+      (currentOptions.messages as any[]).push({
         content: null,
-        rawParts: data.rawParts,
+        rawParts: (data as any).rawParts,
         role: "assistant",
         tool_calls: toolCallsArray.map((t: Record<string, unknown>) => ({
           function: t.function,
@@ -212,7 +212,7 @@ export async function executeAgenticTask({
             const fnName = (tc.function as Record<string, unknown>).name as string;
             const fnArgs = tc.rawArgs as Record<string, unknown>;
             if (executionContext.onChunk) {
-              executionContext.onChunk({
+              (executionContext.onChunk as any)({
                 name: fnName,
                 status: "running",
                 type: "action_state",
@@ -222,10 +222,10 @@ export async function executeAgenticTask({
               const result = await executeInternalTool(
                 fnName,
                 fnArgs,
-                executionContext
+                executionContext as any
               );
               if (executionContext.onChunk) {
-                executionContext.onChunk({
+                (executionContext.onChunk as any)({
                   name: fnName,
                   status: "completed",
                   success: true,
@@ -274,7 +274,7 @@ export async function executeAgenticTask({
 
           const contentStr = truncateToolOutput(output, 12000);
 
-          currentOptions.messages.push({
+          (currentOptions.messages as any[]).push({
             content: contentStr,
             name: fnName,
             role: "tool",
@@ -313,9 +313,9 @@ export async function executeAgenticTask({
         `call_${Math.random().toString(36).substring(2, 11)}`;
 
       // Add assistant tool_call message to history
-      currentOptions.messages.push({
+      (currentOptions.messages as any[]).push({
         content: null,
-        rawParts: data.rawParts,
+        rawParts: (data as any).rawParts,
         role: "assistant",
         tool_calls: [
           {
@@ -330,7 +330,7 @@ export async function executeAgenticTask({
 
       if (isInternalTool(fnName)) {
         if (executionContext.onChunk) {
-          executionContext.onChunk({
+          (executionContext.onChunk as any)({
             name: fnName,
             status: "running",
             type: "action_state",
@@ -340,9 +340,9 @@ export async function executeAgenticTask({
         let result = null;
         let error = null;
         try {
-          result = await executeInternalTool(fnName, fnArgs, executionContext);
+          result = await executeInternalTool(fnName, fnArgs, executionContext as any);
           if (executionContext.onChunk) {
-            executionContext.onChunk({
+            (executionContext.onChunk as any)({
               name: fnName,
               status: "completed",
               success: true,
@@ -382,7 +382,7 @@ export async function executeAgenticTask({
 
         const contentStr = truncateToolOutput(output, 12000);
 
-        currentOptions.messages.push({
+        (currentOptions.messages as any[]).push({
           content: contentStr,
           name: fnName,
           role: "tool",
@@ -421,7 +421,7 @@ export async function executeAgenticTask({
 
   // Fallback if max iterations reached
   const isPt =
-    executionContext.language &&
+    typeof executionContext.language === "string" &&
     executionContext.language.toLowerCase().startsWith("pt");
   const fallbackMsg = isPt
     ? "Pensei por muitas iterações e não consegui chegar numa conclusão final. Pode me dar mais detalhes?"

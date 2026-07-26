@@ -58,7 +58,8 @@ Instructions:
       prompt: summaryPrompt,
       systemMessage,
     });
-    return data.text || data.content || data;
+    const d = data as any;
+    return d.text || d.content || (typeof data === "string" ? data : JSON.stringify(data));
   } catch {
     return "**Action executed successfully.**\n\n(Technical details hidden for brevity)";
   }

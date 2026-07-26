@@ -13,18 +13,20 @@ export async function writerNode(state: ProactiveState) {
 
   try {
     const { data, provider } = await callAIProvider({
-      model: state.jobContext.model || null,
+      model: (state.jobContext?.model as string) || null,
       options: {
         allowEdit: false,
-        messages: state.conversationHistory || [],
+        messages: ((state.jobContext?.conversationHistory || (state as any).conversationHistory || []) as any[]),
       },
       prompt,
       systemMessage:
-        state.systemMessage ||
+        (state.jobContext?.systemMessage as string) ||
+        (state as any).systemMessage ||
         "You are the Writer. Format outputs strictly in Markdown.",
     });
 
-    const resultText = data.text || data.content || data;
+    const d = data as any;
+    const resultText = d?.text || d?.content || data;
 
     return {
       finalOutput:
@@ -33,9 +35,10 @@ export async function writerNode(state: ProactiveState) {
           : JSON.stringify(resultText),
       providerUsed: provider || state.providerUsed,
     };
-  } catch (error) {
-    logger.error("Writer node error", { error: error.message });
-    return { errors: [error.message] };
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    logger.error("Writer node error", { error: errMessage });
+    return { errors: [errMessage] };
   }
 }
 

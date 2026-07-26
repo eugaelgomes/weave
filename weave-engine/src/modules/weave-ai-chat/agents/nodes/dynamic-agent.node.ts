@@ -10,7 +10,8 @@ function extractAgentInstructions(agent: Record<string, unknown> | null | undefi
     return "";
   }
 
-  const personality = agent.personality || {};
+  const a = agent as any;
+  const personality = a.personality || {};
   const persona = personality.persona || {};
   const metadata = personality.metadata || {};
   const behavior = personality.behavior || {};
@@ -21,7 +22,7 @@ function extractAgentInstructions(agent: Record<string, unknown> | null | undefi
     : "";
 
   const lines = [
-    `agentId: ${agent.id || "unknown"}`,
+    `agentId: ${a.id || "unknown"}`,
     metadata.name ? `name: ${metadata.name}` : "",
     persona.role ? `role: ${persona.role}` : "",
     persona.tone ? `tone: ${persona.tone}` : "",
@@ -34,8 +35,9 @@ function extractAgentInstructions(agent: Record<string, unknown> | null | undefi
 }
 
 export async function dynamicAgentNode(state: Record<string, unknown>) {
-  const activeAgentId = state.activeAgent;
-  const agent = (state.availableAgents || []).find(
+  const s = state as any;
+  const activeAgentId = s.activeAgent;
+  const agent = ((s.availableAgents as any[]) || []).find(
     (a: Record<string, unknown>) => a.id === activeAgentId
   );
 
@@ -50,33 +52,33 @@ export async function dynamicAgentNode(state: Record<string, unknown>) {
     `Dynamic Agent node running for agent ${agent.name || activeAgentId}`
   );
 
-  if (state.executionContext && state.executionContext.onChunk) {
-    state.executionContext.onChunk({
+  if (s.executionContext && s.executionContext.onChunk) {
+    s.executionContext.onChunk({
       name: agent.name || activeAgentId,
       status: "running",
       type: "action_state",
     });
   }
 
-  const allTools = await getInternalToolDefinitions(state.executionContext);
+  const allTools = await getInternalToolDefinitions(s.executionContext);
   const agentInstructions = extractAgentInstructions(agent);
 
   try {
     const { data, provider } = await callAIProvider({
-      model: state.jobContext?.model || null,
+      model: s.jobContext?.model || null,
       options: {
-        allowEdit: state.options?.allowEdit ?? false,
+        allowEdit: s.options?.allowEdit ?? false,
         functions: allTools,
-        messages: state.messages || [],
+        messages: (s.messages as any[]) || [],
       },
       prompt: "",
       systemMessage:
-        (state.jobContext?.systemMessage || "") +
+        (s.jobContext?.systemMessage || "") +
         `\n\n[Agent]: ${agentInstructions}`,
     });
 
     const stateUpdate: Record<string, unknown> = {
-      providerUsed: provider || state.providerUsed,
+      providerUsed: provider || s.providerUsed,
     };
 
     if (data.type === "function_call" && data.toolCalls) {
@@ -105,7 +107,7 @@ export async function dynamicAgentNode(state: Record<string, unknown>) {
         })),
       };
 
-      stateUpdate.messages = [...(state.messages || []), assistantMessage];
+      stateUpdate.messages = [...((s.messages as any[]) || []), assistantMessage];
       stateUpdate.pendingToolCalls = toolCallsArray;
     } else {
       const finalMsg = data.text || data.content || data;
@@ -113,11 +115,11 @@ export async function dynamicAgentNode(state: Record<string, unknown>) {
         content: finalMsg,
         role: "assistant",
       };
-      stateUpdate.messages = [...(state.messages || []), assistantMessage];
+      stateUpdate.messages = [...((s.messages as any[]) || []), assistantMessage];
       stateUpdate.finalResponse = finalMsg;
 
-      if (state.executionContext && state.executionContext.onChunk) {
-        state.executionContext.onChunk({
+      if (s.executionContext && s.executionContext.onChunk) {
+        s.executionContext.onChunk({
           name: agent.name || activeAgentId,
           status: "completed",
           success: true,

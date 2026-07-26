@@ -12,31 +12,32 @@ export async function researcherNode(state: ProactiveState) {
   const systemMessage = getResearcherPrompt(state);
 
   const executionContext = {
-    language: state.jobContext.language || "en-US",
-    onChunk: state.jobContext.onChunk,
-    organizationId: state.jobContext.organizationId || null,
-    userId: state.jobContext.triggeredBy || "system",
+    language: (state.jobContext?.language as string) || "en-US",
+    onChunk: state.jobContext?.onChunk as any,
+    organizationId: (state.jobContext?.organizationId as string) || null,
+    userId: (state.jobContext?.triggeredBy as string) || "system",
   };
 
   try {
     const { data, providerUsed, executedActions } = await executeAgenticTask({
+      _allowWebSearch: Boolean(state.jobContext?.allowWebSearch),
       allowEdit: false, // Force readonly for research
-      allowWebSearch: state.jobContext.allowWebSearch,
-      conversationHistory: state.conversationHistory || [],
+      conversationHistory: ((state.jobContext?.conversationHistory || (state as any).conversationHistory || []) as any[]),
       executionContext,
-      files: state.jobContext.files,
-      functions: state.jobContext.functions,
-      message: state.message,
-      model: state.jobContext.model,
+      files: (state.jobContext?.files as any[]) || [],
+      functions: (state.jobContext?.functions as any[]) || [],
+      message: (state.jobContext?.message as string) || (state as any).message || "",
+      model: (state.jobContext?.model as string) || "",
       systemMessage,
     });
 
     const collectedData = [...(state.collectedData || [])];
 
-    if (executedActions && executedActions.length > 0) {
-      executedActions.forEach((action) => {
+    const actions = (executedActions as any[]) || [];
+    if (actions.length > 0) {
+      actions.forEach((action: any) => {
         collectedData.push({
-          query: action.args,
+          query: action.args || action.arguments,
           result: action.result,
           source: action.name,
         });
@@ -44,7 +45,8 @@ export async function researcherNode(state: ProactiveState) {
     }
 
     // Also store any text conclusion the researcher arrived at
-    const text = data?.text || data?.content;
+    const d = data as any;
+    const text = d?.text || d?.content;
     if (text) {
       collectedData.push({ result: text, source: "Researcher Conclusion" });
     }
@@ -52,14 +54,15 @@ export async function researcherNode(state: ProactiveState) {
     return {
       collectedData,
       executedActions: [
-        ...(state.executedActions || []),
-        ...(executedActions || []),
+        ...((state as any).executedActions || []),
+        ...actions,
       ],
       providerUsed: providerUsed || state.providerUsed,
     };
-  } catch (error) {
-    logger.error("Researcher node error", { error: error.message });
-    return { errors: [error.message] };
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    logger.error("Researcher node error", { error: errMessage });
+    return { errors: [errMessage] };
   }
 }
 

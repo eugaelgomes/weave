@@ -1,29 +1,20 @@
-const {
+import {
   estimateTokens,
   formatRole,
   formatServerTime,
   summarizeDocument,
-} = require("./utils");
-
-const {
-  projectsSprintsCapability,
-} = require("./capabilities/projects-sprints");
-const { notesTasksCapability } = require("./capabilities/notes-tasks");
-const {
-  organizationAdminCapability,
-} = require("./capabilities/organization-admin");
-const { ecosystemCapability } = require("./capabilities/ecosystem");
-const {
-  sandboxArtifactsCapability,
-} = require("./capabilities/sandbox-artifacts");
+} from "./utils";
+import { projectsSprintsCapability } from "./capabilities/projects-sprints";
+import { notesTasksCapability } from "./capabilities/notes-tasks";
+import { organizationAdminCapability } from "./capabilities/organization-admin";
+import { ecosystemCapability } from "./capabilities/ecosystem";
+import { sandboxArtifactsCapability } from "./capabilities/sandbox-artifacts";
+import { chatSystemPrompt, engineSystemPrompt } from "./persona";
 
 /**
  * Appends the capabilities playbook to the prompt.
- * @param {string} basePrompt
- * @param {Object} context
- * @returns {string}
  */
-function appendCapabilities(basePrompt, _context) {
+export function appendCapabilities(basePrompt: string, _context?: any): string {
   let prompt = basePrompt;
   prompt += `\n\n### CAPABILITIES PLAYBOOK\nYou have access to several tools. Use them according to the guidelines below:\n`;
   prompt += `\n${projectsSprintsCapability}\n`;
@@ -39,11 +30,8 @@ function appendCapabilities(basePrompt, _context) {
 
 /**
  * Appends standard context like Clock, User, Org, and Locale to the prompt.
- * @param {string} basePrompt
- * @param {Object} context
- * @returns {string}
  */
-function appendStandardContext(basePrompt, context) {
+export function appendStandardContext(basePrompt: string, context: any = {}): string {
   let prompt = basePrompt;
 
   const serverTime = formatServerTime(new Date());
@@ -56,12 +44,12 @@ function appendStandardContext(basePrompt, context) {
 
   const userId = context.userId || context.user_id;
   if (userId) {
-    prompt += `\n[INTERNAL UUID]: ${userId.trim()} (NEVER SHOW USER)`;
+    prompt += `\n[INTERNAL UUID]: ${String(userId).trim()} (NEVER SHOW USER)`;
   }
 
   const orgId = context.organizationId || context.organization_id;
   if (orgId) {
-    prompt += `\n[INTERNAL ORG ID]: ${orgId.trim()} (NEVER SHOW USER)`;
+    prompt += `\n[INTERNAL ORG ID]: ${String(orgId).trim()} (NEVER SHOW USER)`;
   }
 
   return prompt;
@@ -69,11 +57,8 @@ function appendStandardContext(basePrompt, context) {
 
 /**
  * Appends organization details and members.
- * @param {string} basePrompt
- * @param {Object} context
- * @returns {string}
  */
-function appendOrganizationContext(basePrompt, context) {
+export function appendOrganizationContext(basePrompt: string, context: any = {}): string {
   let prompt = basePrompt;
 
   if (context.organizationInfo) {
@@ -91,7 +76,7 @@ function appendOrganizationContext(basePrompt, context) {
     context.organizationMembers.length > 0
   ) {
     prompt += `\n\n[ORG MEMBERS]:`;
-    context.organizationMembers.forEach((member) => {
+    context.organizationMembers.forEach((member: any) => {
       prompt += `\n- ${member.name || "Unknown"} (${member.email || "no-email"}) | role: ${member.role}`;
     });
   }
@@ -101,11 +86,8 @@ function appendOrganizationContext(basePrompt, context) {
 
 /**
  * Appends the proactive workspace panorama containing sprints, integrations, and health.
- * @param {string} basePrompt
- * @param {Object} context
- * @returns {string}
  */
-function appendWorkspacePanorama(basePrompt, context) {
+export function appendWorkspacePanorama(basePrompt: string, context: any = {}): string {
   let prompt = basePrompt;
 
   if (context.workspacePanorama) {
@@ -124,7 +106,7 @@ function appendWorkspacePanorama(basePrompt, context) {
       prompt += `WORKSPACE HEALTH REPORT: `;
       if (hasSprints) {
         const sprintDetails = context.workspacePanorama.activeSprints
-          .map((s) => `"${s.title}" (ending ${s.end_date})`)
+          .map((s: any) => `"${s.title}" (ending ${s.end_date})`)
           .join(", ");
         prompt += `You are managing ${context.workspacePanorama.activeSprints.length} active sprint(s): ${sprintDetails}. `;
       } else {
@@ -156,12 +138,8 @@ function appendWorkspacePanorama(basePrompt, context) {
 
 /**
  * Appends dynamically scaled projects context based on token limits.
- * @param {string} basePrompt
- * @param {Array} projects
- * @param {number} maxTokens
- * @returns {string}
  */
-function appendProjectsContext(basePrompt, projects, maxTokens = 4000) {
+export function appendProjectsContext(basePrompt: string, projects: any[] = [], maxTokens = 4000): string {
   if (!Array.isArray(projects) || projects.length === 0) return basePrompt;
 
   let currentTokens = 0;
@@ -180,8 +158,8 @@ function appendProjectsContext(basePrompt, projects, maxTokens = 4000) {
     let entry = `\n${i + 1}. "${project.title}" (ID: ${project.public_id || project.id || "unknown"}) | stages: ${stageCount} | notes: ${associatedNotesCount}`;
 
     if (stageCount > 0) {
-      const stagesSummary = project.stages
-        .map((stage) => stage?.name)
+      const stagesSummary = (project.stages as any[])
+        .map((stage: any) => stage?.name)
         .filter(Boolean)
         .slice(0, 6)
         .join(", ");
@@ -195,7 +173,7 @@ function appendProjectsContext(basePrompt, projects, maxTokens = 4000) {
       project.collaborators.length > 0
     ) {
       const collabSummary = project.collaborators
-        .map((c) => {
+        .map((c: any) => {
           const role = formatRole(c.role);
           const avatar = c.avatar_url || "none";
           return `${c.name || c.email} (Avatar: ${avatar}, Role: ${role})`;
@@ -222,12 +200,8 @@ function appendProjectsContext(basePrompt, projects, maxTokens = 4000) {
 
 /**
  * Appends dynamically scaled notes context based on token limits.
- * @param {string} basePrompt
- * @param {Array} notes
- * @param {number} maxTokens
- * @returns {string}
  */
-function appendNotesContext(basePrompt, notes, maxTokens = 12000) {
+export function appendNotesContext(basePrompt: string, notes: any[] = [], maxTokens = 12000): string {
   if (!Array.isArray(notes) || notes.length === 0) return basePrompt;
 
   let currentTokens = 0;
@@ -267,11 +241,8 @@ function appendNotesContext(basePrompt, notes, maxTokens = 12000) {
 
 /**
  * Builds the Chat system message with context injected.
- * @param {Object} additionalContext
- * @returns {string}
  */
-function buildChatSystemMessage(additionalContext = {}) {
-  const { chatSystemPrompt } = require("./persona");
+export function buildChatSystemMessage(additionalContext: any = {}): string {
   let prompt = chatSystemPrompt;
 
   prompt = appendStandardContext(prompt, additionalContext);
@@ -301,11 +272,8 @@ function buildChatSystemMessage(additionalContext = {}) {
 
 /**
  * Builds the Engine system message with context injected.
- * @param {Object} additionalContext
- * @returns {string}
  */
-function buildEngineSystemMessage(additionalContext = {}) {
-  const { engineSystemPrompt } = require("./persona");
+export function buildEngineSystemMessage(additionalContext: any = {}): string {
   let prompt = engineSystemPrompt;
 
   prompt = appendStandardContext(prompt, additionalContext);
@@ -333,16 +301,4 @@ function buildEngineSystemMessage(additionalContext = {}) {
   return prompt;
 }
 
-module.exports = {
-  appendNotesContext,
-
-  appendOrganizationContext,
-
-  appendProjectsContext,
-  // alias for backwards compatibility
-  appendStandardContext,
-  appendWorkspacePanorama,
-  buildChatSystemMessage,
-  buildEngineSystemMessage,
-  buildSystemMessage: buildChatSystemMessage,
-};
+export const buildSystemMessage = buildChatSystemMessage;

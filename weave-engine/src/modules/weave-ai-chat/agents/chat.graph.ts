@@ -12,12 +12,13 @@ import { dynamicAgentNode } from "./nodes/dynamic-agent.node";
 
 // Conditional routing function from the orchestrator
 const routeFromOrchestrator = (state: Record<string, unknown>) => {
-  if (state.errors && state.errors.length > 0) return END;
+  const s = state as any;
+  if (s.errors && s.errors.length > 0) return END;
 
   // The orchestrator sets the activeAgent property
-  if (state.activeAgent === "contextualizer") return "contextualizer";
-  if (state.activeAgent === "project_manager") return "project_manager";
-  if (state.activeAgent === "general_assistant") return "general_assistant";
+  if (s.activeAgent === "contextualizer") return "contextualizer";
+  if (s.activeAgent === "project_manager") return "project_manager";
+  if (s.activeAgent === "general_assistant") return "general_assistant";
 
   // If the active agent is something else, it's a dynamic agent
   return "dynamic_agent";
@@ -25,15 +26,16 @@ const routeFromOrchestrator = (state: Record<string, unknown>) => {
 
 // Conditional routing function from agents
 const routeFromAgent = (state: Record<string, unknown>) => {
-  if (state.errors && state.errors.length > 0) return END;
+  const s = state as any;
+  if (s.errors && s.errors.length > 0) return END;
 
   // If the agent requested a tool call that hasn't been executed yet
-  if (state.pendingToolCalls && state.pendingToolCalls.length > 0) {
+  if (s.pendingToolCalls && s.pendingToolCalls.length > 0) {
     return "tool_executor";
   }
 
   // If there's a final response, end the execution
-  if (state.finalResponse) {
+  if (s.finalResponse) {
     return END;
   }
 
@@ -43,12 +45,13 @@ const routeFromAgent = (state: Record<string, unknown>) => {
 
 // Tool executor routes back to the active agent
 const routeFromToolExecutor = (state: Record<string, unknown>) => {
-  if (state.errors && state.errors.length > 0) return END;
+  const s = state as any;
+  if (s.errors && s.errors.length > 0) return END;
 
   // Route back to whoever called the tools
-  if (state.activeAgent === "contextualizer") return "contextualizer";
-  if (state.activeAgent === "project_manager") return "project_manager";
-  if (state.activeAgent === "general_assistant") return "general_assistant";
+  if (s.activeAgent === "contextualizer") return "contextualizer";
+  if (s.activeAgent === "project_manager") return "project_manager";
+  if (s.activeAgent === "general_assistant") return "general_assistant";
 
   return "dynamic_agent";
 };

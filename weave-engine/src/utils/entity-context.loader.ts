@@ -49,14 +49,15 @@ async function fetchContextViaMCP(
 ): Promise<unknown> {
   try {
     const client = await getMCPClient({ organizationId, userId });
-    const result = await client.executeTool(toolName, args);
+    const rawResult = await client.executeTool(toolName, args);
+    const result = rawResult as { isError?: boolean; content?: Array<{ text?: string }> } | null | undefined;
 
-    if (result.isError) {
+    if (!result || result.isError) {
       logger.warn(`MCP context fetch failed for ${toolName}`);
       return null;
     }
 
-    if (result.content && result.content.length > 0) {
+    if (result.content && result.content.length > 0 && typeof result.content[0].text === "string") {
       try {
         return JSON.parse(result.content[0].text);
       } catch {

@@ -1,9 +1,9 @@
-const { getEncoding } = require("js-tiktoken");
+import { getEncoding } from "js-tiktoken";
 
 /**
  * Singleton encoder instance to avoid recreation overhead
  */
-let encoderInstance = null;
+let encoderInstance: ReturnType<typeof getEncoding> | null = null;
 
 function getEncoder() {
   if (!encoderInstance) {
@@ -15,11 +15,8 @@ function getEncoder() {
 
 /**
  * Estimates the number of tokens in a string.
- *
- * @param {string} text
- * @returns {number}
  */
-function estimateTokens(text) {
+export function estimateTokens(text?: string): number {
   if (!text) return 0;
   try {
     const encoder = getEncoder();
@@ -33,27 +30,26 @@ function estimateTokens(text) {
 
 /**
  * Produces a compact plain-text preview from note document JSON.
- *
- * @param {unknown} rawDocument
- * @returns {string}
  */
-function summarizeDocument(rawDocument) {
+export function summarizeDocument(rawDocument: unknown): string {
   if (!rawDocument || typeof rawDocument !== "object") {
     return "";
   }
 
-  const blocks = Array.isArray(rawDocument.blocks) ? rawDocument.blocks : [];
+  const doc = rawDocument as { blocks?: unknown[] };
+  const blocks = Array.isArray(doc.blocks) ? doc.blocks : [];
   if (blocks.length === 0) {
     return "";
   }
 
-  const textParts = [];
+  const textParts: string[] = [];
   for (const block of blocks) {
     if (!block || typeof block !== "object") {
       continue;
     }
-    if (typeof block.text === "string" && block.text.trim().length > 0) {
-      textParts.push(block.text.trim());
+    const b = block as { text?: unknown };
+    if (typeof b.text === "string" && b.text.trim().length > 0) {
+      textParts.push(b.text.trim());
     }
     if (textParts.length >= 3) {
       break;
@@ -70,10 +66,8 @@ function summarizeDocument(rawDocument) {
 
 /**
  * Formats the server time.
- * @param {Date} date
- * @returns {string}
  */
-function formatServerTime(date = new Date()) {
+export function formatServerTime(date: Date = new Date()): string {
   const dayNames = [
     "Sunday",
     "Monday",
@@ -109,18 +103,9 @@ function formatServerTime(date = new Date()) {
 
 /**
  * Formats the role of a user, applying translations if necessary.
- * @param {string} role
- * @returns {string}
  */
-function formatRole(role) {
+export function formatRole(role?: string): string {
   if (role === "PROJECT_MANAGER") return "Manager";
   if (role === "PROJECT_MEMBER") return "Member";
   return role || "Unknown";
 }
-
-module.exports = {
-  estimateTokens,
-  formatRole,
-  formatServerTime,
-  summarizeDocument,
-};

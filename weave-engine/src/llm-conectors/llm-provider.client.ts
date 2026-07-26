@@ -134,14 +134,14 @@ function normalizeFileInput(rawFile: Record<string, unknown>): NormalizedFile | 
  * @param {any} files
  * @returns {Array<{name: string, mimeType: string, base64Data: string}>}
  */
-function normalizeFiles(files: unknown[]): NormalizedFile[] {
+function normalizeFiles(files: unknown): NormalizedFile[] {
   if (!Array.isArray(files) || files.length === 0) {
     return [];
   }
 
   return files
     .slice(0, MAX_INLINE_FILES_PER_REQUEST)
-    .map((file) => normalizeFileInput(file))
+    .map((file) => normalizeFileInput(file as Record<string, unknown>))
     .filter((file): file is NormalizedFile => file !== null);
 }
 
@@ -278,15 +278,18 @@ async function callGenericApi(
       }
 
       if (msg.role === "assistant" && msg.tool_calls) {
-        cleanMsg.tool_calls = (msg.tool_calls as Record<string, unknown>[]).map((tc: Record<string, unknown>) => ({
-          function: {
-            arguments: tc.function.arguments,
-            name: tc.function.name,
-          },
-          id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}`,
-          type: "function",
-          ...(tc.extra_content ? { extra_content: tc.extra_content } : {}),
-        }));
+        cleanMsg.tool_calls = (msg.tool_calls as Record<string, unknown>[]).map((tc: Record<string, unknown>) => {
+          const fn = (tc.function || {}) as Record<string, unknown>;
+          return {
+            function: {
+              arguments: fn.arguments,
+              name: fn.name,
+            },
+            id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}`,
+            type: "function",
+            ...(tc.extra_content ? { extra_content: tc.extra_content } : {}),
+          };
+        });
       }
 
       if (msg.role === "tool") {
@@ -345,6 +348,7 @@ async function callGenericApi(
   }
 
   if (options.onChunk) {
+    const onChunkCallback = typeof options.onChunk === "function" ? (options.onChunk as (chunk: string) => void) : null;
     payload.stream = true;
     const response = await axios.post(endpointUrl, payload, {
       headers: requestHeaders,
@@ -354,7 +358,7 @@ async function callGenericApi(
 
     let fullContent = "";
     let finalUsage: Record<string, unknown> | null = null;
-    let finalToolCalls: Record<string, unknown>[] | null = null;
+    let finalToolCalls: Array<{ extra_content?: string; function: { arguments: string; name: string }; id?: string; type: string }> | null = null;
     let streamBuffer = "";
 
     for await (const chunk of response.data) {
@@ -370,7 +374,7 @@ async function callGenericApi(
             const deltaContent = parsed.choices?.[0]?.delta?.content;
             if (deltaContent) {
               fullContent += deltaContent;
-              options.onChunk(deltaContent);
+              if (onChunkCallback) onChunkCallback(deltaContent);
             }
             const deltaToolCalls = parsed.choices?.[0]?.delta?.tool_calls;
             if (deltaToolCalls) {
@@ -565,10 +569,11 @@ async function callGenericApi(
       text: null,
       toolCallId: toolCall.id,
       toolCalls: message.tool_calls.map((tc: Record<string, unknown>) => {
+        const fn = (tc.function || {}) as Record<string, unknown>;
         const mapped: Record<string, unknown> = {
-          arguments: safeParse(tc.function.arguments),
+          arguments: safeParse(fn.arguments as string),
           id: tc.id,
-          name: tc.function.name,
+          name: fn.name,
         };
         if (tc.extra_content) {
           mapped.extra_content = tc.extra_content;
@@ -616,8 +621,9 @@ async function callProviderWithRetry(
     throw new Error(`Unsupported LLM provider: ${provider}`);
   } catch (error: unknown) {
     const err = error as Record<string, unknown>;
-    if (err.response && (err.response as Record<string, unknown>).data) {
-      const responseData = (err.response as Record<string, unknown>).data as Record<string, unknown>;
+    const res = (err.response || {}) as Record<string, unknown>;
+    if (res.data) {
+      const responseData = res.data as Record<string, unknown>;
       if (typeof responseData.on === "function") {
         let errorBody = "";
         responseData.on("data", (chunk: unknown) => {
@@ -632,7 +638,7 @@ async function callProviderWithRetry(
       } else {
         console.error(
           "[LLM ERROR] Provider API returned:",
-          JSON.stringify(err.response.data, null, 2)
+          JSON.stringify(res.data, null, 2)
         );
       }
     }
@@ -655,7 +661,7 @@ async function callProviderWithRetry(
   }
 }
 
-function resolveModelName(modelName: string): string {
+function resolveModelName(modelName?: string | null): string {
   const normalizedModelName = normalizeModelName(modelName);
   if (!normalizedModelName || normalizedModelName === "auto") {
     return resolveDefaultModelName();
@@ -673,7 +679,7 @@ function resolveModelName(modelName: string): string {
 export interface CallAIProviderParams {
   options?: Record<string, unknown>;
   prompt: string;
-  model: string;
+  model?: string | null;
   systemMessage: string;
 }
 

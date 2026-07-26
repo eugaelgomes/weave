@@ -13,9 +13,10 @@ Use your internal tools to gather data and answer the user's questions clearly a
 
 export async function contextualizerNode(state: Record<string, unknown>) {
   logger.info("Contextualizer node running");
+  const s = state as any;
 
-  if (state.executionContext && state.executionContext.onChunk) {
-    state.executionContext.onChunk({
+  if (s.executionContext && s.executionContext.onChunk) {
+    s.executionContext.onChunk({
       name: "contextualizer",
       status: "running",
       type: "action_state",
@@ -23,25 +24,25 @@ export async function contextualizerNode(state: Record<string, unknown>) {
   }
 
   // Provide access to ALL tools
-  const allTools = getInternalToolDefinitions(state.executionContext);
+  const allTools = await getInternalToolDefinitions(s.executionContext);
 
   try {
     const { data, provider } = await callAIProvider({
-      model: state.jobContext?.model || null,
+      model: s.jobContext?.model || null,
       options: {
         allowEdit: false,
         functions: allTools,
-        messages: state.messages || [],
+        messages: (s.messages as any[]) || [],
       },
       prompt: "",
       systemMessage:
-        (state.jobContext?.systemMessage || "") +
+        (s.jobContext?.systemMessage || "") +
         "\n\n" +
         CONTEXTUALIZER_SYSTEM_PROMPT,
     });
 
     const stateUpdate: Record<string, unknown> = {
-      providerUsed: provider || state.providerUsed,
+      providerUsed: provider || s.providerUsed,
     };
 
     if (data.type === "function_call" && data.toolCalls) {
@@ -70,7 +71,7 @@ export async function contextualizerNode(state: Record<string, unknown>) {
         })),
       };
 
-      stateUpdate.messages = [...(state.messages || []), assistantMessage];
+      stateUpdate.messages = [...((s.messages as any[]) || []), assistantMessage];
       stateUpdate.pendingToolCalls = toolCallsArray;
     } else {
       const finalMsg = data.text || data.content || data;
@@ -78,11 +79,11 @@ export async function contextualizerNode(state: Record<string, unknown>) {
         content: finalMsg,
         role: "assistant",
       };
-      stateUpdate.messages = [...(state.messages || []), assistantMessage];
+      stateUpdate.messages = [...((s.messages as any[]) || []), assistantMessage];
       stateUpdate.finalResponse = finalMsg;
 
-      if (state.executionContext && state.executionContext.onChunk) {
-        state.executionContext.onChunk({
+      if (s.executionContext && s.executionContext.onChunk) {
+        s.executionContext.onChunk({
           name: "contextualizer",
           status: "completed",
           success: true,
