@@ -15,5 +15,8 @@
     "skipLibCheck": true,
     "outDir": "./dist"
   },
+  "ts-node": {
+    "transpileOnly": true
+  },
   "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }

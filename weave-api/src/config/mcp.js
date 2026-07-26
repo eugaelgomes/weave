@@ -105,13 +105,20 @@ function buildRegistry(user) {
 function registerHandlers(server, registry) {
   // Tools capability: list available tools
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: Object.values(registry.tools).map(
-      ({ name, description, schema }) => ({
-        description,
-        inputSchema: zodToJsonSchema(schema),
-        name,
-      })
-    ),
+    tools: Object.entries(registry.tools).map(([toolKey, tool]) => {
+      const toolName = tool.name || toolKey;
+      const rawJsonSchema = zodToJsonSchema(tool.schema);
+      delete rawJsonSchema.$schema;
+      return {
+        description: tool.description || "",
+        inputSchema: {
+          properties: {},
+          type: "object",
+          ...rawJsonSchema,
+        },
+        name: toolName,
+      };
+    }),
   }));
 
   // Tools capability: execute a tool by name

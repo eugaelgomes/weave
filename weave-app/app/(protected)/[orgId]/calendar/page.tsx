@@ -209,7 +209,7 @@ export function CalendarPreview({
   const [viewEventModal, setViewEventModal] = useState<UnifiedCalendarEvent | null>(null);
   const [viewEventInvites, setViewEventInvites] = useState<any[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [eventToEdit, setEventToEdit] = useState<EventInput | null>(null);
+  const [eventToEdit, setEventToEdit] = useState<UnifiedCalendarEvent | null>(null);
 
   useEffect(() => {
     const handleHashChange = () => {

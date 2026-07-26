@@ -46,8 +46,25 @@ const updateTaskPrioritySchema = z.object({
     .optional(),
 });
 
+/**
+ * Validates the parameters for deleting a task priority.
+ */
+const deleteTaskPrioritySchema = z.object({
+  priorityId: z.string().uuid("Invalid priority ID format"),
+  projectId: z.string().uuid("Invalid project ID format").optional(),
+});
+
+/**
+ * Validates the query/parameters for listing task priorities.
+ */
+const listTaskPrioritiesSchema = z.object({
+  projectId: z.string().uuid("Invalid project ID format").optional(),
+});
+
 module.exports = {
   createTaskPrioritySchema,
+  deleteTaskPrioritySchema,
+  listTaskPrioritiesSchema,
   taskPrioritiesParamsSchema,
   updateTaskPrioritySchema,
 };

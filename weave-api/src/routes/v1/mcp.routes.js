@@ -4,7 +4,9 @@ const {
   SSEServerTransport,
 } = require("@modelcontextprotocol/sdk/server/sse.js");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
-const { verifyInternalService } = require("@/middlewares/security/verify-internal-service");
+const {
+  verifyInternalService,
+} = require("@/middlewares/security/verify-internal-service");
 const { configureServerForUser } = require("@/config/mcp");
 
 // Store active SSE sessions
@@ -74,14 +76,18 @@ const handleMessages = async (req, res) => {
 
 const createMCPRouter = ({ version: _version = "v1" } = {}) => {
   const router = express.Router();
-  router.get("/sse", verifyToken, (req, res) => handleSSE(req, res, "/api/v1/mcp/messages"));
+  router.get("/sse", verifyToken, (req, res) =>
+    handleSSE(req, res, "/api/v1/mcp/messages")
+  );
   router.post("/messages", verifyToken, handleMessages);
   return router;
 };
 
 const createServiceMCPRouter = () => {
   const router = express.Router();
-  router.get("/sse", verifyInternalService, (req, res) => handleSSE(req, res, "/api/v1/service/mcp/messages"));
+  router.get("/sse", verifyInternalService, (req, res) =>
+    handleSSE(req, res, "/api/service/v1/mcp/messages")
+  );
   router.post("/messages", verifyInternalService, handleMessages);
   return router;
 };

@@ -11,11 +11,16 @@ interface DeadLetterPayload {
   rawPayload: string;
 }
 
+interface QueueJobProcessor {
+  parseRawJob(rawPayload: string): unknown;
+  processJob(parsedJob: unknown): Promise<void>;
+}
+
 class QueueRouter {
   private isRunning: boolean;
   private isShuttingDown: boolean;
   private queueKeys: string[];
-  private registry: Record<string, unknown>;
+  private registry: Record<string, QueueJobProcessor>;
   private activeJobs: Set<Promise<void>>;
   private maxConcurrentJobs: number;
 
@@ -110,8 +115,7 @@ class QueueRouter {
   }
 
   private async processJobSafe(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    processor: any,
+    processor: QueueJobProcessor,
     parsedJob: unknown,
     queueName: string,
     rawPayload: string
@@ -125,7 +129,7 @@ class QueueRouter {
       });
       await this.pushDeadLetter({
         errorCode: "ENGINE_JOB_PROCESS_FAILED",
-        errorMessage: error.message,
+        errorMessage: (error as Error).message,
         queueName,
         rawPayload,
       });

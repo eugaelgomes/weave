@@ -433,7 +433,7 @@ class LlmQueueProcessor {
       userLanguage: payload.userLanguage || (payload.context as Record<string, unknown>)?.userLanguage,
     });
     const agentInstructions = this.extractAgentInstructions(payload.agent);
-    const noteDocumentContract = (payload?.context as Record<string, unknown>)?.noteDocumentContract || null;
+    const noteDocumentContract = ((payload?.context as Record<string, unknown>)?.noteDocumentContract || null) as (Record<string, unknown> & { allowedBlockTypes?: string[] }) | null;
     const composeOverlay =
       isEngineComposeSurface(payload.context) ||
       payload.useCase === "engine_compose" ||
