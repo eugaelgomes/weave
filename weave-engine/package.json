@@ -20,7 +20,7 @@
     "format": "prettier --write \"src/**/*.{js,ts,json}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,json}\"",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck",
+    "check": "npm run lint",
     "build": "tsc && npm run lint && npm run format:check",
     "test": "jest"
   },
