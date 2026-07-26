@@ -1,3 +1,5 @@
-apis.weavenotes.app, apis.theweave.tech, mcp.apis.weavenotes.app, mcp.apis.theweave.tech {
-	reverse_proxy server:8080
+apis.weavenotes.app, apis.theweave.tech {
+    reverse_proxy server:8080 {
+        lb_policy ip_hash
+    }
 }
