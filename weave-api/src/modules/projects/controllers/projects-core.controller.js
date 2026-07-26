@@ -51,6 +51,8 @@ class ProjectsCoreController extends ProjectsBaseController {
       "complexity",
       "color",
       "icon",
+      "due_date_reminder_enabled",
+      "due_date_reminder_time",
     ];
     const validPriorities = ["alta", "media", "baixa"];
     const validComplexities = ["alta", "media", "baixa"];
@@ -148,6 +150,27 @@ class ProjectsCoreController extends ProjectsBaseController {
         } else {
           validated[key] = value;
         }
+      }
+
+      // Validar due_date_reminder_enabled
+      else if (key === "due_date_reminder_enabled") {
+        if (value !== null && typeof value !== "boolean") {
+          throw new Error("due_date_reminder_enabled deve ser booleano");
+        }
+        validated[key] = value;
+      }
+
+      // Validar due_date_reminder_time (ISO 8601 timestamp)
+      else if (key === "due_date_reminder_time") {
+        if (value !== null) {
+          const date = new Date(value);
+          if (isNaN(date.getTime())) {
+            throw new Error(
+              "due_date_reminder_time deve ser uma data válida (ISO 8601)"
+            );
+          }
+        }
+        validated[key] = value;
       }
     }
 
