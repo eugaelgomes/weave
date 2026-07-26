@@ -46,9 +46,35 @@ function initializeJobs() {
   logger.info("Jobs initialized", { registered: listRegisteredJobs() });
 }
 
+function startAllJobs() {
+  for (const [name, processor] of jobProcessors.entries()) {
+    if (processor && typeof processor.start === "function") {
+      logger.info(`Starting processor: ${name}`);
+      processor.start().catch((error) => {
+        logger.error(`Processor ${name} failed`, { error: error.message, stack: error.stack });
+      });
+    }
+  }
+}
+
+function stopAllJobs() {
+  for (const [name, processor] of jobProcessors.entries()) {
+    if (processor && typeof processor.stop === "function") {
+      logger.info(`Stopping processor: ${name}`);
+      try {
+        processor.stop();
+      } catch (error) {
+        logger.error(`Error stopping processor ${name}`, { error: error.message });
+      }
+    }
+  }
+}
+
 module.exports = {
   getProcessor,
   initializeJobs,
   listRegisteredJobs,
   registerJob,
+  startAllJobs,
+  stopAllJobs,
 };

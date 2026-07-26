@@ -1,0 +1,10 @@
+{
+  "name": "theweave-workspace",
+  "private": true,
+  "scripts": {
+    "deploy": "./scripts/deploy.sh",
+    "deploy:engine": "./scripts/deploy.sh engine",
+    "deploy:server": "./scripts/deploy.sh server",
+    "deploy:worker": "./scripts/deploy.sh worker"
+  }
+}

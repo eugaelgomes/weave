@@ -3,7 +3,7 @@ const { validateEnv, env } = require("./config/enviroment");
 const { logger } = require("./config/logger");
 const { setupGracefulShutdown, registerShutdownHandler } = require("./config/graceful-shutdown");
 const { closePool } = require("./database/connection");
-const { initializeJobs } = require("./app");
+const { initializeJobs, startAllJobs, stopAllJobs } = require("./app");
 
 async function bootstrap() {
   logger.info("weave-worker starting", { env: env.NODE_ENV });
@@ -12,7 +12,11 @@ async function bootstrap() {
   logger.info("Environment validated");
 
   initializeJobs();
+  startAllJobs();
 
+  registerShutdownHandler("processors", async () => {
+    stopAllJobs();
+  });
   registerShutdownHandler("database", closePool);
   registerShutdownHandler("sentry", async () => {
     await require("@sentry/node").close(2000);
