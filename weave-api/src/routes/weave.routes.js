@@ -27,17 +27,22 @@ const registerApiRoutes = (app, { version = DEFAULT_VERSION } = {}) => {
 
   const { createInternalRouter } = require(`./${version}/internal.routes`);
   const { createPublicRouter } = require(`./${version}/public.routes`);
-  const { createMCPRouter, createServiceMCPRouter } = require(`./${version}/mcp.routes`);
+  const { createMCPRouter, createServiceMCPRouter } = require(
+    `./${version}/mcp.routes`
+  );
 
   const internalRouter = createInternalRouter({ version: context.version });
   const publicRouter = createPublicRouter({ version: context.version });
 
-  app.use(context.internalBasePath, internalRouter);
-  app.use(context.publicBasePath, publicRouter);
+  // Register MCP routes first so they aren't intercepted by the internal router middlewares
   app.use(context.mcpBasePath, createMCPRouter({ version: context.version }));
 
   const serviceMCPRouter = createServiceMCPRouter();
   app.use(`${context.serviceBasePath}/mcp`, serviceMCPRouter);
+
+  // Register standard internal and public routes
+  app.use(context.internalBasePath, internalRouter);
+  app.use(context.publicBasePath, publicRouter);
 
   return context;
 };
