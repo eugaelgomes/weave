@@ -122,7 +122,11 @@ jobs:
           username: ${{ secrets.WORKER_REMOTE_USER }}
           key: ${{ secrets.WORKER_SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p "${{ secrets.WORKER_APP_DIR }}"
+            APP_DIR="${{ secrets.WORKER_APP_DIR }}"
+            case "$APP_DIR" in
+              /root*|"") APP_DIR="/home/${{ secrets.WORKER_REMOTE_USER }}/weave-worker" ;;
+            esac
+            mkdir -p "$APP_DIR"
 
       - name: Copy Compose file via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -131,7 +135,7 @@ jobs:
           username: ${{ secrets.WORKER_REMOTE_USER }}
           key: ${{ secrets.WORKER_SSH_PRIVATE_KEY }}
           source: "compose.worker.yml"
-          target: ${{ secrets.WORKER_APP_DIR }}
+          target: "weave-worker"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -143,6 +147,9 @@ jobs:
             set -e
 
             APP_DIR="${{ secrets.WORKER_APP_DIR }}"
+            case "$APP_DIR" in
+              /root*|"") APP_DIR="/home/${{ secrets.WORKER_REMOTE_USER }}/weave-worker" ;;
+            esac
             cd "$APP_DIR"
 
             # Create or update .env file
