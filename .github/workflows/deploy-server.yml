@@ -161,18 +161,23 @@ jobs:
             [ -f "$HOME/.profile" ] && . "$HOME/.profile"
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
 
+            if ! command -v docker >/dev/null 2>&1; then
+              echo "Docker not found on target server (${{ secrets.SERVER_REMOTE_HOST }}). Please install Docker Engine:" >&2
+              echo "curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker \$USER" >&2
+              exit 127
+            fi
+
             # Authenticate with GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+            if docker compose version >/dev/null 2>&1; then
               docker compose -f compose.server.yml pull
               docker compose -f compose.server.yml up -d
             elif command -v docker-compose >/dev/null 2>&1; then
               docker-compose -f compose.server.yml pull
               docker-compose -f compose.server.yml up -d
             else
-              echo "Docker not found or Compose plugin missing. On the server, install Docker Engine" >&2
-              echo "and ensure 'docker compose' works for this SSH user (same as in an interactive shell)." >&2
+              echo "Docker Compose plugin missing. On the server, ensure 'docker compose' works." >&2
               exit 127
             fi
 
