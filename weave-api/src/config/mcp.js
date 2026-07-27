@@ -195,11 +195,16 @@ function registerHandlers(server, registry) {
  *
  * @returns {Server} A fresh MCP Server instance.
  */
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://weavenotes.app";
+
 function createMcpServer() {
   return new Server(
     {
+      description: "Weave AI MCP Server for notes, tasks, and workspaces",
+      icon: `${FRONTEND_URL.replace(/\/+$/, "")}/weave.png`,
       name: "weave-api-mcp",
       version: "1.0.0",
+      websiteUrl: FRONTEND_URL,
     },
     {
       capabilities: {
