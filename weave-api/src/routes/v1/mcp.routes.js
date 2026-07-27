@@ -1,5 +1,4 @@
 const express = require("express");
-const crypto = require("crypto");
 const {
   SSEServerTransport,
 } = require("@modelcontextprotocol/sdk/server/sse.js");
@@ -44,8 +43,6 @@ redisSubscriber.on("message", async (channel, message) => {
 
 const handleSSE = async (req, res, messagesPathPrefix) => {
   try {
-    const sessionId = crypto.randomUUID();
-
     // Create a new server instance scoped to the user context
     const server = configureServerForUser(req.user);
 
@@ -53,11 +50,10 @@ const handleSSE = async (req, res, messagesPathPrefix) => {
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no");
 
-    // Create the SSE transport with the return URL for POST messages
-    const sseTransport = new SSEServerTransport(
-      `${messagesPathPrefix}?sessionId=${sessionId}`,
-      res
-    );
+    // Create the SSE transport with the messages endpoint prefix.
+    // SSEServerTransport automatically generates its own sessionId and appends it to the endpoint URL.
+    const sseTransport = new SSEServerTransport(messagesPathPrefix, res);
+    const sessionId = sseTransport.sessionId;
 
     sessions.set(sessionId, { server, transport: sseTransport });
 
@@ -106,7 +102,7 @@ const handleMessages = async (req, res) => {
   if (session) {
     // A sessão está na RAM deste container! Processa localmente.
     try {
-      await session.transport.handlePostMessage(req, res);
+      await session.transport.handlePostMessage(req, res, req.body);
     } catch (error) {
       console.error(
         `[MCP Error] Error handling post message for session ${sessionId}:`,
