@@ -4,244 +4,140 @@ const areasRepository = require("@/modules/organizations/repositories/areas.repo
 const domainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const { validRoles } = require("@/modules/organizations/normalizer");
 
-const emptySchema = z.object({});
+const manageOrganizationsSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("update"),
+    banner_url: z
+      .string()
+      .url()
+      .optional()
+      .nullable()
+      .describe("Organization banner image URL"),
+    description: z
+      .string()
+      .optional()
+      .nullable()
+      .describe("Organization description"),
+    logo_url: z
+      .string()
+      .url()
+      .optional()
+      .nullable()
+      .describe("Organization logo image URL"),
+    org_name: z.string().optional().describe("Organization name"),
+    settings: z
+      .record(z.any())
+      .optional()
+      .nullable()
+      .describe("Organization settings"),
+    unique_name: z
+      .string()
+      .optional()
+      .nullable()
+      .describe("Globally unique identifier string for the org"),
+  }),
+  z.object({
+    action: z.literal("get_active"),
+  }),
+]);
 
-const updateOrganizationSchema = z.object({
-  banner_url: z
-    .string()
-    .url("Invalid banner URL")
-    .optional()
-    .nullable()
-    .describe(
-      "The URL of the organization's banner image. Must be a valid URL."
-    ),
-  description: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .describe("A detailed description of the organization."),
-  logo_url: z
-    .string()
-    .url("Invalid logo URL")
-    .optional()
-    .nullable()
-    .describe("The URL of the organization's logo image. Must be a valid URL."),
-  org_name: z
-    .string()
-    .trim()
-    .min(1, "org_name cannot be empty")
-    .optional()
-    .describe("The display name of the organization."),
-  settings: z
-    .record(z.any())
-    .optional()
-    .nullable()
-    .describe("A configuration object for the organization settings."),
-  unique_name: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .describe("A globally unique identifier string for the organization."),
-});
+const manageOrganizationDomainsSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("add"),
+    domain_name: z.string().describe("Domain name"),
+  }),
+  z.object({
+    action: z.literal("update_sso"),
+    domainId: z.string().uuid().describe("Domain ID"),
+    enabled: z.boolean().describe("Whether SSO is enabled"),
+    metadata: z
+      .object({
+        acsUrl: z.string().optional(),
+        certificate: z.string(),
+        entityId: z.string(),
+        sloUrl: z.string().optional().nullable(),
+        ssoUrl: z.string().optional(),
+      })
+      .describe("SSO metadata"),
+    provider: z.literal("saml").describe("SSO provider"),
+  }),
+  z.object({
+    action: z.literal("delete"),
+    domainId: z.string().uuid().describe("Domain ID"),
+  }),
+  z.object({
+    action: z.literal("list"),
+  }),
+]);
 
-const createOrganizationAreaSchema = z.object({
-  area_name: z
-    .string()
-    .trim()
-    .min(1, "area_name is required")
-    .describe("The display name of the area."),
-  description: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .describe("A detailed description of the area."),
-  parent_area_id: z
-    .string()
-    .uuid("Invalid parent area ID")
-    .optional()
-    .nullable()
-    .describe(
-      "The universally unique identifier of the parent area, if this is a sub-area."
-    ),
-  properties: z
-    .record(z.any())
-    .optional()
-    .nullable()
-    .describe("A configuration object for custom area properties."),
-  slug: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .describe("A URL-friendly identifier string for the area."),
-});
+const manageOrganizationAreasSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("create"),
+    area_name: z.string().describe("Area name"),
+    description: z.string().optional().nullable().describe("Area description"),
+    parent_area_id: z
+      .string()
+      .uuid()
+      .optional()
+      .nullable()
+      .describe("Parent area ID"),
+    properties: z
+      .record(z.any())
+      .optional()
+      .nullable()
+      .describe("Custom area properties"),
+    slug: z.string().describe("URL-friendly identifier string"),
+  }),
+  z.object({
+    action: z.literal("update"),
+    active: z.boolean().optional().describe("Whether the area is active"),
+    area_name: z.string().optional().describe("Area name"),
+    areaId: z.string().uuid().describe("Area ID"),
+    description: z.string().optional().nullable().describe("Area description"),
+    parent_area_id: z
+      .string()
+      .uuid()
+      .optional()
+      .nullable()
+      .describe("Parent area ID"),
+    properties: z
+      .record(z.any())
+      .optional()
+      .nullable()
+      .describe("Custom area properties"),
+    slug: z.string().optional().describe("URL-friendly identifier string"),
+  }),
+  z.object({
+    action: z.literal("delete"),
+    areaId: z.string().uuid().describe("Area ID"),
+  }),
+  z.object({
+    action: z.literal("list"),
+  }),
+]);
 
-const updateOrganizationAreaSchema = z.object({
-  active: z
-    .boolean()
-    .optional()
-    .describe("Indicates whether the area is active."),
-  area_name: z
-    .string()
-    .trim()
-    .min(1, "area_name cannot be empty")
-    .optional()
-    .describe("The display name of the area."),
-  areaId: z
-    .string()
-    .uuid()
-    .describe("The universally unique identifier of the area to update."),
-  description: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .describe("A detailed description of the area."),
-  parent_area_id: z
-    .string()
-    .uuid("Invalid parent area ID")
-    .optional()
-    .nullable()
-    .describe(
-      "The universally unique identifier of the parent area, if this is a sub-area."
-    ),
-  properties: z
-    .record(z.any())
-    .optional()
-    .describe("A configuration object for custom area properties."),
-  slug: z
-    .string()
-    .trim()
-    .optional()
-    .describe("A URL-friendly identifier string for the area."),
-});
+const manageOrganizationMembersSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("invite"),
+    email: z.string().email().describe("Email to invite"),
+    name: z.string().describe("Name of the invited user"),
+    role: z.enum(validRoles).describe("Role for the member"),
+    username: z.string().optional().describe("Chosen username for the invitee"),
+  }),
+  z.object({
+    action: z.literal("update_role"),
+    role: z.enum(validRoles).describe("New role for the member"),
+    userId: z.string().uuid().describe("User ID to modify"),
+  }),
+  z.object({
+    action: z.literal("remove"),
+    userId: z.string().uuid().describe("User ID to remove"),
+  }),
+  z.object({
+    action: z.literal("list"),
+  }),
+]);
 
-const deleteOrganizationAreaSchema = z.object({
-  areaId: z
-    .string()
-    .uuid()
-    .describe("The universally unique identifier of the area to delete."),
-});
-
-const inviteOrganizationMemberSchema = z.object({
-  email: z
-    .string()
-    .email("Invalid email format")
-    .describe("The email address of the user to invite."),
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .describe("The full name of the user to invite."),
-  role: z
-    .enum(validRoles)
-    .optional()
-    .default("MEMBER")
-    .describe(
-      "The role of the member in the organization. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST."
-    ),
-  username: z
-    .string()
-    .trim()
-    .optional()
-    .describe("The chosen username for the invited user."),
-});
-
-const updateOrganizationMemberRoleSchema = z.object({
-  role: z
-    .enum(validRoles)
-    .describe(
-      "The role of the member in the organization. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST."
-    ),
-  userId: z
-    .string()
-    .uuid()
-    .describe("The universally unique identifier of the user to update."),
-});
-
-const removeOrganizationMemberSchema = z.object({
-  userId: z
-    .string()
-    .uuid()
-    .describe(
-      "The universally unique identifier of the user to remove from the organization."
-    ),
-});
-
-const createOrganizationDomainSchema = z.object({
-  domain_name: z
-    .string()
-    .trim()
-    .min(1, "domain_name is required")
-    .describe("The fully qualified domain name."),
-});
-
-const updateSsoSettingsSchema = z.object({
-  domainId: z
-    .string()
-    .uuid()
-    .describe("The universally unique identifier of the domain."),
-  enabled: z
-    .boolean()
-    .optional()
-    .describe("Indicates whether Single Sign-On is enabled for this domain."),
-  metadata: z
-    .object({
-      acsUrl: z
-        .string()
-        .trim()
-        .optional()
-        .describe(
-          "The Assertion Consumer Service URL for the Single Sign-On provider."
-        ),
-      certificate: z
-        .string()
-        .trim()
-        .min(1, "certificate is required")
-        .describe(
-          "The public certificate provided by the Single Sign-On Identity Provider."
-        ),
-      entityId: z
-        .string()
-        .trim()
-        .min(1, "entityId is required")
-        .describe(
-          "The Entity Identifier for the Single Sign-On Identity Provider."
-        ),
-      sloUrl: z
-        .string()
-        .trim()
-        .optional()
-        .nullable()
-        .describe("The Single Logout URL for the Single Sign-On provider."),
-      ssoUrl: z
-        .string()
-        .trim()
-        .optional()
-        .describe("The Single Sign-On login URL."),
-    })
-    .describe("A configuration object containing the Single Sign-On metadata."),
-  provider: z
-    .literal("saml")
-    .describe("The Single Sign-On provider type. Only saml is supported."),
-});
-
-const deleteDomainSchema = z.object({
-  domainId: z
-    .string()
-    .uuid()
-    .describe("The universally unique identifier of the domain to delete."),
-});
-
-/**
- * Creates the Organizations tools registry bound to a specific user context.
- *
- * @param {Object} user - The authenticated user object.
- * @returns {Record<string, Object>} The organization tools definition map.
- */
 const createOrganizationsTools = (user) => {
   const getActiveOrgId = async () => {
     const org =
@@ -253,262 +149,91 @@ const createOrganizationsTools = (user) => {
   };
 
   return {
-    add_organization_domain: {
-      description: "Adds a new domain to the active organization",
+    manage_organization_areas: {
+      description: "Manage organization areas (create, update, delete, list).",
       handler: async (args) => {
         try {
-          const organizationId = await getActiveOrgId();
-          const verificationToken = require("crypto").randomUUID();
-          const result = await domainsRepository.createDomain({
-            domainName: args.domain_name,
-            organizationId,
-            verificationToken,
-          });
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "add_organization_domain",
-      schema: createOrganizationDomainSchema,
-    },
-    create_organization_area: {
-      description: "Creates a new area in the active organization",
-      handler: async (args) => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const result = await areasRepository.createArea({
-            areaName: args.area_name,
-            createdBy: user.userId,
-            description: args.description,
-            organizationId,
-            parentAreaId: args.parent_area_id,
-            properties: args.properties,
-            slug: args.slug,
-          });
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "create_organization_area",
-      schema: createOrganizationAreaSchema,
-    },
-    delete_organization_area: {
-      description: "Soft deletes an area from the active organization",
-      handler: async (args) => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const result = await areasRepository.softDeleteArea(
-            args.areaId,
-            organizationId
-          );
-          if (!result) {
+          const {
+            action,
+            areaId,
+            area_name,
+            description,
+            parent_area_id,
+            properties,
+            slug,
+            active,
+          } = args;
+
+          if (action === "list") {
+            const organizationId = await getActiveOrgId();
+            const result =
+              await areasRepository.listOrganizationAreas(organizationId);
             return {
               content: [
-                { text: "Area not found or access denied.", type: "text" },
+                { text: JSON.stringify(result, null, 2), type: "text" },
               ],
-              isError: true,
             };
           }
-          return {
-            content: [
-              {
-                text: JSON.stringify({ success: true }, null, 2),
-                type: "text",
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "delete_organization_area",
-      schema: deleteOrganizationAreaSchema,
-    },
-    delete_organization_domain: {
-      description: "Deletes a domain from the active organization",
-      handler: async (args) => {
-        try {
-          const domain = await domainsRepository.findById(args.domainId);
-          if (!domain) {
+
+          if (action === "create") {
+            if (!area_name || !slug)
+              throw new Error(
+                "area_name and slug are required for create action"
+              );
+            const organizationId = await getActiveOrgId();
+            const result = await areasRepository.createArea({
+              areaName: area_name,
+              createdBy: user.userId,
+              description,
+              organizationId,
+              parentAreaId: parent_area_id,
+              properties,
+              slug,
+            });
             return {
-              content: [{ text: "Domain not found.", type: "text" }],
-              isError: true,
+              content: [
+                { text: JSON.stringify(result, null, 2), type: "text" },
+              ],
             };
           }
-          const result = await domainsRepository.deleteDomain(args.domainId);
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "delete_organization_domain",
-      schema: deleteDomainSchema,
-    },
-    get_active_organization: {
-      description:
-        "Gets the active organization and membership role for the current user",
-      handler: async () => {
-        try {
-          const org =
-            await organizationsRepository.getActiveOrganizationWithMembership(
-              user.userId
+
+          if (action === "update") {
+            if (!areaId)
+              throw new Error("areaId is required for update action");
+            const organizationId = await getActiveOrgId();
+            const result = await areasRepository.updateArea(
+              areaId,
+              organizationId,
+              { active, areaName: area_name, description, properties, slug }
             );
-          if (!org)
+            if (!result) throw new Error("Area not found or access denied.");
             return {
               content: [
-                { text: "No active organization found.", type: "text" },
+                { text: JSON.stringify(result, null, 2), type: "text" },
               ],
             };
-          return {
-            content: [{ text: JSON.stringify(org, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "get_active_organization",
-      schema: emptySchema,
-    },
-    invite_organization_member: {
-      description:
-        "Creates an invite for a new member to join the active organization",
-      handler: async (args) => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const result = await organizationsRepository.createOrgInvite(
-            organizationId,
-            args.email,
-            args.role,
-            user.userId,
-            args.name,
-            args.username
-          );
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "invite_organization_member",
-      schema: inviteOrganizationMemberSchema,
-    },
-    list_organization_areas: {
-      description: "Lists all areas in the active organization",
-      handler: async () => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const result =
-            await areasRepository.listOrganizationAreas(organizationId);
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "list_organization_areas",
-      schema: emptySchema,
-    },
-    list_organization_domains: {
-      description: "Lists all domains for the active organization",
-      handler: async () => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const result =
-            await domainsRepository.listByOrganization(organizationId);
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "list_organization_domains",
-      schema: emptySchema,
-    },
-    list_organization_members: {
-      description: "Lists all members of the active organization",
-      handler: async () => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const result =
-            await organizationsRepository.getOrganizationMembers(
+          }
+
+          if (action === "delete") {
+            if (!areaId)
+              throw new Error("areaId is required for delete action");
+            const organizationId = await getActiveOrgId();
+            const result = await areasRepository.softDeleteArea(
+              areaId,
               organizationId
             );
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "list_organization_members",
-      schema: emptySchema,
-    },
-    remove_organization_member: {
-      description: "Removes a member from the active organization",
-      handler: async (args) => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const result = await organizationsRepository.removeOrganizationMember(
-            organizationId,
-            args.userId
-          );
-          if (!result) {
+            if (!result) throw new Error("Area not found or access denied.");
             return {
               content: [
                 {
-                  text: "Member not found, could not be removed, or access denied.",
+                  text: JSON.stringify({ success: true }, null, 2),
                   type: "text",
                 },
               ],
-              isError: true,
             };
           }
-          return {
-            content: [
-              {
-                text: JSON.stringify({ success: true }, null, 2),
-                type: "text",
-              },
-            ],
-          };
+
+          throw new Error(`Invalid action: ${action}`);
         } catch (error) {
           return {
             content: [{ text: `Error: ${error.message}`, type: "text" }],
@@ -516,140 +241,180 @@ const createOrganizationsTools = (user) => {
           };
         }
       },
-      name: "remove_organization_member",
-      schema: removeOrganizationMemberSchema,
+      name: "manage_organization_areas",
+      schema: manageOrganizationAreasSchema,
     },
-    update_organization: {
-      description: "Updates the active organization's details",
+
+    manage_organization_domains: {
+      description:
+        "Manage organization domains and SSO (add, update_sso, delete, list).",
       handler: async (args) => {
         try {
-          const org =
-            await organizationsRepository.getActiveOrganizationWithMembership(
-              user.userId
+          const { action, domainId, domain_name, enabled, metadata, provider } =
+            args;
+
+          if (action === "list") {
+            const organizationId = await getActiveOrgId();
+            const result =
+              await domainsRepository.listByOrganization(organizationId);
+            return {
+              content: [
+                { text: JSON.stringify(result, null, 2), type: "text" },
+              ],
+            };
+          }
+
+          if (action === "add") {
+            if (!domain_name)
+              throw new Error("domain_name is required for add action");
+            const organizationId = await getActiveOrgId();
+            const verificationToken = require("crypto").randomUUID();
+            const result = await domainsRepository.createDomain({
+              domainName: domain_name,
+              organizationId,
+              verificationToken,
+            });
+            return {
+              content: [
+                { text: JSON.stringify(result, null, 2), type: "text" },
+              ],
+            };
+          }
+
+          if (action === "update_sso") {
+            if (!domainId || !metadata || !provider)
+              throw new Error(
+                "domainId, metadata, and provider are required for update_sso"
+              );
+            const domain = await domainsRepository.findById(domainId);
+            if (!domain) throw new Error("Domain not found.");
+            const organizationId = await getActiveOrgId();
+            if (domain.organization_id !== organizationId)
+              throw new Error("Domain does not belong to active organization.");
+            const result = await domainsRepository.updateSsoSettings(domainId, {
+              enabled,
+              metadata,
+              provider,
+            });
+            return {
+              content: [
+                { text: JSON.stringify(result, null, 2), type: "text" },
+              ],
+            };
+          }
+
+          if (action === "delete") {
+            if (!domainId)
+              throw new Error("domainId is required for delete action");
+            const domain = await domainsRepository.findById(domainId);
+            if (!domain) throw new Error("Domain not found.");
+            const organizationId = await getActiveOrgId();
+            if (domain.organization_id !== organizationId)
+              throw new Error("Domain does not belong to active organization.");
+            const result = await domainsRepository.deleteDomain(domainId);
+            return {
+              content: [
+                { text: JSON.stringify(result, null, 2), type: "text" },
+              ],
+            };
+          }
+
+          throw new Error(`Invalid action: ${action}`);
+        } catch (error) {
+          return {
+            content: [{ text: `Error: ${error.message}`, type: "text" }],
+            isError: true,
+          };
+        }
+      },
+      name: "manage_organization_domains",
+      schema: manageOrganizationDomainsSchema,
+    },
+
+    manage_organization_members: {
+      description:
+        "Manage organization members (invite, update_role, remove, list).",
+      handler: async (args) => {
+        try {
+          const { action, email, name, role, username, userId } = args;
+
+          if (action === "list") {
+            const organizationId = await getActiveOrgId();
+            const result =
+              await organizationsRepository.getOrganizationMembers(
+                organizationId
+              );
+            return {
+              content: [
+                { text: JSON.stringify(result, null, 2), type: "text" },
+              ],
+            };
+          }
+
+          if (action === "invite") {
+            if (!email || !name)
+              throw new Error("email and name are required for invite action");
+            const organizationId = await getActiveOrgId();
+            const result = await organizationsRepository.createOrgInvite(
+              organizationId,
+              email,
+              role,
+              user.userId,
+              name,
+              username
             );
-          if (!org) throw new Error("No active organization found for user.");
-
-          const result = await organizationsRepository.updateOrg(
-            org.id,
-            user.userId,
-            args.org_name !== undefined ? args.org_name : org.org_name,
-            args.unique_name !== undefined ? args.unique_name : org.unique_name,
-            args.logo_url !== undefined ? args.logo_url : org.logo_url,
-            args.banner_url !== undefined ? args.banner_url : org.banner_url,
-            args.description !== undefined ? args.description : org.description,
-            args.settings !== undefined ? args.settings : org.settings,
-            org.deleted
-          );
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "update_organization",
-      schema: updateOrganizationSchema,
-    },
-    update_organization_area: {
-      description: "Updates an area in the active organization",
-      handler: async (args) => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const fields = {};
-          if (args.area_name !== undefined) fields.area_name = args.area_name;
-          if (args.slug !== undefined) fields.slug = args.slug;
-          if (args.description !== undefined)
-            fields.description = args.description;
-          if (args.properties !== undefined)
-            fields.properties = args.properties;
-          if (args.active !== undefined) fields.active = args.active;
-          if (args.parent_area_id !== undefined)
-            fields.parent_area_id = args.parent_area_id;
-
-          const result = await areasRepository.updateArea(
-            args.areaId,
-            organizationId,
-            fields
-          );
-          if (!result) {
             return {
               content: [
-                { text: "Area not found or access denied.", type: "text" },
+                { text: JSON.stringify(result, null, 2), type: "text" },
               ],
-              isError: true,
             };
           }
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "update_organization_area",
-      schema: updateOrganizationAreaSchema,
-    },
-    update_organization_domain_sso: {
-      description: "Updates Single Sign-On (SSO) configuration for a domain",
-      handler: async (args) => {
-        try {
-          const result = await domainsRepository.updateSsoConfiguration(
-            args.domainId,
-            {
-              enabled: args.enabled,
-              metadata: args.metadata,
-              provider: args.provider,
-            }
-          );
-          if (!result) {
+
+          if (action === "update_role") {
+            if (!userId || !role)
+              throw new Error("userId and role are required for update_role");
+            const organizationId = await getActiveOrgId();
+            const result =
+              await organizationsRepository.updateOrganizationMemberRole(
+                organizationId,
+                userId,
+                role
+              );
+            if (!result)
+              throw new Error(
+                "Member not found, could not be updated, or access denied."
+              );
             return {
-              content: [{ text: "Domain not found.", type: "text" }],
-              isError: true,
+              content: [
+                { text: JSON.stringify(result, null, 2), type: "text" },
+              ],
             };
           }
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "update_organization_domain_sso",
-      schema: updateSsoSettingsSchema,
-    },
-    update_organization_member_role: {
-      description: "Updates a member's role in the active organization",
-      handler: async (args) => {
-        try {
-          const organizationId = await getActiveOrgId();
-          const result = await organizationsRepository.updateMemberRole(
-            organizationId,
-            args.userId,
-            args.role
-          );
-          if (!result) {
+
+          if (action === "remove") {
+            if (!userId)
+              throw new Error("userId is required for remove action");
+            const organizationId = await getActiveOrgId();
+            const result =
+              await organizationsRepository.removeOrganizationMember(
+                organizationId,
+                userId
+              );
+            if (!result)
+              throw new Error(
+                "Member not found, could not be removed, or access denied."
+              );
             return {
               content: [
                 {
-                  text: "Member not found or could not be updated.",
+                  text: JSON.stringify({ success: true }, null, 2),
                   type: "text",
                 },
               ],
-              isError: true,
             };
           }
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
+
+          throw new Error(`Invalid action: ${action}`);
         } catch (error) {
           return {
             content: [{ text: `Error: ${error.message}`, type: "text" }],
@@ -657,8 +422,70 @@ const createOrganizationsTools = (user) => {
           };
         }
       },
-      name: "update_organization_member_role",
-      schema: updateOrganizationMemberRoleSchema,
+      name: "manage_organization_members",
+      schema: manageOrganizationMembersSchema,
+    },
+
+    manage_organizations: {
+      description: "Manage the active organization (get_active, update).",
+      handler: async (args) => {
+        try {
+          const {
+            action,
+            banner_url,
+            description,
+            logo_url,
+            org_name,
+            settings,
+            unique_name,
+          } = args;
+
+          if (action === "get_active") {
+            const org =
+              await organizationsRepository.getActiveOrganizationWithMembership(
+                user.userId
+              );
+            if (!org)
+              return {
+                content: [
+                  { text: "No active organization found.", type: "text" },
+                ],
+              };
+            return {
+              content: [{ text: JSON.stringify(org, null, 2), type: "text" }],
+            };
+          }
+
+          if (action === "update") {
+            const organizationId = await getActiveOrgId();
+            const result = await organizationsRepository.updateOrganization(
+              organizationId,
+              {
+                banner_url,
+                description,
+                logo_url,
+                org_name,
+                settings,
+                unique_name,
+              }
+            );
+            return {
+              content: [
+                { text: JSON.stringify(result, null, 2), type: "text" },
+              ],
+            };
+          }
+
+          throw new Error(`Invalid action: ${action}`);
+        } catch (error) {
+          return {
+            content: [{ text: `Error: ${error.message}`, type: "text" }],
+            isError: true,
+          };
+        }
+      },
+      name: "manage_organizations",
+      schema: manageOrganizationsSchema,
     },
   };
 };

@@ -25,6 +25,7 @@ const createTaskPrioritySchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(100, "Name must be 100 characters or less"),
+  projectId: z.string().uuid("Invalid project ID format"),
 });
 
 /**

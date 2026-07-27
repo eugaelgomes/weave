@@ -302,7 +302,7 @@ const newBlockId = () => crypto.randomUUID();
  * @param {unknown} node
  * @param {string} path
  * @param {number} depth
- * @returns {{ id: string, type: string, properties: Record<string, unknown>, position?: number, done?: boolean, text?: string, children?: unknown[] }}
+ * @returns {{ id: string, type: string, properties: Record<string, unknown>, position?: number, text?: string, children?: unknown[] }}
  */
 const validateBlockPayload = (node, path = "blocks", depth = 0) => {
   if (!isPlainObject(node)) {
@@ -330,13 +330,6 @@ const validateBlockPayload = (node, path = "blocks", depth = 0) => {
 
   if (typeof node.text === "string" && node.text !== "") {
     properties.text = node.text;
-  }
-
-  if (type === "todo" && node.done !== undefined) {
-    properties.attrs = {
-      ...(isPlainObject(properties.attrs) ? properties.attrs : {}),
-      checked: node.done === true,
-    };
   }
 
   properties = normalizeBlockProperties(type, properties, `${path}.properties`);

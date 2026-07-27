@@ -1,80 +1,88 @@
-const {
-  listSlackIntegrationSchema,
-  removeSlackIntegrationSchema,
-  setDefaultChannelSchema,
-} = require("../schemas/slack.schema");
+const { z } = require("zod");
 const ReadSlackIntegrationsRepository = require("../repositories/read-slack-integrations.repository");
 const MutateSlackIntegrationsRepository = require("../repositories/mutate-slack-integrations.repository");
 
-/**
- * Creates the Slack tools registry bound to a specific user context.
- *
- * @param {Object} user - The authenticated user object.
- * @returns {Record<string, Object>} The tools definition map.
- */
+const manageSlackSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("add_default_channel"),
+    channel_id: z.string().describe("ID of the Slack channel"),
+    organization_id: z.string().uuid().describe("ID of the organization"),
+  }),
+  z.object({
+    action: z.literal("list"),
+    organization_id: z.string().uuid().describe("ID of the organization"),
+  }),
+  z.object({
+    action: z.literal("remove"),
+    organization_id: z.string().uuid().describe("ID of the organization"),
+  }),
+]);
+
 const createSlackTools = (_user) => ({
-  add_default_slack_channel: {
+  manage_slack: {
     description:
-      "Set the default Slack channel for an organization's Slack integration.",
+      "Manage Slack integrations (add_default_channel, list, remove).",
     handler: async (args) => {
       try {
-        const channelId =
-          args.channel_id || args.channelId || args.default_channel_id;
+        const { action, organization_id, channel_id } = args;
 
-        await MutateSlackIntegrationsRepository.updateDefaultChannel(
-          args.organization_id,
-          channelId,
-          null
-        );
-
-        return {
-          content: [
-            {
-              text: `Successfully set default Slack channel to ${channelId} for organization ${args.organization_id}`,
-              type: "text",
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              text: `Error setting default Slack channel: ${error.message}`,
-              type: "text",
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
-    name: "add_default_slack_channel",
-    schema: setDefaultChannelSchema,
-  },
-  list_slack_integration: {
-    description:
-      "List the active Slack integration for a specific organization.",
-    handler: async (args) => {
-      try {
-        const result =
-          await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
-            args.organization_id
+        if (action === "add_default_channel") {
+          if (!channel_id)
+            throw new Error(
+              "channel_id is required for add_default_channel action."
+            );
+          await MutateSlackIntegrationsRepository.updateDefaultChannel(
+            organization_id,
+            channel_id,
+            null
           );
+          return {
+            content: [
+              {
+                text: `Successfully set default Slack channel to ${channel_id} for organization ${organization_id}`,
+                type: "text",
+              },
+            ],
+          };
+        }
 
-        return {
-          content: [
-            {
-              text: result
-                ? JSON.stringify(result, null, 2)
-                : "No active Slack integration found for this organization.",
-              type: "text",
-            },
-          ],
-        };
+        if (action === "list") {
+          const result =
+            await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
+              organization_id
+            );
+          return {
+            content: [
+              {
+                text: result
+                  ? JSON.stringify(result, null, 2)
+                  : "No active Slack integration found for this organization.",
+                type: "text",
+              },
+            ],
+          };
+        }
+
+        if (action === "remove") {
+          await MutateSlackIntegrationsRepository.softDeleteByOrganizationId(
+            organization_id
+          );
+          return {
+            content: [
+              {
+                text: `Successfully removed Slack integration for organization ${organization_id}`,
+                type: "text",
+              },
+            ],
+          };
+        }
+
+        throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
           content: [
             {
-              text: `Error listing Slack integration: ${error.message}`,
+              text: `Error managing Slack integration: ${error.message}`,
               type: "text",
             },
           ],
@@ -82,40 +90,8 @@ const createSlackTools = (_user) => ({
         };
       }
     },
-    name: "list_slack_integration",
-    schema: listSlackIntegrationSchema,
-  },
-  remove_slack_integration: {
-    description:
-      "Remove or disconnect the Slack integration for a specific organization.",
-    handler: async (args) => {
-      try {
-        await MutateSlackIntegrationsRepository.softDeleteByOrganizationId(
-          args.organization_id
-        );
-
-        return {
-          content: [
-            {
-              text: `Successfully removed Slack integration for organization ${args.organization_id}`,
-              type: "text",
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              text: `Error removing Slack integration: ${error.message}`,
-              type: "text",
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
-    name: "remove_slack_integration",
-    schema: removeSlackIntegrationSchema,
+    name: "manage_slack",
+    schema: manageSlackSchema,
   },
 });
 

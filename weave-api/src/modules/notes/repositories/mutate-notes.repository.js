@@ -127,13 +127,13 @@ class MutateNotesRepository extends BaseRepository {
     WHERE ${whereSql};
   `;
 
-    const result = await this.executeQuery(query, params);
+    const count = await this.rowCount(query, params);
 
-    if (result.rowCount === 0) {
+    if (count === 0) {
       throw new Error("Nenhuma nota encontrada para deleção.");
     }
 
-    return result.rowCount;
+    return count;
   }
 }
 

@@ -1,149 +1,162 @@
+const { z } = require("zod");
 const CalendarEventsRepository = require("../repositories/calendar-events.repository");
-const {
-  listEventsQuerySchema,
-  createEventSchema,
-  updateEventSchema,
-  eventIdParamSchema,
-} = require("../schemas/calendar-events.schema");
 
-/**
- * Creates the CalendarEvents tools registry bound to a specific user context.
- *
- * @param {Object} user - The authenticated user object.
- * @returns {Record<string, Object>} The calendar-events tools definition map.
- */
+const manageCalendarEventsSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("create"),
+    description: z.string().optional().describe("Description of the event"),
+    endTime: z.string().optional().describe("End time in ISO format"),
+    isAllDay: z.boolean().optional().describe("Whether the event is all day"),
+    location: z.string().optional().describe("Location of the event"),
+    startTime: z.string().optional().describe("Start time in ISO format"),
+    timezone: z.string().optional().describe("Timezone of the event"),
+    title: z.string().optional().describe("Title of the event"),
+  }),
+  z.object({
+    action: z.literal("get"),
+    eventId: z.string().uuid().describe("ID of the event"),
+  }),
+  z.object({
+    action: z.literal("update"),
+    description: z.string().optional().describe("Description of the event"),
+    endTime: z.string().optional().describe("End time in ISO format"),
+    eventId: z.string().uuid().describe("ID of the event"),
+    isAllDay: z.boolean().optional().describe("Whether the event is all day"),
+    location: z.string().optional().describe("Location of the event"),
+    startTime: z.string().optional().describe("Start time in ISO format"),
+    timezone: z.string().optional().describe("Timezone of the event"),
+    title: z.string().optional().describe("Title of the event"),
+  }),
+  z.object({
+    action: z.literal("delete"),
+    eventId: z.string().uuid().describe("ID of the event"),
+  }),
+  z.object({
+    action: z.literal("list"),
+    endDate: z.string().optional().describe("End date for list filter"),
+    startDate: z.string().optional().describe("Start date for list filter"),
+  }),
+]);
+
 const createCalendarEventsTools = (user) => ({
-  create_calendar_event: {
-    description: "Create a new calendar event",
+  manage_calendar_events: {
+    description: "Manage calendar events (create, get, update, delete, list).",
     handler: async (args) => {
       try {
-        const payload = {
-          ...args,
-          creatorId: user.id,
-        };
-        const event = await CalendarEventsRepository.createEvent(payload);
-        return {
-          content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
-        };
-      } catch (error) {
-        return {
-          content: [{ text: `Error: ${error.message}`, type: "text" }],
-          isError: true,
-        };
-      }
-    },
-    schema: createEventSchema,
-  },
-  delete_calendar_event: {
-    description: "Delete a calendar event",
-    handler: async (args) => {
-      try {
-        const result = await CalendarEventsRepository.softDeleteEvent({
-          creatorId: user.id,
-          eventId: args.eventId,
-        });
-        if (!result) {
+        const {
+          action,
+          eventId,
+          title,
+          description,
+          startTime,
+          endTime,
+          startDate,
+          endDate,
+          timezone,
+          isAllDay,
+          location,
+        } = args;
+
+        if (action === "create") {
+          const payload = {
+            creatorId: user.id,
+            description,
+            endTime,
+            isAllDay,
+            location,
+            startTime,
+            timezone,
+            title,
+          };
+          const event = await CalendarEventsRepository.createEvent(payload);
           return {
-            content: [
-              { text: "Event not found or already deleted", type: "text" },
-            ],
-            isError: true,
+            content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
           };
         }
+
+        if (action === "get") {
+          if (!eventId) throw new Error("eventId is required for get action.");
+          const event = await CalendarEventsRepository.getEventById({
+            creatorId: user.id,
+            eventId,
+          });
+          if (!event) throw new Error("Event not found");
+          return {
+            content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
+          };
+        }
+
+        if (action === "update") {
+          if (!eventId)
+            throw new Error("eventId is required for update action.");
+          const fields = {
+            description,
+            endTime,
+            isAllDay,
+            location,
+            startTime,
+            timezone,
+            title,
+          };
+          // Remove undefined fields
+          Object.keys(fields).forEach(
+            (key) => fields[key] === undefined && delete fields[key]
+          );
+          const event = await CalendarEventsRepository.updateEvent({
+            creatorId: user.id,
+            eventId,
+            fields,
+          });
+          if (!event) throw new Error("Event not found or not updated");
+          return {
+            content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
+          };
+        }
+
+        if (action === "delete") {
+          if (!eventId)
+            throw new Error("eventId is required for delete action.");
+          const result = await CalendarEventsRepository.softDeleteEvent({
+            creatorId: user.id,
+            eventId,
+          });
+          if (!result) throw new Error("Event not found or already deleted");
+          return {
+            content: [
+              {
+                text: JSON.stringify({ eventId, success: true }, null, 2),
+                type: "text",
+              },
+            ],
+          };
+        }
+
+        if (action === "list") {
+          const events = await CalendarEventsRepository.listEvents({
+            creatorId: user.id,
+            endDate,
+            startDate,
+          });
+          return {
+            content: [{ text: JSON.stringify(events, null, 2), type: "text" }],
+          };
+        }
+
+        throw new Error(`Invalid action: ${action}`);
+      } catch (error) {
         return {
           content: [
             {
-              text: JSON.stringify(
-                { eventId: args.eventId, success: true },
-                null,
-                2
-              ),
+              text: `Error managing calendar events: ${error.message}`,
               type: "text",
             },
           ],
-        };
-      } catch (error) {
-        return {
-          content: [{ text: `Error: ${error.message}`, type: "text" }],
           isError: true,
         };
       }
     },
-    schema: eventIdParamSchema,
-  },
-  get_calendar_event: {
-    description: "Get a specific calendar event by ID",
-    handler: async (args) => {
-      try {
-        const event = await CalendarEventsRepository.getEventById({
-          creatorId: user.id,
-          eventId: args.eventId,
-        });
-        if (!event) {
-          return {
-            content: [{ text: "Event not found", type: "text" }],
-            isError: true,
-          };
-        }
-        return {
-          content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
-        };
-      } catch (error) {
-        return {
-          content: [{ text: `Error: ${error.message}`, type: "text" }],
-          isError: true,
-        };
-      }
-    },
-    schema: eventIdParamSchema,
-  },
-  list_calendar_events: {
-    description: "List calendar events for the user",
-    handler: async (args) => {
-      try {
-        const events = await CalendarEventsRepository.listEvents({
-          creatorId: user.id,
-          ...args,
-        });
-        return {
-          content: [{ text: JSON.stringify(events, null, 2), type: "text" }],
-        };
-      } catch (error) {
-        return {
-          content: [{ text: `Error: ${error.message}`, type: "text" }],
-          isError: true,
-        };
-      }
-    },
-    schema: listEventsQuerySchema,
-  },
-  update_calendar_event: {
-    description: "Update an existing calendar event",
-    handler: async (args) => {
-      try {
-        const { eventId, ...fields } = args;
-        const event = await CalendarEventsRepository.updateEvent({
-          creatorId: user.id,
-          eventId,
-          fields,
-        });
-        if (!event) {
-          return {
-            content: [{ text: "Event not found or not updated", type: "text" }],
-            isError: true,
-          };
-        }
-        return {
-          content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
-        };
-      } catch (error) {
-        return {
-          content: [{ text: `Error: ${error.message}`, type: "text" }],
-          isError: true,
-        };
-      }
-    },
-    schema: eventIdParamSchema.merge(updateEventSchema),
+    name: "manage_calendar_events",
+    schema: manageCalendarEventsSchema,
   },
 });
 

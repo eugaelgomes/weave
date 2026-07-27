@@ -102,7 +102,7 @@ class PDFService {
     }
 
     if (type === "todo") {
-      const checked = props.attrs?.checked === true || block.done === true;
+      const checked = props.attrs?.checked === true;
       const bullet = checked ? "[x]" : "[ ]";
       doc
         .font("Helvetica")

@@ -113,7 +113,7 @@ class NoteBlocksRepository extends BaseRepository {
           version: Number(r.version),
         };
         if (r.type === "todo") {
-          node.done = props.attrs?.checked === true;
+          // Do nothing (handled by properties)
         }
         if (r.type === "list") {
           node.children = walk(String(r.id), depth + 1);
@@ -187,14 +187,13 @@ class NoteBlocksRepository extends BaseRepository {
   /**
    * @param {string} noteId
    * @param {string} userId
-   * @param {{ type?: string, parent_id?: string | null, position?: number, properties?: Record<string, unknown>, text?: string, done?: boolean }} data
+   * @param {{ type?: string, parent_id?: string | null, position?: number, properties?: Record<string, unknown>, text?: string }} data
    * @returns {Promise<Record<string, unknown>>}
    */
   async insert(noteId, userId, data) {
     const id = newBlockId();
     const validated = validateBlockPayload(
       {
-        done: data.done,
         id,
         properties: data.properties,
         text: data.text,
@@ -293,7 +292,7 @@ class NoteBlocksRepository extends BaseRepository {
 
   /**
    * @param {string} blockId
-   * @param {{ type?: string, properties?: Record<string, unknown>, position?: number, text?: string, done?: boolean }} patch
+   * @param {{ type?: string, properties?: Record<string, unknown>, position?: number, text?: string }} patch
    * @returns {Promise<Record<string, unknown> | null>}
    */
   async update(blockId, patch, expectedVersion = null) {
@@ -312,21 +311,9 @@ class NoteBlocksRepository extends BaseRepository {
     }
     if (!properties || typeof properties !== "object") properties = {};
 
-    if (
-      patch.text !== undefined ||
-      patch.done !== undefined ||
-      patch.properties !== undefined
-    ) {
+    if (patch.text !== undefined || patch.properties !== undefined) {
       const propsPatch = { ...(patch.properties || {}) };
       if (patch.text !== undefined) propsPatch.text = patch.text;
-      if (patch.done !== undefined && blockType === "todo") {
-        propsPatch.attrs = {
-          ...(propsPatch.attrs && typeof propsPatch.attrs === "object"
-            ? propsPatch.attrs
-            : {}),
-          checked: patch.done === true,
-        };
-      }
       properties = mergeBlockPropertiesPatch(blockType, propsPatch, properties);
     }
 
@@ -471,7 +458,7 @@ class NoteBlocksRepository extends BaseRepository {
       version: Number(row.version),
     };
     if (row.type === "todo") {
-      out.done = props.attrs?.checked === true;
+      // Do nothing (handled by properties)
     }
     return out;
   }

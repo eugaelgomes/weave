@@ -115,7 +115,6 @@ class NoteBlocksController extends NotesBaseController {
       await this._validateNoteAccessLightweight(noteId, userId);
 
       const block = await this.notesRepository.insertNoteBlock(noteId, userId, {
-        done: req.body?.done,
         parent_id: req.body?.parent_id ?? req.body?.parentId,
         position: req.body?.position,
         properties: req.body?.properties,
@@ -172,7 +171,6 @@ class NoteBlocksController extends NotesBaseController {
       const updated = await this.notesRepository.updateNoteBlock(
         blockId,
         {
-          done: req.body?.done,
           position: req.body?.position,
           properties: req.body?.properties,
           text: req.body?.text,

@@ -7,7 +7,6 @@ const {
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
 } = require("@modelcontextprotocol/sdk/types.js");
-const { zodToJsonSchema } = require("zod-to-json-schema");
 
 // Import all active module tool factories
 const { createPlansTools } = require("@/modules/plans/tools/plans.tools");
@@ -107,7 +106,7 @@ function registerHandlers(server, registry) {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: Object.entries(registry.tools).map(([toolKey, tool]) => {
       const toolName = tool.name || toolKey;
-      const rawJsonSchema = zodToJsonSchema(tool.schema);
+      const rawJsonSchema = tool.schema.toJSONSchema();
       delete rawJsonSchema.$schema;
       return {
         description: tool.description || "",

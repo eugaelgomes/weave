@@ -1,91 +1,67 @@
+const { z } = require("zod");
 const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.repository");
-const {
-  triggerBackupSchema,
-  listBackupsSchema,
-  backupJobStatusSchema,
-} = require("../schemas/backup.schema");
 
-/**
- * Creates the Backup tools registry bound to a specific user context.
- *
- * @param {Object} user - The authenticated user object.
- * @returns {Record<string, Object>} The backup tools definition map.
- */
+const manageBackupsSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("trigger"),
+  }),
+  z.object({
+    action: z.literal("list"),
+  }),
+  z.object({
+    action: z.literal("get_status"),
+    jobId: z.string().uuid().describe("ID of the backup job"),
+  }),
+]);
+
 const createBackupTools = (user) => ({
-  get_backup_status: {
-    description: "Retrieve the current status of a specific backup job.",
+  manage_backups: {
+    description: "Manage data backups (trigger, get_status, list).",
     handler: async (args) => {
       try {
-        const job = await backupJobsRepository.getJob(args.jobId);
-        if (!job || job.userId !== user.userId) {
+        const { action, jobId } = args;
+
+        if (action === "trigger") {
+          const job = await backupJobsRepository.createJob(
+            "user_backup",
+            user.userId,
+            {}
+          );
           return {
-            content: [
-              { text: "Job not found or access denied.", type: "text" },
-            ],
-            isError: true,
+            content: [{ text: JSON.stringify(job, null, 2), type: "text" }],
           };
         }
-        return {
-          content: [{ text: JSON.stringify(job, null, 2), type: "text" }],
-        };
+
+        if (action === "list") {
+          const jobs = await backupJobsRepository.getUserJobs(user.userId);
+          return {
+            content: [{ text: JSON.stringify(jobs, null, 2), type: "text" }],
+          };
+        }
+
+        if (action === "get_status") {
+          if (!jobId)
+            throw new Error("jobId is required for get_status action.");
+          const job = await backupJobsRepository.getJob(jobId);
+          if (!job || job.userId !== user.userId)
+            throw new Error("Job not found or access denied.");
+          return {
+            content: [{ text: JSON.stringify(job, null, 2), type: "text" }],
+          };
+        }
+
+        throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
           content: [
-            {
-              text: `Error retrieving backup status: ${error.message}`,
-              type: "text",
-            },
+            { text: `Error managing backups: ${error.message}`, type: "text" },
           ],
           isError: true,
         };
       }
     },
-    name: "get_backup_status",
-    schema: backupJobStatusSchema,
-  },
-  list_backups: {
-    description: "List all backup jobs initiated by the user.",
-    handler: async () => {
-      try {
-        const jobs = await backupJobsRepository.getUserJobs(user.userId);
-        return {
-          content: [{ text: JSON.stringify(jobs, null, 2), type: "text" }],
-        };
-      } catch (error) {
-        return {
-          content: [
-            { text: `Error listing backups: ${error.message}`, type: "text" },
-          ],
-          isError: true,
-        };
-      }
-    },
-    name: "list_backups",
-    schema: listBackupsSchema,
-  },
-  trigger_backup: {
-    description: "Trigger a new backup job for the user data.",
-    handler: async () => {
-      try {
-        const job = await backupJobsRepository.createJob(
-          "user_backup",
-          user.userId,
-          {}
-        );
-        return {
-          content: [{ text: JSON.stringify(job, null, 2), type: "text" }],
-        };
-      } catch (error) {
-        return {
-          content: [
-            { text: `Error triggering backup: ${error.message}`, type: "text" },
-          ],
-          isError: true,
-        };
-      }
-    },
-    name: "trigger_backup",
-    schema: triggerBackupSchema,
+    name: "manage_backups",
+    schema: manageBackupsSchema,
   },
 });
 

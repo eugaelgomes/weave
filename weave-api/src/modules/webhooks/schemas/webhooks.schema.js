@@ -76,6 +76,10 @@ const createWebhookSchema = z
  */
 const deleteWebhookSchema = z
   .object({
+    all: z
+      .boolean()
+      .optional()
+      .describe("Set to true to delete all active webhooks for the user."),
     channelId: z
       .string()
       .optional()

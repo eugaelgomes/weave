@@ -2,40 +2,143 @@ const { z } = require("zod");
 const noteBlocksRepository = require("@/modules/notes/repositories/note-blocks.repository");
 const readNotesRepository = require("@/modules/notes/repositories/read-notes.repository");
 
-const createNoteBlockSchema = z.object({
-  done: z
-    .boolean()
-    .optional()
-    .describe("If type is todo, whether it is checked"),
-  noteId: z.string().describe("ID of the note"),
-  parentId: z
+const blockAttrsSchema = z.object({
+  alt: z
     .string()
     .optional()
-    .nullable()
-    .describe("Optional parent block ID"),
-  position: z.number().optional().describe("Optional position among siblings"),
-  text: z.string().optional().describe("Text content for the block"),
-  type: z
+    .describe("Alternative text. Allowed for image blocks."),
+  backgroundColor: z
     .string()
     .optional()
     .describe(
-      "Block type which must be one of paragraph, list, todo, heading, heading_1, heading_2, heading_3, image, code, quote, divider, or page"
+      "Background hex color from the palette. Allowed for heading, paragraph, quote, list, todo blocks."
     ),
+  checked: z
+    .boolean()
+    .optional()
+    .describe("Whether the todo is checked. Allowed for todo blocks."),
+  language: z
+    .string()
+    .optional()
+    .describe("Programming language string. Allowed for code blocks."),
+  level: z
+    .number()
+    .min(1)
+    .max(6)
+    .optional()
+    .describe("Heading level (1-6). Required for heading blocks."),
+  ordered: z
+    .boolean()
+    .optional()
+    .describe("Whether the list is ordered. Allowed for list blocks."),
+  src: z
+    .string()
+    .optional()
+    .describe(
+      "URL of the image or video (http, https, blob, data, upload:// or notes/). Required for image and video blocks."
+    ),
+  title: z
+    .string()
+    .optional()
+    .describe("Title text. Allowed for image and video blocks."),
 });
 
-const updateNoteBlockSchema = z.object({
-  blockId: z.string().describe("ID of the block to update"),
-  done: z.boolean().optional().describe("If type is todo, new checked state"),
-  position: z.number().optional().describe("New position among siblings"),
-  text: z.string().optional().describe("New text content"),
-  type: z.string().optional().describe("New block type"),
+const markAttrsSchema = z.object({
+  class: z.string().optional().describe("CSS class name for the mark."),
+  color: z
+    .string()
+    .optional()
+    .describe(
+      "Hex color string from the palette. Allowed for textStyle and highlight marks."
+    ),
+  href: z.string().optional().describe("Target URL. Required for link marks."),
+  rel: z
+    .string()
+    .optional()
+    .describe("Link rel attribute. Allowed for link marks."),
+  target: z
+    .string()
+    .optional()
+    .describe("Link target. Allowed for link marks."),
+  title: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("Link title. Allowed for link marks."),
 });
 
-const deleteNoteBlockSchema = z.object({
-  blockId: z
-    .union([z.string(), z.array(z.string())])
-    .describe("ID(s) of the block(s) to delete"),
+const markSchema = z.object({
+  attrs: markAttrsSchema
+    .optional()
+    .describe("Specific attributes for the mark."),
+  end: z.number().describe("End index of the mark."),
+  start: z.number().describe("Start index of the mark."),
+  type: z
+    .enum([
+      "bold",
+      "code",
+      "highlight",
+      "italic",
+      "link",
+      "strike",
+      "subscript",
+      "superscript",
+      "textStyle",
+      "underline",
+    ])
+    .describe("Exact type of the formatting mark."),
 });
+
+const blockPropertiesSchema = z
+  .object({
+    attrs: blockAttrsSchema
+      .optional()
+      .describe("Block specific attributes mapped by type."),
+    level: z.number().optional().describe("Legacy heading level duplication."),
+    marks: z
+      .array(markSchema)
+      .optional()
+      .describe("Text formatting marks definitions."),
+    text: z.string().optional().describe("Text content within properties."),
+  })
+  .catchall(z.unknown())
+  .describe("Block properties containing formatting marks and specific attrs");
+
+const manageNoteBlocksSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("create"),
+    noteId: z.string().describe("ID of the note"),
+    parentId: z
+      .string()
+      .optional()
+      .nullable()
+      .describe("Optional parent block ID"),
+    position: z.number().optional().describe("Position among siblings"),
+    properties: blockPropertiesSchema.optional(),
+    text: z.string().optional().describe("Text content for the block"),
+    type: z.string().describe("Block type"),
+  }),
+  z.object({
+    action: z.literal("update"),
+    blockId: z
+      .union([z.string(), z.array(z.string())])
+      .describe("ID(s) of the block(s)"),
+    position: z.number().optional().describe("Position among siblings"),
+    properties: blockPropertiesSchema.optional(),
+    text: z.string().optional().describe("Text content for the block"),
+    type: z.string().optional().describe("Block type"),
+  }),
+  z.object({
+    action: z.literal("delete"),
+    blockId: z
+      .union([z.string(), z.array(z.string())])
+      .describe("ID(s) of the block(s)"),
+  }),
+  z.object({
+    action: z.literal("list"),
+    noteId: z.string().describe("ID of the note"),
+  }),
+]);
 
 /**
  * Creates the Note Blocks tools registry bound to a specific user context.
@@ -44,116 +147,94 @@ const deleteNoteBlockSchema = z.object({
  * @returns {Record<string, Object>} The blocks tools definition map.
  */
 const createNoteBlocksTools = (user) => ({
-  create_note_block: {
-    description: "Adds a new block to a note.",
+  manage_note_blocks: {
+    description:
+      "Manage note blocks (create, update, delete, list) all in one tool. Use this to manipulate the content structure of a note.",
     handler: async (args) => {
       try {
-        const { noteId, parentId, type, text, position, done } = args;
+        const {
+          action,
+          noteId,
+          blockId,
+          parentId,
+          type,
+          text,
+          position,
+          properties,
+        } = args;
 
-        // Security check
-        const accessSummary =
-          await readNotesRepository.getNoteAccessSummary(noteId);
-        if (!accessSummary || accessSummary.user_id !== user.userId) {
+        if (action === "create") {
+          if (!noteId) throw new Error("noteId is required for create action.");
+          const accessSummary =
+            await readNotesRepository.getNoteAccessSummary(noteId);
+          if (!accessSummary || accessSummary.user_id !== user.userId) {
+            throw new Error(`Note ${noteId} not found or access denied.`);
+          }
+          const newBlock = await noteBlocksRepository.insert(
+            noteId,
+            user.userId,
+            {
+              parent_id: parentId,
+              position,
+              properties,
+              text,
+              type,
+            }
+          );
           return {
             content: [
-              {
-                text: `Note ${noteId} not found or access denied.`,
-                type: "text",
-              },
+              { text: JSON.stringify(newBlock, null, 2), type: "text" },
             ],
-            isError: true,
           };
         }
 
-        const newBlock = await noteBlocksRepository.insert(
-          noteId,
-          user.userId,
-          {
-            done,
-            parent_id: parentId,
+        if (action === "update") {
+          if (!blockId || Array.isArray(blockId))
+            throw new Error(
+              "A single blockId string is required for update action."
+            );
+          const updated = await noteBlocksRepository.update(blockId, {
             position,
+            properties,
             text,
             type,
-          }
-        );
-
-        return {
-          content: [{ text: JSON.stringify(newBlock, null, 2), type: "text" }],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              text: `Error creating note block: ${error.message}`,
-              type: "text",
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
-    name: "create_note_block",
-    schema: createNoteBlockSchema,
-  },
-  delete_note_block: {
-    description: "Deletes one or more blocks.",
-    handler: async (args) => {
-      try {
-        const { blockId } = args;
-        const blockIds = Array.isArray(blockId) ? blockId : [blockId];
-
-        const count = await noteBlocksRepository.softDelete(blockIds);
-
-        return {
-          content: [
-            { text: `Successfully deleted ${count} block(s).`, type: "text" },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              text: `Error deleting note block: ${error.message}`,
-              type: "text",
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
-    name: "delete_note_block",
-    schema: deleteNoteBlockSchema,
-  },
-  update_note_block: {
-    description: "Updates a block inside a note.",
-    handler: async (args) => {
-      try {
-        const { blockId, type, text, position, done } = args;
-
-        // We lack a direct block->note access check, but the repository relies on finding the block.
-        // If security becomes strict, we should fetch block -> noteId and check note access.
-        const updated = await noteBlocksRepository.update(blockId, {
-          done,
-          position,
-          text,
-          type,
-        });
-
-        if (!updated) {
+          });
           return {
-            content: [{ text: `Block ${blockId} not found.`, type: "text" }],
-            isError: true,
+            content: [{ text: JSON.stringify(updated, null, 2), type: "text" }],
           };
         }
 
-        return {
-          content: [{ text: JSON.stringify(updated, null, 2), type: "text" }],
-        };
+        if (action === "delete") {
+          if (!blockId)
+            throw new Error("blockId is required for delete action.");
+          const blockIds = Array.isArray(blockId) ? blockId : [blockId];
+          const count = await noteBlocksRepository.softDelete(blockIds);
+          return {
+            content: [
+              { text: `Successfully deleted ${count} block(s).`, type: "text" },
+            ],
+          };
+        }
+
+        if (action === "list") {
+          if (!noteId) throw new Error("noteId is required for list action.");
+          const accessSummary =
+            await readNotesRepository.getNoteAccessSummary(noteId);
+          if (!accessSummary || accessSummary.user_id !== user.userId) {
+            throw new Error(`Note ${noteId} not found or access denied.`);
+          }
+          const tree = await noteBlocksRepository.findTreeByNoteId(noteId);
+          return {
+            content: [{ text: JSON.stringify(tree, null, 2), type: "text" }],
+          };
+        }
+
+        throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
           content: [
             {
-              text: `Error updating note block: ${error.message}`,
+              text: `Error in manage_note_blocks: ${error.message}`,
               type: "text",
             },
           ],
@@ -161,8 +242,8 @@ const createNoteBlocksTools = (user) => ({
         };
       }
     },
-    name: "update_note_block",
-    schema: updateNoteBlockSchema,
+    name: "manage_note_blocks",
+    schema: manageNoteBlocksSchema,
   },
 });
 

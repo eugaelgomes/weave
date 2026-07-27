@@ -59,23 +59,68 @@ const updateNoteSchema = z.object({
   title: z.string().optional(),
 });
 
+const blockAttrsSchema = z.object({
+  alt: z.string().optional(),
+  backgroundColor: z.string().optional(),
+  checked: z.boolean().optional(),
+  language: z.string().optional(),
+  level: z.number().min(1).max(6).optional(),
+  ordered: z.boolean().optional(),
+  src: z.string().optional(),
+  title: z.string().optional(),
+});
+
+const markAttrsSchema = z.object({
+  class: z.string().optional(),
+  color: z.string().optional(),
+  href: z.string().optional(),
+  rel: z.string().optional(),
+  target: z.string().optional(),
+  title: z.string().nullable().optional(),
+});
+
+const markSchema = z.object({
+  attrs: markAttrsSchema.optional(),
+  end: z.number(),
+  start: z.number(),
+  type: z.enum([
+    "bold",
+    "code",
+    "highlight",
+    "italic",
+    "link",
+    "strike",
+    "subscript",
+    "superscript",
+    "textStyle",
+    "underline",
+  ]),
+});
+
+const blockPropertiesSchema = z
+  .object({
+    attrs: blockAttrsSchema.optional(),
+    level: z.number().optional(),
+    marks: z.array(markSchema).optional(),
+    text: z.string().optional(),
+  })
+  .catchall(z.unknown());
+
 // Blocks Bodies
 const createNoteBlockSchema = z.object({
-  done: z.boolean().optional(),
   parent_id: z.string().optional().nullable(),
   parentId: z.string().optional().nullable(),
   position: z.number().optional(),
-  properties: z.record(z.any()).optional(),
+  properties: blockPropertiesSchema.optional(),
   text: z.string().optional(),
   type: z.string().optional(),
 });
 
 const updateNoteBlockSchema = z.object({
-  done: z.boolean().optional(),
   expected_version: z.union([z.number(), z.string()]).optional(),
   expectedVersion: z.union([z.number(), z.string()]).optional(),
   position: z.number().optional(),
-  properties: z.record(z.any()).optional(),
+  properties: blockPropertiesSchema.optional(),
   text: z.string().optional(),
   type: z.string().optional(),
 });

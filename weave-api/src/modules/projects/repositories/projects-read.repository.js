@@ -1504,9 +1504,9 @@ class ProjectsReadRepository {
         tasks_stats AS (
           SELECT
             COUNT(*)                               AS total,
-            COUNT(*) FILTER (WHERE b.done = true)  AS done,
-            COUNT(*) FILTER (WHERE b.done = false) AS pending
-          FROM blocks b
+            COUNT(*) FILTER (WHERE (b.properties->'attrs'->>'checked')::boolean = true)  AS done,
+            COUNT(*) FILTER (WHERE (b.properties->'attrs'->>'checked')::boolean = false OR b.properties->'attrs'->>'checked' IS NULL) AS pending
+          FROM note_blocks b
           JOIN notes n ON n.id = b.note_id
           WHERE n.project_id IN (SELECT id FROM user_projects)
             AND n.deleted = false
@@ -1623,9 +1623,9 @@ class ProjectsReadRepository {
         tasks_stats AS (
           SELECT
             COUNT(*)                               AS total,
-            COUNT(*) FILTER (WHERE b.done = true)  AS done,
-            COUNT(*) FILTER (WHERE b.done = false) AS pending
-          FROM blocks b
+            COUNT(*) FILTER (WHERE (b.properties->'attrs'->>'checked')::boolean = true)  AS done,
+            COUNT(*) FILTER (WHERE (b.properties->'attrs'->>'checked')::boolean = false OR b.properties->'attrs'->>'checked' IS NULL) AS pending
+          FROM note_blocks b
           JOIN notes n ON n.id = b.note_id
           WHERE n.project_id IN (SELECT id FROM user_projects)
             AND n.deleted = false

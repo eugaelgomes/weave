@@ -1,7 +1,4 @@
-const {
-  listMcpServersSchema,
-  configureMcpServerSchema,
-} = require("../schemas/mcp.schema");
+const { z } = require("zod");
 const fs = require("fs").promises;
 const path = require("path");
 
@@ -24,51 +21,73 @@ async function writeMcpConfig(config) {
   await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2), "utf8");
 }
 
-/**
- * Creates the Mcp tools registry bound to a specific user context.
- *
- * @param {Object} user - The authenticated user object.
- * @returns {Record<string, Object>} The mcp tools definition map.
- */
+const manageMcpSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("configure"),
+    args: z.array(z.string()).optional().describe("Arguments for stdio server"),
+    command: z.string().optional().describe("Command for stdio server"),
+    env: z.record(z.string()).optional().describe("Environment variables"),
+    name: z.string().describe("Name of the server"),
+    type: z.enum(["stdio", "sse"]).describe("Type of the server"),
+    url: z.string().optional().describe("URL for sse server"),
+  }),
+  z.object({
+    action: z.literal("list"),
+  }),
+]);
+
 const createMcpTools = (user) => ({
-  configure_mcp_server: {
+  manage_mcp_servers: {
     description:
-      "Configure (add or update) an external Model Context Protocol (MCP) server configuration.",
+      "Manage external Model Context Protocol (MCP) servers (configure, list).",
     handler: async (args) => {
       try {
-        const config = await readMcpConfig();
-        if (!config[user.id]) {
-          config[user.id] = { servers: {} };
+        const { action, name, type, command, env, url } = args;
+
+        if (action === "configure") {
+          if (!name || !type)
+            throw new Error("name and type are required for configure action.");
+          const config = await readMcpConfig();
+          if (!config[user.id]) config[user.id] = { servers: {} };
+          if (!config[user.id].servers) config[user.id].servers = {};
+
+          const serverConfig = {
+            args: args.args || null,
+            command: command || null,
+            env: env || null,
+            name,
+            type,
+            url: url || null,
+          };
+
+          config[user.id].servers[name] = serverConfig;
+          await writeMcpConfig(config);
+
+          return {
+            content: [
+              {
+                text: `Successfully configured Model Context Protocol (MCP) server: ${name}`,
+                type: "text",
+              },
+            ],
+          };
         }
-        if (!config[user.id].servers) {
-          config[user.id].servers = {};
+
+        if (action === "list") {
+          const config = await readMcpConfig();
+          const userConfig = config[user.id] || { servers: {} };
+          const servers = Object.values(userConfig.servers || {});
+          return {
+            content: [{ text: JSON.stringify(servers, null, 2), type: "text" }],
+          };
         }
 
-        const serverConfig = {
-          args: args.args || null,
-          command: args.command || null,
-          env: args.env || null,
-          name: args.name,
-          type: args.type,
-          url: args.url || null,
-        };
-
-        config[user.id].servers[args.name] = serverConfig;
-        await writeMcpConfig(config);
-
-        return {
-          content: [
-            {
-              text: `Successfully configured Model Context Protocol (MCP) server: ${args.name}`,
-              type: "text",
-            },
-          ],
-        };
+        throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
           content: [
             {
-              text: `Error configuring MCP server: ${error.message}`,
+              text: `Error managing MCP servers: ${error.message}`,
               type: "text",
             },
           ],
@@ -76,40 +95,8 @@ const createMcpTools = (user) => ({
         };
       }
     },
-    name: "configure_mcp_server",
-    schema: configureMcpServerSchema,
-  },
-  list_mcp_servers: {
-    description:
-      "List all configured external Model Context Protocol (MCP) servers for the user.",
-    handler: async () => {
-      try {
-        const config = await readMcpConfig();
-        const userConfig = config[user.id] || { servers: {} };
-        const servers = Object.values(userConfig.servers || {});
-
-        return {
-          content: [
-            {
-              text: JSON.stringify(servers, null, 2),
-              type: "text",
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              text: `Error listing MCP servers: ${error.message}`,
-              type: "text",
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
-    name: "list_mcp_servers",
-    schema: listMcpServersSchema,
+    name: "manage_mcp_servers",
+    schema: manageMcpSchema,
   },
 });
 
