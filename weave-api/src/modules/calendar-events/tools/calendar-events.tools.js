@@ -30,9 +30,10 @@ const createCalendarEventsTools = (user) => ({
     handler: async (args) => {
       try {
         const { action, eventId, from, to, items, timeMax, timeMin } = args;
+        const userId = user?.userId || user?.id;
 
         if (action === "create") {
-          const event = await calendarEventsService.createEvent(args, user.id);
+          const event = await calendarEventsService.createEvent(args, userId);
           return {
             content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
           };
@@ -42,7 +43,7 @@ const createCalendarEventsTools = (user) => ({
           if (!eventId) throw new Error("eventId is required for get action.");
           const event = await calendarEventsService.getEventById(
             eventId,
-            user.id
+            userId
           );
           return {
             content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
@@ -55,7 +56,7 @@ const createCalendarEventsTools = (user) => ({
           const event = await calendarEventsService.updateEvent(
             eventId,
             args,
-            user.id
+            userId
           );
           return {
             content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
@@ -65,7 +66,7 @@ const createCalendarEventsTools = (user) => ({
         if (action === "delete") {
           if (!eventId)
             throw new Error("eventId is required for delete action.");
-          await calendarEventsService.deleteEvent(eventId, user.id);
+          await calendarEventsService.deleteEvent(eventId, userId);
           return {
             content: [
               {
@@ -78,7 +79,7 @@ const createCalendarEventsTools = (user) => ({
 
         if (action === "list") {
           const events = await calendarEventsService.listEvents({
-            creatorId: user.id,
+            creatorId: userId,
             from,
             includeDeleted: args.includeDeleted || args.include_deleted,
             organizationId: args.organizationId || args.organization_id,
@@ -90,9 +91,8 @@ const createCalendarEventsTools = (user) => ({
         }
 
         if (action === "list_google_calendars") {
-          const calendars = await calendarEventsService.listGoogleCalendars(
-            user.id
-          );
+          const calendars =
+            await calendarEventsService.listGoogleCalendars(userId);
           return {
             content: [
               { text: JSON.stringify(calendars, null, 2), type: "text" },
@@ -102,7 +102,7 @@ const createCalendarEventsTools = (user) => ({
 
         if (action === "get_google_settings") {
           const settings =
-            await calendarEventsService.getGoogleCalendarSettings(user.id);
+            await calendarEventsService.getGoogleCalendarSettings(userId);
           return {
             content: [
               { text: JSON.stringify(settings, null, 2), type: "text" },
@@ -111,7 +111,7 @@ const createCalendarEventsTools = (user) => ({
         }
 
         if (action === "check_free_busy") {
-          const freebusy = await calendarEventsService.checkFreeBusy(user.id, {
+          const freebusy = await calendarEventsService.checkFreeBusy(userId, {
             items,
             timeMax,
             timeMin,
