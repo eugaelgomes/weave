@@ -1,19 +1,5 @@
-const { z } = require("zod");
-const searchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-
-const manageUsersSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("get_my_profile"),
-  }),
-  z.object({
-    action: z.literal("search_users"),
-    limit: z
-      .number()
-      .optional()
-      .describe("Maximum number of results to return"),
-    query: z.string().describe("Search term (name or email)"),
-  }),
-]);
+const UsersService = require("../services/users.service");
+const { manageUsersSchema } = require("../schemas/users.schema");
 
 const createUsersTools = (user) => ({
   manage_users: {
@@ -21,9 +7,10 @@ const createUsersTools = (user) => ({
     handler: async (args) => {
       try {
         const { action, query, limit } = args;
+        const userId = user?.userId || user?.id;
 
         if (action === "get_my_profile") {
-          const result = await searchUsersRepository.getUserById(user.userId);
+          const result = await UsersService.getUserById(userId);
           if (!result)
             return {
               content: [{ text: "User profile not found.", type: "text" }],
@@ -37,10 +24,7 @@ const createUsersTools = (user) => ({
         if (action === "search_users") {
           if (!query)
             throw new Error("query is required for search_users action.");
-          const result = await searchUsersRepository.searchUsers(
-            query,
-            user.userId
-          );
+          const result = await UsersService.searchWithContext(query, userId);
           let finalResult = result;
           if (limit && Array.isArray(result)) {
             finalResult = result.slice(0, limit);

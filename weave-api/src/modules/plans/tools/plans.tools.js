@@ -1,14 +1,5 @@
-const { z } = require("zod");
-const PlansRepository = require("../repositories/plans.repository");
-
-const managePlansSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("get_current"),
-  }),
-  z.object({
-    action: z.literal("list_available"),
-  }),
-]);
+const PlansService = require("../services/plans.service");
+const { managePlansSchema } = require("../schemas/plans.schema");
 
 const createPlansTools = (user) => ({
   manage_plans: {
@@ -16,9 +7,10 @@ const createPlansTools = (user) => ({
     handler: async (args) => {
       try {
         const { action } = args;
+        const userId = user?.userId || user?.id;
 
         if (action === "get_current") {
-          const result = await PlansRepository.getUserWithPlan(user.userId);
+          const result = await PlansService.getCurrentPlan(userId);
           if (!result) throw new Error("No active plan found for the user.");
           return {
             content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
@@ -26,7 +18,7 @@ const createPlansTools = (user) => ({
         }
 
         if (action === "list_available") {
-          const result = await PlansRepository.getAllPlans();
+          const result = await PlansService.listAvailablePlans();
           return {
             content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
           };

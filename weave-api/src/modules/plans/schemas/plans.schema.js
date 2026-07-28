@@ -24,8 +24,18 @@ const listAvailablePlansSchema = z
     "Schema used for listing all available subscription plans that are configured in the system."
   );
 
+const managePlansSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("get_current"),
+  }),
+  z.object({
+    action: z.literal("list_available"),
+  }),
+]);
+
 module.exports = {
   changePlanSchema,
   getCurrentPlanSchema,
   listAvailablePlansSchema,
+  managePlansSchema,
 };

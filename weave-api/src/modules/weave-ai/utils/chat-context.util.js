@@ -1,11 +1,20 @@
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
 const agentsRepository = require("@/modules/weave-ai/repositories/agents.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
-const { resolveAuthorizedFunctions } = require("@/modules/weave-ai/utils/authorized-functions.util");
-const { resolveNoteIdsToUuids } = require("@/modules/notes/utils/note-id-lookup.util");
-const { resolveProjectIdsToUuids } = require("@/modules/projects/utils/project-id-lookup.util");
+const PlansService = require("@/modules/plans/services/plans.service");
+const {
+  PLAN_PATHS,
+  USAGE_PATHS,
+} = require("@/modules/plans/utils/plan-paths.util");
+const {
+  resolveAuthorizedFunctions,
+} = require("@/modules/weave-ai/utils/authorized-functions.util");
+const {
+  resolveNoteIdsToUuids,
+} = require("@/modules/notes/utils/note-id-lookup.util");
+const {
+  resolveProjectIdsToUuids,
+} = require("@/modules/projects/utils/project-id-lookup.util");
 const chatFormatterUtil = require("../utils/chat-formatter.util");
 const chatEngineService = require("./chat-engine.util");
 const { getI18n } = require("../utils/weave-ai-i18n.util");
@@ -36,7 +45,7 @@ class ChatContextService {
       organizationId
     );
 
-    const usageRecord = await PlanUsageManager.managePlanUsage(
+    const usageRecord = await PlansService.managePlanUsage(
       userId,
       organizationId
     ).catch(() => null);
@@ -46,7 +55,7 @@ class ChatContextService {
         await PlansRepository.getEffectivePlanByUserId(userId);
       const planDetails = effectivePlan?.plan_details;
       if (planDetails) {
-        const allowed = PlanUsageManager.checkLimit(
+        const allowed = PlansService.checkLimit(
           planDetails,
           usageRecord.usage_details,
           USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT,
@@ -64,7 +73,10 @@ class ChatContextService {
         const aiConfig = planDetails.weave_ai?.config || {};
 
         // Model Validation
-        if (Array.isArray(aiConfig.available_models) && aiConfig.available_models.length > 0) {
+        if (
+          Array.isArray(aiConfig.available_models) &&
+          aiConfig.available_models.length > 0
+        ) {
           if (!aiConfig.available_models.includes(payload.model.name)) {
             const modelError = new Error(
               `The model ${payload.model.name} is not available in your current plan.`
@@ -76,10 +88,16 @@ class ChatContextService {
         }
 
         // Reasoning Level Validation
-        if (payload.model.reasoningLevel && payload.model.reasoningLevel !== "none") {
+        if (
+          payload.model.reasoningLevel &&
+          payload.model.reasoningLevel !== "none"
+        ) {
           const REASONING_WEIGHTS = { high: 3, low: 1, medium: 2, none: 0 };
           const maxLevel = aiConfig.max_reasoning_level || "none";
-          if (REASONING_WEIGHTS[payload.model.reasoningLevel] > REASONING_WEIGHTS[maxLevel]) {
+          if (
+            REASONING_WEIGHTS[payload.model.reasoningLevel] >
+            REASONING_WEIGHTS[maxLevel]
+          ) {
             const reasoningError = new Error(
               `Your plan does not support reasoning level '${payload.model.reasoningLevel}'. Maximum allowed is '${maxLevel}'.`
             );

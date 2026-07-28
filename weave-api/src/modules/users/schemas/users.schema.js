@@ -116,12 +116,27 @@ const confirmDeleteAccountSchema = z.object({
   token: z.string().min(1, "Token is required"),
 });
 
+const manageUsersSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("get_my_profile"),
+  }),
+  z.object({
+    action: z.literal("search_users"),
+    limit: z
+      .number()
+      .optional()
+      .describe("Maximum number of results to return"),
+    query: z.string().describe("Search term (name or email)"),
+  }),
+]);
+
 module.exports = {
   activateAccountSchema,
   checkAvailabilitySchema,
   checkUsernamePublicSchema,
   confirmDeleteAccountSchema,
   createAccountSchema,
+  manageUsersSchema,
   searchUsersSchema,
   updateProfileSchema,
 };

@@ -5,7 +5,15 @@ const ProjectsCollaboratorsRepository = require("@/modules/projects/repositories
 const NoteCollaboratorsRepository = require("@/modules/notes/repositories/note-collaborators.repository");
 const NotesCommentsRepository = require("@/modules/notes/repositories/notes-comments.repository");
 
-class SearchUsersService {
+class UsersService {
+  /**
+   * Fetches the user by ID
+   * @param {string} userId
+   */
+  async getUserById(userId) {
+    return await SearchUsersRepository.getUserById(userId);
+  }
+
   /**
    * Perform raw user search and merge context data.
    */
@@ -102,7 +110,7 @@ class SearchUsersService {
       }
     } catch (err) {
       console.error(
-        `[SearchUsersService] Error fetching context ${contextType}:`,
+        `[UsersService] Error fetching context ${contextType}:`,
         err
       );
     }
@@ -110,4 +118,4 @@ class SearchUsersService {
   }
 }
 
-module.exports = new SearchUsersService();
+module.exports = new UsersService();

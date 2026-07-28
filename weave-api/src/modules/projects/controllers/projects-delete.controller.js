@@ -1,6 +1,6 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansService = require("@/modules/plans/services/plans.service");
 
 class ProjectsDeleteController extends ProjectsCoreController {
   async deleteProject(req, res, next) {
@@ -20,9 +20,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
       // Ensure project exists and user has access (middleware should already enforce permission).
       const project = await this._validateProjectAccess(id, userId);
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(
-        project.user_id
-      );
+      const usageRecord = await PlansService.managePlanUsage(project.user_id);
 
       const result =
         orgWide && membership?.id
@@ -38,7 +36,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
 
       // Decrementar o uso de projetos
       if (usageRecord) {
-        await PlanUsageManager.decrementProjectUsage(usageRecord.id);
+        await PlansService.decrementProjectUsage(usageRecord.id);
       }
 
       res.status(200).json({

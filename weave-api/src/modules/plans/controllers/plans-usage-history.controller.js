@@ -1,6 +1,9 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
+const PlansService = require("../services/plans.service");
+const {
+  PLAN_PATHS,
+  USAGE_PATHS,
+} = require("@/modules/plans/utils/plan-paths.util");
 
 /**
  * @param {unknown} value
@@ -48,10 +51,8 @@ function computeVariation(current, previous) {
  */
 function buildUsageMetrics(usageDetails = {}, planDetails = {}) {
   const metric = (usagePath, limitPath) => {
-    const used = toNumber(
-      PlanUsageManager.getNestedValue(usageDetails, usagePath)
-    );
-    const rawLimit = PlanUsageManager.getNestedValue(planDetails, limitPath);
+    const used = toNumber(PlansService.getNestedValue(usageDetails, usagePath));
+    const rawLimit = PlansService.getNestedValue(planDetails, limitPath);
     const limit =
       rawLimit === null || rawLimit === undefined ? null : toNumber(rawLimit);
 
@@ -243,12 +244,12 @@ class PlansUsageHistoryController {
           metrics: currentMetrics,
           percentage_total: computeTotalPercentage(currentMetrics),
           period_end:
-            PlanUsageManager.getNestedValue(
+            PlansService.getNestedValue(
               currentUsageDetails,
               USAGE_PATHS.MONTHLY.PERIOD_END
             ) || null,
           period_start:
-            PlanUsageManager.getNestedValue(
+            PlansService.getNestedValue(
               currentUsageDetails,
               USAGE_PATHS.MONTHLY.PERIOD_START
             ) || null,

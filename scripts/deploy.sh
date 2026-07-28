@@ -8,11 +8,24 @@ SERVICE=${1:-all}
 HOST=$2
 USER=$3
 
-# Load .env.deploy if present locally
+# Load .env and .env.deploy if present locally
+if [ -f .env ]; then
+  set -a
+  source .env
+  set +a
+fi
+
 if [ -f .env.deploy ]; then
   set -a
   source .env.deploy
   set +a
+fi
+
+# Auto docker login to GHCR if token is provided
+GH_TOKEN_VAL=${GH_NPM_TOKEN:-${GITHUB_TOKEN:-$GH_TOKEN}}
+if [ -n "$GH_TOKEN_VAL" ]; then
+  GH_USER_VAL=${GH_USER:-eugaelgomes}
+  echo "$GH_TOKEN_VAL" | docker login ghcr.io -u "$GH_USER_VAL" --password-stdin 2>/dev/null && echo "✔ Docker logged into GHCR as $GH_USER_VAL" || true
 fi
 
 # Fetch from Doppler (prd) if Doppler CLI is installed

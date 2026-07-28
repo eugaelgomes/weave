@@ -1,11 +1,13 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
 const projectsCollaboratorsRepository = require("@/modules/projects/repositories/projects-collaborators.repository");
-const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
+const {
+  sendPlanLimitExceeded,
+} = require("@/modules/plans/utils/plan-limit-http.util");
 const {
   respondIfWorkspaceShareDenied,
 } = require("@/modules/organizations/utils/workspace-share-guard.util");
@@ -28,7 +30,7 @@ class ProjectsCollaboratorsCreateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
       const planDetails = await PlansRepository.getPlanById(
         getUserPlan.plan_id

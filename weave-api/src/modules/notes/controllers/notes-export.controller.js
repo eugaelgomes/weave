@@ -1,7 +1,9 @@
 const NotesBaseController = require("./base.controller");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
+const {
+  sendPlanLimitExceeded,
+} = require("@/modules/plans/utils/plan-limit-http.util");
 const { PLAN_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 const { PDFService } = require("../utils/pdf-export.util");
 
@@ -17,7 +19,7 @@ class NotesExportController extends NotesBaseController {
       if (!userId) return;
 
       // Fetch/Create usage record
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
       // Fetch plan details
@@ -32,7 +34,7 @@ class NotesExportController extends NotesBaseController {
       }
 
       // Validate monthly exports limit
-      const canExport = PlanUsageManager.checkLimit(
+      const canExport = PlansService.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
         "monthly_cycle.exports.notes_count",
@@ -68,7 +70,7 @@ class NotesExportController extends NotesBaseController {
       const pdfBuffer = await PDFService.generateNotePDF(dataForPDF);
 
       // Increment exports counter
-      await PlanUsageManager.consumeExport(usageRecord.id, "notes");
+      await PlansService.consumeExport(usageRecord.id, "notes");
 
       const filename = `note-${noteId}-${new Date().getTime()}.pdf`;
 

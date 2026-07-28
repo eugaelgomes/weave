@@ -5,7 +5,7 @@ const {
   ALLOWED_PROJECT_STATUSES,
   normalizeProjectStatus,
 } = require("@/utils/patterns/product-patterns");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 // Removed PLAN_PATHS
 const {
@@ -18,13 +18,17 @@ const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
 
-const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
+const {
+  sendPlanLimitExceeded,
+} = require("@/modules/plans/utils/plan-limit-http.util");
 const {
   respondIfWorkspaceShareDenied,
 } = require("@/modules/organizations/utils/workspace-share-guard.util");
 const { resolveNoteTitle } = require("@/modules/notes/utils/derive-note-title");
 // Removed redis and queue keys
-const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
+const {
+  resolveNoteIdToUuid,
+} = require("@/modules/notes/utils/note-id-lookup.util");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -210,7 +214,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       // Se a ação for adicionar, validar limites do plano
       if (action === "add") {
-        const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+        const usageRecord = await PlansService.managePlanUsage(userId);
         const getUserPlan = await PlansRepository.getUserAndPlan(userId);
         const planDetails = await PlansRepository.getPlanById(
           getUserPlan.plan_id

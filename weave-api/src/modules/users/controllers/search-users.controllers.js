@@ -1,5 +1,5 @@
 const BaseController = require("./base.controller");
-const SearchUsersService = require("@/modules/users/utils/search-users.util");
+const UsersService = require("../services/users.service");
 
 /**
  * Public user search by term (min 3 chars), excluding the requester.
@@ -27,7 +27,7 @@ class SearchUsersController extends BaseController {
 
       const searchTerm = q.trim();
 
-      const search_users = await SearchUsersService.searchWithContext(
+      const search_users = await UsersService.searchWithContext(
         searchTerm,
         userId,
         contextType,

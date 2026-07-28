@@ -1,6 +1,9 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
+const PlansService = require("../services/plans.service");
+const {
+  PLAN_PATHS,
+  USAGE_PATHS,
+} = require("@/modules/plans/utils/plan-paths.util");
 
 /**
  * Authenticated, minimal plan + usage snapshot for web clients (polling / gates).
@@ -15,9 +18,9 @@ class PlansMeController {
    * @returns {{ allowed: boolean, current: number, limit: number | null }}
    */
   _gate(planDetails, usageDetails, usagePath, limitPath) {
-    const rawCurrent = PlanUsageManager.getNestedValue(usageDetails, usagePath);
-    const rawLimit = PlanUsageManager.getNestedValue(planDetails, limitPath);
-    const allowed = PlanUsageManager.checkLimit(
+    const rawCurrent = PlansService.getNestedValue(usageDetails, usagePath);
+    const rawLimit = PlansService.getNestedValue(planDetails, limitPath);
+    const allowed = PlansService.checkLimit(
       planDetails,
       usageDetails,
       usagePath,
@@ -62,7 +65,7 @@ class PlansMeController {
         return res.status(404).json({ message: "Plan not found for user" });
       }
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const planRow = await PlansRepository.getPlanById(userPlan.plan_id);
 
       if (!usageRecord || !planRow) {
@@ -81,37 +84,32 @@ class PlansMeController {
 
       const usage_summary = {
         backups_monthly:
-          PlanUsageManager.getNestedValue(
+          PlansService.getNestedValue(
             ud,
             USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
           ) ?? 0,
         exports_notes_monthly:
-          PlanUsageManager.getNestedValue(
+          PlansService.getNestedValue(
             ud,
             USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT
           ) ?? 0,
         notes_total:
-          PlanUsageManager.getNestedValue(
-            ud,
-            USAGE_PATHS.SUMMARY.NOTES_TOTAL
-          ) ?? 0,
+          PlansService.getNestedValue(ud, USAGE_PATHS.SUMMARY.NOTES_TOTAL) ?? 0,
         projects_total:
-          PlanUsageManager.getNestedValue(
-            ud,
-            USAGE_PATHS.SUMMARY.PROJECTS_TOTAL
-          ) ?? 0,
+          PlansService.getNestedValue(ud, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) ??
+          0,
         storage_uploaded_mb_monthly:
-          PlanUsageManager.getNestedValue(
+          PlansService.getNestedValue(
             ud,
             USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
           ) ?? 0,
         team_members_total:
-          PlanUsageManager.getNestedValue(
+          PlansService.getNestedValue(
             ud,
             USAGE_PATHS.SUMMARY.TEAM_MEMBERS_TOTAL
           ) ?? 0,
         weave_ai_messages_monthly:
-          PlanUsageManager.getNestedValue(
+          PlansService.getNestedValue(
             ud,
             USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT
           ) ?? 0,
@@ -119,13 +117,11 @@ class PlansMeController {
 
       const usage_period = {
         period_end:
-          PlanUsageManager.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_END) ??
+          PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_END) ??
           null,
         period_start:
-          PlanUsageManager.getNestedValue(
-            ud,
-            USAGE_PATHS.MONTHLY.PERIOD_START
-          ) ?? null,
+          PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_START) ??
+          null,
         plan_id: usageRecord.plan_id || userPlan.plan_id,
       };
 

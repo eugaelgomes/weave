@@ -2,8 +2,11 @@ const BackupBaseController = require("./base.controller");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
+const PlansService = require("@/modules/plans/services/plans.service");
+const {
+  PLAN_PATHS,
+  USAGE_PATHS,
+} = require("@/modules/plans/utils/plan-paths.util");
 const { enqueueBackupExportJob } = require("@/services/queue/queue-controller");
 
 /**
@@ -38,14 +41,14 @@ class BackupExportController extends BackupBaseController {
         });
       }
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const planDetails = await PlansRepository.getPlanById(userPlan.plan_id);
       const appliedPlanDetails =
         usageRecord?.applied_plan_snapshot ||
         userPlan.plan_details ||
         planDetails?.details;
 
-      const canBackup = PlanUsageManager.checkLimit(
+      const canBackup = PlansService.checkLimit(
         appliedPlanDetails,
         usageRecord.usage_details,
         USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT,
@@ -53,11 +56,11 @@ class BackupExportController extends BackupBaseController {
       );
 
       if (!canBackup) {
-        const currentUsage = PlanUsageManager.getNestedValue(
+        const currentUsage = PlansService.getNestedValue(
           usageRecord.usage_details,
           USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
         );
-        const limit = PlanUsageManager.getNestedValue(
+        const limit = PlansService.getNestedValue(
           appliedPlanDetails,
           PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
         );
@@ -66,7 +69,7 @@ class BackupExportController extends BackupBaseController {
           details: {
             current_usage: currentUsage,
             monthly_limit: limit,
-            period_end: PlanUsageManager.getNestedValue(
+            period_end: PlansService.getNestedValue(
               usageRecord.usage_details,
               USAGE_PATHS.MONTHLY.PERIOD_END
             ),
@@ -115,16 +118,16 @@ class BackupExportController extends BackupBaseController {
         }
       );
 
-      await PlanUsageManager.consumeExport(usageRecord.id, "backup");
+      await PlansService.consumeExport(usageRecord.id, "backup");
 
       await enqueueBackupExportJob({ jobId: job.id, userId });
 
       const updatedUsage =
-        PlanUsageManager.getNestedValue(
+        PlansService.getNestedValue(
           usageRecord.usage_details,
           USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
         ) + 1;
-      const monthlyLimit = PlanUsageManager.getNestedValue(
+      const monthlyLimit = PlansService.getNestedValue(
         appliedPlanDetails,
         PLAN_PATHS.LIMITS.EXPORTS.BACKUPS_MONTHLY
       );

@@ -1,7 +1,7 @@
 const NotesBaseController = require("./base.controller");
 const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const {
   collabMail,
@@ -26,7 +26,7 @@ class NotesCollaboratorsController extends NotesBaseController {
       if (!userId) return;
 
       // Fetch/Create usage record
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
       // Fetch plan details

@@ -1,6 +1,6 @@
 const express = require("express");
 
-const PlansManager = require("@/modules/plans/utils/plans-manager.util");
+const PlansPublicController = require("@/modules/plans/controllers/plans-public.controller");
 const PlansMeController = require("@/modules/plans/controllers/plans-me.controller");
 const PlansUsageHistoryController = require("@/modules/plans/controllers/plans-usage-history.controller");
 const PlansSubscriptionController = require("@/modules/plans/controllers/plans-subscription.controller");
@@ -48,6 +48,6 @@ router.post(
   )
 );
 
-router.get("/", PlansManager.getAllPlans.bind(PlansManager));
+router.get("/", PlansPublicController.getAllPlans.bind(PlansPublicController));
 
 module.exports = router;

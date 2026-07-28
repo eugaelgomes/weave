@@ -3,10 +3,15 @@ const {
   ALLOWED_PROJECT_STATUSES,
   normalizeProjectStatus,
 } = require("@/utils/patterns/product-patterns");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
-const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
+const {
+  PLAN_PATHS,
+  USAGE_PATHS,
+} = require("@/modules/plans/utils/plan-paths.util");
+const {
+  sendPlanLimitExceeded,
+} = require("@/modules/plans/utils/plan-limit-http.util");
 const {
   respondIfWorkspaceShareDenied,
 } = require("@/modules/organizations/utils/workspace-share-guard.util");
@@ -37,7 +42,7 @@ class ProjectsCreateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
       const planDetails = await PlansRepository.getPlanById(
         getUserPlan.plan_id
@@ -71,7 +76,7 @@ class ProjectsCreateController extends ProjectsCoreController {
         });
       }
 
-      const canCreate = PlanUsageManager.checkLimit(
+      const canCreate = PlansService.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
         USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
@@ -149,7 +154,7 @@ class ProjectsCreateController extends ProjectsCoreController {
       }
 
       // Incrementar o uso de projetos
-      await PlanUsageManager.consumeProjectCreation(usageRecord.id);
+      await PlansService.consumeProjectCreation(usageRecord.id);
 
       const newProject = result[0];
 
@@ -211,7 +216,7 @@ class ProjectsCreateController extends ProjectsCoreController {
       if (!userId) return;
 
       // Buscar/Criar registro de uso
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
       // Buscar detalhes do plano

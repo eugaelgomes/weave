@@ -1,6 +1,6 @@
 const { v5: uuidv5 } = require("uuid");
 const chatRepository = require("@/modules/weave-ai/repositories/chat.repository");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansService = require("@/modules/plans/services/plans.service");
 const chatFormatterUtil = require("../utils/chat-formatter.util");
 const chatEngineService = require("./chat-engine.util");
 const chatFunctionsService = require("./chat-functions.util");
@@ -263,14 +263,11 @@ class ChatLoopService {
     if (usageRecord?.id) {
       const filesCount = files?.length || 0;
       const reasoningLevel = payload.model?.reasoningLevel || "none";
-      PlanUsageManager.consumeAiMessage(
-        usageRecord.id,
-        {
-          filesCount,
-          reasoningLevel,
-          tokens: tokenUsage.totalTokens || 0
-        }
-      ).catch((err) => {
+      PlansService.consumeAiMessage(usageRecord.id, {
+        filesCount,
+        reasoningLevel,
+        tokens: tokenUsage.totalTokens || 0,
+      }).catch((err) => {
         console.error(
           "[weave-ai/chat] failed to enqueue AI usage consumption",
           {

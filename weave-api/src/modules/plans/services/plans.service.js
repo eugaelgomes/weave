@@ -1,15 +1,44 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { executeQuery } = require("@/database/connection");
-
 const { enqueuePlanUsageJob } = require("@/services/queue/queue-controller");
+const { USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 
-class PlanUsageManager {
+class PlansService {
+  // ==========================================
+  // CORE PLAN METHODS (For Tools & API)
+  // ==========================================
+
+  async getCurrentPlan(userId) {
+    return await PlansRepository.getUserWithPlan(userId);
+  }
+
+  async listAvailablePlans() {
+    const plans = await PlansRepository.getAllPlans();
+    if (!plans) return [];
+    if (plans instanceof Error) throw plans;
+
+    return plans.map((plan) => ({
+      createdAt: plan.created_at,
+      details: this._sanitizePlanForPublic(plan.details),
+      name: plan.name,
+      planId: plan.plan_id,
+      updatedAt: plan.updated_at,
+    }));
+  }
+
+  _sanitizePlanForPublic(details) {
+    if (!details || typeof details !== "object") return {};
+    // eslint-disable-next-line no-unused-vars
+    const { billing, governance, weave_ai, ...publicFields } = details;
+    return publicFields;
+  }
+
+  // ==========================================
+  // USAGE & LIMITS MANAGEMENT
+  // ==========================================
+
   /**
    * Manages the usage cycle: fetches the record and creates if it doesn't exist.
-   * Monthly rollover is now executed by the worker.
-   */
-  /**
-   *
    * @param {string} userId
    * @param {string | null} orgId
    * @returns {Promise<Record<string, any>>}
@@ -68,9 +97,6 @@ class PlanUsageManager {
   // CONSUMPTION METHODS (INCREMENTS)
   // ==========================================
 
-  /**
-   * Increments the total of created notes
-   */
   async consumeNoteCreation(usageId) {
     return enqueuePlanUsageJob({
       operation: "consume_note_creation",
@@ -78,10 +104,6 @@ class PlanUsageManager {
     });
   }
 
-  /**
-   * @param {string} usageId
-   * @param {number} [amount=1] - Number of notes deleted (supports bulk)
-   */
   async decrementNoteUsage(usageId, amount = 1) {
     return enqueuePlanUsageJob({
       operation: "consume_note_creation",
@@ -90,9 +112,6 @@ class PlanUsageManager {
     });
   }
 
-  /**
-   * Increments the total of created projects
-   */
   async consumeProjectCreation(usageId) {
     return enqueuePlanUsageJob({
       operation: "consume_project_creation",
@@ -100,10 +119,6 @@ class PlanUsageManager {
     });
   }
 
-  /**
-   * @param {string} usageId
-   * @param {number} [amount=1] - Number of projects deleted (supports bulk)
-   */
   async decrementProjectUsage(usageId, amount = 1) {
     return enqueuePlanUsageJob({
       operation: "consume_project_creation",
@@ -112,10 +127,10 @@ class PlanUsageManager {
     });
   }
 
-  /**
-   * Increments AI usage (messages, tokens, reasoning, and files)
-   */
-  async consumeAiMessage(usageId, { tokens = 0, reasoningLevel = "none", filesCount = 0 } = {}) {
+  async consumeAiMessage(
+    usageId,
+    { tokens = 0, reasoningLevel = "none", filesCount = 0 } = {}
+  ) {
     return enqueuePlanUsageJob({
       operation: "consume_ai_message",
       payload: { filesCount, reasoningLevel, tokens },
@@ -123,9 +138,6 @@ class PlanUsageManager {
     });
   }
 
-  /**
-   * Increments storage usage (files and MB)
-   */
   async consumeStorage(usageId, fileSizeMb) {
     return enqueuePlanUsageJob({
       operation: "consume_storage",
@@ -134,9 +146,6 @@ class PlanUsageManager {
     });
   }
 
-  /**
-   * Increments export counters
-   */
   async consumeExport(usageId, type = "notes") {
     return enqueuePlanUsageJob({
       operation: "consume_export",
@@ -149,16 +158,10 @@ class PlanUsageManager {
   // INTERNAL LOGIC AND HELPERS
   // ==========================================
 
-  /**
-   * Fetches user usage history
-   */
   async getUserUsageHistory(userId, limit = 12) {
     return await PlansRepository.getUsageHistory(userId, limit);
   }
 
-  /**
-   * Generates usage report
-   */
   async generateUsageReport(userId) {
     const history = await this.getUserUsageHistory(userId);
     const currentUsage = await PlansRepository.getPlanUsage(userId);
@@ -230,7 +233,7 @@ class PlanUsageManager {
           reasoning_high_sent: 0,
           reasoning_low_sent: 0,
           reasoning_medium_sent: 0,
-          tokens_estimated: 0
+          tokens_estimated: 0,
         },
       },
       usage_summary: {
@@ -256,6 +259,35 @@ class PlanUsageManager {
   getNestedValue(obj, path) {
     return path.split(".").reduce((acc, part) => acc && acc[part], obj);
   }
+
+  toPgPath(dotPath) {
+    return `{${dotPath.replace(/\./g, ",")}}`;
+  }
+
+  async updateLastActivity(usageId) {
+    return await PlansRepository.updateJsonValue(
+      usageId,
+      this.toPgPath(USAGE_PATHS.HISTORY.LAST_ACTIVITY),
+      new Date().toISOString()
+    );
+  }
+
+  async setDefaultPlanForNewUser(userId) {
+    const user = await PlansRepository.getUserAndPlan(userId);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+    if (user.plan_id) {
+      return user;
+    }
+
+    const defaultPlanId = await PlansRepository.getDefaultSignupPlanId();
+    if (!defaultPlanId) {
+      throw new Error("Default signup plan not found.");
+    }
+
+    return await PlansRepository.assignPlanToUser(userId, defaultPlanId);
+  }
 }
 
-module.exports = new PlanUsageManager();
+module.exports = new PlansService();

@@ -1,6 +1,6 @@
 const NotesBaseController = require("./base.controller");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
-const PlanUsageManager = require("@/modules/plans/controllers/plans.controller");
+const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const taskPrioritiesRepository = require("@/modules/task-priorities/repositories/task-priorities.repository");
 const {
@@ -13,9 +13,13 @@ const {
   resolveNoteTitle,
   deriveTitleFromBlocks,
 } = require("@/modules/notes/utils/derive-note-title");
-const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
+const {
+  sendPlanLimitExceeded,
+} = require("@/modules/plans/utils/plan-limit-http.util");
 const { PLAN_PATHS } = require("@/modules/plans/utils/plan-paths.util");
-const { resolveProjectIdToUuid } = require("@/modules/projects/utils/project-id-lookup.util");
+const {
+  resolveProjectIdToUuid,
+} = require("@/modules/projects/utils/project-id-lookup.util");
 
 /**
  * Creation, update, and deletion of notes.
@@ -99,7 +103,7 @@ class NotesWriteController extends NotesBaseController {
       if (!userId) return;
 
       // 2. FETCH/CREATE USAGE RECORD (USING MANAGER)
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
       // 3. FETCH PLAN DETAILS (LIMITS AND NAME)
@@ -114,7 +118,7 @@ class NotesWriteController extends NotesBaseController {
       }
 
       // 4. VALIDATE NOTES LIMIT
-      const canCreate = PlanUsageManager.checkLimit(
+      const canCreate = PlansService.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
         "usage_summary.notes_total",
@@ -183,7 +187,7 @@ class NotesWriteController extends NotesBaseController {
       }
 
       // 7. INCREMENT USAGE
-      await PlanUsageManager.consumeNoteCreation(usageRecord.id);
+      await PlansService.consumeNoteCreation(usageRecord.id);
 
       // 8. Format and return the created note
       const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
@@ -221,7 +225,7 @@ class NotesWriteController extends NotesBaseController {
       if (!userId) return;
 
       // Fetch/Create usage record
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
       // Fetch plan details
@@ -236,7 +240,7 @@ class NotesWriteController extends NotesBaseController {
       }
 
       // Validate notes limit
-      const canCreate = PlanUsageManager.checkLimit(
+      const canCreate = PlansService.checkLimit(
         planDetails.details,
         usageRecord.usage_details,
         "usage_summary.notes_total",
@@ -309,7 +313,7 @@ class NotesWriteController extends NotesBaseController {
       }
 
       // Increment notes usage
-      await PlanUsageManager.consumeNoteCreation(usageRecord.id);
+      await PlansService.consumeNoteCreation(usageRecord.id);
 
       const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
         String(result.note_id)
@@ -538,7 +542,7 @@ class NotesWriteController extends NotesBaseController {
       let totalUploadSizeMb = 0;
 
       if (allUploadedFiles.length > 0) {
-        usageRecord = await PlanUsageManager.managePlanUsage(userId);
+        usageRecord = await PlansService.managePlanUsage(userId);
         const getUserPlan = await PlansRepository.getUserAndPlan(userId);
         const planDetails = await PlansRepository.getPlanById(
           getUserPlan.plan_id
@@ -577,7 +581,7 @@ class NotesWriteController extends NotesBaseController {
         // Validate monthly upload limit
         if (totalMonthlyUploadMb) {
           const currentUsageMb =
-            PlanUsageManager.getNestedValue(
+            PlansService.getNestedValue(
               usageRecord.usage_details,
               "monthly_cycle.storage.total_uploaded_mb"
             ) || 0;
@@ -714,10 +718,7 @@ class NotesWriteController extends NotesBaseController {
 
       // Register storage consumption in plan after successful uploads
       if (usageRecord && totalUploadSizeMb > 0) {
-        await PlanUsageManager.consumeStorage(
-          usageRecord.id,
-          totalUploadSizeMb
-        );
+        await PlansService.consumeStorage(usageRecord.id, totalUploadSizeMb);
       }
 
       // Body image: do PATCH in /notes/:noteId/blocks/:blockId after upload (uploadDocumentImages).
@@ -803,7 +804,7 @@ class NotesWriteController extends NotesBaseController {
         return res.status(400).json({ error: "Nenhum arquivo enviado" });
       }
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
       const planDetails = await PlansRepository.getPlanById(
         getUserPlan.plan_id
@@ -839,7 +840,7 @@ class NotesWriteController extends NotesBaseController {
 
       if (totalMonthlyUploadMb) {
         const currentUsageMb =
-          PlanUsageManager.getNestedValue(
+          PlansService.getNestedValue(
             usageRecord.usage_details,
             "monthly_cycle.storage.total_uploaded_mb"
           ) || 0;
@@ -874,10 +875,7 @@ class NotesWriteController extends NotesBaseController {
       );
 
       if (totalUploadSizeMb > 0) {
-        await PlanUsageManager.consumeStorage(
-          usageRecord.id,
-          totalUploadSizeMb
-        );
+        await PlansService.consumeStorage(usageRecord.id, totalUploadSizeMb);
       }
 
       return res.status(201).json({ files });
@@ -894,7 +892,7 @@ class NotesWriteController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const usageRecord = await PlanUsageManager.managePlanUsage(userId);
+      const usageRecord = await PlansService.managePlanUsage(userId);
 
       let noteIds = [];
 
@@ -916,7 +914,7 @@ class NotesWriteController extends NotesBaseController {
       );
 
       if (usageRecord) {
-        await PlanUsageManager.decrementNoteUsage(usageRecord.id, affectedRows);
+        await PlansService.decrementNoteUsage(usageRecord.id, affectedRows);
       }
 
       return res.status(200).json({
