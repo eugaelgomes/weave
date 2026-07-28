@@ -49,7 +49,7 @@ const calendarEventSchema = z.object({
     .nullable()
     .optional()
     .describe("Description or notes for the event"),
-  end_time: z.date().optional().describe("End time of the event"),
+  end_time: z.string().optional().describe("End time of the event"),
   etag: z
     .string()
     .nullable()
@@ -111,7 +111,7 @@ const calendarEventSchema = z.object({
     .nullable()
     .optional()
     .describe("ID of the project associated with the event"),
-  start_time: z.date().optional().describe("Start time of the event"),
+  start_time: z.string().optional().describe("Start time of the event"),
   sync_status: syncStatusEnum
     .nullable()
     .optional()
@@ -179,12 +179,12 @@ const createEventSchema = z
       .describe("Description or notes for the event"),
     end_time: z
       .string()
-      .or(z.date())
+      .or(z.string())
       .optional()
       .describe("End time of the event"),
     endTime: z
       .string()
-      .or(z.date())
+      .or(z.string())
       .optional()
       .describe("End time of the event (camelCase)"),
     etag: z
@@ -248,13 +248,13 @@ const createEventSchema = z
       .describe("Whether the event was created from a project (camelCase)"),
     last_synced_at: z
       .string()
-      .or(z.date())
+      .or(z.string())
       .optional()
       .nullable()
       .describe("Timestamp of the last synchronization"),
     lastSyncedAt: z
       .string()
-      .or(z.date())
+      .or(z.string())
       .optional()
       .nullable()
       .describe("Timestamp of the last synchronization (camelCase)"),
@@ -309,12 +309,12 @@ const createEventSchema = z
       .describe("ID of the project associated with the event (camelCase)"),
     start_time: z
       .string()
-      .or(z.date())
+      .or(z.string())
       .optional()
       .describe("Start time of the event"),
     startTime: z
       .string()
-      .or(z.date())
+      .or(z.string())
       .optional()
       .describe("Start time of the event (camelCase)"),
     sync_status: syncStatusEnum
@@ -377,12 +377,12 @@ const updateEventSchema = z.object({
     .describe("Description or notes for the event"),
   end_time: z
     .string()
-    .or(z.date())
+    .or(z.string())
     .optional()
     .describe("End time of the event"),
   endTime: z
     .string()
-    .or(z.date())
+    .or(z.string())
     .optional()
     .describe("End time of the event (camelCase)"),
   etag: z
@@ -446,13 +446,13 @@ const updateEventSchema = z.object({
     .describe("Whether the event was created from a project (camelCase)"),
   last_synced_at: z
     .string()
-    .or(z.date())
+    .or(z.string())
     .optional()
     .nullable()
     .describe("Timestamp of the last synchronization"),
   lastSyncedAt: z
     .string()
-    .or(z.date())
+    .or(z.string())
     .optional()
     .nullable()
     .describe("Timestamp of the last synchronization (camelCase)"),
@@ -503,12 +503,12 @@ const updateEventSchema = z.object({
     .describe("ID of the project associated with the event (camelCase)"),
   start_time: z
     .string()
-    .or(z.date())
+    .or(z.string())
     .optional()
     .describe("Start time of the event"),
   startTime: z
     .string()
-    .or(z.date())
+    .or(z.string())
     .optional()
     .describe("Start time of the event (camelCase)"),
   sync_status: syncStatusEnum

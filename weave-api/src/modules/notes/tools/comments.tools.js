@@ -1,61 +1,40 @@
-const { z } = require("zod");
+const { manageNoteCommentsSchema } = require("../schemas/tools.schema");
+const { NotesCommentsService } = require("../services/notes-comments.service");
 const notesCommentsRepository = require("@/modules/notes/repositories/notes-comments.repository");
 
-const manageCommentsSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("create"),
-    content: z.string().describe("The text content of the comment"),
-    noteId: z.string().describe("ID of the note"),
-  }),
-  z.object({
-    action: z.literal("update"),
-    commentId: z.string().describe("ID of the comment"),
-    content: z.string().describe("The text content of the comment"),
-  }),
-  z.object({
-    action: z.literal("delete"),
-    commentId: z.string().describe("ID of the comment"),
-  }),
-  z.object({
-    action: z.literal("list"),
-    noteId: z.string().describe("ID of the note"),
-  }),
-]);
-
-/**
- * Creates the Comments tools registry bound to a specific user context.
- *
- * @param {Object} user - The authenticated user object.
- * @returns {Record<string, Object>} The comments tools definition map.
- */
 const createCommentsTools = (user) => ({
   manage_note_comments: {
     description: "Manage note comments (create, update, delete, list).",
     handler: async (args) => {
       try {
+        const userId = user?.userId || user?.id;
+        if (!userId) throw new Error("Unauthorized");
+
         const { action, noteId, commentId, content } = args;
 
         if (action === "create") {
-          if (!noteId || !content)
+          if (!noteId || !content) {
             throw new Error(
               "noteId and content are required for create action."
             );
-          const newComment = await notesCommentsRepository.create({
-            content: {
-              content: [
-                {
-                  content: [{ text: content, type: "text" }],
-                  type: "paragraph",
-                },
-              ],
-              type: "doc",
-            },
-            files: [],
+          }
+          const newComment = await NotesCommentsService.createComment(
+            userId,
             noteId,
-            orgId: user.organizationId,
-            parentId: null,
-            userId: user.userId,
-          });
+            {
+              content: {
+                content: [
+                  {
+                    content: [{ text: content, type: "text" }],
+                    type: "paragraph",
+                  },
+                ],
+                type: "doc",
+              },
+              files: [],
+              parentId: null,
+            }
+          );
           return {
             content: [
               {
@@ -67,13 +46,18 @@ const createCommentsTools = (user) => ({
         }
 
         if (action === "update") {
-          if (!commentId || !content)
+          if (!commentId || !content) {
             throw new Error(
               "commentId and content are required for update action."
             );
-          const updated = await notesCommentsRepository.update(
+          }
+          const existing = await notesCommentsRepository.getById(commentId);
+          if (!existing) throw new Error("Comment not found.");
+
+          await NotesCommentsService.updateComment(
+            userId,
+            String(existing.note_id),
             commentId,
-            user.userId,
             {
               content: {
                 content: [
@@ -86,22 +70,23 @@ const createCommentsTools = (user) => ({
               },
             }
           );
-          if (!updated)
-            throw new Error(`Comment ${commentId} not found or access denied.`);
           return {
             content: [{ text: `Comment updated successfully.`, type: "text" }],
           };
         }
 
         if (action === "delete") {
-          if (!commentId)
+          if (!commentId) {
             throw new Error("commentId is required for delete action.");
-          const success = await notesCommentsRepository.softDelete(
-            commentId,
-            user.userId
+          }
+          const existing = await notesCommentsRepository.getById(commentId);
+          if (!existing) throw new Error("Comment not found.");
+
+          await NotesCommentsService.deleteComment(
+            userId,
+            String(existing.note_id),
+            commentId
           );
-          if (!success)
-            throw new Error(`Comment ${commentId} not found or access denied.`);
           return {
             content: [
               {
@@ -114,7 +99,10 @@ const createCommentsTools = (user) => ({
 
         if (action === "list") {
           if (!noteId) throw new Error("noteId is required for list action.");
-          const comments = await notesCommentsRepository.listByNoteId(noteId);
+          const comments = await NotesCommentsService.listComments(
+            userId,
+            noteId
+          );
           return {
             content: [
               { text: JSON.stringify(comments, null, 2), type: "text" },
@@ -136,7 +124,7 @@ const createCommentsTools = (user) => ({
       }
     },
     name: "manage_note_comments",
-    schema: manageCommentsSchema,
+    schema: manageNoteCommentsSchema,
   },
 });
 

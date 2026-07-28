@@ -1,77 +1,22 @@
 const NotesBaseController = require("./base.controller");
-const PlansService = require("@/modules/plans/services/plans.service");
-const PlansRepository = require("@/modules/plans/repositories/plans.repository");
+const { NotesExportService } = require("../services/notes-export.service");
+const { PlanLimitError } = require("../services/notes.service");
 const {
   sendPlanLimitExceeded,
 } = require("@/modules/plans/utils/plan-limit-http.util");
-const { PLAN_PATHS } = require("@/modules/plans/utils/plan-paths.util");
-const { PDFService } = require("../utils/pdf-export.util");
 
-/**
- * Export note to PDF.
- */
 class NotesExportController extends NotesBaseController {
   async exportNoteAsPDF(req, res, next) {
     try {
-      const { noteId } = req.params; // In routes, defined as /:id/export/pdf
+      const { noteId } = req.params;
 
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      // Fetch/Create usage record
-      const usageRecord = await PlansService.managePlanUsage(userId);
-      const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-
-      // Fetch plan details
-      const planDetails = await PlansRepository.getPlanById(
-        getUserPlan.plan_id
+      const pdfBuffer = await NotesExportService.exportNoteAsPDF(
+        userId,
+        noteId
       );
-
-      if (!usageRecord || !planDetails) {
-        return res.status(404).json({
-          error: "Plan configuration not found for this user.",
-        });
-      }
-
-      // Validate monthly exports limit
-      const canExport = PlansService.checkLimit(
-        planDetails.details,
-        usageRecord.usage_details,
-        "monthly_cycle.exports.notes_count",
-        "limits.exports.notes_monthly"
-      );
-
-      if (!canExport) {
-        return sendPlanLimitExceeded(res, {
-          error: "Exports limit reached",
-          limit_key: PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY,
-          message: `Your plan (${planDetails.name}) allows only ${planDetails.details.limits.exports.notes_monthly} note exports per month.`,
-          resource: "exports",
-        });
-      }
-
-      const { note } = await this._validateNoteAccess(noteId, userId);
-
-      if (!note) {
-        return res.status(404).json({ error: "Note not found" });
-      }
-
-      const blocks =
-        await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
-
-      const dataForPDF = {
-        ...note,
-        blocks,
-        collaborators: note.collaborators || [],
-        user_email: note.user_email,
-        user_name: note.user_name,
-      };
-
-      const pdfBuffer = await PDFService.generateNotePDF(dataForPDF);
-
-      // Increment exports counter
-      await PlansService.consumeExport(usageRecord.id, "notes");
-
       const filename = `note-${noteId}-${new Date().getTime()}.pdf`;
 
       res.setHeader("Content-Type", "application/pdf");
@@ -83,6 +28,17 @@ class NotesExportController extends NotesBaseController {
 
       return res.status(200).send(pdfBuffer);
     } catch (error) {
+      if (error instanceof PlanLimitError) {
+        return sendPlanLimitExceeded(res, {
+          error: "Exports limit reached",
+          limit_key: error.limitKey,
+          message: error.message,
+          resource: error.resource,
+        });
+      }
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({ error: error.message });
+      }
       this._handleError(error, res, next);
     }
   }

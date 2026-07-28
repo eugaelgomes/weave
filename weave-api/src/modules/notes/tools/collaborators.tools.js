@@ -1,49 +1,25 @@
-const { z } = require("zod");
-const noteCollaboratorsRepository = require("@/modules/notes/repositories/note-collaborators.repository");
-const readNotesRepository = require("@/modules/notes/repositories/read-notes.repository");
+const { manageNoteCollaboratorsSchema } = require("../schemas/tools.schema");
+const {
+  NotesCollaboratorsService,
+} = require("../services/notes-collaborators.service");
 
-const manageNoteCollaboratorsSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("add"),
-    noteId: z.string().describe("ID of the note"),
-    userId: z.string().describe("ID of the user to add as a collaborator"),
-  }),
-  z.object({
-    action: z.literal("remove"),
-    noteId: z.string().describe("ID of the note"),
-    userId: z.string().describe("ID of the user to remove"),
-  }),
-  z.object({
-    action: z.literal("list"),
-    noteId: z.string().describe("ID of the note"),
-  }),
-]);
-
-/**
- * Creates the Note Collaborators tools registry bound to a specific user context.
- *
- * @param {Object} user - The authenticated user object.
- * @returns {Record<string, Object>} The collaborators tools definition map.
- */
 const createNoteCollaboratorsTools = (user) => ({
   manage_note_collaborators: {
     description: "Manage note collaborators (add, remove, list).",
     handler: async (args) => {
       try {
-        const { action, noteId, userId } = args;
+        const userId = user?.userId || user?.id;
+        if (!userId) throw new Error("Unauthorized");
 
-        // Security check
-        const accessSummary =
-          await readNotesRepository.getNoteAccessSummary(noteId);
-        if (!accessSummary || accessSummary.user_id !== user.userId) {
-          throw new Error(`Note ${noteId} not found or access denied.`);
-        }
+        const { action, noteId, userId: targetUserId } = args;
 
         if (action === "add") {
-          if (!userId) throw new Error("userId is required for add action.");
-          const added = await noteCollaboratorsRepository.addCollaborator(
+          if (!targetUserId)
+            throw new Error("userId is required for add action.");
+          const added = await NotesCollaboratorsService.addCollaborator(
+            userId,
             noteId,
-            userId
+            targetUserId
           );
           return {
             content: [{ text: JSON.stringify(added, null, 2), type: "text" }],
@@ -51,11 +27,12 @@ const createNoteCollaboratorsTools = (user) => ({
         }
 
         if (action === "remove") {
-          if (!userId) throw new Error("userId is required for remove action.");
-          await noteCollaboratorsRepository.removeCollaborator(
-            noteId,
+          if (!targetUserId)
+            throw new Error("userId is required for remove action.");
+          await NotesCollaboratorsService.removeCollaborator(
             userId,
-            user.userId
+            noteId,
+            targetUserId
           );
           return {
             content: [
@@ -65,8 +42,10 @@ const createNoteCollaboratorsTools = (user) => ({
         }
 
         if (action === "list") {
-          const collabs =
-            await noteCollaboratorsRepository.getCollaboratorsByNoteId(noteId);
+          const collabs = await NotesCollaboratorsService.listCollaborators(
+            userId,
+            noteId
+          );
           return {
             content: [{ text: JSON.stringify(collabs, null, 2), type: "text" }],
           };

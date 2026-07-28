@@ -1,57 +1,5 @@
-const { z } = require("zod");
-const readNotesRepository = require("@/modules/notes/repositories/read-notes.repository");
-const createNotesRepository = require("@/modules/notes/repositories/create-notes.repository");
-const mutateNotesRepository = require("@/modules/notes/repositories/mutate-notes.repository");
-
-const manageNotesSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("create"),
-    description: z
-      .string()
-      .optional()
-      .describe("Content/description of the note"),
-    projectId: z.string().optional().describe("ID of the associated project"),
-    status: z
-      .string()
-      .optional()
-      .describe("Status of the note (VISIBLE, SECURE, ARCHIVED)"),
-    tags: z.array(z.string()).optional().describe("Array of tags"),
-    title: z.string().describe("Title of the note"),
-  }),
-  z.object({
-    action: z.literal("update"),
-    description: z.string().optional().describe("New description"),
-    noteId: z.string().describe("ID of the note to update"),
-    status: z.string().optional().describe("New status"),
-    tags: z.array(z.string()).optional().describe("New tags"),
-    title: z.string().optional().describe("New title"),
-  }),
-  z.object({
-    action: z.literal("delete"),
-    noteId: z.string().describe("ID of the note to delete"),
-  }),
-  z.object({
-    action: z.literal("get"),
-    noteId: z.string().describe("ID of the note to retrieve"),
-  }),
-  z.object({
-    action: z.literal("list"),
-    limit: z
-      .number()
-      .optional()
-      .describe("Number of notes to return (default: 10)"),
-    page: z
-      .number()
-      .optional()
-      .describe("Page number for pagination (default: 1)"),
-    search: z.string().optional().describe("Search term to filter notes"),
-    sortBy: z
-      .enum(["updated_at", "created_at", "title"])
-      .optional()
-      .describe("Field to sort by"),
-    sortOrder: z.enum(["asc", "desc"]).optional().describe("Sort direction"),
-  }),
-]);
+const { manageNotesSchema } = require("../schemas/tools.schema");
+const { NotesService } = require("../services/notes.service");
 
 const createNotesTools = (user) => ({
   manage_notes: {
@@ -59,6 +7,9 @@ const createNotesTools = (user) => ({
       "Manage notes (create, update, delete, get, list). Use this tool to query or modify notes metadata.",
     handler: async (args) => {
       try {
+        const userId = user?.userId || user?.id;
+        if (!userId) throw new Error("Unauthorized");
+
         const {
           action,
           noteId,
@@ -76,14 +27,13 @@ const createNotesTools = (user) => ({
 
         if (action === "create") {
           if (!title) throw new Error("title is required for create action");
-          const newNote = await createNotesRepository.createNotesQuery(
-            user.userId,
-            title,
+          const newNote = await NotesService.createNote(userId, {
             description,
-            tags,
+            project_id: projectId,
             status,
-            projectId
-          );
+            tags,
+            title,
+          });
           return {
             content: [{ text: JSON.stringify(newNote, null, 2), type: "text" }],
           };
@@ -91,19 +41,7 @@ const createNotesTools = (user) => ({
 
         if (action === "get") {
           if (!noteId) throw new Error("noteId is required for get action");
-          const note = await readNotesRepository.getNoteById(
-            noteId,
-            user.userId
-          );
-          if (!note)
-            throw new Error(`Note ${noteId} not found or access denied.`);
-
-          const noteBlocksRepository = require("@/modules/notes/repositories/note-blocks.repository");
-          const blocks = await noteBlocksRepository.findTreeByNoteId(
-            args.noteId
-          );
-          note.blocks = blocks;
-
+          const note = await NotesService.getNoteById(noteId, userId);
           return {
             content: [{ text: JSON.stringify(note, null, 2), type: "text" }],
           };
@@ -111,18 +49,14 @@ const createNotesTools = (user) => ({
 
         if (action === "update") {
           if (!noteId) throw new Error("noteId is required for update action");
-          const accessSummary =
-            await readNotesRepository.getNoteAccessSummary(noteId);
-          if (!accessSummary || accessSummary.user_id !== user.userId) {
-            throw new Error(`Note ${noteId} not found or access denied.`);
-          }
-          const updated = await mutateNotesRepository.updateNoteById(noteId, {
+          const currentNote = await NotesService.getNoteById(noteId, userId);
+          const updated = await NotesService.updateNote(userId, noteId, {
+            baseRevision: currentNote.revision,
             description,
             status,
             tags,
             title,
           });
-          if (!updated) throw new Error(`Note ${noteId} could not be updated.`);
           return {
             content: [{ text: JSON.stringify(updated, null, 2), type: "text" }],
           };
@@ -130,10 +64,7 @@ const createNotesTools = (user) => ({
 
         if (action === "delete") {
           if (!noteId) throw new Error("noteId is required for delete action");
-          const count = await mutateNotesRepository.softDeleteNotes(
-            [noteId],
-            user.userId
-          );
+          const count = await NotesService.deleteNote(userId, noteId);
           return {
             content: [
               { text: `Successfully deleted ${count} note(s).`, type: "text" },
@@ -142,7 +73,7 @@ const createNotesTools = (user) => ({
         }
 
         if (action === "list") {
-          const result = await readNotesRepository.listNotes(user.userId, {
+          const result = await NotesService.getAllNotes(userId, {
             limit: limit || 10,
             page: page || 1,
             search,
