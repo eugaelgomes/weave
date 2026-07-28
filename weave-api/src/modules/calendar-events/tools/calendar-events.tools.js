@@ -1,41 +1,27 @@
 const { z } = require("zod");
-const CalendarEventsRepository = require("../repositories/calendar-events.repository");
+const calendarEventsService = require("../services/calendar-events.service");
+const {
+  createEventSchema,
+  updateEventSchema,
+  listEventsQuerySchema,
+  eventIdParamSchema,
+  checkFreeBusySchema,
+} = require("../schemas/calendar-events.schema");
 
 const manageCalendarEventsSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("create"),
-    description: z.string().optional().describe("Description of the event"),
-    endTime: z.string().optional().describe("End time in ISO format"),
-    isAllDay: z.boolean().optional().describe("Whether the event is all day"),
-    location: z.string().optional().describe("Location of the event"),
-    startTime: z.string().optional().describe("Start time in ISO format"),
-    timezone: z.string().optional().describe("Timezone of the event"),
-    title: z.string().optional().describe("Title of the event"),
-  }),
-  z.object({
-    action: z.literal("get"),
-    eventId: z.string().uuid().describe("ID of the event"),
-  }),
-  z.object({
-    action: z.literal("update"),
-    description: z.string().optional().describe("Description of the event"),
-    endTime: z.string().optional().describe("End time in ISO format"),
-    eventId: z.string().uuid().describe("ID of the event"),
-    isAllDay: z.boolean().optional().describe("Whether the event is all day"),
-    location: z.string().optional().describe("Location of the event"),
-    startTime: z.string().optional().describe("Start time in ISO format"),
-    timezone: z.string().optional().describe("Timezone of the event"),
-    title: z.string().optional().describe("Title of the event"),
-  }),
-  z.object({
-    action: z.literal("delete"),
-    eventId: z.string().uuid().describe("ID of the event"),
-  }),
-  z.object({
-    action: z.literal("list"),
-    endDate: z.string().optional().describe("End date for list filter"),
-    startDate: z.string().optional().describe("Start date for list filter"),
-  }),
+  z.object({ action: z.literal("create") }).extend(createEventSchema.shape),
+  z.object({ action: z.literal("get") }).extend(eventIdParamSchema.shape),
+  z
+    .object({ action: z.literal("update") })
+    .extend(eventIdParamSchema.shape)
+    .extend(updateEventSchema.shape),
+  z.object({ action: z.literal("delete") }).extend(eventIdParamSchema.shape),
+  z.object({ action: z.literal("list") }).extend(listEventsQuerySchema.shape),
+  z.object({ action: z.literal("list_google_calendars") }),
+  z.object({ action: z.literal("get_google_settings") }),
+  z
+    .object({ action: z.literal("check_free_busy") })
+    .extend(checkFreeBusySchema.shape),
 ]);
 
 const createCalendarEventsTools = (user) => ({
@@ -43,32 +29,10 @@ const createCalendarEventsTools = (user) => ({
     description: "Manage calendar events (create, get, update, delete, list).",
     handler: async (args) => {
       try {
-        const {
-          action,
-          eventId,
-          title,
-          description,
-          startTime,
-          endTime,
-          startDate,
-          endDate,
-          timezone,
-          isAllDay,
-          location,
-        } = args;
+        const { action, eventId, from, to, items, timeMax, timeMin } = args;
 
         if (action === "create") {
-          const payload = {
-            creatorId: user.id,
-            description,
-            endTime,
-            isAllDay,
-            location,
-            startTime,
-            timezone,
-            title,
-          };
-          const event = await CalendarEventsRepository.createEvent(payload);
+          const event = await calendarEventsService.createEvent(args, user.id);
           return {
             content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
           };
@@ -76,11 +40,10 @@ const createCalendarEventsTools = (user) => ({
 
         if (action === "get") {
           if (!eventId) throw new Error("eventId is required for get action.");
-          const event = await CalendarEventsRepository.getEventById({
-            creatorId: user.id,
+          const event = await calendarEventsService.getEventById(
             eventId,
-          });
-          if (!event) throw new Error("Event not found");
+            user.id
+          );
           return {
             content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
           };
@@ -89,25 +52,11 @@ const createCalendarEventsTools = (user) => ({
         if (action === "update") {
           if (!eventId)
             throw new Error("eventId is required for update action.");
-          const fields = {
-            description,
-            endTime,
-            isAllDay,
-            location,
-            startTime,
-            timezone,
-            title,
-          };
-          // Remove undefined fields
-          Object.keys(fields).forEach(
-            (key) => fields[key] === undefined && delete fields[key]
-          );
-          const event = await CalendarEventsRepository.updateEvent({
-            creatorId: user.id,
+          const event = await calendarEventsService.updateEvent(
             eventId,
-            fields,
-          });
-          if (!event) throw new Error("Event not found or not updated");
+            args,
+            user.id
+          );
           return {
             content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
           };
@@ -116,11 +65,7 @@ const createCalendarEventsTools = (user) => ({
         if (action === "delete") {
           if (!eventId)
             throw new Error("eventId is required for delete action.");
-          const result = await CalendarEventsRepository.softDeleteEvent({
-            creatorId: user.id,
-            eventId,
-          });
-          if (!result) throw new Error("Event not found or already deleted");
+          await calendarEventsService.deleteEvent(eventId, user.id);
           return {
             content: [
               {
@@ -132,13 +77,49 @@ const createCalendarEventsTools = (user) => ({
         }
 
         if (action === "list") {
-          const events = await CalendarEventsRepository.listEvents({
+          const events = await calendarEventsService.listEvents({
             creatorId: user.id,
-            endDate,
-            startDate,
+            from,
+            includeDeleted: args.includeDeleted || args.include_deleted,
+            organizationId: args.organizationId || args.organization_id,
+            to,
           });
           return {
             content: [{ text: JSON.stringify(events, null, 2), type: "text" }],
+          };
+        }
+
+        if (action === "list_google_calendars") {
+          const calendars = await calendarEventsService.listGoogleCalendars(
+            user.id
+          );
+          return {
+            content: [
+              { text: JSON.stringify(calendars, null, 2), type: "text" },
+            ],
+          };
+        }
+
+        if (action === "get_google_settings") {
+          const settings =
+            await calendarEventsService.getGoogleCalendarSettings(user.id);
+          return {
+            content: [
+              { text: JSON.stringify(settings, null, 2), type: "text" },
+            ],
+          };
+        }
+
+        if (action === "check_free_busy") {
+          const freebusy = await calendarEventsService.checkFreeBusy(user.id, {
+            items,
+            timeMax,
+            timeMin,
+          });
+          return {
+            content: [
+              { text: JSON.stringify(freebusy, null, 2), type: "text" },
+            ],
           };
         }
 

@@ -26,6 +26,103 @@ const inviteIdParamSchema = z.object({
   inviteId: uuidParamSchema,
 });
 
+// Full Entity Schema (matching repository output)
+const calendarEventSchema = z.object({
+  created_at: z
+    .date()
+    .optional()
+    .describe("Timestamp of when the event was created"),
+  creator_id: uuidParamSchema
+    .optional()
+    .describe("ID of the user who created the event"),
+  deleted: z
+    .boolean()
+    .optional()
+    .describe("Whether the event has been soft-deleted"),
+  deleted_at: z
+    .date()
+    .nullable()
+    .optional()
+    .describe("Timestamp of when the event was deleted, if applicable"),
+  description: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("Description or notes for the event"),
+  end_time: z.date().optional().describe("End time of the event"),
+  etag: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ETag for the event, used for synchronization"),
+  google_calendar_id: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ID of the associated Google Calendar"),
+  google_event_id: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ID of the event in Google Calendar"),
+  id: uuidParamSchema
+    .optional()
+    .describe("Unique identifier of the calendar event"),
+  is_all_day: z
+    .boolean()
+    .nullable()
+    .optional()
+    .describe("Whether the event lasts all day"),
+  is_from_note: z
+    .boolean()
+    .nullable()
+    .optional()
+    .describe("Whether the event was created from a note"),
+  is_from_project: z
+    .boolean()
+    .nullable()
+    .optional()
+    .describe("Whether the event was created from a project"),
+  last_synced_at: z
+    .date()
+    .nullable()
+    .optional()
+    .describe("Timestamp of the last synchronization with external calendars"),
+  location: z.string().nullable().optional().describe("Location of the event"),
+  note_id: publicIdOrUuidSchema
+    .nullable()
+    .optional()
+    .describe("ID of the note associated with the event"),
+  organization_id: uuidParamSchema
+    .nullable()
+    .optional()
+    .describe("ID of the organization the event belongs to"),
+  outlook_calendar_id: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ID of the associated Outlook Calendar"),
+  outlook_event_id: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ID of the event in Outlook Calendar"),
+  project_id: publicIdOrUuidSchema
+    .nullable()
+    .optional()
+    .describe("ID of the project associated with the event"),
+  start_time: z.date().optional().describe("Start time of the event"),
+  sync_status: syncStatusEnum
+    .nullable()
+    .optional()
+    .describe("Current synchronization status of the event"),
+  title: z.string().optional().describe("Title of the event"),
+  updated_at: z
+    .date()
+    .optional()
+    .describe("Timestamp of when the event was last updated"),
+});
+
 // Query schemas
 const listEventsQuerySchema = z.object({
   from: z
@@ -484,7 +581,54 @@ const checkFreeBusySchema = z.object({
     .describe("Start time for the free/busy check window"),
 });
 
+// Full Entity Schema for Invites (matching repository output)
+const calendarEventInviteSchema = z.object({
+  created_at: z
+    .date()
+    .optional()
+    .describe("Timestamp of when the invite was created"),
+  deleted: z
+    .boolean()
+    .optional()
+    .describe("Whether the invite has been soft-deleted"),
+  deleted_at: z
+    .date()
+    .nullable()
+    .optional()
+    .describe("Timestamp of when the invite was deleted, if applicable"),
+  email: z.string().email().optional().describe("Email address of the invitee"),
+  event_id: uuidParamSchema
+    .optional()
+    .describe("ID of the calendar event this invite belongs to"),
+  external_guest_id: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ID of an external guest, if applicable"),
+  id: uuidParamSchema
+    .optional()
+    .describe("Unique identifier of the event invite"),
+  role: z
+    .string()
+    .optional()
+    .describe("Role of the invited user (e.g., REQUIRED, OPTIONAL)"),
+  status: z
+    .string()
+    .optional()
+    .describe("Status of the invitation (e.g., PENDING, ACCEPTED, DECLINED)"),
+  updated_at: z
+    .date()
+    .optional()
+    .describe("Timestamp of when the invite was last updated"),
+  user_id: uuidParamSchema
+    .nullable()
+    .optional()
+    .describe("ID of the user, if registered in the system"),
+});
+
 module.exports = {
+  calendarEventInviteSchema,
+  calendarEventSchema,
   checkFreeBusySchema,
   createEventSchema,
   createInviteSchema,
