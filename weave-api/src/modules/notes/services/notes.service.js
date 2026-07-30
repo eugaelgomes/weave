@@ -6,6 +6,8 @@ const taskPrioritiesRepository = require("@/modules/task-priorities/repositories
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const spacesService = require("@/services/storage");
+const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const { AppError, ERROR_CODES } = require("@/errors");
 const {
   orgRoleHasPermission,
@@ -889,6 +891,61 @@ class NotesService {
       isCollaborator,
       isOwner,
     };
+
+    if (hadOtherUpdates || hadFilesWithoutDbRow) {
+      try {
+        const updaterData = await SearchUsersRepository.findById(userId);
+        const collaborators =
+          await this.notesRepository.getCollaboratorsByNoteId(noteId);
+        const notifyUserIds = new Set();
+
+        if (note.user_id && note.user_id !== userId) {
+          notifyUserIds.add(note.user_id);
+        }
+        for (const c of collaborators) {
+          if (c.user_id !== userId) notifyUserIds.add(c.user_id);
+        }
+
+        const changedFields = [];
+        if (updateData.due_date !== undefined) changedFields.push("due date");
+        if (updateData.project_id !== undefined) changedFields.push("project");
+        if (updateData.project_stage_id !== undefined)
+          changedFields.push("stage");
+        if (updateData.status !== undefined) changedFields.push("status");
+        if (updateData.priority_id !== undefined)
+          changedFields.push("priority");
+        if (updateData.title !== undefined) changedFields.push("title");
+        if (updateData.description !== undefined)
+          changedFields.push("description");
+        if (updateData.tags !== undefined) changedFields.push("tags");
+        if (
+          hadFilesWithoutDbRow ||
+          (updateData.properties &&
+            Object.keys(updateData.properties).length > 0)
+        )
+          changedFields.push("files/properties");
+
+        for (const notifyUserId of notifyUserIds) {
+          await NotificationsRepository.createNotification({
+            actorId: userId,
+            content: {
+              action: "note_updated",
+              changed_fields: changedFields,
+              note_id: noteId,
+              note_title: formattedNote.title,
+              updated_by_name: updaterData?.name,
+            },
+            entityId: noteId,
+            entityType: "note",
+            title: `Note updated: ${formattedNote.title || "untitled"}`,
+            type: "note_shared",
+            userId: notifyUserId,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to send note update notifications", err);
+      }
+    }
 
     return formattedNote;
   }

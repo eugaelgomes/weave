@@ -48,7 +48,7 @@ const manageOrganizationDomainsSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("update_sso"),
-    domainId: z.string().uuid().describe("Domain ID"),
+    domain_id: z.string().uuid().describe("Domain ID"),
     enabled: z.boolean().describe("Whether SSO is enabled"),
     metadata: z
       .object({
@@ -63,7 +63,7 @@ const manageOrganizationDomainsSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("delete"),
-    domainId: z.string().uuid().describe("Domain ID"),
+    domain_id: z.string().uuid().describe("Domain ID"),
   }),
   z.object({
     action: z.literal("list"),
@@ -91,8 +91,8 @@ const manageOrganizationAreasSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("update"),
     active: z.boolean().optional().describe("Whether the area is active"),
+    area_id: z.string().uuid().describe("Area ID"),
     area_name: z.string().optional().describe("Area name"),
-    areaId: z.string().uuid().describe("Area ID"),
     description: z.string().optional().nullable().describe("Area description"),
     parent_area_id: z
       .string()
@@ -109,7 +109,7 @@ const manageOrganizationAreasSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("delete"),
-    areaId: z.string().uuid().describe("Area ID"),
+    area_id: z.string().uuid().describe("Area ID"),
   }),
   z.object({
     action: z.literal("list"),
@@ -127,11 +127,11 @@ const manageOrganizationMembersSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("update_role"),
     role: z.enum(validRoles).describe("New role for the member"),
-    userId: z.string().uuid().describe("User ID to modify"),
+    user_id: z.string().uuid().describe("User ID to modify"),
   }),
   z.object({
     action: z.literal("remove"),
-    userId: z.string().uuid().describe("User ID to remove"),
+    user_id: z.string().uuid().describe("User ID to remove"),
   }),
   z.object({
     action: z.literal("list"),
@@ -155,7 +155,7 @@ const createOrganizationsTools = (user) => {
         try {
           const {
             action,
-            areaId,
+            area_id,
             area_name,
             description,
             parent_area_id,
@@ -198,11 +198,11 @@ const createOrganizationsTools = (user) => {
           }
 
           if (action === "update") {
-            if (!areaId)
-              throw new Error("areaId is required for update action");
+            if (!area_id)
+              throw new Error("area_id is required for update action");
             const organizationId = await getActiveOrgId();
             const result = await areasRepository.updateArea(
-              areaId,
+              area_id,
               organizationId,
               { active, areaName: area_name, description, properties, slug }
             );
@@ -215,11 +215,11 @@ const createOrganizationsTools = (user) => {
           }
 
           if (action === "delete") {
-            if (!areaId)
-              throw new Error("areaId is required for delete action");
+            if (!area_id)
+              throw new Error("area_id is required for delete action");
             const organizationId = await getActiveOrgId();
             const result = await areasRepository.softDeleteArea(
-              areaId,
+              area_id,
               organizationId
             );
             if (!result) throw new Error("Area not found or access denied.");
@@ -250,8 +250,14 @@ const createOrganizationsTools = (user) => {
         "Manage organization domains and SSO (add, update_sso, delete, list).",
       handler: async (args) => {
         try {
-          const { action, domainId, domain_name, enabled, metadata, provider } =
-            args;
+          const {
+            action,
+            domain_id,
+            domain_name,
+            enabled,
+            metadata,
+            provider,
+          } = args;
 
           if (action === "list") {
             const organizationId = await getActiveOrgId();
@@ -282,20 +288,23 @@ const createOrganizationsTools = (user) => {
           }
 
           if (action === "update_sso") {
-            if (!domainId || !metadata || !provider)
+            if (!domain_id || !metadata || !provider)
               throw new Error(
-                "domainId, metadata, and provider are required for update_sso"
+                "domain_id, metadata, and provider are required for update_sso"
               );
-            const domain = await domainsRepository.findById(domainId);
+            const domain = await domainsRepository.findById(domain_id);
             if (!domain) throw new Error("Domain not found.");
             const organizationId = await getActiveOrgId();
             if (domain.organization_id !== organizationId)
               throw new Error("Domain does not belong to active organization.");
-            const result = await domainsRepository.updateSsoSettings(domainId, {
-              enabled,
-              metadata,
-              provider,
-            });
+            const result = await domainsRepository.updateSsoSettings(
+              domain_id,
+              {
+                enabled,
+                metadata,
+                provider,
+              }
+            );
             return {
               content: [
                 { text: JSON.stringify(result, null, 2), type: "text" },
@@ -304,14 +313,14 @@ const createOrganizationsTools = (user) => {
           }
 
           if (action === "delete") {
-            if (!domainId)
-              throw new Error("domainId is required for delete action");
-            const domain = await domainsRepository.findById(domainId);
+            if (!domain_id)
+              throw new Error("domain_id is required for delete action");
+            const domain = await domainsRepository.findById(domain_id);
             if (!domain) throw new Error("Domain not found.");
             const organizationId = await getActiveOrgId();
             if (domain.organization_id !== organizationId)
               throw new Error("Domain does not belong to active organization.");
-            const result = await domainsRepository.deleteDomain(domainId);
+            const result = await domainsRepository.deleteDomain(domain_id);
             return {
               content: [
                 { text: JSON.stringify(result, null, 2), type: "text" },
@@ -336,7 +345,7 @@ const createOrganizationsTools = (user) => {
         "Manage organization members (invite, update_role, remove, list).",
       handler: async (args) => {
         try {
-          const { action, email, name, role, username, userId } = args;
+          const { action, email, name, role, username, user_id } = args;
 
           if (action === "list") {
             const organizationId = await getActiveOrgId();
@@ -371,13 +380,13 @@ const createOrganizationsTools = (user) => {
           }
 
           if (action === "update_role") {
-            if (!userId || !role)
-              throw new Error("userId and role are required for update_role");
+            if (!user_id || !role)
+              throw new Error("user_id and role are required for update_role");
             const organizationId = await getActiveOrgId();
             const result =
               await organizationsRepository.updateOrganizationMemberRole(
                 organizationId,
-                userId,
+                user_id,
                 role
               );
             if (!result)
@@ -392,13 +401,13 @@ const createOrganizationsTools = (user) => {
           }
 
           if (action === "remove") {
-            if (!userId)
-              throw new Error("userId is required for remove action");
+            if (!user_id)
+              throw new Error("user_id is required for remove action");
             const organizationId = await getActiveOrgId();
             const result =
               await organizationsRepository.removeOrganizationMember(
                 organizationId,
-                userId
+                user_id
               );
             if (!result)
               throw new Error(

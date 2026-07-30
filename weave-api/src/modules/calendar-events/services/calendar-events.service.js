@@ -12,6 +12,10 @@ const {
   buildGoogleEventBody,
   normalizeUpdateFields,
 } = require("../normalizer");
+const usersService = require("../../users/services/users.service");
+const {
+  calendar_invite_receipt,
+} = require("../../../services/email/templates/calendar-invite");
 
 class CalendarEventsService {
   async _syncEventToGoogle(payload, creatorId) {
@@ -61,6 +65,53 @@ class CalendarEventsService {
     };
   }
 
+  async _fetchGoogleEvents(creatorId, from, to) {
+    try {
+      const tokens =
+        await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
+      if (!tokens) return [];
+
+      const { calendar } = googleService.getCalendarClientWithAuth({
+        access_token: tokens.access_token,
+        expiry_date: tokens.expires_at
+          ? new Date(tokens.expires_at).getTime()
+          : null,
+        refresh_token: tokens.refresh_token,
+      });
+
+      // Se from/to não forem passados, define default (1 semana atrás até 6 meses frente)
+      const timeMin =
+        from || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const timeMax =
+        to || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data } = await calendar.events.list({
+        calendarId: "primary",
+        orderBy: "startTime",
+        singleEvents: true,
+        timeMax,
+        timeMin,
+      });
+
+      return (data.items || []).map((item) => ({
+        attendees: (item.attendees || []).map((a) => a.email),
+        description: item.description || "",
+        end_time: item.end?.dateTime || item.end?.date,
+        google_event_id: item.id,
+        html_link: item.htmlLink,
+        id: item.id,
+        is_all_day: !item.start?.dateTime && !!item.start?.date,
+        location: item.location || "",
+        origin: "google",
+        start_time: item.start?.dateTime || item.start?.date,
+        title: item.summary || "No Title",
+      }));
+    } catch (error) {
+      console.warn("Failed to fetch Google events:", error.message);
+      return [];
+    }
+  }
+
   async createEvent(body, creatorId) {
     const payload = normalizeCreatePayload(body, creatorId);
 
@@ -101,17 +152,72 @@ class CalendarEventsService {
       }
     }
 
-    return await calendarEventsRepository.createEvent(payload);
+    const createdEvent = await calendarEventsRepository.createEvent(payload);
+
+    // Envio de email de recibo para criador e convidados do Weave
+    try {
+      const creator = await usersService.getUserById(creatorId);
+      if (creator && creator.email) {
+        const recipients = new Set([creator.email]);
+        if (payload.attendees && payload.attendees.length > 0) {
+          payload.attendees.forEach((att) => recipients.add(att));
+        }
+
+        const meetLink =
+          payload.createGoogleMeet && createdEvent.google_event_id
+            ? `https://meet.google.com/${createdEvent.google_event_id}` // Mock if real html_link is missing from insert, real link could be fetched if needed
+            : null;
+
+        for (const email of recipients) {
+          await calendar_invite_receipt(
+            email,
+            payload.title,
+            payload.startTime ? payload.startTime.toISOString() : "",
+            payload.endTime ? payload.endTime.toISOString() : "",
+            payload.location,
+            payload.description,
+            meetLink
+          );
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to send calendar receipt emails:", err.message);
+    }
+
+    return createdEvent;
   }
 
-  async listEvents({ creatorId, organizationId, includeDeleted, from, to }) {
-    return await calendarEventsRepository.listEvents({
+  async listEvents({
+    creatorId,
+    organizationId,
+    includeDeleted,
+    from,
+    to,
+    includeGoogleEvents,
+  }) {
+    const weaveEvents = await calendarEventsRepository.listEvents({
       creatorId,
       from,
       includeDeleted,
       organizationId,
       to,
     });
+
+    let results = weaveEvents.map((e) => ({ ...e, origin: "weave" }));
+
+    if (includeGoogleEvents) {
+      const googleEvents = await this._fetchGoogleEvents(creatorId, from, to);
+      results = results.concat(googleEvents);
+    }
+
+    // Sort combined events by start_time
+    results.sort((a, b) => {
+      const timeA = new Date(a.start_time || 0).getTime();
+      const timeB = new Date(b.start_time || 0).getTime();
+      return timeA - timeB;
+    });
+
+    return results;
   }
 
   async getEventById(eventId, creatorId) {

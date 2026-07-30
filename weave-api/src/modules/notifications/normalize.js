@@ -312,6 +312,45 @@ const buildNoteSharedContent = (payload) => {
     });
   }
 
+  if (actionKey === "note_updated") {
+    const updatedByName = payload.content?.updated_by_name;
+    const changedFields = payload.content?.changed_fields || [];
+
+    let changesText = "";
+    if (changedFields.length > 0) {
+      if (changedFields.length === 1) {
+        changesText = ` (changed: ${changedFields[0]})`;
+      } else {
+        changesText = ` (changed: ${changedFields.slice(0, -1).join(", ")} and ${changedFields[changedFields.length - 1]})`;
+      }
+    }
+
+    const message =
+      payload.content?.message ||
+      `${updatedByName || "A collaborator"} updated the note ${noteTitle || "untitled"}${changesText}.`;
+
+    return createBaseContent(payload, {
+      actionKey,
+      actionText: "Review the changes in the note.",
+      entityName: noteTitle,
+      message,
+    });
+  }
+
+  if (actionKey === "comment_added") {
+    const commenterName = payload.content?.commenter_name;
+    const message =
+      payload.content?.message ||
+      `${commenterName || "A collaborator"} commented on the note ${noteTitle || "untitled"}.`;
+
+    return createBaseContent(payload, {
+      actionKey,
+      actionText: "Read and reply to the comment.",
+      entityName: noteTitle,
+      message,
+    });
+  }
+
   return null;
 };
 

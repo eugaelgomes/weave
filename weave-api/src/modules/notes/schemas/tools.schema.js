@@ -1,4 +1,5 @@
 const { z } = require("zod");
+const { uuidSchema } = require("@/utils/mcp-schemas.util");
 
 // ==========================================
 // manage_notes
@@ -6,11 +7,7 @@ const { z } = require("zod");
 const manageNotesSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
-    description: z
-      .string()
-      .optional()
-      .describe("Content/description of the note"),
-    projectId: z.string().optional().describe("ID of the associated project"),
+    project_id: uuidSchema.optional().describe("ID of the associated project"),
     status: z
       .string()
       .optional()
@@ -20,19 +17,30 @@ const manageNotesSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("update"),
-    description: z.string().optional().describe("New description"),
-    noteId: z.string().describe("ID of the note to update"),
+    note_id: z
+      .string()
+      .describe(
+        "ID of the note to update (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+      ),
     status: z.string().optional().describe("New status"),
     tags: z.array(z.string()).optional().describe("New tags"),
     title: z.string().optional().describe("New title"),
   }),
   z.object({
     action: z.literal("delete"),
-    noteId: z.string().describe("ID of the note to delete"),
+    note_id: z
+      .string()
+      .describe(
+        "ID of the note to delete (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+      ),
   }),
   z.object({
     action: z.literal("get"),
-    noteId: z.string().describe("ID of the note to retrieve"),
+    note_id: z
+      .string()
+      .describe(
+        "ID of the note to retrieve (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+      ),
   }),
   z.object({
     action: z.literal("list"),
@@ -45,23 +53,41 @@ const manageNotesSchema = z.discriminatedUnion("action", [
       .optional()
       .describe("Page number for pagination (default: 1)"),
     search: z.string().optional().describe("Search term to filter notes"),
-    sortBy: z
+    sort_by: z
       .enum(["updated_at", "created_at", "title"])
       .optional()
       .describe("Field to sort by"),
-    sortOrder: z.enum(["asc", "desc"]).optional().describe("Sort direction"),
+    sort_order: z.enum(["asc", "desc"]).optional().describe("Sort direction"),
   }),
 ]);
 
 // ==========================================
 // manage_note_blocks
 // ==========================================
+
+/** Block type enum — use one of these exact strings for the `type` field. */
+const blockTypeSchema = z
+  .enum([
+    "heading",
+    "paragraph",
+    "code",
+    "list",
+    "todo",
+    "image",
+    "video",
+    "quote",
+    "divider",
+  ])
+  .describe(
+    "Type of the block. Allowed values: heading, paragraph, code, list, todo, image, video, quote, divider."
+  );
+
 const blockAttrsSchema = z.object({
   alt: z
     .string()
     .optional()
     .describe("Alternative text. Allowed for image blocks."),
-  backgroundColor: z
+  background_color: z
     .string()
     .optional()
     .describe(
@@ -147,50 +173,71 @@ const blockPropertiesSchema = z
   .object({
     attrs: blockAttrsSchema
       .optional()
-      .describe("Block specific attributes mapped by type."),
-    level: z.number().optional().describe("Legacy heading level duplication."),
+      .describe("Block-specific attributes mapped by type."),
+    level: z
+      .number()
+      .optional()
+      .describe("Legacy heading level (deprecated, prefer attrs.level)."),
     marks: z
       .array(markSchema)
       .optional()
-      .describe("Text formatting marks definitions."),
+      .describe(
+        "Text formatting marks. Example: [{type:'bold',start:0,end:5},{type:'link',start:6,end:11,attrs:{href:'https://example.com'}}]"
+      ),
     text: z.string().optional().describe("Text content within properties."),
   })
   .catchall(z.unknown())
-  .describe("Block properties containing formatting marks and specific attrs");
+  .describe(
+    "Block properties containing text, formatting marks and block-specific attrs. Example for a heading: {text:'Introduction',attrs:{level:2,background_color:'#f0f0f0'}}"
+  );
 
 const manageNoteBlocksSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
-    noteId: z.string().describe("ID of the note"),
-    parentId: z
+    note_id: z
+      .string()
+      .describe(
+        "ID of the note to add the block to (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+      ),
+    parent_id: z
       .string()
       .optional()
       .nullable()
-      .describe("Optional parent block ID"),
-    position: z.number().optional().describe("Position among siblings"),
+      .describe("Optional parent block ID for nesting"),
+    position: z
+      .number()
+      .optional()
+      .describe("Position among siblings (0-indexed)"),
     properties: blockPropertiesSchema.optional(),
-    text: z.string().optional().describe("Text content for the block"),
-    type: z.string().describe("Block type"),
+    text: z
+      .string()
+      .optional()
+      .describe("Shorthand text content for the block"),
+    type: blockTypeSchema,
   }),
   z.object({
     action: z.literal("update"),
-    blockId: z
-      .union([z.string(), z.array(z.string())])
-      .describe("ID(s) of the block(s)"),
-    position: z.number().optional().describe("Position among siblings"),
+    block_id: z
+      .union([uuidSchema, z.array(uuidSchema)])
+      .describe("ID or array of IDs of the block(s) to update"),
+    position: z.number().optional().describe("New position among siblings"),
     properties: blockPropertiesSchema.optional(),
-    text: z.string().optional().describe("Text content for the block"),
-    type: z.string().optional().describe("Block type"),
+    text: z.string().optional().describe("Updated text content"),
+    type: blockTypeSchema.optional(),
   }),
   z.object({
     action: z.literal("delete"),
-    blockId: z
-      .union([z.string(), z.array(z.string())])
-      .describe("ID(s) of the block(s)"),
+    block_id: z
+      .union([uuidSchema, z.array(uuidSchema)])
+      .describe("ID or array of IDs of the block(s) to delete"),
   }),
   z.object({
     action: z.literal("list"),
-    noteId: z.string().describe("ID of the note"),
+    note_id: z
+      .string()
+      .describe(
+        "ID of the note whose blocks to list (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+      ),
   }),
 ]);
 
@@ -198,49 +245,91 @@ const manageNoteBlocksSchema = z.discriminatedUnion("action", [
 // manage_note_collaborators
 // ==========================================
 const manageNoteCollaboratorsSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("add"),
-    noteId: z.string().describe("ID of the note"),
-    userId: z.string().describe("ID of the user to add as a collaborator"),
-  }),
-  z.object({
-    action: z.literal("remove"),
-    noteId: z.string().describe("ID of the note"),
-    userId: z.string().describe("ID of the user to remove"),
-  }),
-  z.object({
-    action: z.literal("list"),
-    noteId: z.string().describe("ID of the note"),
-  }),
+  z
+    .object({
+      action: z.literal("add"),
+      note_id: z
+        .string()
+        .describe(
+          "ID of the note (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+        ),
+      user_id: uuidSchema.describe("ID of the user to add as a collaborator"),
+    })
+    .describe("Action to add a new collaborator to the note"),
+  z
+    .object({
+      action: z.literal("remove"),
+      note_id: z
+        .string()
+        .describe(
+          "ID of the note (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+        ),
+      user_id: uuidSchema.describe("ID of the user to remove"),
+    })
+    .describe("Action to remove an existing collaborator from the note"),
+  z
+    .object({
+      action: z.literal("list"),
+      note_id: z
+        .string()
+        .describe(
+          "ID of the note (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+        ),
+    })
+    .describe("Action to list all collaborators of the note"),
 ]);
 
 // ==========================================
 // manage_note_comments
 // ==========================================
 const manageNoteCommentsSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("create"),
-    content: z.string().describe("Content of the comment"),
-    noteId: z.string().describe("ID of the note"),
-    parentId: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("Optional ID of the parent comment"),
-  }),
-  z.object({
-    action: z.literal("update"),
-    commentId: z.string().describe("ID of the comment to update"),
-    content: z.string().describe("New content for the comment"),
-  }),
-  z.object({
-    action: z.literal("delete"),
-    commentId: z.string().describe("ID of the comment to delete"),
-  }),
-  z.object({
-    action: z.literal("list"),
-    noteId: z.string().describe("ID of the note"),
-  }),
+  z
+    .object({
+      action: z.literal("create"),
+      content: z
+        .union([z.string(), z.record(z.any())])
+        .describe(
+          "Content of the comment (plain text string or ProseMirror JSON object for rich text)"
+        ),
+      note_id: z
+        .string()
+        .describe(
+          "ID of the note (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+        ),
+      parent_id: z
+        .string()
+        .optional()
+        .nullable()
+        .describe("Optional ID of the parent comment for threaded replies"),
+    })
+    .describe("Action to create a new comment on a note"),
+  z
+    .object({
+      action: z.literal("update"),
+      comment_id: uuidSchema.describe("ID of the comment to update"),
+      content: z
+        .union([z.string(), z.record(z.any())])
+        .describe(
+          "New content for the comment (plain text string or ProseMirror JSON object)"
+        ),
+    })
+    .describe("Action to update an existing comment"),
+  z
+    .object({
+      action: z.literal("delete"),
+      comment_id: uuidSchema.describe("ID of the comment to delete"),
+    })
+    .describe("Action to delete a comment"),
+  z
+    .object({
+      action: z.literal("list"),
+      note_id: z
+        .string()
+        .describe(
+          "ID of the note (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+        ),
+    })
+    .describe("Action to list all comments for a note"),
 ]);
 
 module.exports = {

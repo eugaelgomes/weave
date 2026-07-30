@@ -6,6 +6,9 @@ const {
   normalizeCommentUpdatePayload,
 } = require("../normalizer");
 const { NotesService } = require("./notes.service");
+const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const notesRepository = require("@/modules/notes/notes.repository");
 
 class NotesCommentsService {
   constructor() {
@@ -55,6 +58,39 @@ class NotesCommentsService {
       parentId: normalizedPayload.parentId,
       userId,
     });
+
+    try {
+      const commenterData = await SearchUsersRepository.findById(userId);
+      const collaborators =
+        await notesRepository.getCollaboratorsByNoteId(noteId);
+      const notifyUserIds = new Set();
+
+      if (note.user_id && note.user_id !== userId) {
+        notifyUserIds.add(note.user_id);
+      }
+      for (const c of collaborators) {
+        if (c.user_id !== userId) notifyUserIds.add(c.user_id);
+      }
+
+      for (const notifyUserId of notifyUserIds) {
+        await NotificationsRepository.createNotification({
+          actorId: userId,
+          content: {
+            action: "comment_added",
+            commenter_name: commenterData?.name,
+            note_id: noteId,
+            note_title: note.title,
+          },
+          entityId: noteId,
+          entityType: "note",
+          title: `New comment on ${note.title || "untitled"}`,
+          type: "note_shared",
+          userId: notifyUserId,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to send comment notifications", err);
+    }
 
     return created;
   }

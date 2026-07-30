@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const Sentry = require("@sentry/node");
 const {
   configureGlobalMiddlewares,
@@ -40,6 +41,8 @@ app.get("/health", (req, res) => {
  * 2. Global Middlewares (Security, Parsing, Rate Limits)
  */
 configureGlobalMiddlewares(app);
+
+app.use("/public", express.static(path.join(__dirname, "assets/public")));
 
 /**
  * 3. Routing (Internal & Public APIs)

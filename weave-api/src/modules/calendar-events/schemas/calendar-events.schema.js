@@ -1,7 +1,7 @@
 const { z } = require("zod");
+const { uuidSchema } = require("@/utils/mcp-schemas.util");
 
 // Reusable schemas
-const uuidParamSchema = z.string().uuid("Invalid UUID format");
 const publicIdOrUuidSchema = z.string().refine(
   (val) => {
     const isUUID =
@@ -18,12 +18,12 @@ const syncStatusEnum = z.enum(["SYNCED", "PENDING", "FAILED", "OUT_OF_SYNC"]);
 
 // Event param schemas
 const eventIdParamSchema = z.object({
-  eventId: uuidParamSchema,
+  event_id: uuidSchema,
 });
 
 const inviteIdParamSchema = z.object({
-  eventId: uuidParamSchema,
-  inviteId: uuidParamSchema,
+  event_id: uuidSchema,
+  invite_id: uuidSchema,
 });
 
 // Full Entity Schema (matching repository output)
@@ -32,7 +32,7 @@ const calendarEventSchema = z.object({
     .date()
     .optional()
     .describe("Timestamp of when the event was created"),
-  creator_id: uuidParamSchema
+  creator_id: uuidSchema
     .optional()
     .describe("ID of the user who created the event"),
   deleted: z
@@ -65,9 +65,7 @@ const calendarEventSchema = z.object({
     .nullable()
     .optional()
     .describe("ID of the event in Google Calendar"),
-  id: uuidParamSchema
-    .optional()
-    .describe("Unique identifier of the calendar event"),
+  id: uuidSchema.optional().describe("Unique identifier of the calendar event"),
   is_all_day: z
     .boolean()
     .nullable()
@@ -93,7 +91,7 @@ const calendarEventSchema = z.object({
     .nullable()
     .optional()
     .describe("ID of the note associated with the event"),
-  organization_id: uuidParamSchema
+  organization_id: uuidSchema
     .nullable()
     .optional()
     .describe("ID of the organization the event belongs to"),
@@ -130,27 +128,20 @@ const listEventsQuerySchema = z.object({
     .datetime({ offset: true })
     .or(z.string())
     .optional()
-    .describe("Start date/time to filter events from"),
+    .describe("Start date/time to filter events from (ISO 8601)"),
   include_deleted: z
-    .string()
+    .boolean()
     .optional()
-    .describe("Whether to include deleted events in the list"),
-  includeDeleted: z
-    .string()
-    .optional()
-    .describe("Whether to include deleted events in the list (camelCase)"),
-  organization_id: uuidParamSchema
+    .describe("Whether to include soft-deleted events in the list"),
+  organization_id: uuidSchema
     .optional()
     .describe("Organization ID to filter events by"),
-  organizationId: uuidParamSchema
-    .optional()
-    .describe("Organization ID to filter events by (camelCase)"),
   to: z
     .string()
     .datetime({ offset: true })
     .or(z.string())
     .optional()
-    .describe("End date/time to filter events to"),
+    .describe("End date/time to filter events to (ISO 8601)"),
 });
 
 // Body schemas
@@ -159,18 +150,15 @@ const createEventSchema = z
     attendees: z
       .array(z.string().email("Invalid email in attendees"))
       .optional()
-      .describe("List of attendee emails for the event"),
+      .describe(
+        "List of attendee/guest emails. All entries are deduplicated and invited via Google Calendar if sync is enabled."
+      ),
     create_google_meet: z
       .boolean()
       .optional()
       .nullable()
-      .describe("Whether to create a Google Meet link for this event"),
-    createGoogleMeet: z
-      .boolean()
-      .optional()
-      .nullable()
       .describe(
-        "Whether to create a Google Meet link for this event (camelCase)"
+        "Set to true to automatically generate a Google Meet conference link for this event. Requires Google Calendar to be connected."
       ),
     description: z
       .string()
@@ -179,85 +167,22 @@ const createEventSchema = z
       .describe("Description or notes for the event"),
     end_time: z
       .string()
-      .or(z.string())
       .optional()
-      .describe("End time of the event"),
-    endTime: z
-      .string()
-      .or(z.string())
-      .optional()
-      .describe("End time of the event (camelCase)"),
-    etag: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ETag for the event, used for synchronization"),
+      .describe(
+        "End time of the event (ISO 8601, e.g. '2025-08-01T18:00:00Z')"
+      ),
     google_calendar_id: z
       .string()
       .optional()
       .nullable()
-      .describe("ID of the associated Google Calendar"),
-    google_event_id: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ID of the event in Google Calendar"),
-    googleCalendarId: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ID of the associated Google Calendar (camelCase)"),
-    googleEventId: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ID of the event in Google Calendar (camelCase)"),
-    guests: z
-      .array(z.string().email("Invalid email in guests"))
-      .optional()
-      .describe("List of guest emails for the event"),
+      .describe(
+        "ID of the Google Calendar to sync this event to. Defaults to 'primary' when sync_with_google is true."
+      ),
     is_all_day: z
       .boolean()
       .optional()
       .nullable()
       .describe("Whether the event lasts all day"),
-    is_from_note: z
-      .boolean()
-      .optional()
-      .nullable()
-      .describe("Whether the event was created from a note"),
-    is_from_project: z
-      .boolean()
-      .optional()
-      .nullable()
-      .describe("Whether the event was created from a project"),
-    isAllDay: z
-      .boolean()
-      .optional()
-      .nullable()
-      .describe("Whether the event lasts all day (camelCase)"),
-    isFromNote: z
-      .boolean()
-      .optional()
-      .nullable()
-      .describe("Whether the event was created from a note (camelCase)"),
-    isFromProject: z
-      .boolean()
-      .optional()
-      .nullable()
-      .describe("Whether the event was created from a project (camelCase)"),
-    last_synced_at: z
-      .string()
-      .or(z.string())
-      .optional()
-      .nullable()
-      .describe("Timestamp of the last synchronization"),
-    lastSyncedAt: z
-      .string()
-      .or(z.string())
-      .optional()
-      .nullable()
-      .describe("Timestamp of the last synchronization (camelCase)"),
     location: z
       .string()
       .optional()
@@ -267,89 +192,38 @@ const createEventSchema = z
       .optional()
       .nullable()
       .describe("ID of the note associated with the event"),
-    noteId: publicIdOrUuidSchema
-      .optional()
-      .nullable()
-      .describe("ID of the note associated with the event (camelCase)"),
-    organization_id: uuidParamSchema
+    organization_id: uuidSchema
       .optional()
       .nullable()
       .describe("ID of the organization the event belongs to"),
-    organizationId: uuidParamSchema
-      .optional()
-      .nullable()
-      .describe("ID of the organization the event belongs to (camelCase)"),
-    outlook_calendar_id: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ID of the associated Outlook Calendar"),
-    outlook_event_id: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ID of the event in Outlook Calendar"),
-    outlookCalendarId: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ID of the associated Outlook Calendar (camelCase)"),
-    outlookEventId: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("ID of the event in Outlook Calendar (camelCase)"),
     project_id: publicIdOrUuidSchema
       .optional()
       .nullable()
       .describe("ID of the project associated with the event"),
-    projectId: publicIdOrUuidSchema
-      .optional()
-      .nullable()
-      .describe("ID of the project associated with the event (camelCase)"),
     start_time: z
       .string()
-      .or(z.string())
       .optional()
-      .describe("Start time of the event"),
-    startTime: z
-      .string()
-      .or(z.string())
-      .optional()
-      .describe("Start time of the event (camelCase)"),
-    sync_status: syncStatusEnum
-      .optional()
-      .nullable()
-      .describe("Current synchronization status of the event"),
+      .describe(
+        "Start time of the event (ISO 8601, e.g. '2025-08-01T16:00:00Z')"
+      ),
     sync_with_google: z
       .boolean()
       .optional()
       .nullable()
       .describe(
-        "Whether the event should be synchronized with Google Calendar"
-      ),
-    syncStatus: syncStatusEnum
-      .optional()
-      .nullable()
-      .describe("Current synchronization status of the event (camelCase)"),
-    syncWithGoogle: z
-      .boolean()
-      .optional()
-      .nullable()
-      .describe(
-        "Whether the event should be synchronized with Google Calendar (camelCase)"
+        "Set to true to push this event to the user's Google Calendar. Requires Google Calendar to be connected."
       ),
     title: z
       .string()
       .min(1, "title is required")
       .describe("Title of the event"),
   })
-  .refine((data) => data.start_time || data.startTime, {
-    message: "start_time or startTime is required",
+  .refine((data) => data.start_time, {
+    message: "start_time is required",
     path: ["start_time"],
   })
-  .refine((data) => data.end_time || data.endTime, {
-    message: "end_time or endTime is required",
+  .refine((data) => data.end_time, {
+    message: "end_time is required",
     path: ["end_time"],
   });
 
@@ -357,185 +231,47 @@ const updateEventSchema = z.object({
   attendees: z
     .array(z.string().email("Invalid email in attendees"))
     .optional()
-    .describe("List of attendee emails for the event"),
+    .describe("Updated list of attendee/guest emails"),
   create_google_meet: z
     .boolean()
     .optional()
     .nullable()
-    .describe("Whether to create a Google Meet link for this event"),
-  createGoogleMeet: z
-    .boolean()
-    .optional()
-    .nullable()
-    .describe(
-      "Whether to create a Google Meet link for this event (camelCase)"
-    ),
+    .describe("Set to true to add a Google Meet link to this event"),
   description: z
     .string()
     .optional()
     .nullable()
-    .describe("Description or notes for the event"),
-  end_time: z
-    .string()
-    .or(z.string())
-    .optional()
-    .describe("End time of the event"),
-  endTime: z
-    .string()
-    .or(z.string())
-    .optional()
-    .describe("End time of the event (camelCase)"),
-  etag: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ETag for the event, used for synchronization"),
-  google_calendar_id: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ID of the associated Google Calendar"),
-  google_event_id: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ID of the event in Google Calendar"),
-  googleCalendarId: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ID of the associated Google Calendar (camelCase)"),
-  googleEventId: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ID of the event in Google Calendar (camelCase)"),
-  guests: z
-    .array(z.string().email("Invalid email in guests"))
-    .optional()
-    .describe("List of guest emails for the event"),
+    .describe("Updated description or notes for the event"),
+  end_time: z.string().optional().describe("Updated end time (ISO 8601)"),
   is_all_day: z
     .boolean()
     .optional()
     .nullable()
     .describe("Whether the event lasts all day"),
-  is_from_note: z
-    .boolean()
-    .optional()
-    .nullable()
-    .describe("Whether the event was created from a note"),
-  is_from_project: z
-    .boolean()
-    .optional()
-    .nullable()
-    .describe("Whether the event was created from a project"),
-  isAllDay: z
-    .boolean()
-    .optional()
-    .nullable()
-    .describe("Whether the event lasts all day (camelCase)"),
-  isFromNote: z
-    .boolean()
-    .optional()
-    .nullable()
-    .describe("Whether the event was created from a note (camelCase)"),
-  isFromProject: z
-    .boolean()
-    .optional()
-    .nullable()
-    .describe("Whether the event was created from a project (camelCase)"),
-  last_synced_at: z
-    .string()
-    .or(z.string())
-    .optional()
-    .nullable()
-    .describe("Timestamp of the last synchronization"),
-  lastSyncedAt: z
-    .string()
-    .or(z.string())
-    .optional()
-    .nullable()
-    .describe("Timestamp of the last synchronization (camelCase)"),
-  location: z.string().optional().nullable().describe("Location of the event"),
+  location: z.string().optional().nullable().describe("Updated location"),
   note_id: publicIdOrUuidSchema
     .optional()
     .nullable()
-    .describe("ID of the note associated with the event"),
-  noteId: publicIdOrUuidSchema
+    .describe("Updated note association ID"),
+  organization_id: uuidSchema
     .optional()
     .nullable()
-    .describe("ID of the note associated with the event (camelCase)"),
-  organization_id: uuidParamSchema
-    .optional()
-    .nullable()
-    .describe("ID of the organization the event belongs to"),
-  organizationId: uuidParamSchema
-    .optional()
-    .nullable()
-    .describe("ID of the organization the event belongs to (camelCase)"),
-  outlook_calendar_id: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ID of the associated Outlook Calendar"),
-  outlook_event_id: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ID of the event in Outlook Calendar"),
-  outlookCalendarId: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ID of the associated Outlook Calendar (camelCase)"),
-  outlookEventId: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("ID of the event in Outlook Calendar (camelCase)"),
+    .describe("Updated organization ID"),
   project_id: publicIdOrUuidSchema
     .optional()
     .nullable()
-    .describe("ID of the project associated with the event"),
-  projectId: publicIdOrUuidSchema
-    .optional()
-    .nullable()
-    .describe("ID of the project associated with the event (camelCase)"),
-  start_time: z
-    .string()
-    .or(z.string())
-    .optional()
-    .describe("Start time of the event"),
-  startTime: z
-    .string()
-    .or(z.string())
-    .optional()
-    .describe("Start time of the event (camelCase)"),
-  sync_status: syncStatusEnum
-    .optional()
-    .nullable()
-    .describe("Current synchronization status of the event"),
+    .describe("Updated project association ID"),
+  start_time: z.string().optional().describe("Updated start time (ISO 8601)"),
   sync_with_google: z
     .boolean()
     .optional()
     .nullable()
-    .describe("Whether the event should be synchronized with Google Calendar"),
-  syncStatus: syncStatusEnum
-    .optional()
-    .nullable()
-    .describe("Current synchronization status of the event (camelCase)"),
-  syncWithGoogle: z
-    .boolean()
-    .optional()
-    .nullable()
-    .describe(
-      "Whether the event should be synchronized with Google Calendar (camelCase)"
-    ),
+    .describe("Set to true to push updated event to Google Calendar"),
   title: z
     .string()
     .min(1, "title cannot be empty")
     .optional()
-    .describe("Title of the event"),
+    .describe("Updated title of the event"),
 });
 
 // Invites
@@ -544,13 +280,13 @@ const createInviteSchema = z.object({
     .string()
     .email("Email is required and must be a valid email")
     .describe("Email address of the invitee"),
-  externalGuestId: uuidParamSchema
+  external_guest_id: uuidSchema
     .optional()
     .nullable()
     .describe("ID of an external guest, if applicable"),
   role: z.string().optional().describe("Role of the invited user"),
   status: z.string().optional().describe("Status of the invitation"),
-  userId: uuidParamSchema
+  user_id: uuidSchema
     .optional()
     .nullable()
     .describe("ID of the user, if registered in the system"),
@@ -571,14 +307,14 @@ const checkFreeBusySchema = z.object({
     )
     .optional()
     .describe("List of calendars or users to check for free/busy time"),
-  timeMax: z
+  time_max: z
     .string()
-    .min(1, "timeMax is required")
-    .describe("End time for the free/busy check window"),
-  timeMin: z
+    .min(1, "time_max is required")
+    .describe("End time for the free/busy check window (ISO 8601)"),
+  time_min: z
     .string()
-    .min(1, "timeMin is required")
-    .describe("Start time for the free/busy check window"),
+    .min(1, "time_min is required")
+    .describe("Start time for the free/busy check window (ISO 8601)"),
 });
 
 // Full Entity Schema for Invites (matching repository output)
@@ -597,7 +333,7 @@ const calendarEventInviteSchema = z.object({
     .optional()
     .describe("Timestamp of when the invite was deleted, if applicable"),
   email: z.string().email().optional().describe("Email address of the invitee"),
-  event_id: uuidParamSchema
+  event_id: uuidSchema
     .optional()
     .describe("ID of the calendar event this invite belongs to"),
   external_guest_id: z
@@ -605,9 +341,7 @@ const calendarEventInviteSchema = z.object({
     .nullable()
     .optional()
     .describe("ID of an external guest, if applicable"),
-  id: uuidParamSchema
-    .optional()
-    .describe("Unique identifier of the event invite"),
+  id: uuidSchema.optional().describe("Unique identifier of the event invite"),
   role: z
     .string()
     .optional()
@@ -620,7 +354,7 @@ const calendarEventInviteSchema = z.object({
     .date()
     .optional()
     .describe("Timestamp of when the invite was last updated"),
-  user_id: uuidParamSchema
+  user_id: uuidSchema
     .nullable()
     .optional()
     .describe("ID of the user, if registered in the system"),

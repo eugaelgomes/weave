@@ -34,6 +34,182 @@ class PlansService {
   }
 
   // ==========================================
+  // SUBSCRIPTION MANAGEMENT
+  // ==========================================
+
+  async changePlan(userId, planId) {
+    const targetPlan = await PlansRepository.getPlanById(planId);
+    if (!targetPlan) {
+      const error = new Error("Target plan not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const effective = await PlansRepository.getEffectivePlanByUserId(userId);
+    if (!effective) {
+      const error = new Error("No active subscription found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (effective.plan_id === planId) {
+      const error = new Error("Already on this plan");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const subscriberType = effective.subscriber_type;
+    const subscriberId = effective.subscriber_id;
+    const now = new Date();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+    await executeQuery(
+      `INSERT INTO subscriptions (subscriber_type, subscriber_id, plan_id, status, provider, current_period_start, current_period_end, cancel_at_period_end)
+       VALUES ($1, $2, $3, 'active', 'internal', $4, $5, false)
+       ON CONFLICT (subscriber_type, subscriber_id)
+       DO UPDATE SET
+         plan_id = EXCLUDED.plan_id,
+         status = 'active',
+         current_period_start = EXCLUDED.current_period_start,
+         current_period_end = EXCLUDED.current_period_end,
+         cancel_at_period_end = false,
+         updated_at = NOW()`,
+      [subscriberType, subscriberId, planId, now, periodEnd]
+    );
+
+    if (subscriberType === "user") {
+      await executeQuery(
+        `UPDATE users SET plan_id = $1, updated_at = NOW() WHERE user_id = $2`,
+        [planId, subscriberId]
+      );
+    } else {
+      await executeQuery(
+        `UPDATE organizations SET plan_id = $1, updated_at = NOW() WHERE id = $2`,
+        [planId, subscriberId]
+      );
+    }
+
+    await this._refreshPlanUsageSnapshot(
+      subscriberType,
+      subscriberId,
+      targetPlan
+    );
+
+    const usageRecord = await PlansRepository.getPlanUsage(userId);
+    const downgradWarnings = this._checkDowngradeWarnings(
+      usageRecord?.usage_details,
+      targetPlan.details
+    );
+
+    return {
+      plan: { id: targetPlan.plan_id, name: targetPlan.name },
+      warnings: downgradWarnings,
+    };
+  }
+
+  async cancelSubscription(userId) {
+    const effective = await PlansRepository.getEffectivePlanByUserId(userId);
+    if (!effective) {
+      const error = new Error("No active subscription found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const subscription = await this.getSubscriptionRow(
+      effective.subscriber_type,
+      effective.subscriber_id
+    );
+
+    if (!subscription) {
+      const error = new Error("Subscription record not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (subscription.cancel_at_period_end) {
+      const error = new Error("Cancellation already scheduled");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    await executeQuery(
+      `UPDATE subscriptions
+       SET cancel_at_period_end = true, updated_at = NOW()
+       WHERE subscriber_type = $1 AND subscriber_id = $2
+         AND status IN ('active', 'past_due', 'trialing')`,
+      [effective.subscriber_type, effective.subscriber_id]
+    );
+
+    return {
+      current_period_end: subscription.current_period_end,
+    };
+  }
+
+  async getSubscriptionRow(subscriberType, subscriberId) {
+    const rows = await executeQuery(
+      `SELECT * FROM subscriptions
+       WHERE subscriber_type = $1 AND subscriber_id = $2
+       ORDER BY updated_at DESC LIMIT 1`,
+      [subscriberType, subscriberId]
+    );
+    return rows[0] || null;
+  }
+
+  async _refreshPlanUsageSnapshot(subscriberType, subscriberId, targetPlan) {
+    await executeQuery(
+      `UPDATE plan_usages
+       SET plan_id = $1,
+           applied_plan_snapshot = $2,
+           applied_plan_version = $3,
+           updated_at = NOW()
+       WHERE subscriber_type = $4 AND subscriber_id = $5`,
+      [
+        targetPlan.plan_id,
+        targetPlan.details,
+        targetPlan.plan_version || 1,
+        subscriberType,
+        subscriberId,
+      ]
+    );
+  }
+
+  _checkDowngradeWarnings(usageDetails, newPlanDetails) {
+    if (!usageDetails || !newPlanDetails) return [];
+    const warnings = [];
+
+    const checks = [
+      {
+        label: "notes",
+        limit: "limits.max_notes",
+        usage: "usage_summary.notes_total",
+      },
+      {
+        label: "projects",
+        limit: "limits.max_projects",
+        usage: "usage_summary.projects_total",
+      },
+      {
+        label: "team members",
+        limit: "limits.max_team_members",
+        usage: "usage_summary.team_members_total",
+      },
+    ];
+
+    for (const check of checks) {
+      const current = this.getNestedValue(usageDetails, check.usage) || 0;
+      const limit = this.getNestedValue(newPlanDetails, check.limit);
+      if (limit !== null && limit !== undefined && current > limit) {
+        warnings.push(
+          `Current ${check.label} (${current}) exceeds new plan limit (${limit}).`
+        );
+      }
+    }
+
+    return warnings;
+  }
+
+  // ==========================================
   // USAGE & LIMITS MANAGEMENT
   // ==========================================
 
