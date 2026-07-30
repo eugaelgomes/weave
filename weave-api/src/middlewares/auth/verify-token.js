@@ -74,6 +74,7 @@ const verifyToken = async (req, res, next) => {
       };
 
       req.user = {
+        apiToken: req.apiToken,
         isApiCall: true,
         organizationId: tokenRecord.organization_id,
         userId: tokenRecord.user_id,

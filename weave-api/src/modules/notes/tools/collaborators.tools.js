@@ -2,6 +2,7 @@ const { manageNoteCollaboratorsSchema } = require("../schemas/tools.schema");
 const {
   NotesCollaboratorsService,
 } = require("../services/notes-collaborators.service");
+const { API_SCOPES } = require("@/config/api-scopes");
 
 const createNoteCollaboratorsTools = (user) => ({
   manage_note_collaborators: {
@@ -79,6 +80,7 @@ FUNCTIONALITIES (Actions):
     },
     name: "manage_note_collaborators",
     schema: manageNoteCollaboratorsSchema,
+    scopes: [API_SCOPES.NOTES_READ, API_SCOPES.NOTES_WRITE],
   },
 });
 

@@ -64,33 +64,55 @@ const {
  * @returns {Object} The registry object containing tools, resources, and prompts.
  */
 function buildRegistry(user) {
+  const allTools = {
+    ...createPlansTools(user),
+    ...createTaskPriorityTools(user),
+    ...createWebhooksTools(user),
+    ...createPasswordTools(user),
+    ...createApiTokensTools(user),
+    ...createProjectsTools(user),
+    ...createNotificationsTools(user),
+    ...createArtifactsTools(user),
+    ...createBackupTools(user),
+    ...createCalendarEventsTools(user),
+    ...createTagsTools(user),
+    ...createNotesTools(user),
+    ...createNoteBlocksTools(user),
+    ...createNoteCollaboratorsTools(user),
+    ...createCommentsTools(user),
+    ...createAuthenticationTools(user),
+    ...createEngineTools(user),
+    ...createUsersTools(user),
+    ...createSlackTools(user),
+    ...createMcpTools(user),
+    ...createWeaveAiTools(user),
+    ...createOrganizationsTools(user),
+  };
+
+  let filteredTools = allTools;
+
+  // Filter tools based on API token scopes natively defined by each tool
+  if (user?.isApiCall && user?.apiToken?.scopes) {
+    const userScopes = user.apiToken.scopes;
+    filteredTools = {};
+
+    for (const [toolKey, tool] of Object.entries(allTools)) {
+      if (tool.scopes && Array.isArray(tool.scopes)) {
+        // Only include the tool if the user token has at least one matching scope
+        if (tool.scopes.some((scope) => userScopes.includes(scope))) {
+          filteredTools[toolKey] = tool;
+        }
+      } else {
+        // If the tool does not require explicit scope mapping, include it
+        filteredTools[toolKey] = tool;
+      }
+    }
+  }
+
   return {
     prompts: {},
     resources: { readHandlers: [], templates: [] },
-    tools: {
-      ...createPlansTools(user),
-      ...createTaskPriorityTools(user),
-      ...createWebhooksTools(user),
-      ...createPasswordTools(user),
-      ...createApiTokensTools(user),
-      ...createProjectsTools(user),
-      ...createNotificationsTools(user),
-      ...createArtifactsTools(user),
-      ...createBackupTools(user),
-      ...createCalendarEventsTools(user),
-      ...createTagsTools(user),
-      ...createNotesTools(user),
-      ...createNoteBlocksTools(user),
-      ...createNoteCollaboratorsTools(user),
-      ...createCommentsTools(user),
-      ...createAuthenticationTools(user),
-      ...createEngineTools(user),
-      ...createUsersTools(user),
-      ...createSlackTools(user),
-      ...createMcpTools(user),
-      ...createWeaveAiTools(user),
-      ...createOrganizationsTools(user),
-    },
+    tools: filteredTools,
   };
 }
 

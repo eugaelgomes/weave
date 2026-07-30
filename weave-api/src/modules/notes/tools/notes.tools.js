@@ -1,6 +1,7 @@
 const { manageNotesSchema } = require("../schemas/tools.schema");
 const { NotesService } = require("../services/notes.service");
 const McpLinksUtil = require("@/utils/mcp-links.util");
+const { API_SCOPES } = require("@/config/api-scopes");
 
 const createNotesTools = (user) => ({
   manage_notes: {
@@ -152,6 +153,11 @@ FUNCTIONALITIES (Actions):
     },
     name: "manage_notes",
     schema: manageNotesSchema,
+    scopes: [
+      API_SCOPES.NOTES_READ,
+      API_SCOPES.NOTES_WRITE,
+      API_SCOPES.NOTES_DELETE,
+    ],
   },
 });
 

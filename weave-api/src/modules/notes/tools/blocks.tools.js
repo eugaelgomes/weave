@@ -1,16 +1,31 @@
 const { manageNoteBlocksSchema } = require("../schemas/tools.schema");
 const { NoteBlocksService } = require("../services/note-blocks.service");
 const noteBlocksRepository = require("@/modules/notes/repositories/note-blocks.repository");
+const { API_SCOPES } = require("@/config/api-scopes");
 
 const createNoteBlocksTools = (user) => ({
   manage_note_blocks: {
     description: `Manage Weave Note Blocks (create, update, delete, list).
 IMPORTANT: A "Weave Note" is a fully-fledged RICH TEXT DOCUMENT. Blocks are the structural units (headings, paragraphs, lists, todos, code) that make up this document's hierarchical tree.
 
+CRITICAL RULE FOR PARAGRAPHS: Do NOT use newline characters (\\n) in text to break lines! If a text needs a line break, you MUST create separate blocks. One paragraph block = one continuous line of text.
+
+FORMATTING & RICH TEXT (Marks & Attributes):
+- Allowed Block Types: 'paragraph', 'heading', 'code', 'list', 'todo', 'image', 'video', 'quote', 'divider'.
+- Text Formatting (marks array inside properties): You can apply bold, italic, underline, strike, code (inline), highlight (background color), textStyle (text color), link (href). Use { "type": "...", "start": index, "end": index } and optionally "attrs" for links or colors.
+- Block Attributes (attrs inside properties):
+  - Heading (h1-h4): { "attrs": { "level": 1 } }
+  - Lists: { "attrs": { "ordered": true/false } }
+  - Todo (checkbox): { "attrs": { "checked": true/false } }
+  - Code Block: { "attrs": { "language": "javascript" } }
+  - Images/Videos: { "attrs": { "src": "url", "title": "...", "alt": "..." } }
+  - Block Background Color: { "attrs": { "background_color": "#hex" } } (Allowed on heading, paragraph, quote, list, todo).
+
 FUNCTIONALITIES (Actions):
-1. 'create': Appends or inserts a new block into a note.
-   - How to use: Provide 'action' as "create", the 'note_id', the block 'type' (must be one of: heading, paragraph, code, list, todo, image, video, quote, divider), and 'text'. Optionally provide 'properties' for formatting or 'parent_id' for nesting.
-   - What it does: Creates a structural block inside the note's document tree.
+1. 'create': Appends or inserts a new block (or multiple blocks) into a note.
+   - How to use (single): Provide 'action' as "create", the 'note_id', the block 'type', and 'text'. Optionally provide 'properties' or 'parent_id'.
+   - How to use (multiple): Provide 'action' as "create", the 'note_id', and a 'blocks' array containing objects with 'type', 'text', 'properties', etc.
+   - What it does: Creates structural blocks inside the note's document tree.
 2. 'update': Modifies an existing block.
    - How to use: Provide 'action' as "update", the 'block_id', and the fields to change ('text', 'type', 'properties', 'position').
    - What it does: Updates the content or formatting of the specified block.
@@ -25,12 +40,12 @@ EXAMPLES (How to structure data):
 - Creating a heading block:
   type = "heading"
   text = "My Title"
-  properties = { "attrs": { "level": 2 } }
+  properties = { "attrs": { "level": 2, "background_color": "#f0f0f0" } }
 
-- Creating a paragraph with formatted text:
+- Creating a paragraph with formatted text (bold & link):
   type = "paragraph"
   text = "Hello world"
-  properties = { "marks": [ { "type": "bold", "start": 0, "end": 5 } ] }
+  properties = { "marks": [ { "type": "bold", "start": 0, "end": 5 }, { "type": "link", "start": 6, "end": 11, "attrs": { "href": "https://example.com" } } ] }
   
 - Creating a todo item:
   type = "todo"
@@ -50,25 +65,62 @@ EXAMPLES (How to structure data):
           text,
           position,
           properties,
+          blocks,
         } = args;
 
         if (action === "create") {
           if (!note_id)
             throw new Error("note_id is required for create action.");
-          const newBlock = await NoteBlocksService.createBlock(
-            userId,
-            note_id,
-            {
-              parentId: parent_id,
-              position,
-              properties,
-              text,
-              type,
-            }
-          );
+
+          const blocksToCreate =
+            blocks && blocks.length > 0
+              ? blocks
+              : [
+                  {
+                    parent_id,
+                    position,
+                    properties,
+                    text,
+                    type,
+                  },
+                ];
+
+          if (!blocksToCreate[0].type) {
+            throw new Error("block 'type' is required.");
+          }
+
+          const newBlocks = [];
+          for (const blockData of blocksToCreate) {
+            const newBlock = await NoteBlocksService.createBlock(
+              userId,
+              note_id,
+              {
+                parentId:
+                  blockData.parent_id !== undefined
+                    ? blockData.parent_id
+                    : parent_id,
+                position:
+                  blockData.position !== undefined
+                    ? blockData.position
+                    : position,
+                properties: blockData.properties,
+                text: blockData.text,
+                type: blockData.type,
+              }
+            );
+            newBlocks.push(newBlock);
+          }
+
           return {
             content: [
-              { text: JSON.stringify(newBlock, null, 2), type: "text" },
+              {
+                text: JSON.stringify(
+                  newBlocks.length === 1 ? newBlocks[0] : newBlocks,
+                  null,
+                  2
+                ),
+                type: "text",
+              },
             ],
           };
         }
@@ -147,6 +199,7 @@ EXAMPLES (How to structure data):
     },
     name: "manage_note_blocks",
     schema: manageNoteBlocksSchema,
+    scopes: [API_SCOPES.NOTES_READ, API_SCOPES.NOTES_WRITE],
   },
 });
 

@@ -194,6 +194,30 @@ const blockPropertiesSchema = z
 const manageNoteBlocksSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
+    blocks: z
+      .array(
+        z.object({
+          parent_id: z
+            .string()
+            .optional()
+            .nullable()
+            .describe("Optional parent block ID for nesting"),
+          position: z
+            .number()
+            .optional()
+            .describe("Position among siblings (0-indexed)"),
+          properties: blockPropertiesSchema.optional(),
+          text: z
+            .string()
+            .optional()
+            .describe("Shorthand text content for the block"),
+          type: blockTypeSchema,
+        })
+      )
+      .optional()
+      .describe(
+        "Array of blocks to create multiple at once. Ignores single block fields if provided."
+      ),
     note_id: z
       .string()
       .describe(
@@ -213,7 +237,7 @@ const manageNoteBlocksSchema = z.discriminatedUnion("action", [
       .string()
       .optional()
       .describe("Shorthand text content for the block"),
-    type: blockTypeSchema,
+    type: blockTypeSchema.optional(),
   }),
   z.object({
     action: z.literal("update"),
@@ -289,7 +313,7 @@ const manageNoteCommentsSchema = z.discriminatedUnion("action", [
       content: z
         .union([z.string(), z.record(z.any())])
         .describe(
-          "Content of the comment (plain text string or ProseMirror JSON object for rich text)"
+          "Content of the comment (plain text string or block structure object for rich text)"
         ),
       note_id: z
         .string()
@@ -310,7 +334,7 @@ const manageNoteCommentsSchema = z.discriminatedUnion("action", [
       content: z
         .union([z.string(), z.record(z.any())])
         .describe(
-          "New content for the comment (plain text string or ProseMirror JSON object)"
+          "New content for the comment (plain text string or block structure object)"
         ),
     })
     .describe("Action to update an existing comment"),

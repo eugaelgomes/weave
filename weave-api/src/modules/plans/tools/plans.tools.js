@@ -1,5 +1,6 @@
 const PlansService = require("../services/plans.service");
 const { managePlansSchema } = require("../schemas/plans.schema");
+const { API_SCOPES } = require("@/config/api-scopes");
 
 const createPlansTools = (user) => ({
   manage_plans: {
@@ -65,6 +66,7 @@ FUNCTIONALITIES (Actions):
     },
     name: "manage_plans",
     schema: managePlansSchema,
+    scopes: [API_SCOPES.PROFILE_READ],
   },
 });
 
