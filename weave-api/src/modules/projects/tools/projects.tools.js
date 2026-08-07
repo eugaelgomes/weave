@@ -3,8 +3,10 @@ const projectsReadRepository = require("@/modules/projects/repositories/projects
 const projectsCreateRepository = require("@/modules/projects/repositories/projects-create.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
 const projectsDeleteRepository = require("@/modules/projects/repositories/projects-delete.repository");
+const McpLinksUtil = require("@/utils/mcp-links.util");
 const createNotesRepository = require("@/modules/notes/repositories/create-notes.repository");
 const mutateNotesRepository = require("@/modules/notes/repositories/mutate-notes.repository");
+const spacesService = require("@/services/storage/index");
 
 const manageProjectsSchema = z.discriminatedUnion("action", [
   z.object({
@@ -35,6 +37,21 @@ const manageProjectsSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("stats"),
+  }),
+  z.object({
+    action: z.literal("upload_file"),
+    base64Data: z.string().describe("Base64 encoded string of the file content"),
+    fileName: z.string().optional().describe("Original file name"),
+    mimeType: z.string().describe("MIME type of the file (e.g., image/png, application/pdf)"),
+    projectId: z.string().uuid().describe("ID of the project"),
+  }),
+  z.object({
+    action: z.literal("read_file"),
+    url: z.string().describe("The public URL of the file to read/download"),
+  }),
+  z.object({
+    action: z.literal("delete_file"),
+    url: z.string().describe("The public URL of the file to delete"),
   }),
 ]);
 
@@ -162,8 +179,9 @@ const createProjectsTools = (user) => ({
             project_stage_id: stageId,
             title,
           });
+          const enriched = McpLinksUtil.enrichWithAppUrl(result, "task", "public_note_id");
           return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+            content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
         }
 
@@ -194,10 +212,10 @@ const createProjectsTools = (user) => ({
   },
 
   manage_projects: {
-    description: "Manage projects (create, update, delete, get, list, stats).",
+    description: "Manage projects (create, update, delete, get, list, stats, upload_file, read_file, delete_file).",
     handler: async (args) => {
       try {
-        const { action, projectId, name, description, methodology } = args;
+        const { action, projectId, name, description, methodology, fileName, mimeType, base64Data, url } = args;
 
         if (action === "create") {
           if (!name) throw new Error("name is required for create action");
@@ -211,8 +229,9 @@ const createProjectsTools = (user) => ({
             },
             []
           );
+          const enriched = McpLinksUtil.enrichWithAppUrl(result, "project", "id");
           return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+            content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
         }
 
@@ -224,8 +243,9 @@ const createProjectsTools = (user) => ({
             user.userId,
             { description, title: name }
           );
+          const enriched = McpLinksUtil.enrichWithAppUrl(result, "project", "id");
           return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+            content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
         }
 
@@ -251,8 +271,9 @@ const createProjectsTools = (user) => ({
             user.userId
           );
           if (!result) throw new Error("Project not found or access denied.");
+          const enriched = McpLinksUtil.enrichWithAppUrl(result, "project", "id");
           return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+            content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
         }
 
@@ -260,8 +281,9 @@ const createProjectsTools = (user) => ({
           const result = await projectsReadRepository.getProjectsForUser(
             user.userId
           );
+          const enriched = result.map(p => McpLinksUtil.enrichWithAppUrl(p, "project", "id"));
           return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+            content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
         }
 
@@ -271,6 +293,42 @@ const createProjectsTools = (user) => ({
           );
           return {
             content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+          };
+        }
+
+        if (action === "upload_file") {
+          if (!projectId) throw new Error("projectId is required for upload_file action");
+          const buffer = Buffer.from(base64Data, "base64");
+          const result = await spacesService.uploadProjectFile(buffer, mimeType, projectId, user.userId, fileName);
+          return {
+            content: [
+              { text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key, type: "text" },
+            ],
+          };
+        }
+
+        if (action === "read_file") {
+          const key = spacesService.extractKeyFromUrl(url);
+          if (!key) throw new Error("Invalid URL or could not extract file key");
+          const buffer = await spacesService.downloadFile(key);
+          const base64Str = buffer.toString("base64");
+          return {
+            content: [
+              { text: `File successfully read. Extracted ${buffer.length} bytes.`, type: "text" },
+              { text: "data:application/octet-stream;base64," + base64Str, type: "text" }
+            ],
+          };
+        }
+
+        if (action === "delete_file") {
+          const key = spacesService.extractKeyFromUrl(url);
+          if (!key) throw new Error("Invalid URL or could not extract file key");
+          const success = await spacesService.deleteImage(key);
+          if (!success) throw new Error("Failed to delete file from storage.");
+          return {
+            content: [
+              { text: "File deleted successfully (Key: " + key + ")", type: "text" },
+            ],
           };
         }
 

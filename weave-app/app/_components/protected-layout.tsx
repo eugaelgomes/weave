@@ -3,7 +3,7 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 
 import Sidebar from "@/app/(protected)/_components/layout/sidebar";
-import WeaveAi from "@/app/(protected)/_components/layout/WeaveAi";
+
 import { cn } from "@/lib/utils";
 
 const LG_MEDIA = "(min-width: 1024px)";
@@ -118,8 +118,6 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           </div>
         </div>
       </div>
-
-      <WeaveAi />
     </div>
   );
 };

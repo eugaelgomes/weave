@@ -3,8 +3,6 @@ require("dotenv").config();
 require("./instrument");
 const http = require("http");
 const { app } = require("@/app");
-const responseConsumer = require("@/services/reasoning/response-consumer");
-const triggerConsumer = require("@/services/reasoning/trigger-consumer");
 
 /**
  * @param {*} val
@@ -56,14 +54,7 @@ server.on("listening", () => {
   const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   console.info(`Weave Notes API running on ${bind}`);
 
-  // Start background consumers
-  responseConsumer.start().catch((err) => {
-    console.error("[API] Failed to start response consumer:", err);
-  });
-
-  triggerConsumer.start().catch((err) => {
-    console.error("[API] Failed to start trigger consumer:", err);
-  });
+  // Background consumers migrated to Agent House worker.
 });
 
 const { configureShutdown } = require("@/config/shutdown");

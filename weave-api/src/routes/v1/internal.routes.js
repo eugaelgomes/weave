@@ -9,7 +9,7 @@ const {
 
 const authRoutes = require("@/modules/authentication/auth.routes");
 const userRoutes = require("@/modules/users/users.routes");
-const passwordRoutes = require("@/modules/password/password.routes");
+
 const notesRoutes = require("@/modules/notes/notes.routes");
 const backupRoutes = require("@/modules/backup/backup.routes");
 const projectsRoutes = require("@/modules/projects/projects.routes");
@@ -17,14 +17,13 @@ const organizationsRoutes = require("@/modules/organizations/organizations.route
 const plansRoutes = require("@/modules/plans/plans.routes");
 const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
 const notificationsRoutes = require("@/modules/notifications/notifications.routes");
-const calendarEventsRoutes = require("@/modules/calendar-events/calendar-events.routes");
+const calendarRoutes = require("@/modules/calendar/calendar.routes");
 const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
-const tagsRoutes = require("@/modules/tags/tags.routes");
-const taskPrioritiesRoutes = require("@/modules/task-priorities/task-priorities.routes");
-const weaveAiRoutes = require("@/modules/weave-ai/weave-ai.routes");
+const tagsRoutes = require("@/modules/projects/tags.routes");
+const taskPrioritiesRoutes = require("@/modules/projects/task-priorities.routes");
+const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 const slackRoutes = require("@/modules/slack/slack.routes");
-const engineRoutes = require("@/modules/engine/engine.routes");
-const artifactsRoutes = require("@/modules/artifacts/artifacts.routes");
+const artifactsRoutes = require("@/modules/agent-house/artifacts.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -132,23 +131,22 @@ const routeRegistry = [
   { basePath: "/api-tokens", handler: apiTokensRoutes },
   { basePath: "/auth", handler: authRoutes },
   { basePath: "/backup", handler: backupRoutes },
-  { basePath: "/calendar-events", handler: calendarEventsRoutes },
+  { basePath: "/calendar", handler: calendarRoutes },
   { basePath: "/notes", handler: notesRoutes },
   { basePath: "/organizations", handler: organizationsRoutes },
   { basePath: "/projects", handler: tagsRoutes },
   { basePath: "/projects", handler: taskPrioritiesRoutes },
   { basePath: "/organizations", handler: tagsRoutes },
   { basePath: "/organizations", handler: taskPrioritiesRoutes },
-  { basePath: "/password", handler: passwordRoutes },
+
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/notifications", handler: notificationsRoutes },
   { basePath: "/projects", handler: projectsRoutes },
   { basePath: "/task-priorities", handler: taskPrioritiesRoutes },
   { basePath: "/users", handler: userRoutes },
   { basePath: "/webhooks", handler: webhooksRoutes },
-  { basePath: "/weave-ai", handler: weaveAiRoutes },
+  { basePath: "/agent-house", handler: agentHouseRoutes },
   { basePath: "/slack", handler: slackRoutes },
-  { basePath: "/engine", handler: engineRoutes },
   { basePath: "/artifacts", handler: artifactsRoutes },
 ];
 

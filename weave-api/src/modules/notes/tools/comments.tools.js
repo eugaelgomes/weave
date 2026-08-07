@@ -2,6 +2,11 @@ const { manageNoteCommentsSchema } = require("../schemas/tools.schema");
 const { NotesCommentsService } = require("../services/notes-comments.service");
 const notesCommentsRepository = require("@/modules/notes/repositories/notes-comments.repository");
 const { API_SCOPES } = require("@/config/api-scopes");
+const spacesService = require("@/services/storage/index");
+const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
+const McpLinksUtil = require("@/utils/mcp-links.util");
+const { markdownToBlocks } = require("@/modules/agent-house/utils/markdown-to-blocks.util");
+const { serializeBlocksToMarkdown } = require("@/services/reasoning/notes-to-markdown");
 
 const createCommentsTools = (user) => ({
   manage_note_comments: {
@@ -27,12 +32,18 @@ FUNCTIONALITIES (Actions):
 4. 'list': Retrieves all comments for a note.
    - How to use: Provide 'action' as "list" and the 'note_id'.
    - What it does: Returns a hierarchical structure of comments (and replies) for the note.
+5. 'upload_file': Uploads a file attached to a comment.
+   - How to use: Provide 'action' as "upload_file", 'note_id', 'mime_type', and 'base64_data'.
+6. 'read_file': Reads a file from its public URL.
+   - How to use: Provide 'action' as "read_file" and 'url'. Returns base64 string.
+7. 'delete_file': Deletes a file given its public URL.
+   - How to use: Provide 'action' as "delete_file" and 'url'.
    
 EXAMPLES (How to structure data):
-- Plain text comment: 
-  content = "This is a simple comment"
+- Plain text / Markdown comment: 
+  content = "**This is bold** and this is a [link](https://example.com)\\n- Item 1\\n- Item 2"
 
-- Rich text comment (Block structure):
+- Rich text comment (Block structure) - NOT RECOMMENDED for LLMs, use Markdown string instead:
   content = {
     "blocks": [
       {
@@ -48,7 +59,7 @@ EXAMPLES (How to structure data):
         const userId = user?.userId || user?.id;
         if (!userId) throw new Error("Unauthorized");
 
-        const { action, note_id, comment_id, content } = args;
+        const { action, note_id, comment_id, content, base64_data, file_name, mime_type, url } = args;
 
         if (action === "create") {
           if (!note_id || !content) {
@@ -59,13 +70,7 @@ EXAMPLES (How to structure data):
           const finalContent =
             typeof content === "string"
               ? {
-                  blocks: [
-                    {
-                      properties: {},
-                      text: content,
-                      type: "paragraph",
-                    },
-                  ],
+                  blocks: markdownToBlocks(content),
                   version: 1,
                 }
               : content;
@@ -79,10 +84,12 @@ EXAMPLES (How to structure data):
               parentId: null,
             }
           );
+          newComment.note_id = note_id; // Ensures we have note_id for enrichment
+          const enriched = McpLinksUtil.enrichWithAppUrl(newComment, "comment", "note_id", "id");
           return {
             content: [
               {
-                text: `Comment created successfully! ID: ${newComment.id}`,
+                text: JSON.stringify(enriched, null, 2),
                 type: "text",
               },
             ],
@@ -101,18 +108,12 @@ EXAMPLES (How to structure data):
           const finalContent =
             typeof content === "string"
               ? {
-                  blocks: [
-                    {
-                      properties: {},
-                      text: content,
-                      type: "paragraph",
-                    },
-                  ],
+                  blocks: markdownToBlocks(content),
                   version: 1,
                 }
               : content;
 
-          await NotesCommentsService.updateComment(
+          const updatedComment = await NotesCommentsService.updateComment(
             userId,
             String(existing.note_id),
             comment_id,
@@ -120,8 +121,11 @@ EXAMPLES (How to structure data):
               content: finalContent,
             }
           );
+          const enrichedObj = updatedComment || { ...existing, content: finalContent };
+          enrichedObj.note_id = note_id || existing.note_id;
+          const enriched = McpLinksUtil.enrichWithAppUrl(enrichedObj, "comment", "note_id", "id");
           return {
-            content: [{ text: `Comment updated successfully.`, type: "text" }],
+            content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
         }
 
@@ -153,9 +157,53 @@ EXAMPLES (How to structure data):
             userId,
             note_id
           );
+          const enriched = comments.map(c => {
+             c.note_id = note_id;
+             if (c.content && c.content.blocks) {
+               c.markdown = serializeBlocksToMarkdown(c.content.blocks);
+             }
+             return McpLinksUtil.enrichWithAppUrl(c, "comment", "note_id", "id");
+          });
           return {
             content: [
-              { text: JSON.stringify(comments, null, 2), type: "text" },
+              { text: JSON.stringify(enriched, null, 2), type: "text" },
+            ],
+          };
+        }
+
+        if (action === "upload_file") {
+          if (!note_id) throw new Error("note_id is required for upload_file action");
+          const buffer = Buffer.from(base64_data, "base64");
+          const noteUuid = await resolveNoteIdToUuid(note_id) || note_id;
+          const result = await spacesService.uploadNoteCommentFile(buffer, mime_type, noteUuid, userId, file_name);
+          return {
+            content: [
+              { text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key, type: "text" },
+            ],
+          };
+        }
+
+        if (action === "read_file") {
+          const key = spacesService.extractKeyFromUrl(url);
+          if (!key) throw new Error("Invalid URL or could not extract file key");
+          const buffer = await spacesService.downloadFile(key);
+          const base64Str = buffer.toString("base64");
+          return {
+            content: [
+              { text: `File successfully read. Extracted ${buffer.length} bytes.`, type: "text" },
+              { text: "data:application/octet-stream;base64," + base64Str, type: "text" }
+            ],
+          };
+        }
+
+        if (action === "delete_file") {
+          const key = spacesService.extractKeyFromUrl(url);
+          if (!key) throw new Error("Invalid URL or could not extract file key");
+          const success = await spacesService.deleteImage(key);
+          if (!success) throw new Error("Failed to delete file from storage.");
+          return {
+            content: [
+              { text: "File deleted successfully (Key: " + key + ")", type: "text" },
             ],
           };
         }

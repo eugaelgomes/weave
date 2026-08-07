@@ -1,4 +1,4 @@
-const googleService = require("@/modules/calendar-events/utils/google-calendar.util");
+const googleService = require("@/modules/calendar/utils/google-calendar.util");
 const GoogleOauthTokensRepository = require("@/modules/webhooks/repositories/google-oauth-tokens.repository");
 const GoogleCalendarController = require("@/modules/webhooks/controllers/google-calendar.controller");
 const WebhooksBaseController = require("@/modules/webhooks/controllers/base.controller");
@@ -9,7 +9,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
  * Google Calendar OAuth2: `GET /api/v1/webhooks/google/auth` and callback
  * `GET /api/v1/webhooks/google/callback`.
  *
- * The `redirect_uri` is hardcoded in `@/modules/calendar-events/services/google-calendar.service.js`:
+ * The `redirect_uri` is hardcoded in `@/modules/calendar/services/google-calendar.service.js`:
  * production `https://apis.weavenotes.app/api/v1/webhooks/google/callback`,
  * dev `http://localhost:8080/api/v1/webhooks/google/callback`.
  */

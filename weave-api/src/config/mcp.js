@@ -12,13 +12,13 @@ const {
 const { createPlansTools } = require("@/modules/plans/tools/plans.tools");
 const {
   createTaskPriorityTools,
-} = require("@/modules/task-priorities/tools/task-priorities.tools");
+} = require("@/modules/projects/tools/task-priorities.tools");
 const {
   createWebhooksTools,
 } = require("@/modules/webhooks/tools/webhooks.tools");
 const {
   createPasswordTools,
-} = require("@/modules/password/tools/password.tools");
+} = require("@/modules/authentication/tools/password.tools");
 const {
   createApiTokensTools,
 } = require("@/modules/api-tokens/tools/api-tokens.tools");
@@ -30,12 +30,12 @@ const {
 } = require("@/modules/notifications/tools/notifications.tools");
 const {
   createArtifactsTools,
-} = require("@/modules/artifacts/tools/artifacts.tools");
+} = require("@/modules/agent-house/tools/artifacts.tools");
 const { createBackupTools } = require("@/modules/backup/tools/backup.tools");
 const {
-  createCalendarEventsTools,
-} = require("@/modules/calendar-events/tools/calendar-events.tools");
-const { createTagsTools } = require("@/modules/tags/tools/tags.tools");
+  createCalendarTools,
+} = require("@/modules/calendar/tools/calendar.tools");
+const { createTagsTools } = require("@/modules/projects/tools/tags.tools");
 const { createNotesTools } = require("@/modules/notes/tools/notes.tools");
 const { createNoteBlocksTools } = require("@/modules/notes/tools/blocks.tools");
 const {
@@ -45,13 +45,12 @@ const { createCommentsTools } = require("@/modules/notes/tools/comments.tools");
 const {
   createAuthenticationTools,
 } = require("@/modules/authentication/tools/authentication.tools");
-const { createEngineTools } = require("@/modules/engine/tools/engine.tools");
 const { createUsersTools } = require("@/modules/users/tools/users.tools");
 const { createSlackTools } = require("@/modules/slack/tools/slack.tools");
-const { createMcpTools } = require("@/modules/mcp/tools/mcp.tools");
+
 const {
-  createWeaveAiTools,
-} = require("@/modules/weave-ai/tools/weave-ai.tools");
+  createAgentHouseTools,
+} = require("@/modules/agent-house/tools/agent-house.tools");
 const {
   createOrganizationsTools,
 } = require("@/modules/organizations/tools/organizations.tools");
@@ -74,18 +73,17 @@ function buildRegistry(user) {
     ...createNotificationsTools(user),
     ...createArtifactsTools(user),
     ...createBackupTools(user),
-    ...createCalendarEventsTools(user),
+    ...createCalendarTools(user),
     ...createTagsTools(user),
     ...createNotesTools(user),
     ...createNoteBlocksTools(user),
     ...createNoteCollaboratorsTools(user),
     ...createCommentsTools(user),
     ...createAuthenticationTools(user),
-    ...createEngineTools(user),
     ...createUsersTools(user),
     ...createSlackTools(user),
-    ...createMcpTools(user),
-    ...createWeaveAiTools(user),
+
+    ...createAgentHouseTools(user),
     ...createOrganizationsTools(user),
   };
 

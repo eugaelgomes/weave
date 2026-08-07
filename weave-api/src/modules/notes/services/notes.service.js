@@ -2,7 +2,7 @@ const notesRepository = require("@/modules/notes/notes.repository");
 
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const taskPrioritiesRepository = require("@/modules/task-priorities/repositories/task-priorities.repository");
+const taskPrioritiesRepository = require("@/modules/projects/repositories/task-priorities.repository");
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const spacesService = require("@/services/storage");

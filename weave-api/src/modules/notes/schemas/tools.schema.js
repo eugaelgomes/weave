@@ -59,208 +59,57 @@ const manageNotesSchema = z.discriminatedUnion("action", [
       .describe("Field to sort by"),
     sort_order: z.enum(["asc", "desc"]).optional().describe("Sort direction"),
   }),
+  z.object({
+    action: z.literal("upload_file"),
+    base64_data: z.string().describe("Base64 encoded string of the file content"),
+    file_name: z.string().optional().describe("Original file name"),
+    is_image: z.boolean().optional().describe("Whether this file should be treated as a document image (vs general attachment)"),
+    mime_type: z.string().describe("MIME type of the file (e.g., image/png, application/pdf)"),
+    note_id: z.string().describe("ID of the note (Internal UUID or public_note_id)"),
+  }),
+  z.object({
+    action: z.literal("read_file"),
+    url: z.string().describe("The public URL of the file to read/download"),
+  }),
+  z.object({
+    action: z.literal("delete_file"),
+    url: z.string().describe("The public URL of the file to delete"),
+  })
 ]);
 
 // ==========================================
 // manage_note_blocks
 // ==========================================
 
-/** Block type enum — use one of these exact strings for the `type` field. */
-const blockTypeSchema = z
-  .enum([
-    "heading",
-    "paragraph",
-    "code",
-    "list",
-    "todo",
-    "image",
-    "video",
-    "quote",
-    "divider",
-  ])
-  .describe(
-    "Type of the block. Allowed values: heading, paragraph, code, list, todo, image, video, quote, divider."
-  );
-
-const blockAttrsSchema = z.object({
-  alt: z
-    .string()
-    .optional()
-    .describe("Alternative text. Allowed for image blocks."),
-  background_color: z
-    .string()
-    .optional()
-    .describe(
-      "Background hex color from the palette. Allowed for heading, paragraph, quote, list, todo blocks."
-    ),
-  checked: z
-    .boolean()
-    .optional()
-    .describe("Whether the todo is checked. Allowed for todo blocks."),
-  language: z
-    .string()
-    .optional()
-    .describe("Programming language string. Allowed for code blocks."),
-  level: z
-    .number()
-    .min(1)
-    .max(6)
-    .optional()
-    .describe("Heading level (1-6). Required for heading blocks."),
-  ordered: z
-    .boolean()
-    .optional()
-    .describe("Whether the list is ordered. Allowed for list blocks."),
-  src: z
-    .string()
-    .optional()
-    .describe(
-      "URL of the image or video. Required for image and video blocks."
-    ),
-  title: z
-    .string()
-    .optional()
-    .describe("Title text. Allowed for image and video blocks."),
-});
-
-const markAttrsSchema = z.object({
-  class: z.string().optional().describe("CSS class name for the mark."),
-  color: z
-    .string()
-    .optional()
-    .describe(
-      "Hex color string from the palette. Allowed for textStyle and highlight marks."
-    ),
-  href: z.string().optional().describe("Target URL. Required for link marks."),
-  rel: z
-    .string()
-    .optional()
-    .describe("Link rel attribute. Allowed for link marks."),
-  target: z
-    .string()
-    .optional()
-    .describe("Link target. Allowed for link marks."),
-  title: z
-    .string()
-    .nullable()
-    .optional()
-    .describe("Link title. Allowed for link marks."),
-});
-
-const markSchema = z.object({
-  attrs: markAttrsSchema
-    .optional()
-    .describe("Specific attributes for the mark."),
-  end: z.number().describe("End index of the mark."),
-  start: z.number().describe("Start index of the mark."),
-  type: z
-    .enum([
-      "bold",
-      "code",
-      "highlight",
-      "italic",
-      "link",
-      "strike",
-      "subscript",
-      "superscript",
-      "textStyle",
-      "underline",
-    ])
-    .describe("Exact type of the formatting mark."),
-});
-
-const blockPropertiesSchema = z
-  .object({
-    attrs: blockAttrsSchema
-      .optional()
-      .describe("Block-specific attributes mapped by type."),
-    level: z
-      .number()
-      .optional()
-      .describe("Legacy heading level (deprecated, prefer attrs.level)."),
-    marks: z
-      .array(markSchema)
-      .optional()
-      .describe(
-        "Text formatting marks. Example: [{type:'bold',start:0,end:5},{type:'link',start:6,end:11,attrs:{href:'https://example.com'}}]"
-      ),
-    text: z.string().optional().describe("Text content within properties."),
-  })
-  .catchall(z.unknown())
-  .describe(
-    "Block properties containing text, formatting marks and block-specific attrs. Example for a heading: {text:'Introduction',attrs:{level:2,background_color:'#f0f0f0'}}"
-  );
-
 const manageNoteBlocksSchema = z.discriminatedUnion("action", [
   z.object({
-    action: z.literal("create"),
-    blocks: z
-      .array(
-        z.object({
-          parent_id: z
-            .string()
-            .optional()
-            .nullable()
-            .describe("Optional parent block ID for nesting"),
-          position: z
-            .number()
-            .optional()
-            .describe("Position among siblings (0-indexed)"),
-          properties: blockPropertiesSchema.optional(),
-          text: z
-            .string()
-            .optional()
-            .describe("Shorthand text content for the block"),
-          type: blockTypeSchema,
-        })
-      )
-      .optional()
-      .describe(
-        "Array of blocks to create multiple at once. Ignores single block fields if provided."
-      ),
+    action: z.literal("read"),
     note_id: z
       .string()
       .describe(
-        "ID of the note to add the block to (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+        "ID of the note whose content to read as Markdown (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
       ),
-    parent_id: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("Optional parent block ID for nesting"),
-    position: z
-      .number()
-      .optional()
-      .describe("Position among siblings (0-indexed)"),
-    properties: blockPropertiesSchema.optional(),
-    text: z
-      .string()
-      .optional()
-      .describe("Shorthand text content for the block"),
-    type: blockTypeSchema.optional(),
   }),
   z.object({
     action: z.literal("update"),
-    block_id: z
-      .union([uuidSchema, z.array(uuidSchema)])
-      .describe("ID or array of IDs of the block(s) to update"),
-    position: z.number().optional().describe("New position among siblings"),
-    properties: blockPropertiesSchema.optional(),
-    text: z.string().optional().describe("Updated text content"),
-    type: blockTypeSchema.optional(),
-  }),
-  z.object({
-    action: z.literal("delete"),
-    block_id: z
-      .union([uuidSchema, z.array(uuidSchema)])
-      .describe("ID or array of IDs of the block(s) to delete"),
-  }),
-  z.object({
-    action: z.literal("list"),
+    markdown: z
+      .string()
+      .describe("The full updated markdown content that will COMPLETELY REPLACE the current note content"),
     note_id: z
       .string()
       .describe(
-        "ID of the note whose blocks to list (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+        "ID of the note to completely update (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
+      ),
+  }),
+  z.object({
+    action: z.literal("create"),
+    markdown: z
+      .string()
+      .describe("Markdown content to append to the end of the note"),
+    note_id: z
+      .string()
+      .describe(
+        "ID of the note to add the content to (Internal UUID or public_note_id). CRITICAL: Always use public_note_id to construct URLs or show IDs to the user."
       ),
   }),
 ]);
@@ -354,6 +203,21 @@ const manageNoteCommentsSchema = z.discriminatedUnion("action", [
         ),
     })
     .describe("Action to list all comments for a note"),
+  z.object({
+    action: z.literal("upload_file"),
+    base64_data: z.string().describe("Base64 encoded string of the file content"),
+    file_name: z.string().optional().describe("Original file name"),
+    mime_type: z.string().describe("MIME type of the file (e.g., image/png, application/pdf)"),
+    note_id: z.string().describe("ID of the note (Internal UUID or public_note_id)"),
+  }).describe("Action to upload a file to a comment"),
+  z.object({
+    action: z.literal("read_file"),
+    url: z.string().describe("The public URL of the file to read/download"),
+  }).describe("Action to read a comment file"),
+  z.object({
+    action: z.literal("delete_file"),
+    url: z.string().describe("The public URL of the file to delete"),
+  }).describe("Action to delete a comment file"),
 ]);
 
 module.exports = {

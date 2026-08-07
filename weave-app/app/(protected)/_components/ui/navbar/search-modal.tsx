@@ -65,13 +65,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
 
   const places: SearchResult[] = [
     { id: "1", title: searchT.placeHome, type: "page", icon: Home, href: routes.home(orgId) },
-    {
-      id: "2",
-      title: searchT.placeExplore,
-      type: "page",
-      icon: LayoutGrid,
-      href: routes.weaveEngine.base(orgId),
-    },
+
     {
       id: "4",
       title: searchT.placePreferences,

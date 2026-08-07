@@ -561,6 +561,11 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       label: t.nav.projects,
     },
     {
+      path: `${orgPrefix}/agent-house`,
+      icon: Bot,
+      label: "Agent House",
+    },
+    {
       path: `${orgPrefix}/weave-flow`,
       icon: AnimatedFlowsIcon,
       label: t.nav.weaveFlow,

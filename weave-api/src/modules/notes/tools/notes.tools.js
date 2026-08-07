@@ -2,6 +2,8 @@ const { manageNotesSchema } = require("../schemas/tools.schema");
 const { NotesService } = require("../services/notes.service");
 const McpLinksUtil = require("@/utils/mcp-links.util");
 const { API_SCOPES } = require("@/config/api-scopes");
+const spacesService = require("@/services/storage/index");
+const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 
 const createNotesTools = (user) => ({
   manage_notes: {
@@ -23,7 +25,13 @@ FUNCTIONALITIES (Actions):
    - What it does: Soft-deletes the note and cascades deletion to blocks and comments.
 5. 'list': Lists notes in the workspace.
    - How to use: Provide 'action' as "list". Optionally include 'search', 'limit', 'page', 'sort_by', and 'sort_order'.
-   - What it does: Returns a paginated list of notes accessible to the user.`,
+   - What it does: Returns a paginated list of notes accessible to the user.
+6. 'upload_file': Uploads a file (or image) attached to a note.
+   - How to use: Provide 'action' as "upload_file", 'note_id', 'mime_type', and 'base64_data'. Use 'is_image: true' for document images.
+7. 'read_file': Reads a file from its public URL.
+   - How to use: Provide 'action' as "read_file" and 'url'. Returns base64 string.
+8. 'delete_file': Deletes a file given its public URL.
+   - How to use: Provide 'action' as "delete_file" and 'url'.`,
     handler: async (args) => {
       try {
         const userId = user?.userId || user?.id;
@@ -41,6 +49,11 @@ FUNCTIONALITIES (Actions):
           search,
           sort_by,
           sort_order,
+          base64_data,
+          file_name,
+          is_image,
+          mime_type,
+          url,
         } = args;
 
         if (action === "create") {
@@ -138,6 +151,48 @@ FUNCTIONALITIES (Actions):
 
           return {
             content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+          };
+        }
+
+        if (action === "upload_file") {
+          if (!note_id) throw new Error("note_id is required for upload_file action");
+          const buffer = Buffer.from(base64_data, "base64");
+          const noteUuid = await resolveNoteIdToUuid(note_id) || note_id;
+          let result;
+          if (is_image) {
+            result = await spacesService.uploadNoteDocumentImage(buffer, mime_type, noteUuid, userId, file_name);
+          } else {
+            result = await spacesService.uploadNoteFile(buffer, mime_type, noteUuid, userId, file_name);
+          }
+          return {
+            content: [
+              { text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key, type: "text" }
+            ],
+          };
+        }
+
+        if (action === "read_file") {
+          const key = spacesService.extractKeyFromUrl(url);
+          if (!key) throw new Error("Invalid URL or could not extract file key");
+          const buffer = await spacesService.downloadFile(key);
+          const base64Str = buffer.toString("base64");
+          return {
+            content: [
+              { text: `File successfully read. Extracted ${buffer.length} bytes.`, type: "text" },
+              { text: "data:application/octet-stream;base64," + base64Str, type: "text" }
+            ],
+          };
+        }
+
+        if (action === "delete_file") {
+          const key = spacesService.extractKeyFromUrl(url);
+          if (!key) throw new Error("Invalid URL or could not extract file key");
+          const success = await spacesService.deleteImage(key);
+          if (!success) throw new Error("Failed to delete file from storage.");
+          return {
+            content: [
+              { text: "File deleted successfully (Key: " + key + ")", type: "text" },
+            ],
           };
         }
 

@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const { z } = require("zod");
-const googleService = require("@/modules/calendar-events/utils/google-calendar.util");
+const googleService = require("@/modules/calendar/utils/google-calendar.util");
 const GoogleOauthTokensRepository = require("../repositories/google-oauth-tokens.repository");
 const GoogleCalendarWebhooksRepository = require("../repositories/google-calendar-webhooks.repository");
 const { executeQuery } = require("@/database/connection");

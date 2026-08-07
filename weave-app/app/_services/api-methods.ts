@@ -79,8 +79,8 @@ export const API_ENDPOINTS = {
   PLANS_USAGE_HISTORY: "/plans/usage-history",
 
   // Password Recovery
-  FORGOT_PASSWORD: "/password/forgot-password",
-  RESET_PASSWORD: "/password/reset-password",
+  FORGOT_PASSWORD: "/auth/forgot-password",
+  RESET_PASSWORD: "/auth/reset-password",
 
   // Notifications
   NOTIFICATIONS: "/notifications",

@@ -7,6 +7,11 @@ const GoogleOauthController = require("@/modules/authentication/controllers/goog
 const GithubOauthController = require("@/modules/authentication/controllers/github-oauth.controller");
 const MicrosoftOauthController = require("@/modules/authentication/controllers/microsoft-oauth.controller");
 const LogoutController = require("@/modules/authentication/controllers/logout.controller");
+const PasswordController = require("@/modules/authentication/controllers/password.controller");
+const {
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} = require("@/modules/authentication/schemas/password.schema");
 const {
   oauthCallbackSchema,
   signinSchema,
@@ -58,5 +63,17 @@ router.get(
 );
 
 router.post("/logout", LogoutController.logout.bind(LogoutController));
+
+router.post(
+  "/forgot-password",
+  validate(forgotPasswordSchema, "body"),
+  PasswordController.forgotPassword.bind(PasswordController)
+);
+
+router.post(
+  "/reset-password",
+  validate(resetPasswordSchema, "body"),
+  PasswordController.resetPassword.bind(PasswordController)
+);
 
 module.exports = router;

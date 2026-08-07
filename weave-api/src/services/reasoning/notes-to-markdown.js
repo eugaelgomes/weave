@@ -153,10 +153,16 @@ function applyMarks(text, marks) {
 
   // Simple implementation for common marks (Markdown doesn't support overlapping as easily as HTML)
   // We'll process bold, italic, code, and link
-  const sortedMarks = [...marks].sort((a, b) => b.from - a.from);
+  const sortedMarks = [...marks].sort((a, b) => {
+    const fromA = a.from ?? a.start ?? 0;
+    const fromB = b.from ?? b.start ?? 0;
+    return fromB - fromA;
+  });
 
   for (const mark of sortedMarks) {
-    const { from, to, type, attrs } = mark;
+    const from = mark.from ?? mark.start ?? 0;
+    const to = mark.to ?? mark.end ?? result.length;
+    const { type, attrs } = mark;
     const part = result.slice(from, to);
     let wrapped = part;
 

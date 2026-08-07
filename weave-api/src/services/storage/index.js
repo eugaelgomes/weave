@@ -43,12 +43,11 @@ class SpacesService {
   };
 
   constructor() {
-    this.spacesEndpoint = process.env.DO_SPACES_ENDPOINT;
-    this.accessKeyId = process.env.DO_SPACES_ACCESS_KEY;
-    this.secretAccessKey = process.env.DO_SPACES_SECRET_KEY;
-    // Força o bucket central para wn-storage
-    this.bucketName = process.env.DO_SPACES_BUCKET_NAME || "wn-storage";
-    this.region = process.env.DO_SPACES_REGION || "sfo3";
+    this.spacesEndpoint = process.env.STORAGE_ENDPOINT || process.env.DO_SPACES_ENDPOINT;
+    this.accessKeyId = process.env.STORAGE_ACCESS_KEY || process.env.DO_SPACES_ACCESS_KEY;
+    this.secretAccessKey = process.env.STORAGE_SECRET_KEY || process.env.DO_SPACES_SECRET_KEY;
+    this.bucketName = process.env.STORAGE_BUCKET_NAME || process.env.DO_SPACES_BUCKET_NAME || "weave-storage";
+    this.region = process.env.STORAGE_REGION || process.env.DO_SPACES_REGION || "us-ashburn-1";
 
     if (
       !this.spacesEndpoint ||
@@ -57,7 +56,7 @@ class SpacesService {
       !this.bucketName
     ) {
       throw new Error(
-        "Digital Ocean Spaces credentials not configured properly"
+        "Storage credentials not configured properly. Ensure STORAGE_ENDPOINT, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY and STORAGE_BUCKET_NAME are set."
       );
     }
 
@@ -67,7 +66,7 @@ class SpacesService {
         secretAccessKey: this.secretAccessKey,
       },
       endpoint: this.spacesEndpoint,
-      forcePathStyle: false,
+      forcePathStyle: true,
       region: this.region,
     });
   }
@@ -169,14 +168,17 @@ class SpacesService {
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
-      // eslint-disable-next-line no-unused-vars
-      const publicUrl =
-        `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
+      let publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
+      
+      // Ajuste para Digital Ocean (caso esteja usando o antigo padrão sem região na URL)
+      if (publicUrl.includes("digitaloceanspaces.com")) {
+        publicUrl = publicUrl.replace(
           "digitaloceanspaces.com",
           `${this.region}.digitaloceanspaces.com`
         );
+      }
 
-      const simpleUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
+      const simpleUrl = publicUrl;
 
       return {
         fileName: uniqueFileName,
@@ -470,13 +472,13 @@ class SpacesService {
       return key;
     }
 
-    // Substitui digitaloceanspaces.com por {region}.digitaloceanspaces.com caso aplicável
-    // e garante que a URL aponte corretamente para o bucket
-    const publicUrl =
-      `${this.spacesEndpoint}/${this.bucketName}/${key}`.replace(
+    let publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
+    if (publicUrl.includes("digitaloceanspaces.com")) {
+      publicUrl = publicUrl.replace(
         "digitaloceanspaces.com",
         `${this.region}.digitaloceanspaces.com`
       );
+    }
 
     return publicUrl;
   }

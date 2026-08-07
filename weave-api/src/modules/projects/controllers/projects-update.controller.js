@@ -13,7 +13,7 @@ const {
 } = require("@/services/email/templates/project-add-person");
 const spacesService = require("@/services/storage");
 const notesRepository = require("@/modules/notes/notes.repository");
-const taskPrioritiesRepository = require("@/modules/task-priorities/repositories/task-priorities.repository");
+const taskPrioritiesRepository = require("@/modules/projects/repositories/task-priorities.repository");
 const {
   ASSIGNABLE_PROJECT_ROLES,
 } = require("@/modules/projects/project-role-policy");
