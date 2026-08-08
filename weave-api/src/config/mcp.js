@@ -126,8 +126,47 @@ function registerHandlers(server, registry) {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: Object.entries(registry.tools).map(([toolKey, tool]) => {
       const toolName = tool.name || toolKey;
-      const rawJsonSchema = tool.schema.toJSONSchema();
+
+      let rawJsonSchema =
+        typeof tool.schema?.toJSONSchema === "function"
+          ? tool.schema.toJSONSchema()
+          : {};
       delete rawJsonSchema.$schema;
+
+      // Normalize root-level unions to a flat object schema.
+      // Zod's discriminatedUnion emits anyOf/oneOf at the root, which is rejected
+      // by OpenAI's function calling API. We flatten union branches into a single
+      // object with merged properties, promoting literal 'const' values to 'enum'.
+      const unionBranches = rawJsonSchema.anyOf || rawJsonSchema.oneOf || rawJsonSchema.allOf;
+      if (Array.isArray(unionBranches)) {
+        const mergedProperties = {};
+        for (const branch of unionBranches) {
+          if (!branch?.properties) continue;
+          for (const [propName, propSchema] of Object.entries(branch.properties)) {
+            if (!mergedProperties[propName]) {
+              mergedProperties[propName] = { ...propSchema };
+            } else {
+              const existing = mergedProperties[propName];
+              const enumValues = new Set();
+              if (Array.isArray(existing.enum)) existing.enum.forEach((v) => enumValues.add(v));
+              if (existing.const !== undefined) enumValues.add(String(existing.const));
+              if (Array.isArray(propSchema.enum)) propSchema.enum.forEach((v) => enumValues.add(v));
+              if (propSchema.const !== undefined) enumValues.add(String(propSchema.const));
+              if (enumValues.size > 0) {
+                delete existing.const;
+                existing.type = "string";
+                existing.enum = Array.from(enumValues);
+              }
+            }
+          }
+        }
+        delete rawJsonSchema.anyOf;
+        delete rawJsonSchema.oneOf;
+        delete rawJsonSchema.allOf;
+        rawJsonSchema.type = "object";
+        rawJsonSchema.properties = mergedProperties;
+      }
+
       return {
         description: tool.description || "",
         inputSchema: {

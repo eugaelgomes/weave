@@ -13,7 +13,6 @@ import ProjectBoard from "@/app/(protected)/[orgId]/projects/_components/project
 import AddCollaboratorModal from "@/app/(protected)/[orgId]/projects/_components/modals/add-collaborator-modal";
 import { ProjectFilters } from "@/app/(protected)/[orgId]/projects/_components/project-filters";
 import { useTaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
-import ProjectWeaveEngine from "@/app/(protected)/[orgId]/projects/_components/project-weave-engine";
 
 export default function ProjectViewPage() {
   const router = useRouter();
@@ -196,13 +195,6 @@ export default function ProjectViewPage() {
         onBack={() => router.push(`/${orgId}/projects`)}
         canEdit={canEdit}
         onIconFile={canEdit ? handleProjectIconChange : undefined}
-      />
-
-      <ProjectWeaveEngine
-        project={project}
-        projectNotes={enrichedProjectNotes}
-        stages={stages}
-        collaborators={collaborators}
       />
 
       <ProjectFilters

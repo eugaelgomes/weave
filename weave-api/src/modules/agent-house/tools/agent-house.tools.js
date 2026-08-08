@@ -1,19 +1,6 @@
 const { z } = require("zod");
 const agentsRepository = require("../repositories/agents.repository");
-const chatOrchestratorService = require("../utils/chat-orchestrator.util");
-const { randomUUID } = require("crypto");
-
 const manageAgentHouseSchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("chat"),
-    agent_id: z.string().optional().describe("ID of the agent to chat with"),
-    message: z.string().optional().describe("Message payload for chat"),
-    messages: z
-      .array(z.record(z.any()))
-      .optional()
-      .describe("Array of chat messages"),
-    requestId: z.string().optional().describe("Request ID for chat"),
-  }),
   z.object({
     action: z.literal("create_agent"),
     description: z
@@ -44,7 +31,6 @@ const createAgentHouseTools = (user) => ({
       try {
         const {
           action,
-          requestId,
           project_id,
           name,
           description,
@@ -55,23 +41,7 @@ const createAgentHouseTools = (user) => ({
           rules,
         } = args;
 
-        if (action === "chat") {
-          const reqId = requestId || randomUUID();
-          const organizationId = user.organizationId || user.org_id || null;
-          const onChunk = () => {};
-          const result = await chatOrchestratorService.orchestrateChat({
-            files: [],
-            onChunk,
-            organizationId,
-            payload: args,
-            requestId: reqId,
-            userId: user.id,
-            userLanguage: "en",
-          });
-          return {
-            content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-          };
-        }
+
 
         if (action === "create_agent") {
           const personality = {

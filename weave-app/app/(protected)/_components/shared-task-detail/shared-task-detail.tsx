@@ -255,7 +255,6 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
     getProjectStages,
     updateProjectNoteStage,
     getTaskPriorities,
-    getOrgTaskPriorities,
   } = useProjects();
 
   const [note, setNote] = useState<Note | null>(null);
@@ -810,13 +809,9 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
         return;
       }
       const projectId = note.associated_project?.id;
-      const orgId = note.associated_organization?.id;
       try {
         if (projectId) {
           const list = await getTaskPriorities(projectId);
-          if (!cancelled) setTaskPriorities(list);
-        } else if (orgId) {
-          const list = await getOrgTaskPriorities(orgId);
           if (!cancelled) setTaskPriorities(list);
         } else if (!cancelled) {
           setTaskPriorities([]);
@@ -829,7 +824,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
     return () => {
       cancelled = true;
     };
-  }, [note, getTaskPriorities, getOrgTaskPriorities]);
+  }, [note, getTaskPriorities]);
 
   useEffect(() => {
     if (!note?.access?.canEdit) return;

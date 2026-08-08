@@ -6,12 +6,17 @@ const ProjectsDeleteController = require("@/modules/projects/controllers/project
 const UserViewPrefsController = require("@/modules/projects/controllers/user-view-prefs.controller");
 const ProjectsCollaboratorsCreateController = require("@/modules/projects/controllers/projects-collaborators-create.controller");
 const ProjectsCollaboratorsUpdateController = require("@/modules/projects/controllers/projects-collaborators-update.controller");
+const TagsController = require("@/modules/projects/controllers/tags.controller");
+const TaskPrioritiesController = require("@/modules/projects/controllers/task-priorities.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { validate } = require("@/middlewares/validation/validate");
 const { requireScope } = require("@/middlewares/auth/require-scope");
 const {
   requireProjectPermission,
   PROJECT_PERMISSIONS,
 } = require("@/middlewares/auth/require-project-permission");
+const { requireOrgPermission } = require("@/middlewares/auth/require-org-permission");
+const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
 const { projectUpdateUpload } = require("@/modules/projects/utils/project-upload.util");
 const { noteUpdateUpload } = require("@/modules/notes/utils/note-upload.util");
 const {
@@ -27,12 +32,17 @@ const {
   validateGetMyViewPref,
   validateSetMyViewPref,
 } = require("@/modules/projects/projects.validators");
+const { tagsParamsSchema, createTagSchema, updateTagSchema } = require("./schemas/tags.schema");
+const { taskPrioritiesParamsSchema, createTaskPrioritySchema, updateTaskPrioritySchema } = require("./schemas/task-priorities.schema");
 const {
   resolveProjectPublicIdParam,
   resolveNotePublicIdParam,
 } = require("@/middlewares/public-id-resolver");
 
 const router = express.Router();
+
+const requireManageTags = requireOrgPermission(ORG_PERMISSIONS.MANAGE_TAGS);
+const requireManageTaskPriorities = requireOrgPermission(ORG_PERMISSIONS.MANAGE_TASK_PRIORITIES);
 
 router.param("id", resolveProjectPublicIdParam);
 router.param("projectId", resolveProjectPublicIdParam);
@@ -199,6 +209,60 @@ router.patch(
   requireProjectPermission(PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT),
   noteUpdateUpload.fields([{ maxCount: 10, name: "files" }]),
   ProjectsUpdateController.patchTaskInProject.bind(ProjectsUpdateController)
+);
+
+// --- TAGS ---
+router.post(
+  "/:projectId/tags",
+  requireManageTags,
+  validate(tagsParamsSchema, "params"),
+  validate(createTagSchema, "body"),
+  TagsController.createTag.bind(TagsController)
+);
+router.get(
+  "/:projectId/tags",
+  validate(tagsParamsSchema, "params"),
+  TagsController.getTags.bind(TagsController)
+);
+router.patch(
+  "/:projectId/tags/:tag_id",
+  requireManageTags,
+  validate(tagsParamsSchema, "params"),
+  validate(updateTagSchema, "body"),
+  TagsController.updateTag.bind(TagsController)
+);
+router.delete(
+  "/:projectId/tags/:tag_id",
+  requireManageTags,
+  validate(tagsParamsSchema, "params"),
+  TagsController.deleteTag.bind(TagsController)
+);
+
+// --- TASK PRIORITIES ---
+router.post(
+  "/:projectId/create-priority",
+  requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
+  validate(createTaskPrioritySchema, "body"),
+  TaskPrioritiesController.createPriority.bind(TaskPrioritiesController)
+);
+router.get(
+  "/:projectId/task-priorities",
+  validate(taskPrioritiesParamsSchema, "params"),
+  TaskPrioritiesController.getPriorities.bind(TaskPrioritiesController)
+);
+router.patch(
+  "/:projectId/task-priorities/:priority_id",
+  requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
+  validate(updateTaskPrioritySchema, "body"),
+  TaskPrioritiesController.updatePriority.bind(TaskPrioritiesController)
+);
+router.delete(
+  "/:projectId/task-priorities/:priority_id",
+  requireManageTaskPriorities,
+  validate(taskPrioritiesParamsSchema, "params"),
+  TaskPrioritiesController.deletePriority.bind(TaskPrioritiesController)
 );
 
 module.exports = router;

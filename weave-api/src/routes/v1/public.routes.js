@@ -8,8 +8,6 @@ const {
 const notesRoutes = require("@/modules/notes/notes.routes");
 const projectsRoutes = require("@/modules/projects/projects.routes");
 const calendarRoutes = require("@/modules/calendar/calendar.routes");
-const tagsRoutes = require("@/modules/projects/tags.routes");
-const taskPrioritiesRoutes = require("@/modules/projects/task-priorities.routes");
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
 const { requireScope } = require("@/middlewares/auth/require-scope");
@@ -65,8 +63,6 @@ const createPublicRouter = ({ version = DEFAULT_VERSION } = {}) => {
   router.use("/notes", notesRoutes);
   router.use("/projects", projectsRoutes);
   router.use("/calendar", calendarRoutes);
-  router.use("/tags", tagsRoutes);
-  router.use("/task-priorities", taskPrioritiesRoutes);
   router.use("/agent-house", agentHouseRoutes);
 
   // Expose ONLY the search endpoint for users

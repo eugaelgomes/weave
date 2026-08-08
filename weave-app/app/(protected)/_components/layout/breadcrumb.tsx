@@ -60,8 +60,7 @@ const Breadcrumb = () => {
 
   if (
     breadcrumbs.length === 0 ||
-    (breadcrumbs.length === 1 &&
-      (breadcrumbs[0].path === "/home" || breadcrumbs[0].path === "/weave-engine"))
+    (breadcrumbs.length === 1 && breadcrumbs[0].path === "/home")
   ) {
     return null;
   }

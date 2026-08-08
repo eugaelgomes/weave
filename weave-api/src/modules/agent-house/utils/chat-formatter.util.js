@@ -112,10 +112,13 @@ class ChatFormatterUtil {
    * @returns {string} Model name or version.
    */
   resolveModelForEngine(model) {
+    if (model.name && model.name.trim()) {
+      return model.name.trim();
+    }
     if (model.version && model.version.trim()) {
       return model.version.trim();
     }
-    return model.name.trim();
+    return "gemini-3.5-flash"; // default fallback in case everything is broken
   }
 
   /**

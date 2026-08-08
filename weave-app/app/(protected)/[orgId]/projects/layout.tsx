@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useProjects } from "@/app/_contexts/projects-context";
-import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
 import { ChevronRight, LayoutDashboard, ChevronDown } from "lucide-react";
 import { ProjectsHeader } from "@/app/(protected)/_components/ui/headers/projects-header";
 import GlobalLoading from "@/app/_components/ui/global-loading";
@@ -16,7 +15,6 @@ import type {
 } from "@/app/_services/projects-service/projects-service";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
 import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
-import { WeaveEngineProvider } from "@/app/_contexts/weave-engine-context";
 import { TagsProvider } from "@/app/_contexts/tags-context";
 import { TaskPrioritiesProvider } from "@/app/_contexts/task-priorities-context";
 import { NotesProvider } from "@/app/_contexts/notes-context";
@@ -39,7 +37,6 @@ function subprojectProperties(sub: SubProject): ProjectProperties | undefined {
 
 function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
   const { getRecentProjects } = useProjects();
-  const { feed } = useWeaveEngine();
   const pathname = usePathname();
   const params = useParams();
   const orgId = params?.orgId as string;
@@ -59,28 +56,9 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
       string,
       { hasNew: boolean; actions: number; risk: "low" | "medium" | "high" }
     >();
-    const now = Date.now();
-    const dayMs = 24 * 60 * 60 * 1000;
-
-    feed.forEach((item) => {
-      const project = recentProjects.find((proj) => proj.id === item.projectId);
-      if (!project?.public_id) return;
-      const key = project.public_id;
-      const current = map.get(key) || { hasNew: false, actions: 0, risk: "low" as const };
-      const createdAt = item.created_at ? new Date(item.created_at).getTime() : 0;
-      const hasNew = current.hasNew || (createdAt > 0 && now - createdAt <= dayMs);
-      const actions = current.actions + (item.action_items_count || 0);
-      const nextRisk =
-        item.safety_label === "unsafe"
-          ? "high"
-          : item.safety_label === "review" && current.risk !== "high"
-            ? "medium"
-            : current.risk;
-      map.set(key, { hasNew, actions, risk: nextRisk });
-    });
-
+    // Signals calculation removed along with Weave Engine feed
     return map;
-  }, [feed, recentProjects]);
+  }, []);
 
   const base = pathname.replace(/\/+$/, "");
   const isDashboard = base === `/${orgId}/projects`;
@@ -254,12 +232,10 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
   }
 
   return (
-    <WeaveEngineProvider>
-      <TagsProvider>
-        <TaskPrioritiesProvider>
-          <ProjectsLayoutContent>{children}</ProjectsLayoutContent>
-        </TaskPrioritiesProvider>
-      </TagsProvider>
-    </WeaveEngineProvider>
+    <TagsProvider>
+      <TaskPrioritiesProvider>
+        <ProjectsLayoutContent>{children}</ProjectsLayoutContent>
+      </TaskPrioritiesProvider>
+    </TagsProvider>
   );
 }

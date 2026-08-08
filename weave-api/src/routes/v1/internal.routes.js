@@ -19,8 +19,7 @@ const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
 const notificationsRoutes = require("@/modules/notifications/notifications.routes");
 const calendarRoutes = require("@/modules/calendar/calendar.routes");
 const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
-const tagsRoutes = require("@/modules/projects/tags.routes");
-const taskPrioritiesRoutes = require("@/modules/projects/task-priorities.routes");
+
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 const slackRoutes = require("@/modules/slack/slack.routes");
 const artifactsRoutes = require("@/modules/agent-house/artifacts.routes");
@@ -134,18 +133,14 @@ const routeRegistry = [
   { basePath: "/calendar", handler: calendarRoutes },
   { basePath: "/notes", handler: notesRoutes },
   { basePath: "/organizations", handler: organizationsRoutes },
-  { basePath: "/projects", handler: tagsRoutes },
-  { basePath: "/projects", handler: taskPrioritiesRoutes },
-  { basePath: "/organizations", handler: tagsRoutes },
-  { basePath: "/organizations", handler: taskPrioritiesRoutes },
+
 
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/notifications", handler: notificationsRoutes },
   { basePath: "/projects", handler: projectsRoutes },
-  { basePath: "/task-priorities", handler: taskPrioritiesRoutes },
   { basePath: "/users", handler: userRoutes },
   { basePath: "/webhooks", handler: webhooksRoutes },
-  { basePath: "/agent-house", handler: agentHouseRoutes },
+  { basePath: "/weave-ai", handler: agentHouseRoutes },
   { basePath: "/slack", handler: slackRoutes },
   { basePath: "/artifacts", handler: artifactsRoutes },
 ];

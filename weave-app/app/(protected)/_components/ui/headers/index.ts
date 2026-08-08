@@ -8,6 +8,5 @@ export * from "@/app/(protected)/_components/ui/headers/weave-ai-header";
 export * from "@/app/(protected)/_components/ui/headers/workspace-header";
 export * from "@/app/(protected)/_components/ui/headers/notifications-header";
 export * from "@/app/(protected)/_components/ui/headers/documents-header";
-export * from "@/app/(protected)/_components/ui/headers/weave-engine-header";
 export * from "@/app/(protected)/_components/ui/headers/weave-flow-header";
 export * from "@/app/(protected)/_components/ui/headers/animated-greeting";

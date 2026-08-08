@@ -126,7 +126,6 @@ export const API_ENDPOINTS = {
   PROJECTS_TASK_PRIORITIES: (projectId: string) => `/projects/${projectId}/task-priorities`,
   PROJECTS_TASK_PRIORITY_BY_ID: (projectId: string, priorityId: string) =>
     `/projects/${projectId}/task-priorities/${priorityId}`,
-  ORGANIZATIONS_TASK_PRIORITIES: (orgId: string) => `/organizations/${orgId}/task-priorities`,
 
   // Sprints
   ENGINE_SPRINTS: (projectId: string) => `/engine/${projectId}/sprints`,
@@ -209,14 +208,14 @@ export const API_ENDPOINTS = {
   SLACK_DISCONNECT: "/slack/integrations",
 
   // Internal Calendar Events
-  CALENDAR_EVENTS: "/calendar-events",
-  CALENDAR_EVENT_BY_ID: (id: string) => `/calendar-events/${id}`,
-  CALENDAR_EVENT_INVITES: (eventId: string) => `/calendar-events/${eventId}/invites`,
+  CALENDAR_EVENTS: "/calendar",
+  CALENDAR_EVENT_BY_ID: (id: string) => `/calendar/${id}`,
+  CALENDAR_EVENT_INVITES: (eventId: string) => `/calendar/${eventId}/invites`,
   CALENDAR_EVENT_INVITE_BY_ID: (eventId: string, inviteId: string) =>
-    `/calendar-events/${eventId}/invites/${inviteId}`,
-  GOOGLE_CALENDAR_SETTINGS: "/calendar-events/google/settings",
-  GOOGLE_CALENDAR_LIST: "/calendar-events/google/calendars",
-  GOOGLE_CALENDAR_FREEBUSY: "/calendar-events/google/freebusy",
+    `/calendar/${eventId}/invites/${inviteId}`,
+  GOOGLE_CALENDAR_SETTINGS: "/calendar/google/settings",
+  GOOGLE_CALENDAR_LIST: "/calendar/google/calendars",
+  GOOGLE_CALENDAR_FREEBUSY: "/calendar/google/freebusy",
 
   // Internal API Tokens
   API_TOKENS_SCOPES: "/api-tokens/scopes",

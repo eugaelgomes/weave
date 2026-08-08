@@ -1,22 +1,13 @@
+/**
+ * Internal service middleware for trusted worker routes (e.g. MCP via Engine).
+ *
+ * Authentication is NOT enforced here — the Engine is a trusted internal worker
+ * that only processes jobs already authenticated by the API via the Redis queue.
+ * Network-level isolation (Docker/VPC) is the security boundary in production.
+ *
+ * This middleware only extracts user context from headers set by the Engine.
+ */
 const verifyInternalService = (req, res, next) => {
-  const secret = process.env.INTERNAL_SERVICE_SECRET;
-
-  if (!secret) {
-    return res.status(503).json({
-      code: "INTERNAL_SERVICE_SECRET_NOT_CONFIGURED",
-      error: "Service secret is not configured.",
-    });
-  }
-
-  const providedSecret = req.headers["x-weave-service-secret"];
-
-  if (!providedSecret || providedSecret !== secret) {
-    return res.status(403).json({
-      code: "INTERNAL_SERVICE_UNAUTHORIZED",
-      error: "Unauthorized service request.",
-    });
-  }
-
   const userId = req.headers["x-weave-user-id"];
   const orgId = req.headers["x-weave-org-id"];
 

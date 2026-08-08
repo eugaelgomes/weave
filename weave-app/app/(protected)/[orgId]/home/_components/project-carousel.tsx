@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -26,7 +26,6 @@ import { ProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/proj
 import { getTagColor } from "@/app/_utils/tag-colors";
 import { PROJECT_STATUS } from "@/app/_utils/db-enums";
 import { useLanguage } from "@/app/_contexts/language-context";
-import { useWeaveEngine } from "@/app/_contexts/weave-engine-context";
 
 interface ProjectsCarouselProps {
   projects: ProjectOverview[];
@@ -76,39 +75,10 @@ export default function ProjectsCarousel({
   const params = useParams();
   const orgId = params?.orgId as string;
   const { t, locale } = useLanguage();
-  const { feed } = useWeaveEngine();
-  const [currentSlide, setCurrentSlide] = React.useState(0);
-  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   const dateLocale = locale === "en-US" ? "en-US" : locale === "es-ES" ? "es-ES" : "pt-BR";
-
-  const signalsByProjectPublicId = React.useMemo(() => {
-    const map = new Map<
-      string,
-      { hasNew: boolean; actions: number; risk: "low" | "medium" | "high" }
-    >();
-    const now = Date.now();
-    const dayMs = 24 * 60 * 60 * 1000;
-
-    feed.forEach((item) => {
-      const project = projects.find((proj) => proj.id === item.projectId);
-      if (!project?.public_id) return;
-      const key = project.public_id;
-      const current = map.get(key) || { hasNew: false, actions: 0, risk: "low" as const };
-      const createdAt = item.created_at ? new Date(item.created_at).getTime() : 0;
-      const hasNew = current.hasNew || (createdAt > 0 && now - createdAt <= dayMs);
-      const actions = current.actions + (item.action_items_count || 0);
-      const nextRisk =
-        item.safety_label === "unsafe"
-          ? "high"
-          : item.safety_label === "review" && current.risk !== "high"
-            ? "medium"
-            : current.risk;
-      map.set(key, { hasNew, actions, risk: nextRisk });
-    });
-
-    return map;
-  }, [feed, projects]);
 
   const statusLabelByKey = React.useMemo(
     () => ({
@@ -200,7 +170,6 @@ export default function ProjectsCarousel({
                   ? t.home.carousel.methodologyScrum
                   : t.home.carousel.methodologyKanban;
               const updatedAt = formatDate(project.lastModified);
-              const signal = signalsByProjectPublicId.get(project.public_id || "");
               const counterParts: string[] = [];
               if ((project.subprojectsCount ?? 0) > 0) {
                 counterParts.push(
@@ -213,45 +182,6 @@ export default function ProjectsCarousel({
               if ((project.stagesCount ?? 0) > 0) {
                 counterParts.push(
                   t.home.carousel.columnsCount.replace("{count}", String(project.stagesCount))
-                );
-              }
-
-              const weaveParts: React.ReactNode[] = [];
-              if (signal?.risk === "high") {
-                weaveParts.push(
-                  <span
-                    key="risk-high"
-                    className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"
-                    title={t.home.carousel.riskHigh}
-                  />
-                );
-              } else if (signal?.risk === "medium") {
-                weaveParts.push(
-                  <span
-                    key="risk-medium"
-                    className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"
-                    title={t.home.carousel.riskMedium}
-                  />
-                );
-              }
-              if (signal?.actions) {
-                weaveParts.push(
-                  <span
-                    key="actions"
-                    className="text-brand-primary-700 dark:text-brand-primary-400 font-normal"
-                  >
-                    {t.home.carousel.suggestedActions.replace("{count}", String(signal.actions))}
-                  </span>
-                );
-              }
-              if (signal?.hasNew) {
-                weaveParts.push(
-                  <span
-                    key="new"
-                    className="text-brand-primary-700 dark:text-brand-primary-400 font-normal"
-                  >
-                    {t.home.carousel.newInsight}
-                  </span>
                 );
               }
 
@@ -360,7 +290,7 @@ export default function ProjectsCarousel({
                     </div>
 
                     <div className="mt-auto">
-                      {(counterParts.length > 0 || weaveParts.length > 0) && (
+                      {counterParts.length > 0 && (
                         <p className="mb-1 flex flex-wrap items-center gap-x-1.5 text-[7px] font-normal text-neutral-500 dark:text-neutral-400">
                           {counterParts.map((part, index) => (
                             <React.Fragment key={`counter-${index}`}>
@@ -368,17 +298,6 @@ export default function ProjectsCarousel({
                                 <span className="text-neutral-400 dark:text-neutral-500">·</span>
                               )}
                               <span>{part}</span>
-                            </React.Fragment>
-                          ))}
-                          {counterParts.length > 0 && weaveParts.length > 0 && (
-                            <span className="text-neutral-400 dark:text-neutral-500">·</span>
-                          )}
-                          {weaveParts.map((part, index) => (
-                            <React.Fragment key={`weave-${index}`}>
-                              {index > 0 && (
-                                <span className="text-neutral-400 dark:text-neutral-500">·</span>
-                              )}
-                              {part}
                             </React.Fragment>
                           ))}
                         </p>

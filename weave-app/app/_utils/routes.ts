@@ -34,6 +34,14 @@ export const routes = {
     base: (orgId: string) => `/${orgId}/weave-flow/`,
   },
 
+  weaveAi: {
+    base: (orgId: string) => `/${orgId}/weave-ai/`,
+    chat: (orgId: string) => `/${orgId}/weave-ai/chat/`,
+    chatSession: (orgId: string, sessionId: string) => `/${orgId}/weave-ai/chat/${sessionId}/`,
+    newAgent: (orgId: string) => `/${orgId}/weave-ai/agents/new/`,
+    agentDetails: (orgId: string, agentId: string) => `/${orgId}/weave-ai/agents/${agentId}/`,
+  },
+
   agentHouse: {
     base: (orgId: string) => `/${orgId}/agent-house/`,
     llms: (orgId: string) => `/${orgId}/agent-house/llms/`,

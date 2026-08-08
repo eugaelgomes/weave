@@ -23,20 +23,13 @@ const listAvailablePlansSchema = z
     "Schema used for listing all available subscription plans that are configured in the system."
   );
 
-const managePlansSchema = z.discriminatedUnion("action", [
-  z
-    .object({
-      action: z.literal("get_current"),
-    })
+const managePlansSchema = z.object({
+  action: z
+    .enum(["get_current", "list_available"])
     .describe(
-      "Action to retrieve the current active subscription plan details for the user."
+      "Action to perform: 'get_current' to retrieve current active plan, 'list_available' to list all available plans."
     ),
-  z
-    .object({
-      action: z.literal("list_available"),
-    })
-    .describe("Action to list all available subscription plans in the system."),
-]);
+});
 
 module.exports = {
   changePlanSchema,

@@ -79,7 +79,6 @@ function TaskNoteModalInner() {
     projects,
     getProjectStages,
     getTaskPriorities,
-    getOrgTaskPriorities,
     addNoteToProject,
     updateProjectNoteStage,
     createTaskInStage,
@@ -207,13 +206,10 @@ function TaskNoteModalInner() {
 
   const loadTaskPriorities = useCallback(
     async (opts: { projectId?: string; orgId?: string }) => {
-      const { projectId: pid, orgId } = opts;
+      const { projectId: pid } = opts;
       try {
         if (pid) {
           const list = await getTaskPriorities(pid);
-          setTaskPriorities(list || []);
-        } else if (orgId) {
-          const list = await getOrgTaskPriorities(orgId);
           setTaskPriorities(list || []);
         } else {
           setTaskPriorities([]);
@@ -222,7 +218,7 @@ function TaskNoteModalInner() {
         setTaskPriorities([]);
       }
     },
-    [getTaskPriorities, getOrgTaskPriorities]
+    [getTaskPriorities]
   );
 
   const loadNote = useCallback(async () => {

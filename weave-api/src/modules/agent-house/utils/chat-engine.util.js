@@ -43,7 +43,7 @@ subscriberClient.on("message", (channel, message) => {
 });
 
 const ENGINE_CHAT_TIMEOUT_SECONDS = Number.parseInt(
-  process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "75",
+  process.env.WEAVE_ENGINE_CHAT_TIMEOUT_SECONDS || "300",
   10
 );
 

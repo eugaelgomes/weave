@@ -11,58 +11,57 @@ export class MCPClient {
   private executionContext: ExecutionContext;
   private client: Client | null;
   private transport: SSEClientTransport | null;
+  private connectionPromise: Promise<void> | null;
 
   constructor(executionContext: ExecutionContext) {
     this.executionContext = executionContext;
     this.client = null;
     this.transport = null;
+    this.connectionPromise = null;
   }
 
   async connect(): Promise<void> {
-    if (this.client) {
-      return;
+    if (this.connectionPromise) {
+      return this.connectionPromise;
     }
 
-    const apiUrl = process.env.WEAVE_API_URL || "http://localhost:3000";
-    const sseUrl = new URL("/api/service/v1/mcp/sse", apiUrl).toString();
+    this.connectionPromise = (async () => {
+      const apiUrl = process.env.WEAVE_API_URL || "http://localhost:8080";
+      const sseUrl = new URL("/api/service/v1/mcp/sse", apiUrl).toString();
 
-    const headers = {
-      "x-weave-org-id": String(this.executionContext.organizationId || ""),
-      "x-weave-service-secret": process.env.INTERNAL_SERVICE_SECRET || "",
-      "x-weave-user-id": String(this.executionContext.userId || ""),
-    };
+      const headers = {
+        "x-weave-org-id": String(this.executionContext.organizationId || ""),
+        "x-weave-user-id": String(this.executionContext.userId || ""),
+      };
 
-    this.transport = new SSEClientTransport(
-      new URL(sseUrl),
-      {
-        eventSourceInit: {
-          headers,
-        } as Record<string, unknown>,
-        requestInit: {
-          headers,
+      const transport = new SSEClientTransport(
+        new URL(sseUrl),
+        {
+          eventSourceInit: { headers } as Record<string, unknown>,
+          requestInit: { headers },
         }
-      }
-    );
+      );
 
-    this.client = new Client(
-      {
-        name: "weave-engine",
-        version: "1.0.0",
-      },
-      {
-        capabilities: {},
-      }
-    );
+      const client = new Client(
+        { name: "weave-engine", version: "1.0.0" },
+        { capabilities: {} }
+      );
 
-    try {
-      await this.client.connect(this.transport);
-      logger.info("Connected to MCP Server via SSE for execution context", {
-        userId: this.executionContext.userId,
-      });
-    } catch (error: unknown) {
-      logger.error("Failed to connect to MCP Server", { error: (error as Error).message });
-      throw error;
-    }
+      try {
+        await client.connect(transport);
+        this.client = client;
+        this.transport = transport;
+        logger.info("Connected to MCP Server via SSE for execution context", {
+          userId: this.executionContext.userId,
+        });
+      } catch (error: unknown) {
+        this.connectionPromise = null;
+        logger.error("Failed to connect to MCP Server", { error: (error as Error).message });
+        throw error;
+      }
+    })();
+
+    return this.connectionPromise;
   }
 
   async getTools(): Promise<Record<string, unknown>[]> {
@@ -105,6 +104,7 @@ export class MCPClient {
       }
       this.client = null;
       this.transport = null;
+      this.connectionPromise = null;
     }
   }
 }

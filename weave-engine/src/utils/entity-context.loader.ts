@@ -82,34 +82,42 @@ export async function buildEntityContext(payload: BuildEntityContextPayload = {}
   const userId = typeof payload.userId === "string" ? payload.userId : "";
   const organizationId = normalizeOptionalUuid(payload.organizationId);
 
-  // We delegate the responsibility of resolving public IDs and fetching the actual data
-  // to the API via MCP tools.
+  // Delegate context fetching to the MCP tools registered in weave-api.
   const [indexedNotes, indexedProjects, organizationMembers, organizationInfo] =
     await Promise.all([
       fetchContextViaMCP(
-        "get_notes_context",
-        { noteIds: payload.noteIds },
+        "manage_notes",
+        { action: "list", note_ids: payload.noteIds },
         userId,
         organizationId
-      ).then(res => Array.isArray(res) ? res : []),
+      ).then(res => {
+        const items = Array.isArray(res) ? res : (res as any)?.notes || (res as any)?.data || [];
+        return Array.isArray(items) ? items : [];
+      }),
 
       fetchContextViaMCP(
-        "get_projects_context",
-        { projectIds: payload.projectIds },
+        "manage_projects",
+        { action: "list", project_ids: payload.projectIds },
         userId,
         organizationId
-      ).then(res => Array.isArray(res) ? res : []),
+      ).then(res => {
+        const items = Array.isArray(res) ? res : (res as any)?.projects || (res as any)?.data || [];
+        return Array.isArray(items) ? items : [];
+      }),
 
       fetchContextViaMCP(
-        "get_organization_members",
-        { organizationId },
+        "manage_organization_members",
+        { action: "list", organizationId },
         userId,
         organizationId
-      ).then(res => Array.isArray(res) ? res : []),
+      ).then(res => {
+        const items = Array.isArray(res) ? res : (res as any)?.members || (res as any)?.data || [];
+        return Array.isArray(items) ? items : [];
+      }),
 
       fetchContextViaMCP(
-        "get_organization_info",
-        { organizationId },
+        "manage_organizations",
+        { action: "get_active" },
         userId,
         organizationId
       ).then(res => res || null),

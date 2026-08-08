@@ -9,7 +9,6 @@ import { ForgotPassword } from "@/app/(public)/auth/_components/ForgotPassword";
 import { ResetPassword } from "@/app/(public)/auth/_components/ResetPassword";
 import { ConfirmCreateAccount } from "@/app/(public)/auth/_components/ConfirmCreateAccount";
 import { AcceptOrganizationInviteModal } from "@/app/(public)/auth/_components/AcceptOrganizationInviteModal";
-import { WeaveEngineIcon } from "@/app/(protected)/_components/layout/icons/weave-engine-icon";
 import { Fredoka } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/app/_contexts/language-context";
@@ -111,14 +110,6 @@ export default function AuthPage() {
 
   return (
     <div className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-white p-4 text-slate-950 sm:p-8">
-      {/* Background Art com o Engine */}
-      <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
-        <WeaveEngineIcon
-          className="absolute -top-20 -right-50 h-[900px] w-[900px] rotate-12 opacity-15"
-          monochrome={false}
-        />
-      </div>
-
       <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
         <div className="mb-2 flex flex-col items-center justify-center text-center">
           <span className="text-xs font-bold tracking-wide text-neutral-500">

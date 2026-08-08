@@ -79,7 +79,7 @@ class ChatContextService {
         ) {
           if (!aiConfig.available_models.includes(payload.model.name)) {
             const modelError = new Error(
-              `The model ${payload.model.name} is not available in your current plan.`
+              `The model '${payload.model.name}' is not available in your current plan.`
             );
             modelError.code = "PLAN_LIMIT_EXCEEDED";
             modelError.statusCode = 403;

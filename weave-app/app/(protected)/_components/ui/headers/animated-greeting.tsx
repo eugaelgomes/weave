@@ -28,7 +28,6 @@ interface AnimatedGreetingProps {
     | "calendar"
     | "notifications"
     | "weave-ai"
-    | "weave-engine"
     | "workspace"
     | "workspaceSettings"
     | "workspaceMembers"
@@ -117,12 +116,6 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
             {t.nav.weaveFlow}
           </span>
         );
-      case "weave-engine":
-        return (
-          <span className="from-brand-primary-500 bg-linear-to-r to-amber-300 bg-clip-text font-bold text-transparent">
-            {t.nav.weaveEngine}
-          </span>
-        );
       default:
         return (
           <span className="font-semibold text-gray-900 dark:text-gray-100">
@@ -178,8 +171,6 @@ export function AnimatedGreeting({ type = "home" }: AnimatedGreetingProps) {
         return t.headers.weaveAi;
       case "weave-flow":
         return "— seu fluxo de valor";
-      case "weave-engine":
-        return t.headers.weaveEngine;
       default:
         return "";
     }

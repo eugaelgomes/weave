@@ -47,7 +47,6 @@ import {
   updateProjectTag as updateProjectTagService,
   deleteProjectTag as deleteProjectTagService,
   fetchTaskPriorities as fetchTaskPrioritiesService,
-  fetchOrgTaskPriorities as fetchOrgTaskPrioritiesService,
   createTaskPriority as createTaskPriorityService,
   updateTaskPriority as updateTaskPriorityService,
   deleteTaskPriority as deleteTaskPriorityService,
@@ -205,7 +204,6 @@ export interface ProjectsContextType {
   ) => Promise<ProjectTag | null>;
   deleteProjectTag: (projectId: string, tagId: string) => Promise<boolean>;
   getTaskPriorities: (projectId: string) => Promise<TaskPriority[]>;
-  getOrgTaskPriorities: (organizationId: string) => Promise<TaskPriority[]>;
   createTaskPriority: (
     projectId: string,
     data: CreateTaskPriorityData
@@ -717,19 +715,6 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id]
   );
 
-  const getOrgTaskPriorities = useCallback(
-    async (organizationId: string): Promise<TaskPriority[]> => {
-      if (!user?.id) return [];
-
-      try {
-        return await fetchOrgTaskPrioritiesService(organizationId);
-      } catch (err: unknown) {
-        console.error("Erro ao buscar prioridades da organização:", err);
-        throw err;
-      }
-    },
-    [user?.id]
-  );
 
   const createTaskPriority = useCallback(
     async (projectId: string, data: CreateTaskPriorityData): Promise<TaskPriority | null> => {
@@ -1242,7 +1227,6 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     updateProjectTag,
     deleteProjectTag,
     getTaskPriorities,
-    getOrgTaskPriorities,
     createTaskPriority,
     updateTaskPriority,
     deleteTaskPriority,
