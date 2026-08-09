@@ -1,8 +1,7 @@
 import redis from "@/queues/redis.client";
 import { REDIS_QUEUES } from "@/queues/redis-queues";
 import { logger } from "@/config/logger";
-import chatProcessor from "@/modules/weave-ai-chat/chat.processor";
-import proactiveProcessor from "@/modules/weave-ai-proactive/proactive.processor";
+import chatWorker from "@/worker/chat.worker";
 
 interface DeadLetterPayload {
   errorCode: string;
@@ -29,11 +28,9 @@ class QueueRouter {
     this.isShuttingDown = false;
     this.queueKeys = [
       REDIS_QUEUES.ENGINE_LLM_REQUESTS.key,
-      REDIS_QUEUES.ENGINE_PROACTIVE_TASKS.key,
     ];
     this.registry = {
-      [REDIS_QUEUES.ENGINE_LLM_REQUESTS.key]: chatProcessor,
-      [REDIS_QUEUES.ENGINE_PROACTIVE_TASKS.key]: proactiveProcessor,
+      [REDIS_QUEUES.ENGINE_LLM_REQUESTS.key]: chatWorker,
     };
     this.activeJobs = new Set();
     this.maxConcurrentJobs = parseInt(

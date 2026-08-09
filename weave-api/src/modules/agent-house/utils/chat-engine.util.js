@@ -153,7 +153,7 @@ class ChatEngineService {
       payload,
       requestId,
       responseQueueKey,
-      taskType: "chat_v2_process",
+      taskType: "chat_process",
     };
 
     await engineRpcRedis.lpush(requestQueueKey, JSON.stringify(job));

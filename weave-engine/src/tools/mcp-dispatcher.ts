@@ -4,8 +4,8 @@
  * Maps function names to their concrete action implementations and schemas using MCP.
  */
 
-import { logger } from "../config/logger";
-import { getMCPClient, ExecutionContext } from "../config/mcp.client";
+import { logger } from "@/config/logger";
+import { getMCPClient, ExecutionContext } from "@/providers/mcp.client";
 
 /**
  * Evaluates whether a given tool name is registered as an internal execution target.

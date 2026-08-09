@@ -6,7 +6,7 @@ import {
   setupGracefulShutdown,
 } from "@/config/shutdown";
 import redis from "@/queues/redis.client";
-import queueRouter from "@/app";
+import queueRouter from "@/worker/queue-router";
 import * as Sentry from "@sentry/node";
 
 async function bootstrap() {
