@@ -66,6 +66,7 @@ const mapOrganizationInfo = (organizationData) => {
     name: organizationData.org_name,
     public_id: organizationData.org_public_id,
     unique_name: organizationData.org_unique_name,
+    active_modules: organizationData.active_modules,
   };
 };
 
@@ -216,6 +217,13 @@ class UserDataController extends BaseController {
             name: protectedOrg?.name || null,
             public_id: protectedOrg?.public_id || null,
             unique_name: protectedOrg?.unique_name || null,
+            active_modules: protectedOrg?.active_modules || {
+              projects: true,
+              notes: true,
+              agent_house: true,
+              weave_flow: true,
+              calendar: true
+            },
           },
           user_profile: {
             avatar_url: protectedUser.avatar_url,

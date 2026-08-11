@@ -12,6 +12,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useNotification } from "@/app/_contexts/notification-context";
 import { useProjects } from "@/app/_contexts/projects-context";
+import { useModules } from "@/app/_contexts/modules-context";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -530,7 +531,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const projectsCtx = useProjects();
   const recentProjects = projectsCtx.getRecentProjects().slice(0, 5);
 
-  const recentItems = recentProjects.map((proj: any) => ({
+  const { isModuleActive } = useModules();
+
+  const recentItems = isModuleActive("projects") ? recentProjects.map((proj: any) => ({
     type: "project" as const,
     id: proj.id,
     public_id: proj.public_id,
@@ -538,7 +541,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     icon: AnimatedProjectsIcon,
     projectIcon: proj.icon,
     projectColor: proj.color,
-  }));
+  })) : [];
 
   const hasOrg = !!user?.org_id;
   const orgPrefix = user?.org_public_id
@@ -554,18 +557,18 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       icon: AiFredokaIcon,
       label: t.nav.weaveAi,
     },
-    { path: `${orgPrefix}/notes`, icon: AnimatedNotesIcon, label: t.nav.notes },
-    {
+    isModuleActive("notes") && { path: `${orgPrefix}/notes`, icon: AnimatedNotesIcon, label: t.nav.notes },
+    isModuleActive("projects") && {
       path: `${orgPrefix}/projects`,
       icon: AnimatedProjectsIcon,
       label: t.nav.projects,
     },
-    {
+    isModuleActive("agent_house") && {
       path: `${orgPrefix}/agent-house`,
       icon: Bot,
       label: "Agent House",
     },
-    {
+    isModuleActive("weave_flow") && {
       path: `${orgPrefix}/weave-flow`,
       icon: AnimatedFlowsIcon,
       label: t.nav.weaveFlow,
@@ -592,7 +595,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
           },
         ]
       : []),
-  ];
+  ].filter(Boolean) as NavigationItem[];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200/80 text-gray-700 transition-colors duration-300 dark:border-white/10 dark:text-gray-300">

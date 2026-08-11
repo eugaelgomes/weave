@@ -58,7 +58,8 @@ const blockWriteLimiter = blockAutosaveV2Enabled
   : standardTrafficLimiter;
 
 router.use(verifyToken);
-
+const { requireModule } = require("@/middlewares/auth/require-module");
+router.use(requireModule("notes"));
 router.use((req, res, next) => {
   if (req.method === "GET") {
     return requireScope("notes:read")(req, res, next);

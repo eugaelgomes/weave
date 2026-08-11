@@ -4,6 +4,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useNotes } from "@/app/_contexts/notes-context";
 import { useProjects } from "@/app/_contexts/projects-context";
 import { useLanguage } from "@/app/_contexts/language-context";
+import { useModules } from "@/app/_contexts/modules-context";
 import { CalendarPreview } from "@/app/(protected)/[orgId]/calendar/page";
 
 import NotesCarousel from "@/app/(protected)/[orgId]/home/_components/notes-carousel";
@@ -14,6 +15,7 @@ export default function HomePage() {
   const { t } = useLanguage();
   const { getRecentNotes } = useNotes();
   const { getRecentProjects } = useProjects();
+  const { isModuleActive } = useModules();
 
   if (loading) {
     return (
@@ -36,11 +38,11 @@ export default function HomePage() {
     <div className="flex h-full min-h-0 flex-col">
       <div className="-mx-1.5 flex-1 space-y-10 overflow-y-auto px-1.5 pb-4">
 
-        <NotesCarousel notes={recentNotes} />
+        {isModuleActive("notes") && <NotesCarousel notes={recentNotes} />}
 
-        <ProjectsCarousel projects={recentProjects} />
+        {isModuleActive("projects") && <ProjectsCarousel projects={recentProjects} />}
 
-        <CalendarPreview />
+        {isModuleActive("calendar") && <CalendarPreview />}
       </div>
     </div>
   );

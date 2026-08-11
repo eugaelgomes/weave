@@ -23,7 +23,8 @@ const {
 const router = express.Router();
 
 router.use(verifyToken);
-
+const { requireModule } = require("@/middlewares/auth/require-module");
+router.use(requireModule("calendar"));
 router.use((req, res, next) => {
   if (req.method === "GET") {
     return requireScope("calendar:read")(req, res, next);

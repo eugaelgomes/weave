@@ -61,7 +61,8 @@ class SigninRepository extends BaseRepository {
               o.unique_name AS org_unique_name, 
               o.public_id AS org_public_id,
               o.org_name, 
-              o.logo_url AS org_logo_url
+              o.logo_url AS org_logo_url,
+              o.settings->'modules' AS active_modules
             FROM organization_members om
             JOIN organizations o ON o.id = om.organization_id
             WHERE om.user_id = u.user_id

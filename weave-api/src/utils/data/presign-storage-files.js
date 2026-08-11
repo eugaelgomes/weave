@@ -7,15 +7,15 @@ const {
 } = require("@/services/storage/access-control");
 const redis = require("@/services/queue/connection");
 
-const spacesHostname = (() => {
+function getSpacesHostname() {
   try {
+    if (!spacesService.spacesEndpoint) return "";
     const url = new URL(spacesService.spacesEndpoint);
     return url.hostname;
   } catch (error) {
-    console.error("Não foi possível determinar o host do Spaces:", error);
     return "";
   }
-})();
+}
 
 const SPACES_PREFIXES = [
   spacesService.constructor?.FOLDER_PATHS?.BACKUPS || "backups",
@@ -43,8 +43,9 @@ function isSpacesManagedValue(value) {
   if (hasProtocol) {
     try {
       const { hostname } = new URL(trimmed);
+      const host = getSpacesHostname();
       return (
-        hostname === spacesHostname ||
+        (host && hostname === host) ||
         hostname.includes(spacesService.bucketName)
       );
     } catch (error) {

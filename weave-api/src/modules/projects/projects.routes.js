@@ -49,7 +49,8 @@ router.param("projectId", resolveProjectPublicIdParam);
 router.param("noteId", resolveNotePublicIdParam);
 
 router.use(verifyToken);
-
+const { requireModule } = require("@/middlewares/auth/require-module");
+router.use(requireModule("projects"));
 router.use((req, res, next) => {
   if (req.method === "GET") {
     return requireScope("projects:read")(req, res, next);

@@ -50,7 +50,8 @@ const requireManageWeaveAi = requireOrgPermission(
 );
 
 router.use(verifyToken, strictLimiter);
-
+const { requireModule } = require("@/middlewares/auth/require-module");
+router.use(requireModule("agent_house"));
 router.use((req, res, next) => {
   if (req.path.startsWith("/chat") || req.path.startsWith("/models")) {
     return requireScope("ai:chat")(req, res, next);

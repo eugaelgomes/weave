@@ -9,6 +9,8 @@ import { ChatProvider } from "./chat-context";
 import { AgentProvider } from "./agent-context";
 import { NotesProvider } from "./notes-context";
 
+import { ModulesProvider } from "./modules-context";
+
 // Apenas providers globais — necessários em todas as rotas protegidas.
 // Os demais providers são carregados sob demanda nos layouts de cada módulo.
 const composeProviders = (...providers: React.ElementType[]) =>
@@ -24,6 +26,7 @@ const composeProviders = (...providers: React.ElementType[]) =>
   });
 
 const GlobalProviders = composeProviders(
+  ModulesProvider,
   NotificationProvider,
   CalendarProvider,
   TaskNoteModalProvider,

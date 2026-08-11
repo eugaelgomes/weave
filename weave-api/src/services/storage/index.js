@@ -4,6 +4,7 @@ const {
   DeleteObjectCommand,
   GetObjectCommand,
 } = require("@aws-sdk/client-s3");
+const { getSignedUrl: awsGetSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { v4: uuidv4 } = require("uuid");
 
 class SpacesService {
@@ -43,32 +44,57 @@ class SpacesService {
   };
 
   constructor() {
-    this.spacesEndpoint = process.env.STORAGE_ENDPOINT || process.env.DO_SPACES_ENDPOINT;
-    this.accessKeyId = process.env.STORAGE_ACCESS_KEY || process.env.DO_SPACES_ACCESS_KEY;
-    this.secretAccessKey = process.env.STORAGE_SECRET_KEY || process.env.DO_SPACES_SECRET_KEY;
-    this.bucketName = process.env.STORAGE_BUCKET_NAME || process.env.DO_SPACES_BUCKET_NAME || "weave-storage";
-    this.region = process.env.STORAGE_REGION || process.env.DO_SPACES_REGION || "us-ashburn-1";
+    this.s3Client = null;
+    this.isConfigured = false;
+    this.initPromise = this.init(); // Starts initialization immediately
+  }
 
-    if (
-      !this.spacesEndpoint ||
-      !this.accessKeyId ||
-      !this.secretAccessKey ||
-      !this.bucketName
-    ) {
-      throw new Error(
-        "Storage credentials not configured properly. Ensure STORAGE_ENDPOINT, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY and STORAGE_BUCKET_NAME are set."
-      );
+  async init() {
+    try {
+      const db = require("../../database/connection");
+      const result = await db.executeQuery("SELECT storage_config FROM system_settings WHERE id = 1");
+      const config = result[0]?.storage_config || {};
+
+      this.spacesEndpoint = config.spacesEndpoint;
+      this.accessKeyId = config.accessKeyId;
+      this.secretAccessKey = config.secretAccessKey;
+      this.bucketName = config.bucketName;
+      this.region = config.region;
+
+      if (
+        !this.spacesEndpoint ||
+        !this.accessKeyId ||
+        !this.secretAccessKey ||
+        !this.bucketName ||
+        !this.region
+      ) {
+        this.isConfigured = false;
+        console.warn("⚠️  Storage is not configured in system_settings. Uploads will fail until configured.");
+        return;
+      }
+
+      this.s3Client = new S3Client({
+        credentials: {
+          accessKeyId: this.accessKeyId,
+          secretAccessKey: this.secretAccessKey,
+        },
+        endpoint: this.spacesEndpoint,
+        forcePathStyle: true,
+        region: this.region,
+      });
+      this.isConfigured = true;
+      console.log("✅ Storage Service initialized from system_settings.");
+    } catch (error) {
+      console.error("❌ Error initializing Storage Service:", error);
+      this.isConfigured = false;
     }
+  }
 
-    this.s3Client = new S3Client({
-      credentials: {
-        accessKeyId: this.accessKeyId,
-        secretAccessKey: this.secretAccessKey,
-      },
-      endpoint: this.spacesEndpoint,
-      forcePathStyle: true,
-      region: this.region,
-    });
+  async ensureConfigured() {
+    await this.initPromise;
+    if (!this.isConfigured) {
+      throw new Error("O armazenamento de arquivos não está configurado. Configure no painel de administração.");
+    }
   }
 
   /**
@@ -93,6 +119,7 @@ class SpacesService {
    * @returns {Promise<Object>} - Objeto com key do arquivo
    */
   async uploadBackup(fileContent, userId, fileName = null) {
+    await this.ensureConfigured();
     try {
       const { BACKUPS } = SpacesService.FOLDER_PATHS;
       const timestamp = Date.now();
@@ -104,7 +131,6 @@ class SpacesService {
         : Buffer.from(fileContent, "utf-8");
 
       const uploadParams = {
-        ACL: "private",
         Body: buffer,
         Bucket: this.bucketName,
         CacheControl: "no-cache, no-store, must-revalidate",
@@ -145,6 +171,7 @@ class SpacesService {
     fileName = null,
     folderPath = null
   ) {
+    await this.ensureConfigured();
     try {
       const fileExtension = this.getFileExtensionFromMimeType(mimeType);
       const uniqueFileName = fileName || `image_${uuidv4()}${fileExtension}`;
@@ -157,7 +184,6 @@ class SpacesService {
           );
 
       const uploadParams = {
-        ACL: "public-read",
         Body: imageBuffer,
         Bucket: this.bucketName,
         CacheControl: "max-age=31536000",
@@ -168,24 +194,14 @@ class SpacesService {
       const command = new PutObjectCommand(uploadParams);
       await this.s3Client.send(command);
 
-      let publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
-      
-      // Ajuste para Digital Ocean (caso esteja usando o antigo padrão sem região na URL)
-      if (publicUrl.includes("digitaloceanspaces.com")) {
-        publicUrl = publicUrl.replace(
-          "digitaloceanspaces.com",
-          `${this.region}.digitaloceanspaces.com`
-        );
-      }
-
-      const simpleUrl = publicUrl;
+      const publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
 
       return {
         fileName: uniqueFileName,
         key: key,
         size: imageBuffer.length,
         success: true,
-        url: simpleUrl,
+        url: publicUrl,
       };
     } catch (error) {
       console.error("Erro ao fazer upload para Digital Ocean Spaces:", error);
@@ -197,6 +213,7 @@ class SpacesService {
    * Deleta um arquivo do Digital Ocean Spaces
    */
   async deleteImage(key) {
+    await this.ensureConfigured();
     try {
       const deleteParams = {
         Bucket: this.bucketName,
@@ -209,6 +226,27 @@ class SpacesService {
       return true;
     } catch (error) {
       console.error("Erro ao deletar imagem do Digital Ocean Spaces:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Deleta um arquivo de backup
+   */
+  async deleteBackup(key) {
+    await this.ensureConfigured();
+    try {
+      const deleteParams = {
+        Bucket: this.bucketName,
+        Key: key,
+      };
+
+      const command = new DeleteObjectCommand(deleteParams);
+      await this.s3Client.send(command);
+
+      return true;
+    } catch (error) {
+      console.error("Erro ao deletar backup do Digital Ocean Spaces:", error);
       return false;
     }
   }
@@ -468,19 +506,48 @@ class SpacesService {
    */
   getFileUrl(key) {
     if (!key) return null;
-    if (key.startsWith("http://") || key.startsWith("https://")) {
+    if (
+      key.startsWith("http://") ||
+      key.startsWith("https://") ||
+      key.startsWith("data:") ||
+      key.startsWith("blob:")
+    ) {
       return key;
     }
 
-    let publicUrl = `${this.spacesEndpoint}/${this.bucketName}/${key}`;
-    if (publicUrl.includes("digitaloceanspaces.com")) {
-      publicUrl = publicUrl.replace(
-        "digitaloceanspaces.com",
-        `${this.region}.digitaloceanspaces.com`
-      );
+    return `${this.spacesEndpoint}/${this.bucketName}/${key}`;
+  }
+
+  /**
+   * Constrói uma URL pré-assinada (Signed URL) com tempo de expiração.
+   * Permite acesso seguro e temporário a buckets PRIVADOS no Oracle Cloud / S3.
+   * @param {string} key - A chave (path) do arquivo no bucket
+   * @param {number} expiresIn - Tempo em segundos para a URL expirar (padrão 12h = 43200s)
+   * @returns {Promise<string|null>} - URL pré-assinada
+   */
+  async getSignedUrl(key, expiresIn = 43200) {
+    await this.ensureConfigured();
+    if (!key) return null;
+    if (
+      key.startsWith("http://") ||
+      key.startsWith("https://") ||
+      key.startsWith("data:") ||
+      key.startsWith("blob:")
+    ) {
+      return key;
     }
 
-    return publicUrl;
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+
+      return await awsGetSignedUrl(this.s3Client, command, { expiresIn });
+    } catch (error) {
+      console.error("Erro ao gerar URL assinada:", error);
+      return this.getFileUrl(key);
+    }
   }
 
   // ========================================

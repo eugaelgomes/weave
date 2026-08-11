@@ -7,6 +7,7 @@ const { sessionMiddleware } = require("./session");
 const { sessionTrackerMiddleware } = require("./session-tracker");
 const { makeCorsOptions } = require("./cors");
 const { requestIdMiddleware } = require("@/middlewares/request-id");
+const { storageUrlInterceptorMiddleware } = require("./storage-url.middleware");
 
 /**
  * Captures the raw request body for Slack signature verification (`req.rawBody`).
@@ -23,6 +24,7 @@ function configureGlobalMiddlewares(app) {
   app.use(cookieParser());
   app.use(sessionMiddleware);
   app.use(sessionTrackerMiddleware);
+  app.use(storageUrlInterceptorMiddleware);
 
   app.use(express.urlencoded({ extended: true, verify: captureRawBody }));
   app.use(express.json({ verify: captureRawBody }));
