@@ -6,6 +6,8 @@ import Sidebar from "@/app/(protected)/_components/layout/sidebar";
 
 import { cn } from "@/lib/utils";
 
+import Navbar from "@/app/(protected)/_components/layout/navbar";
+
 const LG_MEDIA = "(min-width: 1024px)";
 
 interface ProtectedLayoutProps {
@@ -55,22 +57,26 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen min-h-0 flex-row overflow-hidden bg-[#F3F3F3] dark:bg-[#1d1d1b]">
-      {/* Desktop Sidebar - Full Height */}
-      <div
-        className={`hidden min-h-0 shrink-0 flex-col ${
-          isCollapsed ? "lg:w-16" : "lg:w-[170px]"
-        } transition-[width] duration-300 ease-out lg:flex`}
-      >
-        <Sidebar
-          onLinkClick={closeSidebar}
-          isCollapsed={isCollapsed}
-          toggleCollapse={toggleCollapse}
-        />
-      </div>
+    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-[#F3F3F3] dark:bg-[#1d1d1b]">
+      
+      <Navbar onToggleSidebar={toggleSidebar} isCollapsed={isCollapsed} />
 
-      {/* Main Content Area */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-row overflow-hidden relative">
+        {/* Desktop Sidebar */}
+        <div
+          className={`hidden min-h-0 shrink-0 flex-col ${
+            isCollapsed ? "lg:w-16" : "lg:w-[170px]"
+          } transition-[width] duration-300 ease-out lg:flex`}
+        >
+          <Sidebar
+            onLinkClick={closeSidebar}
+            isCollapsed={isCollapsed}
+            toggleCollapse={toggleCollapse}
+          />
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {sidebarOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:hidden">
             <button
@@ -115,6 +121,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

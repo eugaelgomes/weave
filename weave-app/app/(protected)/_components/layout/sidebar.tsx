@@ -598,60 +598,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   ].filter(Boolean) as NavigationItem[];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200/80 text-gray-700 transition-colors duration-300 dark:border-white/10 dark:text-gray-300">
-      {/* Header mobile */}
-      <div className="flex items-center justify-between p-3 lg:hidden">
-        <div className="flex items-center gap-2">
-          <Link
-            href={`${orgPrefix}/home`}
-            onClick={handleLinkClick}
-            className="flex min-w-0 items-center px-1"
-          >
-            <span
-              className={cn(
-                "text-brand-yellow truncate text-base leading-none font-bold",
-                fredoka.className
-              )}
-            >
-              Weave
-            </span>
-          </Link>
-        </div>
-        <button
-          type="button"
-          onClick={handleLinkClick}
-          className="rounded-md p-1.5 text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
-          aria-label={t.nav.closeMenu}
-          title={t.nav.closeMenu}
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="mt-3.5 mb-2 hidden w-full shrink-0 flex-col items-start lg:flex">
-          <Link
-            href={`${orgPrefix}/home`}
-            className="flex min-w-0 items-center pl-2"
-            onClick={handleLinkClick}
-          >
-            <span
-              className={cn(
-                "truncate text-base leading-none font-bold text-[#1D1D1B] dark:text-gray-300",
-                fredoka.className
-              )}
-            >
-              Weave
-            </span>
-          </Link>
-        </div>
-
-        <div className="hidden w-full shrink-0 items-center px-1 py-1 lg:flex">
-          {toggleCollapse ? (
+    <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200/80 text-gray-700 transition-colors duration-300 dark:border-white/10 dark:text-gray-300 bg-white dark:bg-[#1d1d1b]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-1">
+        {toggleCollapse && (
+          <div className="px-1 py-1 shrink-0">
             <button
               type="button"
               onClick={toggleCollapse}
-              className="focus-visible:ring-brand-yellow/50 flex h-8 w-full items-center rounded-md bg-black/5 px-2 text-gray-700 transition-colors hover:bg-black/10 focus-visible:ring-2 focus-visible:outline-none dark:bg-white/6 dark:text-gray-300 dark:hover:bg-white/10"
+              className="flex h-8 w-full items-center rounded-md text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/10 transition-colors"
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
               aria-label={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >
@@ -659,8 +613,8 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
                 <SidebarToggleIcon />
               </span>
             </button>
-          ) : null}
-        </div>
+          </div>
+        )}
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           <ul className="space-y-0.5 px-1 pt-0.5 pb-1.5">
@@ -688,8 +642,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
             sectionLabel={t.nav.recentAccess}
           />
         </div>
-
-        <SidebarBottomActions isCollapsed={isCollapsed} user={user} t={t} logout={logout} />
       </div>
     </div>
   );

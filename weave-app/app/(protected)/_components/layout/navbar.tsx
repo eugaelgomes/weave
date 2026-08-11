@@ -12,6 +12,13 @@ import { useNotification } from "@/app/_contexts/notification-context";
 
 import { cn } from "@/lib/utils";
 
+import { Fredoka } from "next/font/google";
+
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+});
+
 /** Mobile navbar icons — same language as collapsed sidebar rows (rounded-md, soft hover). */
 const navIconMobileShellClass =
   "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-700 transition-colors hover:bg-black/5 active:bg-black/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 dark:text-white dark:hover:bg-white/10 dark:active:bg-white/[0.14] [&>svg]:shrink-0";
@@ -93,88 +100,98 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
     <>
       <header className="relative z-40 w-full shrink-0 print:hidden">
         <nav
-          className="mx-auto w-full max-w-[1920px] px-1.5 pt-1 pb-0.5 sm:px-2 lg:px-2 lg:py-0 lg:pb-0 dark:bg-[#1d1d1b]"
+          className="mx-auto w-full bg-white dark:bg-[#1d1d1b]"
           aria-label={t.navbar.mainNavigation}
         >
           <div
             className={cn(
-              "grid min-h-8 grid-cols-[auto_1fr_auto] items-center gap-x-2 px-2 py-1",
-              "md:min-h-8 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-4",
-              "lg:min-h-8 lg:px-0 lg:py-0"
+              "flex min-h-9 h-9 items-center justify-between gap-x-2 px-2",
+              "lg:px-3"
             )}
           >
-            {/* Bloco Esquerdo: Logo e Organização */}
-            <section className="flex min-w-0 items-center gap-1.5 justify-self-start md:gap-2">
-              {authenticated && (
-                <button
-                  type="button"
-                  onClick={onToggleSidebar}
-                  className={cn(navIconMobileShellClass, "self-center lg:hidden")}
-                  aria-label={t.nav.openSidebar}
-                  title={t.nav.openSidebar}
+            {/* Bloco Esquerdo: Logo & Unique Name */}
+            <section className="flex min-w-0 items-center gap-2 justify-self-start">
+              <Link
+                href="/"
+                className="flex items-center gap-2 transition-opacity hover:opacity-80"
+              >
+                <span
+                  className={cn(
+                    "text-black dark:text-white text-sm font-bold tracking-tight leading-none",
+                    fredoka.className
+                  )}
                 >
-                  <Menu className="h-4 w-4" strokeWidth={1.75} />
-                </button>
-              )}
-
-              {/* Weave title moved to Sidebar */}
-
-              {/*{user?.org_id && isCollapsed && (
-                <div className="hidden items-center gap-2 self-center sm:flex">
-                  <Link
-                    href={
-                      user?.org_public_id
-                        ? `/${user.org_public_id}/organization/editor`
-                        : user?.public_id
-                          ? `/${user.public_id}/organization/editor`
-                          : "/organization/editor"
-                    }
-                    className="flex min-w-0 items-center gap-1.5 self-center rounded-md transition-opacity hover:opacity-80"
-                  >
-                    <span className="max-w-[180px] self-center truncate text-xs leading-none font-medium text-gray-900 dark:text-gray-100">
-                      {user.org_name}
-                    </span>
-                  </Link>
-                </div>
-              )}*/}
+                  Weave
+                </span>
+                
+                {(user?.user_organization?.unique_name || user?.org_name) && (
+                  <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                    <span className="text-gray-300 dark:text-gray-600">|</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {(user?.user_organization?.logo_url || user?.org_logo_url) && (
+                        <Image
+                          src={user?.user_organization?.logo_url || user?.org_logo_url!}
+                          alt={user?.user_organization?.unique_name || user?.org_name || "Org"}
+                          width={16}
+                          height={16}
+                          className="h-4 w-4 rounded-sm object-contain shrink-0"
+                        />
+                      )}
+                      <span className="text-gray-600 dark:text-gray-300 truncate max-w-[140px]">
+                        {user?.user_organization?.unique_name || user?.org_name}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </Link>
             </section>
 
-            {/* Centro: respiro no mobile (1fr); busca + notificações no desktop */}
-            {authenticated && user ? (
-              <section className="flex min-h-0 w-full min-w-0 items-center justify-center px-1 md:px-2">
-                <div className="hidden w-full max-w-md items-center justify-end gap-2 md:flex">
-                  <NotificationsLink ariaLabel={t.nav.notifications} surface="desktop" />
-                </div>
-              </section>
-            ) : (
-              <div className="min-w-0" aria-hidden />
-            )}
-
-            {/* Right */}
-            <section className="flex shrink-0 items-center justify-end gap-0.5 justify-self-end md:gap-2">
+            {/* Right: Docs, Theme, Notifications, Avatar */}
+            <section className="flex shrink-0 items-center justify-end gap-2 md:gap-3">
               {authenticated && user && (
                 <>
+                  <div className="hidden md:flex items-center gap-3 mr-1">
+                    <a href="#" className="text-xs font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
+                      Docs
+                    </a>
+                    <a href="#" className="text-xs font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors">
+                      Blog
+                    </a>
+                  </div>
                   
+                  <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 hidden md:block" />
+
                   <NotificationsLink
                     ariaLabel={t.nav.notifications}
-                    className="md:hidden"
-                    surface="mobile"
+                    surface="desktop"
+                    className="h-6 w-6 !p-0 flex items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300"
                   />
 
                   <button
                     type="button"
                     onClick={handleThemeToggle}
-                    className={cn(
-                      navbarElevatedSurfaceClass,
-                      "focus-visible:ring-brand-yellow/50 flex h-6 w-6 items-center justify-center rounded-full text-gray-700 transition-colors focus-visible:ring-2 focus-visible:outline-none md:h-6 md:w-6 dark:text-white"
-                    )}
+                    className="flex h-6 w-6 items-center justify-center rounded-md text-gray-600 hover:bg-black/5 hover:text-gray-900 transition-colors dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white"
                     aria-label={t.navbar.theme}
                     title={t.navbar.theme}
                   >
                     {theme === "light" ? <Moon size={14} /> : <Sun size={14} />}
                   </button>
 
-                  
+                  <button
+                    onClick={() => { window.location.hash = '#settings/me'; }}
+                    className="flex items-center gap-1.5 rounded-full pl-0.5 pr-2 py-0.5 hover:bg-black/5 transition-colors dark:hover:bg-white/10 border border-transparent hover:border-gray-200 dark:hover:border-white/10"
+                  >
+                    <div className="h-5 w-5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center overflow-hidden">
+                      {user.avatar_url ? (
+                        <Image src={user.avatar_url} alt={user.user_name || "User"} width={20} height={20} className="object-cover" />
+                      ) : (
+                        <CircleUserRound className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      )}
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200 hidden sm:block truncate max-w-[120px]">
+                      {user.username || user.user_name || "Account"}
+                    </span>
+                  </button>
                 </>
               )}
             </section>
