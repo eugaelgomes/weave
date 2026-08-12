@@ -120,45 +120,19 @@ export function ChatInput(props: ChatInputProps) {
     >
       <div
         className={cn(
-          "pointer-events-auto mx-auto flex w-full flex-col gap-2 px-2 transition-all duration-500 ease-in-out sm:px-4",
+          "pointer-events-auto mx-auto flex w-full flex-col gap-3 px-2 transition-all duration-500 ease-in-out sm:px-4",
           props.messagesLength === 0 && !props.loading
             ? "max-w-2xl"
             : props.isSandboxOpen
-              ? "max-w-2xl"
-              : "max-w-4xl"
+              ? "max-w-xl"
+              : "max-w-2xl"
         )}
       >
         {props.messagesLength === 0 && !props.loading && (
-          <div className="animate-in fade-in flex flex-col items-center gap-4 pb-3 text-center duration-500">
-            <h2 className="text-lg font-medium tracking-tight text-neutral-500 dark:text-neutral-400">
-              {t.weaveAi.welcomeGreetingPrefix}{" "}
-              <span className="font-semibold text-neutral-700 dark:text-neutral-200">
-                {props.user?.user_name?.split(" ")[0] || props.user?.username || ""}
-              </span>
-              {", "}
-              {t.weaveAi.welcomeGreetingSuffix}{" "}
-              <span className="font-fredoka text-brand-yellow dark:text-brand-yellow font-semibold tracking-tight">
-                Weave AI
-              </span>{" "}
-              {t.weaveAi.welcomeGreetingAction}
-            </h2>
-            <div className="mt-2 flex flex-wrap justify-center gap-2">
-              {[
-                t.weaveAi.suggestionTask,
-                t.weaveAi.suggestionProject,
-                t.weaveAi.suggestionSchedule,
-                t.weaveAi.suggestionResearch,
-                t.weaveAi.suggestionSummarize,
-              ].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  onClick={() => props.setInput(suggestion)}
-                  className="rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1.5 text-[10px] font-medium text-neutral-600 transition-all hover:bg-neutral-100 dark:border-neutral-800/60 dark:bg-neutral-900/40 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
+          <div className="animate-in fade-in flex flex-col items-center gap-6 pb-4 text-center duration-500">
+            <h1 className="font-serif text-3xl md:text-4xl font-medium tracking-tight text-gray-800 dark:text-gray-100">
+              {props.user?.user_name?.split(" ")[0] || props.user?.username || "Usuário"}, o que posso fazer por você hoje?
+            </h1>
           </div>
         )}
 
@@ -207,27 +181,12 @@ export function ChatInput(props: ChatInputProps) {
         </div>
 
         <div
-          className={`relative flex flex-col gap-1 rounded-2xl bg-white/70 p-2 backdrop-blur-lg transition-all duration-700 focus-within:ring-1 focus-within:ring-neutral-400/10 dark:bg-[#252525]/70 dark:focus-within:ring-neutral-500/10 ${
+          className={`relative flex flex-col gap-1 rounded-[24px] bg-white p-2.5 transition-all duration-700 border focus-within:border-gray-300 dark:bg-[#252525] dark:border-white/5 dark:focus-within:border-white/20 ${
             props.messagesLength === 0 && !props.loading
-              ? "shadow-2xl shadow-black/5 dark:shadow-black/40"
-              : "shadow-lg shadow-black/5 dark:shadow-black/20"
+              ? "shadow-sm border-gray-200/80"
+              : "shadow-lg shadow-black/5 dark:shadow-black/20 border-gray-200/80"
           }`}
         >
-          {/* Elegant Inner Cloud Glow */}
-          <div
-            className={`absolute inset-0 -z-10 overflow-hidden rounded-2xl transition-opacity duration-1000 ${
-              props.messagesLength === 0 && !props.loading ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <div
-              className="bg-brand-yellow/20 dark:bg-brand-yellow/10 absolute top-0 -left-10 h-full w-2/3 animate-pulse rounded-full blur-2xl"
-              style={{ animationDuration: "4s" }}
-            />
-            <div
-              className="absolute top-0 -right-10 h-full w-2/3 animate-pulse rounded-full bg-sky-400/20 blur-2xl dark:bg-sky-500/10"
-              style={{ animationDuration: "5s", animationDelay: "1s" }}
-            />
-          </div>
 
           {props.isTyping && (
             <div className="flex items-center px-2 pt-1 pb-2 select-none">
@@ -281,7 +240,7 @@ export function ChatInput(props: ChatInputProps) {
                 props.isTyping
                   ? ""
                   : props.canSendAiMessage
-                    ? "Como posso te ajudar?"
+                    ? "joga aqui um bom prompt"
                     : (t.weaveAi.limitReached ?? "Monthly AI message limit reached")
               }
               className={cn(
@@ -572,7 +531,7 @@ export function ChatInput(props: ChatInputProps) {
         </div>
 
         {!props.canSendAiMessage && (
-          <p className="text-brand-red text-[11px]">
+          <p className="text-brand-red text-[11px] text-center mt-2">
             {t.weaveAi.limitReached ?? "Monthly AI message limit reached."}{" "}
             <button
               onClick={() => props.router.push(`/${props.orgId}/settings/plans`)}
@@ -582,8 +541,8 @@ export function ChatInput(props: ChatInputProps) {
             </button>
           </p>
         )}
-        {props.fileError ? <p className="text-brand-red text-[11px]">{props.fileError}</p> : null}
-        {props.error ? <p className="text-brand-red text-[11px]">{props.error}</p> : null}
+        {props.fileError ? <p className="text-brand-red text-[11px] text-center mt-2">{props.fileError}</p> : null}
+        {props.error ? <p className="text-brand-red text-[11px] text-center mt-2">{props.error}</p> : null}
       </div>
     </div>
   );

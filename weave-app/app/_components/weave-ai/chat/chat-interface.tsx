@@ -188,13 +188,17 @@ export default function ChatInterface({
     const normalizedPathname = pathname.replace(/\/$/, "");
     if (
       normalizedPathname !== `/${orgId}/weave-ai/chat` &&
-      normalizedPathname !== `/${orgId}/weave-ai/chat/reasonings/new`
+      normalizedPathname !== `/${orgId}/weave-ai/chat/reasonings/new` &&
+      normalizedPathname !== `/${orgId}/new`
     )
       return;
     if (messages.length === 0) return;
 
-    const targetUrl = `/${orgId}/weave-ai/chat/${currentSession.id}/`;
-    router.replace(targetUrl, { scroll: false });
+    if (normalizedPathname === `/${orgId}/new`) {
+      router.replace(`/${orgId}/new?c=${currentSession.id}`, { scroll: false });
+    } else {
+      router.replace(`/${orgId}/weave-ai/chat/${currentSession.id}/`, { scroll: false });
+    }
   }, [chatId, currentSession?.id, messages.length, pathname, orgId, variant, router]);
 
   const autoOpenedArtifactRef = useRef<string | null>(null);
@@ -450,58 +454,61 @@ export default function ChatInterface({
 
   return (
     <div className={cn("relative flex h-full flex-col", "bg-white dark:bg-[#1d1d1b]")}>
-      <div className="dark:border-surface-dark-border flex h-9 flex-shrink-0 items-center justify-between border-b border-neutral-200 px-3">
-        <div className="flex items-center gap-2">
-          <h1 className="text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-            {variant === "widget" ? t.nav.weaveAi : chatHeaderTitle}
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {onToggleSandbox && isSandboxOpen && (
-            <button
-              onClick={() => onToggleSandbox()}
-              className="bg-brand-primary-100 text-brand-primary-700 dark:bg-brand-primary-900/30 dark:text-brand-primary-400 flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              Fechar Sandbox
-            </button>
-          )}
-          {(!variant || variant === "fullPage") && chatId && messages?.length > 0 && (
-            <button
-              onClick={handleShareChat}
-              disabled={isSharing}
-              className="flex items-center gap-1.5 rounded-md text-[10px] font-medium text-neutral-500 transition hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
-            >
-              {isSharing ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Share2 className="h-3 w-3" />
-              )}
-              {locale === "en-US" ? "Share" : "Compartilhar"}
-            </button>
-          )}
-          {variant === "widget" && (
-            <>
-              <Link
-                href={`/${orgId}/weave-ai/chat`}
-                onClick={onClose}
-                className="text-[10px] font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:text-neutral-400 dark:hover:text-neutral-100"
-              >
-                {t.nav.weaveAiOpenFull}
-              </Link>
+      {(messages?.length > 0 || variant === "widget" || isSandboxOpen) && (
+        <div className="flex flex-shrink-0 items-center justify-between px-4 pt-4 pb-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+              {variant === "widget" ? t.nav.weaveAi : chatHeaderTitle}
+            </h1>
+            {(!variant || variant === "fullPage") && chatId && messages?.length > 0 && (
               <button
-                type="button"
-                onClick={onClose}
-                className="rounded-md p-1 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-                aria-label={t.common.close}
+                onClick={handleShareChat}
+                disabled={isSharing}
+                title={locale === "en-US" ? "Share" : "Compartilhar"}
+                className="flex items-center justify-center rounded-md text-neutral-400 transition hover:text-neutral-800 disabled:opacity-50 dark:text-neutral-500 dark:hover:text-neutral-300"
               >
-                <X className="h-4 w-4" strokeWidth={2} />
+                {isSharing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Share2 className="h-3.5 w-3.5" />
+                )}
               </button>
-            </>
-          )}
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {onToggleSandbox && isSandboxOpen && (
+              <button
+                onClick={() => onToggleSandbox()}
+                className="bg-brand-primary-100 text-brand-primary-700 dark:bg-brand-primary-900/30 dark:text-brand-primary-400 flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Fechar Sandbox
+              </button>
+            )}
+
+            {variant === "widget" && (
+              <>
+                <Link
+                  href={`/${orgId}/weave-ai/chat`}
+                  onClick={onClose}
+                  className="text-[10px] font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:text-neutral-400 dark:hover:text-neutral-100"
+                >
+                  {t.nav.weaveAiOpenFull}
+                </Link>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-md p-1 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                  aria-label={t.common.close}
+                >
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div
         ref={messagesContainerRef}
@@ -514,7 +521,7 @@ export default function ChatInterface({
         <div
           className={cn(
             "mx-auto w-full space-y-4",
-            isSandboxOpen ? "max-w-xl px-2 sm:px-4" : "max-w-3xl"
+            isSandboxOpen ? "max-w-xl px-2 sm:px-4" : "max-w-2xl"
           )}
         >
           {filteredMessages?.map((msg: any, index: number) => {

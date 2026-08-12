@@ -57,7 +57,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-[#F3F3F3] dark:bg-[#1d1d1b]">
+    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-white dark:bg-[#1d1d1b]">
       
       <Navbar onToggleSidebar={toggleSidebar} isCollapsed={isCollapsed} />
 
@@ -78,14 +78,14 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
         {/* Main Content Area */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {sidebarOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 lg:hidden">
+          <div className="fixed inset-0 z-[100] lg:hidden">
             <button
               type="button"
               aria-label="Fechar menu lateral"
-              className="absolute inset-0 bg-gray-950/20 backdrop-blur-sm"
+              className="fixed inset-0 bg-gray-950/40 backdrop-blur-xs transition-opacity"
               onClick={closeSidebar}
             />
-            <div className="dark:border-surface-dark-border dark:shadow-surface-dark-xl relative z-[101] flex h-[85vh] min-h-0 w-full max-w-[92%] flex-col overflow-hidden rounded-md border border-neutral-200 bg-white shadow-2xl ring-1 ring-black/5 dark:bg-[#1d1d1b] dark:ring-white/10">
+            <div className="fixed inset-y-0 left-0 z-[101] flex w-[260px] max-w-[85vw] flex-col overflow-hidden bg-white shadow-2xl border-r border-gray-200/80 dark:border-white/10 dark:bg-[#1d1d1b] animate-in slide-in-from-left duration-300">
               <Sidebar
                 onLinkClick={closeSidebar}
                 isCollapsed={false}
@@ -104,10 +104,10 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
             )}
           >
 
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-1.5">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-0">
               <div
                 className={cn(
-                  "flex min-h-0 w-full min-w-0 flex-col overflow-hidden",
+                  "flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#1d1d1b]",
                   isLg ? "flex-1" : "max-lg:flex-none"
                 )}
               >

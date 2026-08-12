@@ -237,6 +237,20 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
             return;
           }
 
+          if (chunk && chunk.type === "title_updated" && chunk.sessionId && chunk.title) {
+            setCurrentSessionState((prev: ChatSession | null) => {
+              if (prev && prev.id === chunk.sessionId) {
+                return { ...prev, title: chunk.title };
+              }
+              return prev;
+            });
+            
+            setChatHistory((prev) => 
+              prev.map((s) => s.id === chunk.sessionId ? { ...s, title: chunk.title } : s)
+            );
+            return;
+          }
+
           setMessages((prev: ChatMessage[]) => {
             const existingIndex = prev.findIndex((m) => m.id === optimisticAssistantMessageId);
 

@@ -245,9 +245,27 @@ class LlmQueueProcessor {
           payload.conversationHistory
         );
 
+        const providerStr = (payload.provider as string) || "openai";
+        let resolvedApiKey = (payload.apiKey as string) || "";
+        let resolvedBaseURL = (payload.baseURL as string) || undefined;
+        
+        if (!resolvedApiKey) {
+          if (providerStr === "google" || providerStr === "gemini") {
+            resolvedApiKey = process.env.GEMINI_API_KEY || "";
+          } else if (providerStr === "anthropic") {
+            resolvedApiKey = process.env.ANTHROPIC_API_KEY || "";
+          } else if (providerStr === "azure") {
+            resolvedApiKey = process.env.FOUNDRY_API_KEY || process.env.AZURE_OPENAI_API_KEY || "";
+            resolvedBaseURL = resolvedBaseURL || process.env.FOUNDRY_PROJECT_URL || process.env.AZURE_OPENAI_ENDPOINT;
+          } else {
+            resolvedApiKey = process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY || "";
+            resolvedBaseURL = resolvedBaseURL || process.env.FOUNDRY_PROJECT_URL;
+          }
+        }
+
         const executionContext: AgenticExecutionContext = {
-          apiKey: (payload.apiKey as string) || "",
-          baseURL: (payload.baseURL as string) || undefined,
+          apiKey: resolvedApiKey,
+          baseURL: resolvedBaseURL,
           language:
             (payload.userLanguage as string) ||
             ((payload.context as Record<string, unknown>)?.userLanguage as string) ||
@@ -315,6 +333,21 @@ class LlmQueueProcessor {
 
       case "provider_call":
       default: {
+        const providerStr = (payload.provider as string) || "openai";
+        if (!payload.apiKey) {
+          if (providerStr === "google" || providerStr === "gemini") {
+            payload.apiKey = process.env.GEMINI_API_KEY || "";
+          } else if (providerStr === "anthropic") {
+            payload.apiKey = process.env.ANTHROPIC_API_KEY || "";
+          } else if (providerStr === "azure") {
+            payload.apiKey = process.env.FOUNDRY_API_KEY || process.env.AZURE_OPENAI_API_KEY || "";
+            payload.baseURL = payload.baseURL || process.env.FOUNDRY_PROJECT_URL || process.env.AZURE_OPENAI_ENDPOINT;
+          } else {
+            payload.apiKey = process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY || "";
+            payload.baseURL = payload.baseURL || process.env.FOUNDRY_PROJECT_URL;
+          }
+        }
+        
         const { data, provider: providerUsed } = await callLLMProvider(
           payload as any
         );

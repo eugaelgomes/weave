@@ -18,7 +18,7 @@ export async function callOpenAICompatProvider(
     throw new Error(`API key is required for provider: ${provider}`);
   }
 
-  const endpointUrl = baseURL
+  let endpointUrl = baseURL
     ? `${baseURL.replace(/\/$/, "")}/chat/completions`
     : `https://api.openai.com/v1/chat/completions`;
 
@@ -29,6 +29,10 @@ export async function callOpenAICompatProvider(
   if (provider === "azure") {
     headers["Authorization"] = `Bearer ${apiKey}`;
     headers["api-key"] = apiKey;
+    if (!endpointUrl.includes("api-version=")) {
+      const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-02-15-preview";
+      endpointUrl += (endpointUrl.includes("?") ? "&" : "?") + `api-version=${apiVersion}`;
+    }
   } else {
     headers["Authorization"] = `Bearer ${apiKey}`;
   }

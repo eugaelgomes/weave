@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 import ChatInterface from "./chat-interface";
 import { ArtifactSandbox } from "../sandbox/artifact-sandbox";
 
-export function ChatViewClient({ chatId }: { chatId?: string }) {
+export function ChatViewClient({ chatId: propChatId }: { chatId?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const chatId = propChatId || searchParams.get("c") || undefined;
 
   const [isSandboxOpen, setIsSandboxOpen] = useState(searchParams.get("sandbox") === "1");
 

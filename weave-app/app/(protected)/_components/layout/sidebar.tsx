@@ -12,6 +12,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useNotification } from "@/app/_contexts/notification-context";
 import { useProjects } from "@/app/_contexts/projects-context";
+import { useChat } from "@/app/_contexts/chat-context";
 import { useModules } from "@/app/_contexts/modules-context";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -307,6 +308,7 @@ interface RecentItemsProps {
     icon?: React.ElementType<any>;
     projectIcon?: any;
     projectColor?: string | null;
+    path?: string;
   }[];
   pathname: string;
   isCollapsed: boolean;
@@ -328,11 +330,11 @@ function RecentItems({
   return (
     <div className="mt-1.5 border-t border-gray-200/80 pt-1.5 dark:border-white/10">
       <ul className="space-y-0.5 px-1">
-        {recentItems.slice(0, 3).map((item) => {
+        {recentItems.slice(0, 5).map((item) => {
           const basePath = item.type === "project" ? "projects" : "notes";
-          const path = pathname.startsWith("/")
+          const path = item.path || (pathname.startsWith("/")
             ? `/${pathname.split("/")[1]}/${basePath}/${item.public_id || item.id}`
-            : `/${basePath}/${item.public_id || item.id}`;
+            : `/${basePath}/${item.public_id || item.id}`);
           const active = isPathActive(pathname, path);
           const ItemIcon = item.icon;
 
@@ -527,21 +529,10 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
 
   if (!authenticated) return null;
 
-  // Projects are global now.
+  // Projects and Chats for Recent Items
   const projectsCtx = useProjects();
-  const recentProjects = projectsCtx.getRecentProjects().slice(0, 5);
-
+  const { chatHistory } = useChat();
   const { isModuleActive } = useModules();
-
-  const recentItems = isModuleActive("projects") ? recentProjects.map((proj: any) => ({
-    type: "project" as const,
-    id: proj.id,
-    public_id: proj.public_id,
-    title: proj.title || t.common.untitled,
-    icon: AnimatedProjectsIcon,
-    projectIcon: proj.icon,
-    projectColor: proj.color,
-  })) : [];
 
   const hasOrg = !!user?.org_id;
   const orgPrefix = user?.org_public_id
@@ -550,13 +541,32 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       ? `/${user.public_id}`
       : "";
 
+  const mappedProjects = isModuleActive("projects") ? projectsCtx.getRecentProjects().slice(0, 10).map((proj: any) => ({
+    type: "project" as const,
+    id: proj.id,
+    public_id: proj.public_id,
+    title: proj.title || t.common.untitled,
+    icon: AnimatedProjectsIcon,
+    projectIcon: proj.icon,
+    projectColor: proj.color,
+    updatedAt: new Date(proj.updated_at || proj.created_at).getTime(),
+    path: `${orgPrefix}/projects/${proj.public_id}`,
+  })) : [];
+
+  const mappedChats = chatHistory.slice(0, 10).map((chat) => ({
+    type: "chat" as const,
+    id: chat.id,
+    title: chat.title || t.common.untitled,
+    icon: MessageSquare,
+    updatedAt: new Date(chat.updatedAt || chat.createdAt).getTime(),
+    path: `${orgPrefix}/new?c=${chat.id}`,
+  }));
+
+  const recentItems = [...mappedProjects, ...mappedChats]
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+
   const navigationItems: NavigationItem[] = [
-    { path: `${orgPrefix}/home`, icon: AnimatedHomeIcon, label: t.nav.home },
-    {
-      path: `${orgPrefix}/weave-ai/chat`,
-      icon: AiFredokaIcon,
-      label: t.nav.weaveAi,
-    },
+    { path: `${orgPrefix}/new`, icon: MessageSquare, label: t.nav.weaveAi || "Chat" },
     isModuleActive("notes") && { path: `${orgPrefix}/notes`, icon: AnimatedNotesIcon, label: t.nav.notes },
     isModuleActive("projects") && {
       path: `${orgPrefix}/projects`,
@@ -598,7 +608,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   ].filter(Boolean) as NavigationItem[];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200/80 text-gray-700 transition-colors duration-300 dark:border-white/10 dark:text-gray-300 bg-white dark:bg-[#1d1d1b]">
+    <div className="flex min-h-0 flex-1 flex-col text-gray-700 transition-colors duration-300 dark:text-gray-300 bg-white dark:bg-[#1d1d1b]">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-1">
         {toggleCollapse && (
           <div className="px-1 py-1 shrink-0">

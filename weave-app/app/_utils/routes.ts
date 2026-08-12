@@ -12,7 +12,7 @@ export const routes = {
   },
 
   // Org Scoped Routes
-  home: (orgId: string) => `/${orgId}/home/`,
+  home: (orgId: string) => `/${orgId}/new/`,
 
   projects: {
     list: (orgId: string) => `/${orgId}/projects/`,
