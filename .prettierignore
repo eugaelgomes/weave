@@ -1,0 +1,9 @@
+dist
+build
+.next
+node_modules
+out
+coverage
+.cursor
+.husky
+.vscode

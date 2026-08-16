@@ -1,0 +1,386 @@
+.tiptap-editor-wrapper {
+  width: 100%;
+  min-height: 200px;
+  position: relative;
+}
+
+.tiptap-editor {
+  outline: none;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--color-neutral-800, #262626);
+}
+
+.dark .tiptap-editor {
+  color: var(--color-neutral-200, #e5e5e5);
+}
+
+.tiptap-editor:focus {
+  outline: none;
+}
+
+.tiptap-editor .ProseMirror {
+  outline: none;
+  min-height: 120px;
+}
+
+.tiptap-editor .ProseMirror:focus {
+  outline: none;
+}
+
+/* Placeholder */
+.tiptap-editor .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #a3a3a3;
+  pointer-events: none;
+  height: 0;
+}
+
+.dark .tiptap-editor .is-empty::before {
+  color: #525252;
+}
+
+.tiptap-editor .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #a3a3a3;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Paragraphs */
+.tiptap-editor p {
+  margin: 0.25em 0;
+}
+
+.tiptap-editor p:first-child {
+  margin-top: 0;
+}
+
+/* Headings */
+.tiptap-editor h1 {
+  font-size: 1.75em;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 1em 0 0.5em;
+  letter-spacing: -0.025em;
+}
+
+.tiptap-editor h2 {
+  font-size: 1.35em;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0.875em 0 0.5em;
+  letter-spacing: -0.02em;
+}
+
+.tiptap-editor h3 {
+  font-size: 1.15em;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0.75em 0 0.5em;
+}
+
+.tiptap-editor h4 {
+  font-size: 1.05em;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0.625em 0 0.5em;
+}
+
+.tiptap-editor h1:first-child,
+.tiptap-editor h2:first-child,
+.tiptap-editor h3:first-child,
+.tiptap-editor h4:first-child {
+  margin-top: 0;
+}
+
+/* Bold, Italic, etc. */
+.tiptap-editor strong {
+  font-weight: 600;
+}
+
+.tiptap-editor em {
+  font-style: italic;
+}
+
+.tiptap-editor u {
+  text-decoration: underline;
+}
+
+.tiptap-editor s {
+  text-decoration: line-through;
+}
+
+/* Inline code */
+.tiptap-editor code {
+  background-color: #f5f5f5;
+  color: #e11d48;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+.dark .tiptap-editor code {
+  background-color: #262626;
+  color: #fb7185;
+}
+
+/* Code blocks */
+.tiptap-editor .tiptap-code-block {
+  background-color: #171717;
+  color: #e5e5e5;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+  line-height: 1.6;
+  padding: 1em;
+  border-radius: 8px;
+  margin: 0.75em 0;
+  overflow-x: auto;
+}
+
+.tiptap-editor .tiptap-code-block code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Blockquote */
+.tiptap-editor blockquote {
+  border-left: 4px solid #d4d4d4;
+  padding-left: 1em;
+  margin: 0.75em 0;
+  color: #525252;
+  font-style: italic;
+}
+
+.dark .tiptap-editor blockquote {
+  border-left-color: #525252;
+  color: #a3a3a3;
+}
+
+/* Lists */
+.tiptap-editor ul,
+.tiptap-editor ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.tiptap-editor ul {
+  list-style-type: disc;
+}
+
+.tiptap-editor ol {
+  list-style-type: decimal;
+}
+
+.tiptap-editor li {
+  margin: 0.25em 0;
+}
+
+.tiptap-editor li p {
+  margin: 0;
+}
+
+/* Task list */
+.tiptap-editor .tiptap-task-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.5em 0;
+}
+
+.tiptap-editor .tiptap-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  margin: 0.375em 0;
+}
+
+.tiptap-editor .tiptap-task-item > label {
+  display: flex;
+  align-items: center;
+  margin-top: 0.25em;
+}
+
+.tiptap-editor .tiptap-task-item > label > input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  cursor: pointer;
+  accent-color: #facc15;
+}
+
+.tiptap-editor .tiptap-task-item > div {
+  flex: 1;
+}
+
+.tiptap-editor .tiptap-task-item[data-checked="true"] > div {
+  text-decoration: line-through;
+  color: #a3a3a3;
+}
+
+/* Horizontal rule */
+.tiptap-editor hr {
+  border: none;
+  border-top: 2px solid #e5e5e5;
+  margin: 1.5em 0;
+}
+
+.dark .tiptap-editor hr {
+  border-top-color: #404040;
+}
+
+/* Images */
+.tiptap-editor .tiptap-video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.dark .tiptap-editor .tiptap-video {
+  outline: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tiptap-editor .tiptap-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0.75em 0;
+  display: block;
+}
+
+/* Links */
+.tiptap-editor .tiptap-link {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.tiptap-editor .tiptap-link:hover {
+  color: #1d4ed8;
+}
+
+.dark .tiptap-editor .tiptap-link {
+  color: #60a5fa;
+}
+
+.dark .tiptap-editor .tiptap-link:hover {
+  color: #93c5fd;
+}
+
+/* Highlight */
+.tiptap-editor mark {
+  background-color: #fef08a;
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+}
+
+.dark .tiptap-editor mark {
+  background-color: #854d0e;
+  color: #fef9c3;
+}
+
+/* Selection */
+.tiptap-editor ::selection {
+  background-color: #bfdbfe;
+}
+
+.dark .tiptap-editor ::selection {
+  background-color: #1e3a5f;
+}
+
+/* Selected node — clean, no outline/ring */
+.tiptap-editor .ProseMirror-selectednode {
+  outline: none;
+  opacity: 0.5;
+}
+
+/* Gapcursor */
+.tiptap-editor .ProseMirror-gapcursor {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+
+.tiptap-editor .ProseMirror-gapcursor::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 20px;
+  border-top: 2px solid #000;
+  animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;
+}
+
+.dark .tiptap-editor .ProseMirror-gapcursor::after {
+  border-top-color: #fff;
+}
+
+@keyframes ProseMirror-cursor-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.tiptap-editor .ProseMirror-focused .ProseMirror-gapcursor {
+  display: block;
+}
+
+/* ===== Drag Handle ===== */
+.tiptap-drag-handle {
+  position: absolute;
+  left: -26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: grab;
+  color: #d4d4d4;
+  transition:
+    opacity 120ms ease,
+    color 120ms ease,
+    background-color 120ms ease;
+  z-index: 50;
+  user-select: none;
+  padding-top: 2px;
+}
+
+.tiptap-drag-handle:hover {
+  color: #a3a3a3;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.tiptap-drag-handle:active {
+  cursor: grabbing;
+  color: #737373;
+}
+
+.dark .tiptap-drag-handle {
+  color: #404040;
+}
+
+.dark .tiptap-drag-handle:hover {
+  color: #737373;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .tiptap-drag-handle:active {
+  color: #a3a3a3;
+}
+
+/* Tippy reset — remove default arrow / bg */
+.tippy-box[data-theme] {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.tippy-box[data-theme] > .tippy-content {
+  padding: 0;
+}

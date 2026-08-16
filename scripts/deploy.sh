@@ -50,35 +50,23 @@ case "$SERVICE" in
   engine)
     IMAGE_TAG="ghcr.io/eugaelgomes/weave-engine:latest"
     DIR="weave-engine"
-    COMPOSE="compose.engine.yml"
-    TARGET_HOST=${HOST:-${ENGINE_REMOTE_HOST:-$(fetch_doppler_sec weave-engine ENGINE_REMOTE_HOST)}}
-    TARGET_USER=${USER:-${ENGINE_REMOTE_USER:-$(fetch_doppler_sec weave-engine ENGINE_REMOTE_USER)}}
-    TARGET_USER=${TARGET_USER:-ubuntu}
-    APP_DIR=${ENGINE_APP_DIR:-"/home/$TARGET_USER/weave-engine"}
-    DOPPLER_TOKEN_VAL=${ENGINE_DOPPLER_TOKEN:-$DOPPLER_TOKEN}
+    COMPOSE="docker-compose.prod.yml"
+    COMPOSE_SERVICE="engine"
     ADDITIONAL_FILES=""
     ;;
   server|api)
     SERVICE="server"
     IMAGE_TAG="ghcr.io/eugaelgomes/weave-api:latest"
     DIR="weave-api"
-    COMPOSE="compose.server.yml"
-    TARGET_HOST=${HOST:-${SERVER_REMOTE_HOST:-$(fetch_doppler_sec weave-api SERVER_REMOTE_HOST)}}
-    TARGET_USER=${USER:-${SERVER_REMOTE_USER:-$(fetch_doppler_sec weave-api SERVER_REMOTE_USER)}}
-    TARGET_USER=${TARGET_USER:-ubuntu}
-    APP_DIR=${SERVER_APP_DIR:-"/home/$TARGET_USER/weave-server"}
-    DOPPLER_TOKEN_VAL=${SERVER_DOPPLER_TOKEN:-$DOPPLER_TOKEN}
+    COMPOSE="docker-compose.prod.yml"
+    COMPOSE_SERVICE="server caddy"
     ADDITIONAL_FILES="Caddyfile"
     ;;
   worker)
     IMAGE_TAG="ghcr.io/eugaelgomes/weave-worker:latest"
     DIR="weave-worker"
-    COMPOSE="compose.worker.yml"
-    TARGET_HOST=${HOST:-${WORKER_REMOTE_HOST:-$(fetch_doppler_sec weave-worker WORKER_REMOTE_HOST)}}
-    TARGET_USER=${USER:-${WORKER_REMOTE_USER:-$(fetch_doppler_sec weave-worker WORKER_REMOTE_USER)}}
-    TARGET_USER=${TARGET_USER:-ubuntu}
-    APP_DIR=${WORKER_APP_DIR:-"/home/$TARGET_USER/weave-worker"}
-    DOPPLER_TOKEN_VAL=${WORKER_DOPPLER_TOKEN:-$DOPPLER_TOKEN}
+    COMPOSE="docker-compose.prod.yml"
+    COMPOSE_SERVICE="worker"
     ADDITIONAL_FILES=""
     ;;
   *)
@@ -87,9 +75,15 @@ case "$SERVICE" in
     ;;
 esac
 
+TARGET_HOST=${HOST:-${REMOTE_HOST:-$(fetch_doppler_sec theweave REMOTE_HOST)}}
+TARGET_USER=${USER:-${REMOTE_USER:-$(fetch_doppler_sec theweave REMOTE_USER)}}
+TARGET_USER=${TARGET_USER:-ubuntu}
+APP_DIR=${APP_DIR:-"/home/$TARGET_USER/theweave"}
+DOPPLER_TOKEN_VAL=${DOPPLER_TOKEN:-$(fetch_doppler_sec theweave DOPPLER_TOKEN)}
+
 if [ -z "$TARGET_HOST" ]; then
-  echo "Error: Remote host not found for $SERVICE."
-  echo "Make sure Doppler is configured or set ${SERVICE^^}_REMOTE_HOST in .env.deploy."
+  echo "Error: Remote host not found."
+  echo "Make sure Doppler is configured or set REMOTE_HOST in .env.deploy."
   exit 1
 fi
 
@@ -98,7 +92,7 @@ echo "▶ Deploying $SERVICE to $TARGET_USER@$TARGET_HOST ($APP_DIR)"
 echo "=================================================="
 
 echo "▶ 1/5 Building $SERVICE image locally (linux/amd64)..."
-docker build --platform linux/amd64 -t "$IMAGE_TAG" "./$DIR"
+docker build --platform linux/amd64 -t "$IMAGE_TAG" -f "./$DIR/Dockerfile" .
 
 echo "▶ 2/5 Pushing image to GHCR..."
 docker push "$IMAGE_TAG"
@@ -127,8 +121,8 @@ else
   COMPOSE_CMD="docker-compose"
 fi
 
-\$COMPOSE_CMD -f $COMPOSE pull
-\$COMPOSE_CMD -f $COMPOSE up -d
+\$COMPOSE_CMD -f $COMPOSE pull $COMPOSE_SERVICE
+\$COMPOSE_CMD -f $COMPOSE up -d $COMPOSE_SERVICE
 docker image prune -f || true
 EOF
 

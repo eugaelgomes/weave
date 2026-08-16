@@ -1,0 +1,1488 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+model ai_agent_runs {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent_id          String             @db.Uuid
+  trigger_id        String?            @db.Uuid
+  status            String             @db.VarChar(50)
+  logs              Json?              @default("[]")
+  started_at        DateTime?          @default(now()) @db.Timestamptz(6)
+  completed_at      DateTime?          @db.Timestamptz(6)
+  error_message     String?
+  ai_user_agent     ai_user_agent      @relation(fields: [agent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ai_agent_triggers ai_agent_triggers? @relation(fields: [trigger_id], references: [id], onUpdate: NoAction)
+}
+
+model ai_agent_triggers {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agent_id      String          @db.Uuid
+  trigger_type  String          @db.VarChar(50)
+  config        Json            @default("{}")
+  is_active     Boolean?        @default(true)
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  ai_agent_runs ai_agent_runs[]
+  ai_user_agent ai_user_agent   @relation(fields: [agent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model ai_artifacts {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id  String?           @db.Uuid
+  user_id          String            @db.Uuid
+  session_id       String?           @db.Uuid
+  title            String            @default("Untitled Document") @db.VarChar(255)
+  type             String            @default("document") @db.VarChar(50)
+  content          Json              @default("[]")
+  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  organizations    organizations?    @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ai_chat_sessions ai_chat_sessions? @relation(fields: [session_id], references: [id], onUpdate: NoAction)
+  users            users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([organization_id], map: "idx_ai_artifacts_organization_id")
+  @@index([user_id], map: "idx_ai_artifacts_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ai_chat_messages {
+  id                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id            String           @db.Uuid
+  user_id               String           @db.Uuid
+  role                  String           @db.VarChar(20)
+  content               String?
+  model                 String?          @db.VarChar(50)
+  metadata              Json             @default("{}")
+  created_at            DateTime         @default(now()) @db.Timestamptz(6)
+  request_id            String?          @db.Uuid
+  provider              String?          @db.VarChar(40)
+  status                String           @default("ok") @db.VarChar(20)
+  error_code            String?          @db.VarChar(80)
+  error_message         String?
+  latency_ms            Int?
+  input_tokens          Int?
+  output_tokens         Int?
+  total_tokens          Int?
+  agent_id              String?          @db.Uuid
+  allow_edit            Boolean?         @default(false)
+  parent_message_id     String?          @db.Uuid
+  tool_calls            Json?
+  tool_call_id          String?          @db.VarChar(255)
+  deleted               Boolean          @default(false)
+  deleted_at            DateTime?        @db.Timestamptz(6)
+  organization_id       String?          @db.Uuid
+  user_feedback_rating  String?          @db.VarChar(50)
+  user_feedback_comment String?
+  ai_user_agent         ai_user_agent?   @relation(fields: [agent_id], references: [id], onUpdate: NoAction, map: "ai_chat_messages_agent_fk")
+  organizations         organizations?   @relation(fields: [organization_id], references: [id], onUpdate: NoAction, map: "ai_chat_messages_organization_FK")
+  ai_chat_sessions      ai_chat_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_messages_session_fk")
+  users                 users            @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "ai_chat_messages_user_fk")
+
+  @@index([provider, created_at(sort: Desc)], map: "idx_ai_chat_messages_provider_created")
+  @@index([request_id], map: "idx_ai_chat_messages_request_id")
+  @@index([session_id, status, created_at(sort: Desc)], map: "idx_ai_chat_messages_session_status_created")
+  @@index([status, created_at(sort: Desc)], map: "idx_ai_chat_messages_status_created")
+  @@index([session_id, created_at], map: "ix_ai_chat_messages_session_created_at")
+  @@index([user_id, created_at], map: "ix_ai_chat_messages_user_created_at")
+}
+
+model ai_chat_sessions {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String             @db.Uuid
+  title            String             @default("Nova Conversa") @db.VarChar(255)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  last_message_at  DateTime?          @db.Timestamptz(6)
+  last_model       String?            @db.VarChar(80)
+  last_provider    String?            @db.VarChar(40)
+  message_count    Int                @default(0)
+  total_tokens     BigInt             @default(0)
+  archived         Boolean            @default(false)
+  deleted          Boolean            @default(false)
+  deleted_at       DateTime?          @db.Timestamptz(6)
+  organization_id  String?            @db.Uuid
+  project_id       String?            @db.Uuid
+  note_id          String?            @db.Uuid
+  context          Json               @default("{}")
+  share_token      String?            @unique @db.VarChar(255)
+  ai_artifacts     ai_artifacts[]
+  ai_chat_messages ai_chat_messages[]
+  organizations    organizations?     @relation(fields: [organization_id], references: [id], onUpdate: NoAction, map: "ai_chat_sessions_org_fk")
+  projects         projects?          @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "ai_chat_sessions_project_fk")
+  users            users              @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_sessions_user_fk")
+
+  @@index([user_id, archived, updated_at(sort: Desc)], map: "idx_ai_chat_sessions_user_archived_updated")
+}
+
+model ai_custom_tools {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String    @db.Uuid
+  organization_id String?   @db.Uuid
+  name            String    @db.VarChar(100)
+  description     String?
+  webhook_url     String
+  method          String?   @default("POST") @db.VarChar(10)
+  headers         Json?     @default("{}")
+  payload_schema  Json?     @default("{}")
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  deleted         Boolean?  @default(false)
+  deleted_at      DateTime? @db.Timestamptz(6)
+}
+
+model ai_llm_models {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier           String    @unique @db.VarChar(100)
+  provider_id          String    @db.VarChar(50)
+  provider_name        String    @db.VarChar(100)
+  logo_url             String?   @db.VarChar(255)
+  name                 String    @db.VarChar(100)
+  version              String?   @db.VarChar(50)
+  description          String?
+  context_window       Int?
+  max_output_tokens    Int?
+  supported_for_agents Boolean?  @default(true)
+  features             Json?     @default("[]")
+  tags                 Json?     @default("[]")
+  reasoning_levels     Json?     @default("[\"none\"]")
+  deprecated           Boolean?  @default(false)
+  created_at           DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model ai_llms {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String          @db.Uuid
+  organization_id  String?         @db.Uuid
+  title            String          @db.VarChar(255)
+  provider         String          @db.VarChar(50)
+  model            String          @db.VarChar(100)
+  api_key          String
+  temperature      Decimal?        @default(0.7) @db.Decimal(3, 2)
+  max_tokens       Int?
+  reasoning_effort String?         @db.VarChar(50)
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  deleted          Boolean?        @default(false)
+  deleted_at       DateTime?       @db.Timestamptz(6)
+  ai_user_agent    ai_user_agent[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ai_user_agent {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String              @db.Uuid
+  personality       Json                @default("{}")
+  knowledge_files   Json                @default("[]")
+  shared_with       Json                @default("[]")
+  deleted           Boolean             @default(false)
+  deleted_at        DateTime?           @db.Timestamptz(6)
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  name              String              @default("Unnamed Agent") @db.VarChar(100)
+  description       String?
+  project_id        String?             @db.Uuid
+  is_active         Boolean             @default(true)
+  llm_config_id     String?             @db.Uuid
+  tools             Json?               @default("[]")
+  ai_agent_runs     ai_agent_runs[]
+  ai_agent_triggers ai_agent_triggers[]
+  ai_chat_messages  ai_chat_messages[]
+  ai_llms           ai_llms?            @relation(fields: [llm_config_id], references: [id], onUpdate: NoAction)
+  projects          projects?           @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "ai_user_agent_project_fk")
+  users             users               @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "ai_user_agent_user_fk")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model api_token_usage_logs {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  api_token_id    String         @db.Uuid
+  user_id         String         @db.Uuid
+  organization_id String?        @db.Uuid
+  request_id      String?        @db.VarChar(100)
+  endpoint        String         @db.VarChar(255)
+  http_method     String         @db.VarChar(10)
+  status_code     Int            @db.SmallInt
+  success         Boolean?       @default(dbgenerated("((status_code >= 200) AND (status_code < 300))"))
+  error_message   String?
+  latency_ms      Int?
+  ip_address      String?        @db.Inet
+  metadata        Json?
+  deleted         Boolean        @default(false)
+  deleted_at      DateTime?      @db.Timestamptz(6)
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime       @default(now()) @db.Timestamptz(6)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_api_token_usage_logs_org")
+  api_tokens      api_tokens     @relation(fields: [api_token_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_api_token_usage_logs_token")
+  users           users          @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_api_token_usage_logs_user")
+
+  @@index([created_at], map: "idx_api_token_usage_logs_created_at")
+  @@index([metadata], map: "idx_api_token_usage_logs_metadata", type: Gin)
+  @@index([api_token_id, created_at], map: "idx_api_token_usage_logs_token")
+  @@index([user_id, organization_id, created_at], map: "idx_api_token_usage_logs_user_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model api_tokens {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String                    @db.VarChar(255)
+  key_prefix              String                    @unique @db.VarChar(50)
+  token_hash              String                    @db.VarChar(255)
+  user_id                 String                    @db.Uuid
+  organization_id         String?                   @db.Uuid
+  scopes                  String[]                  @default(["read"])
+  description             String?                   @db.VarChar(255)
+  expires_at              DateTime?                 @db.Timestamptz(6)
+  revoked_at              DateTime?                 @db.Timestamptz(6)
+  deleted                 Boolean                   @default(false)
+  deleted_at              DateTime?                 @db.Timestamptz(6)
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  api_token_usage_logs    api_token_usage_logs[]
+  organizations           organizations?            @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "api_tokens_org_fk")
+  users                   users                     @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "api_tokens_user_fk")
+  public_api_request_logs public_api_request_logs[]
+
+  @@index([key_prefix], map: "idx_api_tokens_key_prefix")
+  @@index([user_id, organization_id], map: "idx_api_tokens_user_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model calendar_event_invites {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id          String          @db.Uuid
+  user_id           String?         @db.Uuid
+  email             String          @db.VarChar(255)
+  role              invite_role     @default(REQUIRED)
+  status            invite_status   @default(PENDING)
+  external_guest_id String?         @db.VarChar(512)
+  deleted           Boolean         @default(false)
+  deleted_at        DateTime?       @db.Timestamptz(6)
+  created_at        DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?       @db.Timestamptz(6)
+  calendar_events   calendar_events @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "calendar_event_invites_event_fk")
+  users             users?          @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "calendar_event_invites_user_fk")
+
+  @@unique([event_id, email], map: "unique_event_invite_email")
+  @@index([event_id], map: "idx_calendar_invites_event_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model calendar_events {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id        String?                  @db.Uuid
+  creator_id             String                   @db.Uuid
+  note_id                String?                  @db.Uuid
+  project_id             String?                  @db.Uuid
+  title                  String                   @db.VarChar(255)
+  description            String?
+  location               String?
+  start_time             DateTime                 @db.Timestamptz(6)
+  end_time               DateTime                 @db.Timestamptz(6)
+  is_all_day             Boolean?                 @default(false)
+  is_from_note           Boolean?                 @default(false)
+  is_from_project        Boolean?                 @default(false)
+  google_event_id        String?                  @unique @db.VarChar(512)
+  google_calendar_id     String?                  @db.VarChar(255)
+  outlook_event_id       String?                  @unique @db.VarChar(512)
+  outlook_calendar_id    String?                  @db.VarChar(255)
+  sync_status            sync_status?             @default(PENDING)
+  last_synced_at         DateTime?                @db.Timestamptz(6)
+  etag                   String?
+  deleted                Boolean                  @default(false)
+  deleted_at             DateTime?                @db.Timestamptz(6)
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?                @db.Timestamptz(6)
+  calendar_event_invites calendar_event_invites[]
+  users                  users                    @relation(fields: [creator_id], references: [user_id], onUpdate: NoAction, map: "calendar_events_creator_fk")
+  notes                  notes?                   @relation(fields: [note_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "calendar_events_note_fk")
+  organizations          organizations?           @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "calendar_events_org_fk")
+  projects               projects?                @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "calendar_events_project_fk")
+
+  @@index([organization_id, start_time], map: "idx_calendar_events_org_date")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model google_calendar_webhooks {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String    @db.Uuid
+  calendar_id String    @db.VarChar(255)
+  channel_id  String    @db.Uuid
+  resource_id String?   @db.VarChar(255)
+  sync_token  String?   @db.VarChar(255)
+  expires_at  DateTime? @db.Timestamptz(6)
+  is_active   Boolean   @default(true)
+  deleted     Boolean   @default(false)
+  deleted_at  DateTime? @db.Timestamptz(6)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  users       users     @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "google_calendar_webhooks_user_fk")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model jobs {
+  job_id       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type         String    @db.VarChar(50)
+  user_id      String    @db.Uuid
+  status       String    @default("pending") @db.VarChar(20)
+  progress     Int       @default(0)
+  error        String?
+  result       Json?
+  metadata     Json?     @default("{}")
+  deleted      Boolean   @default(false)
+  deleted_at   DateTime? @db.Timestamptz(6)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  started_at   DateTime? @db.Timestamptz(6)
+  completed_at DateTime? @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  users        users     @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "jobs_user_fk")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model note_blocks {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  note_id           String        @db.Uuid
+  parent_id         String?       @db.Uuid
+  type              String
+  properties        Json          @default("{}")
+  position          Int           @default(0)
+  version           Int           @default(1)
+  created_by        String        @db.Uuid
+  deleted           Boolean       @default(false)
+  deleted_at        DateTime?     @db.Timestamptz(6)
+  created_at        DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime      @default(now()) @db.Timestamptz(6)
+  users             users         @relation(fields: [created_by], references: [user_id], onDelete: SetNull, onUpdate: NoAction, map: "fk_note_blocks_created_by")
+  notes             notes         @relation(fields: [note_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_note_blocks_note")
+  note_blocks       note_blocks?  @relation("note_blocksTonote_blocks", fields: [parent_id], references: [id], onUpdate: NoAction, map: "fk_note_blocks_parent")
+  other_note_blocks note_blocks[] @relation("note_blocksTonote_blocks")
+}
+
+model note_collaborators {
+  note_id                                    String    @db.Uuid
+  user_id                                    String    @db.Uuid
+  added_at                                   DateTime  @default(now()) @db.Timestamptz(6)
+  removed                                    Boolean   @default(false)
+  removed_at                                 DateTime? @db.Timestamptz(6)
+  removed_by                                 String?   @db.Uuid
+  deleted                                    Boolean   @default(false)
+  deleted_at                                 DateTime? @db.Timestamptz(6)
+  notes                                      notes     @relation(fields: [note_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_note_collaborators_note")
+  users_note_collaborators_removed_byTousers users?    @relation("note_collaborators_removed_byTousers", fields: [removed_by], references: [user_id], onUpdate: NoAction, map: "fk_note_collaborators_removed_by")
+  users_note_collaborators_user_idTousers    users     @relation("note_collaborators_user_idTousers", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_note_collaborators_user")
+
+  @@id([note_id, user_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model notes {
+  id                                  String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  public_note_id                      String                                @unique(map: "notes_public_id_key")
+  user_id                             String                                @db.Uuid
+  project_id                          String?                               @db.Uuid
+  organization_id                     String?                               @db.Uuid
+  parent_id                           String?                               @db.Uuid
+  project_stage_id                    String?                               @db.Uuid
+  priority_id                         String?                               @db.Uuid
+  title                               String                                @default("Set note title")
+  description                         String?                               @default("Write note description here")
+  document                            Json                                  @default("{\"type\": \"doc\", \"content\": [{\"type\": \"paragraph\"}]}")
+  properties                          Json?                                 @default("{}")
+  tags                                String[]                              @default([]) @db.Uuid
+  status                              notes_status?                         @default(VISIBLE)
+  due_date                            DateTime?                             @db.Timestamptz(6)
+  deleted                             Boolean                               @default(false)
+  deleted_at                          DateTime?                             @db.Timestamptz(6)
+  deleted_by                          String?                               @db.Uuid
+  created_at                          DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime                              @default(now()) @db.Timestamptz(6)
+  embedding                           Unsupported("vector")?
+  revision                            Int                                   @default(1)
+  calendar_events                     calendar_events[]
+  note_blocks                         note_blocks[]
+  note_collaborators                  note_collaborators[]
+  organizations                       organizations?                        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_notes_organization")
+  notes                               notes?                                @relation("notesTonotes", fields: [parent_id], references: [id], onUpdate: NoAction, map: "fk_notes_parent")
+  other_notes                         notes[]                               @relation("notesTonotes")
+  task_priorities                     task_priorities?                      @relation(fields: [priority_id], references: [id], onUpdate: NoAction, map: "fk_notes_priority")
+  projects                            projects?                             @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "fk_notes_project")
+  project_stages                      project_stages?                       @relation(fields: [project_stage_id], references: [id], onUpdate: NoAction, map: "fk_notes_project_stage")
+  users                               users                                 @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "fk_notes_user")
+  notes_comments                      notes_comments[]
+  notes_short_backups                 notes_short_backups[]
+  weave_engine_reasoning_action_items weave_engine_reasoning_action_items[]
+
+  @@index([id, revision], map: "idx_notes_id_revision")
+  @@index([organization_id], map: "idx_notes_organization")
+  @@index([project_id], map: "idx_notes_project")
+  @@index([tags], map: "idx_notes_tags_uuids", type: Gin)
+  @@index([user_id], map: "idx_notes_user")
+  @@index([embedding])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model notes_comments {
+  id                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  note_id              String           @db.Uuid
+  user_id              String           @db.Uuid
+  organization_id      String?          @db.Uuid
+  parent_id            String?          @db.Uuid
+  content              Json
+  files                Json?            @default("[]")
+  deleted              Boolean          @default(false)
+  deleted_at           DateTime?        @db.Timestamptz(6)
+  created_at           DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?        @db.Timestamptz(6)
+  notes                notes            @relation(fields: [note_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notes_comments_note")
+  organizations        organizations?   @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_notes_comments_org")
+  notes_comments       notes_comments?  @relation("notes_commentsTonotes_comments", fields: [parent_id], references: [id], onUpdate: NoAction, map: "fk_notes_comments_parent")
+  other_notes_comments notes_comments[] @relation("notes_commentsTonotes_comments")
+  users                users            @relation(fields: [user_id], references: [user_id], onDelete: SetNull, onUpdate: NoAction, map: "fk_notes_comments_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model notes_short_backups {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  note_id         String         @db.Uuid
+  user_id         String         @db.Uuid
+  organization_id String?        @db.Uuid
+  project_id      String?        @db.Uuid
+  title           String
+  description     String?
+  short_backup    Json
+  deleted         Boolean        @default(false)
+  deleted_at      DateTime?      @db.Timestamptz(6)
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  notes           notes          @relation(fields: [note_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "notes_short_backups_note_fk")
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onUpdate: NoAction, map: "notes_short_backups_org_fk")
+  projects        projects?      @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "notes_short_backups_project_fk")
+  users           users          @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "notes_short_backups_user_fk")
+
+  @@index([note_id, created_at(sort: Desc)], map: "idx_notes_short_backups_note_created")
+  @@index([user_id, created_at(sort: Desc)], map: "idx_notes_short_backups_user_created")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model notifications {
+  id                                  String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                             String                        @db.Uuid
+  actor_id                            String?                       @db.Uuid
+  type                                notification_type_enum
+  entity_type                         notification_entity_type_enum
+  entity_id                           String                        @db.Uuid
+  title                               String                        @db.VarChar(255)
+  content                             Json                          @default("{}")
+  is_read                             Boolean                       @default(false)
+  read_at                             DateTime?                     @db.Timestamptz(6)
+  in_trash                            Boolean                       @default(false)
+  trashed_at                          DateTime?                     @db.Timestamptz(6)
+  deleted                             Boolean                       @default(false)
+  deleted_at                          DateTime?                     @db.Timestamptz(6)
+  created_at                          DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime                      @default(now()) @db.Timestamptz(6)
+  users_notifications_actor_idTousers users?                        @relation("notifications_actor_idTousers", fields: [actor_id], references: [user_id], onUpdate: NoAction, map: "fk_notifications_actor")
+  users_notifications_user_idTousers  users                         @relation("notifications_user_idTousers", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_user")
+}
+
+model organization_area_members {
+  id                 String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id    String                           @db.Uuid
+  area_id            String                           @db.Uuid
+  user_id            String                           @db.Uuid
+  role               organization_workspace_role_enum
+  status             organization_member_status_enum  @default(ACTIVE)
+  invited_by         String?                          @db.Uuid
+  deleted            Boolean                          @default(false)
+  removed_at         DateTime?                        @db.Timestamptz(6)
+  removed_by         String?                          @db.Uuid
+  deleted_at         DateTime?                        @db.Timestamptz(6)
+  created_at         DateTime                         @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?                        @db.Timestamptz(6)
+  organization_areas organization_areas               @relation(fields: [area_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_org_area_members_area")
+  organizations      organizations                    @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_org_area_members_org")
+  users              users                            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_org_area_members_user")
+
+  @@unique([organization_id, area_id, user_id], map: "unique_org_area_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model organization_areas {
+  id                                         String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id                            String                      @db.Uuid
+  parent_area_id                             String?                     @db.Uuid
+  area_name                                  String
+  slug                                       String
+  description                                String?                     @default("Area description here")
+  properties                                 Json                        @default("{}")
+  active                                     Boolean                     @default(true)
+  deleted                                    Boolean                     @default(false)
+  created_by                                 String                      @db.Uuid
+  updated_by                                 String?                     @db.Uuid
+  deleted_by                                 String?                     @db.Uuid
+  created_at                                 DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?                   @db.Timestamptz(6)
+  is_root_area                               Boolean?
+  organization_area_members                  organization_area_members[]
+  organizations                              organizations               @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_organization_areas_org")
+  organization_areas                         organization_areas?         @relation("organization_areasToorganization_areas", fields: [parent_area_id], references: [id], onUpdate: NoAction, map: "fk_organization_areas_parent")
+  other_organization_areas                   organization_areas[]        @relation("organization_areasToorganization_areas")
+  users_organization_areas_created_byTousers users                       @relation("organization_areas_created_byTousers", fields: [created_by], references: [user_id], onUpdate: NoAction, map: "organization_areas_created_by_fk")
+  users_organization_areas_deleted_byTousers users?                      @relation("organization_areas_deleted_byTousers", fields: [deleted_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "organization_areas_deleted_by_fk")
+  users_organization_areas_updated_byTousers users?                      @relation("organization_areas_updated_byTousers", fields: [updated_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "organization_areas_updated_by_fk")
+
+  @@index([parent_area_id], map: "idx_org_areas_parent")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model organization_domains {
+  id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id    String                     @db.Uuid
+  domain_name        String                     @db.VarChar(255)
+  verification_token String                     @unique @db.VarChar(255)
+  status             domain_verification_status @default(PENDING)
+  sso_enabled        Boolean                    @default(false)
+  sso_provider       String?                    @db.VarChar(50)
+  sso_metadata       Json?
+  verified_at        DateTime?                  @db.Timestamptz(6)
+  deleted            Boolean                    @default(false)
+  deleted_at         DateTime?                  @db.Timestamptz(6)
+  created_at         DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime                   @default(now()) @db.Timestamptz(6)
+  organizations      organizations              @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_organization_domains_org")
+
+  @@unique([organization_id, domain_name], map: "unique_org_domain")
+  @@index([organization_id], map: "idx_org_domains_org_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model organization_members {
+  id                                           String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id                              String                           @db.Uuid
+  user_id                                      String                           @db.Uuid
+  role                                         organization_workspace_role_enum
+  status                                       organization_member_status_enum  @default(ACTIVE)
+  invited_by                                   String?                          @db.Uuid
+  suspended                                    Boolean                          @default(false)
+  deleted                                      Boolean                          @default(false)
+  removed_at                                   DateTime?                        @db.Timestamptz(6)
+  removed_by                                   String?                          @db.Uuid
+  deleted_at                                   DateTime?                        @db.Timestamptz(6)
+  created_at                                   DateTime                         @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime?                        @db.Timestamptz(6)
+  organizations                                organizations                    @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_organization_members_org")
+  users_organization_members_user_idTousers    users                            @relation("organization_members_user_idTousers", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_organization_members_user")
+  users_organization_members_invited_byTousers users?                           @relation("organization_members_invited_byTousers", fields: [invited_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "organization_members_invited_by_fk")
+  users_organization_members_removed_byTousers users?                           @relation("organization_members_removed_byTousers", fields: [removed_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "organization_members_removed_by_fk")
+
+  @@unique([organization_id, user_id], map: "unique_org_user")
+  @@index([organization_id], map: "idx_org_members_organization_id")
+  @@index([user_id], map: "idx_org_members_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model organization_slack_integrations {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id      String        @unique(map: "organization_slack_integrations_org_unique") @db.Uuid
+  slack_team_id        String        @db.VarChar(32)
+  slack_team_name      String?       @db.VarChar(255)
+  bot_user_id          String?       @db.VarChar(32)
+  app_id               String?       @db.VarChar(32)
+  scopes               String?
+  bot_access_token     String
+  installed_by_user_id String?       @db.Uuid
+  default_channel_id   String?       @db.VarChar(32)
+  default_channel_name String?       @db.VarChar(255)
+  is_active            Boolean       @default(true)
+  deleted              Boolean       @default(false)
+  deleted_at           DateTime?     @db.Timestamptz(6)
+  created_at           DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime      @default(now()) @db.Timestamptz(6)
+  users                users?        @relation(fields: [installed_by_user_id], references: [user_id], onUpdate: NoAction)
+  organizations        organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model organizations {
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  public_id                 String                      @unique @default(dbgenerated("generate_alphanumeric_id(25)")) @db.VarChar(25)
+  user_id                   String                      @db.Uuid
+  org_name                  String                      @default("New Organization") @db.VarChar(80)
+  unique_name               String                      @unique @db.VarChar(40)
+  logo_url                  String?
+  banner_url                String?
+  description               String?                     @default("Type description here...")
+  settings                  Json                        @default("{}")
+  plan_id                   String?                     @db.Uuid
+  branding_properties       Json?                       @default("{}")
+  integrations              Json?                       @default("{}")
+  deleted                   Boolean                     @default(false)
+  deleted_at                DateTime?                   @db.Timestamptz(6)
+  deleted_by                String?                     @db.Uuid
+  created_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  status                    organization_status         @default(ACTIVE)
+  stripe_customer_id        String?                     @db.VarChar(255)
+  billing_email             String?                     @db.VarChar(255)
+  require_sso               Boolean                     @default(false)
+  default_timezone          String                      @default("UTC") @db.VarChar(50)
+  default_locale            String?                     @default("en-US") @db.VarChar(10)
+  country                   String?                     @db.VarChar(2)
+  public_organization_id    String
+  sso_settings              Json?                       @default("{}")
+  ai_artifacts              ai_artifacts[]
+  ai_chat_messages          ai_chat_messages[]
+  ai_chat_sessions          ai_chat_sessions[]
+  api_token_usage_logs      api_token_usage_logs[]
+  api_tokens                api_tokens[]
+  calendar_events           calendar_events[]
+  notes                     notes[]
+  notes_comments            notes_comments[]
+  notes_short_backups       notes_short_backups[]
+  organization_area_members organization_area_members[]
+  organization_areas        organization_areas[]
+  organization_domains      organization_domains[]
+
+  organization_members                       organization_members[]
+  organization_slack_integrations            organization_slack_integrations?
+  organization_tracing_settings              organization_tracing_settings?
+  users_organizations_user_idTousers         users                            @relation("organizations_user_idTousers", fields: [user_id], references: [user_id], onUpdate: NoAction, map: "fk_organizations_user_id")
+  projects                                   projects[]
+  public_api_request_logs                    public_api_request_logs[]
+  spans                                      spans[]
+  tags                                       tags[]
+  task_priorities                            task_priorities[]
+  traces                                     traces[]
+  users_users_organization_idToorganizations users[]                          @relation("users_organization_idToorganizations")
+  weave_engine_reasonings                    weave_engine_reasonings[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model plan_limit_overrides {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  plan_id          String    @db.Uuid
+  subscriber_type  String
+  subscriber_id    String    @db.Uuid
+  override_details Json      @default("{}")
+  reason           String?
+  starts_at        DateTime? @db.Timestamptz(6)
+  ends_at          DateTime? @db.Timestamptz(6)
+  is_active        Boolean   @default(true)
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+  plans            plans     @relation(fields: [plan_id], references: [plan_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([plan_id, subscriber_type, subscriber_id, is_active, created_at(sort: Desc)], map: "idx_plan_limit_overrides_lookup")
+}
+
+model plan_usage_history {
+  id                     String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  plan_usage_id          String      @db.Uuid
+  user_id                String?     @db.Uuid
+  organization_id        String?     @db.Uuid
+  plan_id                String      @db.Uuid
+  period_start           DateTime    @db.Timestamptz(6)
+  period_end             DateTime    @db.Timestamptz(6)
+  final_usage_details    Json
+  applied_plan_snapshot  Json        @default("{}")
+  applied_plan_version   Int         @default(1)
+  total_notes_created    Int         @default(0)
+  total_projects_created Int         @default(0)
+  total_ai_messages      Int         @default(0)
+  total_storage_mb       Decimal     @default(0) @db.Decimal(12, 2)
+  total_exports          Int         @default(0)
+  created_at             DateTime    @default(now()) @db.Timestamptz(6)
+  plans                  plans       @relation(fields: [plan_id], references: [plan_id], onUpdate: NoAction)
+  plan_usages            plan_usages @relation(fields: [plan_usage_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([organization_id, period_end(sort: Desc)], map: "idx_plan_usage_history_org")
+  @@index([user_id, period_end(sort: Desc)], map: "idx_plan_usage_history_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model plan_usages {
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  plan_id               String               @db.Uuid
+  subscriber_type       String
+  subscriber_id         String               @db.Uuid
+  client_type           String
+  user_id               String?              @db.Uuid
+  organization_id       String?              @db.Uuid
+  usage_details         Json                 @default("{}")
+  applied_plan_snapshot Json                 @default("{}")
+  applied_plan_version  Int                  @default(1)
+  lifetime_stats        Json                 @default("{}")
+  last_reset_at         DateTime             @default(now()) @db.Timestamptz(6)
+  created_at            DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime             @default(now()) @db.Timestamptz(6)
+  plan_usage_history    plan_usage_history[]
+  plans                 plans                @relation(fields: [plan_id], references: [plan_id], onUpdate: NoAction)
+  usage_events          usage_events[]
+
+  @@unique([subscriber_type, subscriber_id])
+  @@index([organization_id], map: "idx_plan_usages_organization_id")
+  @@index([plan_id], map: "idx_plan_usages_plan_id")
+  @@index([user_id], map: "idx_plan_usages_user_id")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model plans {
+  plan_id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String                 @unique @db.VarChar(100)
+  description          String?
+  details              Json                   @default("{}")
+  plan_version         Int                    @default(1)
+  is_active            Boolean                @default(true)
+  deleted              Boolean                @default(false)
+  plan_value           Decimal                @default(0) @db.Decimal(12, 2)
+  currency             String                 @default("BRL") @db.VarChar(3)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime               @default(now()) @db.Timestamptz(6)
+  plan_limit_overrides plan_limit_overrides[]
+  plan_usage_history   plan_usage_history[]
+  plan_usages          plan_usages[]
+  subscriptions        subscriptions[]
+
+  @@index([is_active, deleted], map: "idx_plans_active")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model project_ai_report_configs {
+  id                           String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id                   String                    @unique @db.Uuid
+  user_id                      String                    @db.Uuid
+  enabled                      Boolean                   @default(false)
+  default_sprint_duration_days Int                       @default(14) @db.SmallInt
+  default_workable_days        Int[]                     @default([1, 2, 3, 4, 5]) @db.SmallInt
+  auto_create_next_sprint      Boolean                   @default(true)
+  enable_sprint_kickoff        Boolean                   @default(true)
+  enable_daily_standup         Boolean                   @default(true)
+  enable_sprint_review         Boolean                   @default(true)
+  report_time_utc              String                    @default("14:00") @db.VarChar(5)
+  channels                     String[]                  @default(["in_app"])
+  recipient_scope              String                    @default("all_members") @db.VarChar(20)
+  custom_recipients            Json                      @default("[]")
+  current_sprint_id            String?                   @db.Uuid
+  last_report_type             String?                   @db.VarChar(30)
+  last_report_at               DateTime?                 @db.Timestamptz(6)
+  next_report_at               DateTime?                 @db.Timestamptz(6)
+  deleted                      Boolean                   @default(false)
+  deleted_at                   DateTime?                 @db.Timestamptz(6)
+  created_at                   DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime                  @default(now()) @db.Timestamptz(6)
+  projects                     projects                  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_report_config_project")
+  project_sprints              project_sprints?          @relation(fields: [current_sprint_id], references: [id], onUpdate: NoAction, map: "fk_report_config_sprint")
+  users                        users                     @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "fk_report_config_user")
+  weave_engine_reasonings      weave_engine_reasonings[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model project_members {
+  id                                    String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id                            String                   @db.Uuid
+  user_id                               String                   @db.Uuid
+  role                                  project_member_role_enum
+  added_by                              String                   @db.Uuid
+  suspended                             Boolean                  @default(false)
+  deleted                               Boolean                  @default(false)
+  deleted_at                            DateTime?                @db.Timestamptz(6)
+  created_at                            DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime                 @default(now()) @db.Timestamptz(6)
+  users_project_members_added_byTousers users                    @relation("project_members_added_byTousers", fields: [added_by], references: [user_id], onDelete: SetNull, onUpdate: NoAction, map: "fk_project_members_added_by")
+  projects                              projects                 @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_members_project")
+  users_project_members_user_idTousers  users                    @relation("project_members_user_idTousers", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_members_user")
+
+  @@index([project_id], map: "idx_project_members_project")
+  @@index([user_id], map: "idx_project_members_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model project_sprints {
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id                String                      @db.Uuid
+  sprint_number             Int                         @default(1) @db.SmallInt
+  title                     String?                     @db.VarChar(100)
+  goal                      String?
+  status                    String                      @default("planned") @db.VarChar(20)
+  start_date                DateTime                    @db.Date
+  end_date                  DateTime                    @db.Date
+  workable_days             Int[]                       @default([1, 2, 3, 4, 5]) @db.SmallInt
+  completed_at              DateTime?                   @db.Timestamptz(6)
+  summary                   String?
+  metrics                   Json                        @default("{}")
+  deleted                   Boolean                     @default(false)
+  deleted_at                DateTime?                   @db.Timestamptz(6)
+  created_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  project_ai_report_configs project_ai_report_configs[]
+  projects                  projects                    @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_sprints_project")
+  weave_engine_reasonings   weave_engine_reasonings[]
+
+  @@unique([project_id, sprint_number], map: "uq_project_sprint_number")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model project_stages {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id String    @db.Uuid
+  name       String
+  position   Int
+  color      String?   @default("#E2E8F0")
+  properties Json?     @default("{}")
+  deleted    Boolean   @default(false)
+  deleted_at DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  notes      notes[]
+  projects   projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_stages_project")
+
+  @@unique([project_id, position], map: "uq_project_stages_position")
+  @@index([project_id], map: "idx_project_stages_project")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model projects {
+  id                        String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  public_id                 String                     @unique @default(dbgenerated("generate_alphanumeric_id(25)")) @db.VarChar(25)
+  user_id                   String                     @db.Uuid
+  organization_id           String?                    @db.Uuid
+  parent_project_id         String?                    @db.Uuid
+  title                     String                     @default("The new project")
+  description               String?                    @default("Type description here...")
+  methodology               project_methodology_enum   @default(KANBAN)
+  status                    project_status             @default(OPEN)
+  visibility                project_visibility_enum    @default(PRIVATE)
+  active                    Boolean                    @default(true)
+  properties                Json                       @default("{}")
+  projects_files            Json                       @default("[]")
+  start_date                DateTime?                  @db.Date
+  target_end_date           DateTime?                  @db.Date
+  actual_end_date           DateTime?                  @db.Date
+  deleted                   Boolean                    @default(false)
+  deleted_at                DateTime?                  @db.Timestamptz(6)
+  created_at                DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                   @default(now()) @db.Timestamptz(6)
+  progress                  Decimal                    @default(0.00) @db.Decimal(5, 2)
+  estimated_effort          Decimal                    @default(0.00) @db.Decimal(10, 2)
+  color                     String?                    @db.VarChar(7)
+  icon                      Json?                      @default("{\"name\": \"\", \"path\": \"\", \"size\": \"\", \"type\": \"\"}")
+  public_project_id         String                     @unique
+  ai_chat_sessions          ai_chat_sessions[]
+  ai_user_agent             ai_user_agent[]
+  calendar_events           calendar_events[]
+  notes                     notes[]
+  notes_short_backups       notes_short_backups[]
+  project_ai_report_configs project_ai_report_configs?
+  project_members           project_members[]
+  project_sprints           project_sprints[]
+  project_stages            project_stages[]
+  organizations             organizations?             @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_projects_org")
+  projects                  projects?                  @relation("projectsToprojects", fields: [parent_project_id], references: [id], onUpdate: NoAction, map: "fk_projects_parent_project")
+  other_projects            projects[]                 @relation("projectsToprojects")
+  users                     users                      @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "fk_projects_user")
+  tags                      tags[]
+  task_priorities           task_priorities[]
+  traces                    traces[]
+  user_project_prefs        user_project_prefs[]
+  weave_engine_reasonings   weave_engine_reasonings[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model public_api_request_logs {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  api_token_id    String?        @db.Uuid
+  user_id         String?        @db.Uuid
+  organization_id String?        @db.Uuid
+  http_method     String         @db.VarChar(10)
+  path            String
+  api_version     String         @default("v1") @db.VarChar(10)
+  scopes_required String[]
+  status_code     Int            @db.SmallInt
+  duration_ms     Int?
+  error_code      String?        @db.VarChar(64)
+  request_id      String?        @db.Uuid
+  ip_address      String?        @db.Inet
+  user_agent      String?
+  origin_header   String?
+  referer_header  String?
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  api_tokens      api_tokens?    @relation(fields: [api_token_id], references: [id], onUpdate: NoAction)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onUpdate: NoAction)
+  users           users?         @relation(fields: [user_id], references: [user_id], onUpdate: NoAction)
+}
+
+model sessions {
+  sid         String    @id @db.VarChar
+  sess        Json      @db.Json
+  expire      DateTime  @db.Timestamp(6)
+  user_id     String?   @db.Uuid
+  ip_address  String?   @db.VarChar(45)
+  user_agent  String?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  last_active DateTime? @default(now()) @db.Timestamp(6)
+  api_type    String?   @db.VarChar(20)
+  users       users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expire], map: "idx_sessions_expire")
+  @@index([last_active], map: "idx_sessions_last_active")
+  @@index([user_id], map: "idx_sessions_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model subscriptions {
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  subscriber_type          String
+  subscriber_id            String    @db.Uuid
+  plan_id                  String    @db.Uuid
+  status                   String
+  provider                 String    @default("internal") @db.VarChar(30)
+  provider_customer_id     String?
+  provider_subscription_id String?
+  current_period_start     DateTime  @db.Timestamptz(6)
+  current_period_end       DateTime  @db.Timestamptz(6)
+  cancel_at_period_end     Boolean   @default(false)
+  canceled_at              DateTime? @db.Timestamptz(6)
+  trial_start              DateTime? @db.Timestamptz(6)
+  trial_end                DateTime? @db.Timestamptz(6)
+  metadata                 Json      @default("{}")
+  created_at               DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime  @default(now()) @db.Timestamptz(6)
+  plans                    plans     @relation(fields: [plan_id], references: [plan_id], onUpdate: NoAction)
+
+  @@unique([subscriber_type, subscriber_id], map: "uq_subscriptions_subscriber")
+  @@index([subscriber_type, subscriber_id, status, updated_at(sort: Desc)], map: "idx_subscriptions_lookup")
+}
+
+model system_settings {
+  id                Int       @id @default(autoincrement())
+  storage_config    Json?     @default("{}")
+  smtp_config       Json?     @default("{}")
+  oauth_config      Json?     @default("{}")
+  ai_global_config  Json?     @default("{}")
+  instance_branding Json?     @default("{}")
+  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tags {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String        @db.Uuid
+  user_id         String        @db.Uuid
+  project_id      String?       @db.Uuid
+  name            String        @db.VarChar(30)
+  color_hex       String?       @default("#E2E8F0") @db.VarChar(7)
+  deleted         Boolean       @default(false)
+  deleted_at      DateTime?     @db.Timestamptz(6)
+  deleted_by      String?       @db.Uuid
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tags_org")
+  projects        projects?     @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "fk_tags_project")
+  users           users         @relation(fields: [user_id], references: [user_id], onDelete: SetNull, onUpdate: NoAction, map: "fk_tags_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model task_priorities {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String?        @db.Uuid
+  user_id         String         @db.Uuid
+  project_id      String         @db.Uuid
+  name            String         @db.VarChar(30)
+  color_hex       String?        @default("#808080") @db.VarChar(7)
+  sort_order      Int            @default(0)
+  is_active       Boolean        @default(true)
+  deleted         Boolean        @default(false)
+  deleted_at      DateTime?      @db.Timestamptz(6)
+  deleted_by      String?        @db.Uuid
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime       @default(now()) @db.Timestamptz(6)
+  notes           notes[]
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_task_priorities_org")
+  projects        projects       @relation(fields: [project_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_task_priorities_project")
+  users           users          @relation(fields: [user_id], references: [user_id], onDelete: SetNull, onUpdate: NoAction, map: "fk_task_priorities_user")
+}
+
+model tokens {
+  token_id       BigInt          @id @default(autoincrement())
+  user_id        String          @db.Uuid
+  token          String          @db.VarChar(255)
+  type           token_type_enum
+  code           String?         @db.VarChar(20)
+  data_to_update Json?           @default("{}")
+  active         Boolean         @default(true)
+  deleted        Boolean         @default(false)
+  deleted_at     DateTime?       @db.Timestamptz(6)
+  created_at     DateTime        @default(now()) @db.Timestamptz(6)
+  expires_at     DateTime        @db.Timestamptz(6)
+  users          users           @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tokens_user")
+
+  @@index([user_id, type, active], map: "idx_tokens_lookup")
+}
+
+model usage_events {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id      String      @unique @db.Uuid
+  plan_usage_id String      @db.Uuid
+  operation     String
+  payload       Json        @default("{}")
+  processed_at  DateTime    @default(now()) @db.Timestamptz(6)
+  plan_usages   plan_usages @relation(fields: [plan_usage_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([plan_usage_id, processed_at(sort: Desc)], map: "idx_usage_events_usage_id")
+}
+
+model user_logs {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String            @db.Uuid
+  log_type   user_log_category
+  log        Json?
+  deleted    Boolean           @default(false)
+  deleted_at DateTime?         @db.Timestamptz(6)
+  created_at DateTime          @default(now()) @db.Timestamptz(6)
+  users      users             @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "user_logs_user_fk")
+
+  @@index([created_at], map: "idx_user_logs_created_at")
+  @@index([user_id], map: "idx_user_logs_user_id")
+}
+
+model user_oauth_tokens {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String              @db.Uuid
+  provider      oauth_provider_enum @default(GOOGLE)
+  access_token  String
+  refresh_token String?
+  expires_at    DateTime?           @db.Timestamptz(6)
+  deleted       Boolean             @default(false)
+  deleted_at    DateTime?           @db.Timestamptz(6)
+  created_at    DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?           @db.Timestamptz(6)
+  users         users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_oauth_tokens_user")
+}
+
+model user_project_prefs {
+  user_id    String   @db.Uuid
+  project_id String   @db.Uuid
+  prefs      Json     @default("{}")
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  projects   projects @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, project_id])
+  @@index([project_id], map: "idx_user_project_prefs_project")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model users {
+  user_id                                                 String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                                                    String                      @db.VarChar(255)
+  email                                                   String                      @unique @db.VarChar(255)
+  username                                                String                      @unique @db.VarChar(50)
+  password                                                String                      @db.VarChar(255)
+  avatar_url                                              String?
+  auth_with_google                                        Boolean                     @default(false)
+  google_id                                               String?                     @unique @db.VarChar(255)
+  auth_with_github                                        Boolean                     @default(false)
+  github_id                                               String?                     @unique @db.VarChar(255)
+  theme_mode                                              theme_mode_pattern          @default(DARK)
+  phone_number                                            String?                     @unique @db.VarChar(20)
+  birth_date                                              DateTime?                   @db.Date
+  private_profile                                         Boolean                     @default(false)
+  timezone                                                String?                     @db.VarChar(100)
+  email_verified                                          Boolean                     @default(false)
+  email_verified_at                                       DateTime?                   @db.Timestamptz(6)
+  last_login                                              DateTime?                   @db.Timestamptz(6)
+  organization_id                                         String?                     @db.Uuid
+  plan_id                                                 String?                     @db.Uuid
+  user_preference                                         Json                        @default("{}")
+  deleted                                                 Boolean                     @default(false)
+  deleted_at                                              DateTime?                   @db.Timestamptz(6)
+  created_at                                              DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                              DateTime                    @default(now()) @db.Timestamptz(6)
+  status                                                  user_status_enum            @default(ACTIVE)
+  auth_with_microsoft                                     Boolean?                    @default(false)
+  microsoft_id                                            String?
+  public_user_id                                          String                      @unique(map: "users_public_user_id_idx")
+  auth_with_saml                                          Boolean?                    @default(false)
+  ai_artifacts                                            ai_artifacts[]
+  ai_chat_messages                                        ai_chat_messages[]
+  ai_chat_sessions                                        ai_chat_sessions[]
+  ai_user_agent                                           ai_user_agent[]
+  api_token_usage_logs                                    api_token_usage_logs[]
+  api_tokens                                              api_tokens[]
+  calendar_event_invites                                  calendar_event_invites[]
+  calendar_events                                         calendar_events[]
+  google_calendar_webhooks                                google_calendar_webhooks[]
+  jobs                                                    jobs[]
+  note_blocks                                             note_blocks[]
+  note_collaborators_note_collaborators_removed_byTousers note_collaborators[]        @relation("note_collaborators_removed_byTousers")
+  note_collaborators_note_collaborators_user_idTousers    note_collaborators[]        @relation("note_collaborators_user_idTousers")
+  notes                                                   notes[]
+  notes_comments                                          notes_comments[]
+  notes_short_backups                                     notes_short_backups[]
+  notifications_notifications_actor_idTousers             notifications[]             @relation("notifications_actor_idTousers")
+  notifications_notifications_user_idTousers              notifications[]             @relation("notifications_user_idTousers")
+  organization_area_members                               organization_area_members[]
+  organization_areas_organization_areas_created_byTousers organization_areas[]        @relation("organization_areas_created_byTousers")
+  organization_areas_organization_areas_deleted_byTousers organization_areas[]        @relation("organization_areas_deleted_byTousers")
+  organization_areas_organization_areas_updated_byTousers organization_areas[]        @relation("organization_areas_updated_byTousers")
+
+  organization_members_organization_members_user_idTousers                                    organization_members[]                @relation("organization_members_user_idTousers")
+  organization_members_organization_members_invited_byTousers                                 organization_members[]                @relation("organization_members_invited_byTousers")
+  organization_members_organization_members_removed_byTousers                                 organization_members[]                @relation("organization_members_removed_byTousers")
+  organization_slack_integrations                                                             organization_slack_integrations[]
+  organizations_organizations_user_idTousers                                                  organizations[]                       @relation("organizations_user_idTousers")
+  project_ai_report_configs                                                                   project_ai_report_configs[]
+  project_members_project_members_added_byTousers                                             project_members[]                     @relation("project_members_added_byTousers")
+  project_members_project_members_user_idTousers                                              project_members[]                     @relation("project_members_user_idTousers")
+  projects                                                                                    projects[]
+  public_api_request_logs                                                                     public_api_request_logs[]
+  sessions                                                                                    sessions[]
+  tags                                                                                        tags[]
+  task_priorities                                                                             task_priorities[]
+  tokens                                                                                      tokens[]
+  traces                                                                                      traces[]
+  user_logs                                                                                   user_logs[]
+  user_oauth_tokens                                                                           user_oauth_tokens[]
+  user_project_prefs                                                                          user_project_prefs[]
+  organizations_users_organization_idToorganizations                                          organizations?                        @relation("users_organization_idToorganizations", fields: [organization_id], references: [id], onUpdate: NoAction)
+  weave_engine_reasoning_action_items_weave_engine_reasoning_action_items_assigned_toTousers  weave_engine_reasoning_action_items[] @relation("weave_engine_reasoning_action_items_assigned_toTousers")
+  weave_engine_reasoning_action_items_weave_engine_reasoning_action_items_completed_byTousers weave_engine_reasoning_action_items[] @relation("weave_engine_reasoning_action_items_completed_byTousers")
+  weave_engine_reasoning_interactions                                                         weave_engine_reasoning_interactions[]
+  weave_engine_reasonings                                                                     weave_engine_reasonings[]
+
+  @@index([deleted], map: "idx_users_deleted")
+  @@index([organization_id], map: "idx_users_organization_id")
+  @@index([plan_id], map: "idx_users_plan_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model weave_engine_reasoning_action_items {
+  id                                                            String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reasoning_id                                                  String                  @db.Uuid
+  note_id                                                       String?                 @db.Uuid
+  position                                                      Int                     @default(0) @db.SmallInt
+  content                                                       String
+  priority                                                      String?                 @db.VarChar(20)
+  assigned_to                                                   String?                 @db.Uuid
+  is_completed                                                  Boolean                 @default(false)
+  completed_at                                                  DateTime?               @db.Timestamptz(6)
+  completed_by                                                  String?                 @db.Uuid
+  deleted                                                       Boolean                 @default(false)
+  deleted_at                                                    DateTime?               @db.Timestamptz(6)
+  created_at                                                    DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                                    DateTime                @default(now()) @db.Timestamptz(6)
+  users_weave_engine_reasoning_action_items_assigned_toTousers  users?                  @relation("weave_engine_reasoning_action_items_assigned_toTousers", fields: [assigned_to], references: [user_id], onUpdate: NoAction, map: "fk_reasoning_action_assigned_to")
+  users_weave_engine_reasoning_action_items_completed_byTousers users?                  @relation("weave_engine_reasoning_action_items_completed_byTousers", fields: [completed_by], references: [user_id], onUpdate: NoAction, map: "fk_reasoning_action_completed_by")
+  notes                                                         notes?                  @relation(fields: [note_id], references: [id], onUpdate: NoAction, map: "fk_reasoning_action_note")
+  weave_engine_reasonings                                       weave_engine_reasonings @relation(fields: [reasoning_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reasoning_action_reasoning")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model weave_engine_reasoning_contents {
+  id                      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reasoning_id            String                  @unique @db.Uuid
+  output_markdown         String
+  output_raw              Json?
+  output_metadata         Json                    @default("{}")
+  input_context           Json                    @default("{}")
+  input_prompt            String?
+  input_system_message    String?
+  created_at              DateTime                @default(now()) @db.Timestamptz(6)
+  weave_engine_reasonings weave_engine_reasonings @relation(fields: [reasoning_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reasoning_content_reasoning")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model weave_engine_reasoning_interactions {
+  id                      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reasoning_id            String                  @db.Uuid
+  user_id                 String                  @db.Uuid
+  is_read                 Boolean                 @default(false)
+  read_at                 DateTime?               @db.Timestamptz(6)
+  is_dismissed            Boolean                 @default(false)
+  dismissed_at            DateTime?               @db.Timestamptz(6)
+  is_pinned               Boolean                 @default(false)
+  pinned_at               DateTime?               @db.Timestamptz(6)
+  feedback                String?                 @db.VarChar(20)
+  feedback_at             DateTime?               @db.Timestamptz(6)
+  created_at              DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                @default(now()) @db.Timestamptz(6)
+  weave_engine_reasonings weave_engine_reasonings @relation(fields: [reasoning_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reasoning_interaction_reasoning")
+  users                   users                   @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, map: "fk_reasoning_interaction_user")
+
+  @@unique([reasoning_id, user_id], map: "uq_reasoning_interaction_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model weave_engine_reasonings {
+  id                                  String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id                          String                                @db.Uuid
+  sprint_id                           String                                @db.Uuid
+  report_config_id                    String?                               @db.Uuid
+  organization_id                     String?                               @db.Uuid
+  triggered_by                        String                                @db.Uuid
+  reasoning_type                      weave_engine_reasoning_type
+  title                               String                                @db.VarChar(255)
+  provider_used                       String?                               @db.VarChar(50)
+  model_used                          String?                               @db.VarChar(100)
+  safety_label                        String                                @default("safe") @db.VarChar(20)
+  safety_reason                       String?
+  safety_blocked                      Boolean                               @default(false)
+  status                              String                                @default("completed") @db.VarChar(20)
+  error_message                       String?
+  processing_time_ms                  Int?
+  recipient_scope                     String                                @default("all_members") @db.VarChar(20)
+  custom_recipients                   Json                                  @default("[]")
+  action_items_count                  Int                                   @default(0) @db.SmallInt
+  deleted                             Boolean                               @default(false)
+  deleted_at                          DateTime?                             @db.Timestamptz(6)
+  expires_at                          DateTime?                             @db.Timestamptz(6)
+  created_at                          DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime                              @default(now()) @db.Timestamptz(6)
+  weave_engine_reasoning_action_items weave_engine_reasoning_action_items[]
+  weave_engine_reasoning_contents     weave_engine_reasoning_contents?
+  weave_engine_reasoning_interactions weave_engine_reasoning_interactions[]
+  organizations                       organizations?                        @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reasoning_organization")
+  projects                            projects                              @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reasoning_project")
+  project_ai_report_configs           project_ai_report_configs?            @relation(fields: [report_config_id], references: [id], onUpdate: NoAction, map: "fk_reasoning_report_config")
+  project_sprints                     project_sprints                       @relation(fields: [sprint_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reasoning_sprint")
+  users                               users                                 @relation(fields: [triggered_by], references: [user_id], onUpdate: NoAction, map: "fk_reasoning_triggered_by")
+}
+
+model organization_tracing_settings {
+  organization_id String        @id @db.Uuid
+  enabled         Boolean       @default(false)
+  retention_days  Int?
+  export_target   String?       @default("local") @db.VarChar(50)
+  otlp_endpoint   String?       @db.VarChar(255)
+  otlp_headers    Json?         @default("{}")
+  updated_at      DateTime?     @default(now()) @db.Timestamptz(6)
+  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model spans {
+  id                String        @id @db.Uuid
+  trace_id          String        @db.Uuid
+  parent_span_id    String?       @db.Uuid
+  organization_id   String        @db.Uuid
+  name              String        @db.VarChar(255)
+  span_type         String        @db.VarChar(50)
+  start_time        DateTime      @db.Timestamptz(6)
+  end_time          DateTime?     @db.Timestamptz(6)
+  status            String?       @default("running") @db.VarChar(50)
+  input             Json?         @default("{}")
+  output            Json?         @default("{}")
+  error_message     String?
+  prompt_tokens     Int?          @default(0)
+  completion_tokens Int?          @default(0)
+  model             String?       @db.VarChar(255)
+  metadata          Json?         @default("{}")
+  created_at        DateTime?     @default(now()) @db.Timestamptz(6)
+  organizations     organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  spans             spans?        @relation("spansTospans", fields: [parent_span_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_spans       spans[]       @relation("spansTospans")
+  traces            traces        @relation(fields: [trace_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([organization_id], map: "idx_spans_organization_id")
+  @@index([parent_span_id], map: "idx_spans_parent_span_id")
+  @@index([trace_id], map: "idx_spans_trace_id")
+}
+
+model traces {
+  id              String        @id @db.Uuid
+  organization_id String        @db.Uuid
+  user_id         String?       @db.Uuid
+  project_id      String?       @db.Uuid
+  session_id      String?       @db.VarChar(255)
+  name            String        @db.VarChar(255)
+  start_time      DateTime      @db.Timestamptz(6)
+  end_time        DateTime?     @db.Timestamptz(6)
+  status          String?       @default("running") @db.VarChar(50)
+  total_tokens    Int?          @default(0)
+  total_cost      Decimal?      @default(0.000000) @db.Decimal(10, 6)
+  metadata        Json?         @default("{}")
+  created_at      DateTime?     @default(now()) @db.Timestamptz(6)
+  spans           spans[]
+  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  projects        projects?     @relation(fields: [project_id], references: [id], onUpdate: NoAction)
+  users           users?        @relation(fields: [user_id], references: [user_id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_traces_created_at")
+  @@index([organization_id], map: "idx_traces_organization_id")
+}
+
+enum billing_cycle_enum {
+  MONTHLY
+  YEARLY
+  LIFETIME
+}
+
+enum domain_verification_status {
+  PENDING
+  VERIFIED
+  FAILED
+  EXPIRED
+}
+
+enum invite_role {
+  ORGANIZER
+  REQUIRED
+  OPTIONAL
+  RESOURCE
+}
+
+enum invite_status {
+  PENDING
+  ACCEPTED
+  DECLINED
+  TENTATIVE
+}
+
+enum user_status_enum {
+  ACTIVE
+  SUSPENDED
+  PENDING_INVITE
+}
+
+enum notes_status {
+  VISIBLE
+  SECURE
+  ARCHIVED
+}
+
+enum notification_entity_type_enum {
+  ORGANIZATION
+  PROJECT
+  NOTE
+  JOB
+  WEAVE_AI     @map("WEAVE-AI")
+}
+
+enum notification_type_enum {
+  SYSTEM_ALERT
+  SYSTEM_UPDATE
+  ORGANIZATION_INVITE
+  ORGANIZATION_ACTION
+  PROJECT_INVITE
+  PROJECT_ACTION
+  NOTE_SHARED
+  NOTE_ACTION
+  AI_ACTION
+  JOB_ACTION
+}
+
+enum oauth_provider_enum {
+  GOOGLE
+  GITHUB
+  MICROSOFT
+  APPLE
+}
+
+enum organization_member_status_enum {
+  ACTIVE
+  PENDING
+  INVITED
+  SUSPENDED
+  REMOVED
+}
+
+enum organization_status {
+  ACTIVE
+  SUSPENDED
+  PAST_DUE
+  PENDING
+}
+
+/// This enum is commented in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+enum organization_workspace_role_enum {
+  SUPER_ADMIN
+  ADMIN
+  BILLING_MANAGER
+  MEMBER
+  GUEST
+}
+
+enum project_member_role_enum {
+  PROJECT_MANAGER
+  CONTRIBUTOR
+  COMMENTER
+  VIEWER
+}
+
+enum project_methodology_enum {
+  KANBAN
+  SCRUM
+}
+
+enum project_status {
+  OPEN
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum project_visibility_enum {
+  PRIVATE
+  ORG_WIDE
+  PUBLIC
+}
+
+enum sync_status {
+  PENDING
+  SYNCED
+  FAILED
+  OUT_OF_SYNC
+}
+
+enum system_users_roles {
+  SUPER_ADMIN
+  MANAGER
+  SUPPORT
+  READ_ONLY
+}
+
+enum theme_mode_pattern {
+  DARK
+  LIGHT
+}
+
+enum token_type_enum {
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+  ACCESS
+  DELETE_USER_ACCOUNT
+  BACKUP_DOWNLOAD
+}
+
+enum user_log_category {
+  AUTH_LOGIN
+  AUTH_LOGOUT
+  PROFILE_UPDATE
+  SECURITY_CHANGE
+  DATA_EXPORT
+  SYSTEM_ERROR
+}
+
+enum weave_engine_reasoning_type {
+  sprint_kickoff
+  daily_standup
+  sprint_review
+  deadline_alert
+  analysis
+}

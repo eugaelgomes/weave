@@ -1,0 +1,701 @@
+import { apiClient, handleResponse } from "../api-methods";
+import { API_ENDPOINTS } from "../api-methods";
+import type { ProjectStatus } from "@/app/_utils/db-enums";
+import {
+  AckSchema,
+  CollaboratorsListSchema,
+  ManageCollaboratorsResponseSchema,
+  ManageNotesResponseSchema,
+  MessageOnlySchema,
+  NoteStageUpdateResponseSchema,
+  PatchStageEnvelopeSchema,
+  PostCollaboratorResponseSchema,
+  ProjectDashboardStatsSchema,
+  ProjectViewPreferenceSchema,
+  ProjectNotesListSchema,
+  ProjectSchema,
+  ProjectsResponseSchema,
+  ProjectStagesListSchema,
+  TaskMutationResponseSchema,
+  UpdateProjectEnvelopeSchema,
+} from "./projects.schema";
+
+export interface ProjectProperties {
+  // UI & Design
+  color?: string | null;
+  /** Emoji (legacy) or image object from storage: `{ name, path, type, size }`. */
+  icon?: string | null | { name: string; path: string; type: string; size: string };
+  tags?: string[];
+
+  // Gestão de Tempo e Prioridade
+  priority?: "alta" | "media" | "baixa" | null;
+  complexity?: "alta" | "media" | "baixa" | null;
+  estimated_time?: string | null;
+  progress?: number;
+
+  // Metadados de Metodologias (Scrum/Kanban)
+  type?: "custom" | "continuous_flow" | "iterative" | string;
+  wip_limit_enabled?: boolean;
+  lead_time_target_days?: number | null;
+  sprint_duration_weeks?: number | null;
+  estimation_type?: string | null;
+}
+
+export interface ProjectStageProperties {
+  is_done: boolean;
+  wip_limit: number | null;
+  description: string | null;
+  auto_assign_to_creator: boolean;
+}
+
+export interface ProjectStage {
+  id: string;
+  project_id: string;
+  name: string;
+  position: number;
+  color: string | null;
+  properties: ProjectStageProperties;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectOwner {
+  id: string;
+  username: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+}
+
+export interface ProjectCollaborator {
+  user_id: string;
+  name?: string;
+  username: string;
+  email: string;
+  avatar_url?: string | null;
+  permission?: string;
+  added_at: string;
+  removed?: boolean;
+}
+
+export interface ProjectNote {
+  id: string;
+  title: string;
+  description?: string;
+  tags?: string[];
+  status?: string;
+  project_id?: string | null;
+  project_stage_id?: string | null;
+  parent_id?: string | null;
+  properties?: Record<string, unknown>;
+  priority_id?: string | null;
+  due_date?: string | null;
+  comments_count?: number;
+  attachments_count?: number;
+  created_by?: {
+    user_id: string;
+    username: string;
+  };
+  collaborators?: Array<{
+    user_id: string;
+    username: string;
+    permission?: string;
+    avatar_url?: string | null;
+  }>;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DueDatePreset = "all" | "today" | "week" | "month";
+export type CreatedDatePreset = "all" | "today" | "week" | "month";
+
+export interface ProjectNotesListFilters {
+  search?: string;
+  priority_id?: string[];
+  tags?: string[];
+  stage_id?: string[];
+  created_by?: string[];
+  collaborator_user_id?: string[];
+  due_from?: string;
+  due_to?: string;
+  created_from?: string;
+  created_to?: string;
+  sort?: string;
+}
+
+function startOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function endOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+}
+
+export function datePresetToIsoRange(
+  preset: DueDatePreset | CreatedDatePreset
+): { from: string; to: string } | null {
+  if (preset === "all") return null;
+  const now = new Date();
+
+  switch (preset) {
+    case "today":
+      return {
+        from: startOfLocalDay(now).toISOString(),
+        to: endOfLocalDay(now).toISOString(),
+      };
+    case "week": {
+      const day = now.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diffToMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return {
+        from: startOfLocalDay(monday).toISOString(),
+        to: endOfLocalDay(sunday).toISOString(),
+      };
+    }
+    case "month":
+      return {
+        from: startOfLocalDay(new Date(now.getFullYear(), now.getMonth(), 1)).toISOString(),
+        to: endOfLocalDay(new Date(now.getFullYear(), now.getMonth() + 1, 0)).toISOString(),
+      };
+    default:
+      return null;
+  }
+}
+
+function buildNotesQueryString(filters: ProjectNotesListFilters): string {
+  const params = new URLSearchParams();
+  params.append("page", "1");
+  params.append("limit", "100");
+
+  if (filters.search) params.append("search", filters.search);
+  if (filters.priority_id?.length) params.append("priority_id", filters.priority_id.join(","));
+  if (filters.tags?.length) params.append("tags", filters.tags.join(","));
+  if (filters.stage_id?.length) params.append("stage_id", filters.stage_id.join(","));
+  if (filters.created_by?.length) params.append("created_by", filters.created_by.join(","));
+  if (filters.collaborator_user_id?.length)
+    params.append("collaborator_user_id", filters.collaborator_user_id.join(","));
+  if (filters.due_from) params.append("due_from", filters.due_from);
+  if (filters.due_to) params.append("due_to", filters.due_to);
+  if (filters.created_from) params.append("created_from", filters.created_from);
+  if (filters.created_to) params.append("created_to", filters.created_to);
+  if (filters.sort) params.append("sort", filters.sort);
+
+  return params.toString();
+}
+
+export type NoteStageUpdateResult = {
+  message: string;
+  noteId: string;
+  newStageId?: string | null;
+  notes?: ProjectNote[];
+};
+
+export interface SubProject {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  public_id?: string | null;
+
+  properties?: ProjectProperties;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Project {
+  id: string;
+  user_id: string;
+  org_id?: string | null;
+  parent_project_id?: string | null;
+  public_id?: string | null;
+
+  title: string;
+  description?: string;
+  properties?: ProjectProperties;
+  status: ProjectStatus;
+  methodology: "scrum" | "kanban";
+  created_at: string;
+  updated_at: string;
+  deleted: boolean;
+  active: boolean;
+
+  // Relacionamentos Opcionais
+  owner?: ProjectOwner;
+  collaborators?: ProjectCollaborator[];
+  notes?: ProjectNote[];
+  stages?: ProjectStage[];
+  subprojects?: SubProject[];
+  stages_count?: number;
+  organization?: {
+    id: string;
+    name: string;
+    unique_name?: string | null;
+    logo_url?: string | null;
+  } | null;
+}
+
+export interface ProjectsResponse {
+  projects: Project[];
+}
+
+export interface CreateProjectData {
+  title: string;
+  description?: string;
+  status?: ProjectStatus;
+  methodology?: "scrum" | "kanban";
+  properties?: Omit<ProjectProperties, "progress">;
+  org_id?: string;
+  parent_project_id?: string;
+}
+
+export interface UpdateProjectData {
+  title?: string;
+  description?: string;
+  status?: ProjectStatus;
+  methodology?: "scrum" | "kanban";
+  properties?: Omit<ProjectProperties, "progress">;
+  active?: boolean;
+}
+
+export interface ManageCollaboratorData {
+  action: "add" | "update" | "remove";
+  userId: string;
+  permission?: "admin" | "viewer";
+}
+
+export interface ManageNoteData {
+  action: "add" | "sync" | "remove";
+  noteId: string;
+}
+
+export interface CreateTaskInStageData {
+  title?: string;
+  description?: string;
+  tags?: string[];
+  priority_id?: string | null;
+  due_date?: string | null;
+  collaborator_ids?: string[];
+  properties?: Record<string, unknown>;
+  files?: File[];
+  parent_id?: string | null;
+}
+
+export interface PatchProjectTaskData {
+  title?: string;
+  description?: string;
+  priority_id?: string | null;
+  due_date?: string | null;
+  stage_id?: string | null;
+  parent_id?: string | null;
+  set_tags?: string[];
+  add_tags?: string[];
+  remove_tags?: string[];
+  set_collaborators?: string[];
+  add_collaborators?: string[];
+  remove_collaborators?: string[];
+  remove_file_ids?: string[];
+  properties?: Record<string, unknown>;
+  files?: File[];
+}
+
+/**
+ * Trata propriedades e json arrays que podem vir como string do banco de dados (PostgreSQL)
+ */
+const parseProjectProperties = (project: Project): Project => {
+  if (typeof project.properties === "string") {
+    try {
+      project.properties = JSON.parse(project.properties);
+    } catch {
+      console.warn(`Failed to parse properties for project ${project.id}`);
+    }
+  }
+
+  if (project.stages && Array.isArray(project.stages)) {
+    project.stages = project.stages.map((stage) => {
+      if (typeof stage.properties === "string") {
+        try {
+          stage.properties = JSON.parse(stage.properties);
+        } catch {
+          console.warn(`Failed to parse properties for stage ${stage.id}`);
+        }
+      }
+      return stage;
+    });
+  }
+
+  return project;
+};
+
+// ==========================================
+// API METHODS
+// ==========================================
+
+export const fetchProjects = async (): Promise<Project[]> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS);
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectsResponseSchema.parse(raw);
+  return data.projects.map((p) => parseProjectProperties(p as Project));
+};
+
+export const fetchProjectById = async (projectId: string): Promise<Project> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
+  const raw = await handleResponse<unknown>(response);
+  const project = ProjectSchema.parse(raw);
+  return parseProjectProperties(project as Project);
+};
+
+export const getMyProjectView = async (projectId: string): Promise<"board" | "list"> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS_MY_VIEW_PREF(projectId));
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectViewPreferenceSchema.parse(raw);
+  return data.view;
+};
+
+export const setMyProjectView = async (
+  projectId: string,
+  view: "board" | "list"
+): Promise<"board" | "list"> => {
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_MY_VIEW_PREF(projectId), {
+    view,
+  });
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectViewPreferenceSchema.parse(raw);
+  return data.view;
+};
+
+export const createProject = async (projectData: CreateProjectData): Promise<Project> => {
+  const response = await apiClient.post(API_ENDPOINTS.PROJECTS, projectData);
+  const raw = await handleResponse<unknown>(response);
+  const project = ProjectSchema.parse(raw);
+  return parseProjectProperties(project as Project);
+};
+
+export const updateProject = async (
+  projectId: string,
+  projectData: UpdateProjectData | FormData
+): Promise<Project> => {
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_BY_ID(projectId), projectData);
+  const raw = await handleResponse<unknown>(response);
+  const data = UpdateProjectEnvelopeSchema.parse(raw);
+  return parseProjectProperties(data.project as Project);
+};
+
+export const deleteProject = async (projectId: string): Promise<void> => {
+  const response = await apiClient.delete(API_ENDPOINTS.PROJECTS_BY_ID(projectId));
+  const raw = await handleResponse<unknown>(response);
+  AckSchema.parse(raw ?? {});
+};
+
+const DEFAULT_PROJECT_STAGE_PROPERTIES: ProjectStageProperties = {
+  is_done: false,
+  wip_limit: null,
+  description: null,
+  auto_assign_to_creator: false,
+};
+
+/**
+ * API may return stage.properties as JSON string or object; normalize for {@link ProjectStage}.
+ */
+function parseProjectStagePropertiesFromApi(
+  raw: string | ProjectStageProperties,
+  stageId: string
+): ProjectStageProperties {
+  if (typeof raw !== "string") {
+    return raw;
+  }
+  try {
+    return JSON.parse(raw) as ProjectStageProperties;
+  } catch {
+    console.warn(`Failed to parse properties for stage ${stageId}`);
+    return DEFAULT_PROJECT_STAGE_PROPERTIES;
+  }
+}
+
+/**
+ * Busca as etapas (colunas do Board) de um projeto específico
+ */
+export interface PatchProjectStagePayload {
+  name?: string;
+  position?: number;
+  color?: string | null;
+  properties?: Record<string, unknown>;
+}
+
+export const patchProjectStage = async (
+  projectId: string,
+  stageId: string,
+  updates: PatchProjectStagePayload
+): Promise<ProjectStage> => {
+  const response = await apiClient.patch(
+    API_ENDPOINTS.PROJECTS_STAGE_BY_ID(projectId, stageId),
+    updates
+  );
+  const raw = await handleResponse<unknown>(response);
+  const data = PatchStageEnvelopeSchema.parse(raw);
+  return {
+    ...data.stage,
+    properties: parseProjectStagePropertiesFromApi(data.stage.properties, data.stage.id),
+  };
+};
+
+export interface PostProjectCollaboratorPayload {
+  userId: string;
+  role: string;
+}
+
+export const postProjectCollaborator = async (
+  projectId: string,
+  body: PostProjectCollaboratorPayload
+): Promise<{ message?: string; collaborators?: unknown[] }> => {
+  const response = await apiClient.post(API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId), body);
+  const raw = await handleResponse<unknown>(response);
+  return PostCollaboratorResponseSchema.parse(raw);
+};
+
+export const fetchProjectStages = async (projectId: string): Promise<ProjectStage[]> => {
+  const endpoint = `${API_ENDPOINTS.PROJECTS_BY_ID(projectId)}/stages`;
+  const response = await apiClient.get(endpoint);
+
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectStagesListSchema.parse(raw);
+
+  return data.stages.map((stage): ProjectStage => ({
+    ...stage,
+    properties: parseProjectStagePropertiesFromApi(stage.properties, stage.id),
+  }));
+};
+
+// --- COLABORADORES ---
+
+export const fetchProjectCollaborators = async (
+  projectId: string
+): Promise<ProjectCollaborator[]> => {
+  const response = await apiClient.get(API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId));
+  const raw = await handleResponse<unknown>(response);
+  const data = CollaboratorsListSchema.parse(raw);
+  return data.collaborators as ProjectCollaborator[];
+};
+
+export const manageCollaborator = async (
+  projectId: string,
+  collaboratorData: ManageCollaboratorData
+): Promise<ProjectCollaborator[]> => {
+  const response = await apiClient.put(
+    API_ENDPOINTS.PROJECTS_COLLABORATORS(projectId),
+    collaboratorData
+  );
+  const raw = await handleResponse<unknown>(response);
+  const data = ManageCollaboratorsResponseSchema.parse(raw);
+  return (data.collaborators as ProjectCollaborator[]) || [];
+};
+
+// --- NOTAS (CARDS) ---
+
+export const fetchProjectNotes = async (
+  projectId: string,
+  filters?: ProjectNotesListFilters
+): Promise<ProjectNote[]> => {
+  const hasFilters =
+    filters &&
+    Object.values(filters).some((v) =>
+      Array.isArray(v) ? v.length > 0 : v !== undefined && v !== "" && v !== null
+    );
+  let url = API_ENDPOINTS.PROJECTS_NOTES(projectId);
+  if (hasFilters) url += `?${buildNotesQueryString(filters)}`;
+
+  const response = await apiClient.get(url);
+  const raw = await handleResponse<unknown>(response);
+  const data = ProjectNotesListSchema.parse(raw);
+  return data.notes as ProjectNote[];
+};
+
+export const manageProjectNote = async (
+  projectId: string,
+  noteData: ManageNoteData
+): Promise<ProjectNote[]> => {
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_NOTES(projectId), noteData);
+  const raw = await handleResponse<unknown>(response);
+  const data = ManageNotesResponseSchema.parse(raw);
+  return (data.notes as ProjectNote[]) || [];
+};
+
+export const updateProjectNoteStage = async (
+  projectId: string,
+  noteId: string,
+  stageId: string
+): Promise<NoteStageUpdateResult> => {
+  const response = await apiClient.put(API_ENDPOINTS.PROJECTS_NOTE_STAGE(projectId, noteId), {
+    stageId,
+  });
+  const raw = await handleResponse<unknown>(response);
+  return NoteStageUpdateResponseSchema.parse(raw);
+};
+
+export const createTaskInStage = async (
+  projectId: string,
+  stageId: string,
+  taskData: CreateTaskInStageData
+): Promise<ProjectNote[]> => {
+  const formData = new FormData();
+  formData.append("title", (taskData.title ?? "").trim());
+  if (taskData.description !== undefined) formData.append("description", taskData.description);
+  if (taskData.tags !== undefined) formData.append("tags", JSON.stringify(taskData.tags));
+  if (taskData.priority_id !== undefined)
+    formData.append("priority_id", taskData.priority_id ?? "");
+  if (taskData.due_date !== undefined) formData.append("due_date", taskData.due_date ?? "");
+  if (taskData.collaborator_ids !== undefined) {
+    formData.append("collaborator_ids", JSON.stringify(taskData.collaborator_ids));
+  }
+  if (taskData.parent_id !== undefined && taskData.parent_id !== null) {
+    formData.append("parent_id", taskData.parent_id);
+  }
+  if (taskData.properties !== undefined) {
+    formData.append("properties", JSON.stringify(taskData.properties));
+  }
+  if (taskData.files?.length) {
+    taskData.files.forEach((file) => formData.append("files", file));
+  }
+
+  const response = await apiClient.post(
+    API_ENDPOINTS.PROJECTS_STAGE_TASKS(projectId, stageId),
+    formData
+  );
+  const raw = await handleResponse<unknown>(response);
+  const data = TaskMutationResponseSchema.parse(raw);
+  return data.notes as ProjectNote[];
+};
+
+export const patchProjectTask = async (
+  projectId: string,
+  noteId: string,
+  taskData: PatchProjectTaskData
+): Promise<ProjectNote[]> => {
+  const formData = new FormData();
+  if (taskData.title !== undefined) formData.append("title", taskData.title);
+  if (taskData.description !== undefined) formData.append("description", taskData.description);
+  if (taskData.priority_id !== undefined)
+    formData.append("priority_id", taskData.priority_id ?? "");
+  if (taskData.due_date !== undefined) formData.append("due_date", taskData.due_date ?? "");
+  if (taskData.stage_id !== undefined) formData.append("stage_id", taskData.stage_id ?? "");
+  if (taskData.parent_id !== undefined) formData.append("parent_id", taskData.parent_id ?? "");
+  if (taskData.set_tags !== undefined)
+    formData.append("set_tags", JSON.stringify(taskData.set_tags));
+  if (taskData.add_tags !== undefined)
+    formData.append("add_tags", JSON.stringify(taskData.add_tags));
+  if (taskData.remove_tags !== undefined)
+    formData.append("remove_tags", JSON.stringify(taskData.remove_tags));
+  if (taskData.set_collaborators !== undefined) {
+    formData.append("set_collaborators", JSON.stringify(taskData.set_collaborators));
+  }
+  if (taskData.add_collaborators !== undefined) {
+    formData.append("add_collaborators", JSON.stringify(taskData.add_collaborators));
+  }
+  if (taskData.remove_collaborators !== undefined) {
+    formData.append("remove_collaborators", JSON.stringify(taskData.remove_collaborators));
+  }
+  if (taskData.remove_file_ids !== undefined) {
+    formData.append("remove_file_ids", JSON.stringify(taskData.remove_file_ids));
+  }
+  if (taskData.properties !== undefined) {
+    formData.append("properties", JSON.stringify(taskData.properties));
+  }
+  if (taskData.files?.length) {
+    taskData.files.forEach((file) => formData.append("files", file));
+  }
+
+  const response = await apiClient.patch(
+    API_ENDPOINTS.PROJECTS_TASK_BY_ID(projectId, noteId),
+    formData
+  );
+  const raw = await handleResponse<unknown>(response);
+  const data = TaskMutationResponseSchema.parse(raw);
+  return data.notes as ProjectNote[];
+};
+
+// --- STAGE DELETE ---
+
+export const deleteProjectStage = async (
+  projectId: string,
+  stageId: string
+): Promise<{ message: string }> => {
+  const response = await apiClient.delete(API_ENDPOINTS.PROJECTS_STAGE_BY_ID(projectId, stageId));
+  const raw = await handleResponse<unknown>(response);
+  return MessageOnlySchema.parse(raw);
+};
+
+// --- STATS ---
+
+export interface ProjectDashboardStats {
+  overview: {
+    total: number;
+    owned: number;
+    collaborating: number;
+    active: number;
+    by_status: {
+      OPEN: number;
+      IN_PROGRESS: number;
+      PAUSED: number;
+      COMPLETED: number;
+      ARCHIVED: number;
+    };
+  };
+  methodology: {
+    kanban: number;
+    scrum: number;
+  };
+  progress: {
+    average: number;
+    near_completion: number;
+    not_started: number;
+  };
+  notes: {
+    total: number;
+    VISIBLE: number;
+    ARCHIVED: number;
+    SECURE: number;
+  };
+  tasks: {
+    total: number;
+    done: number;
+    pending: number;
+    completion_rate: number;
+  };
+  filters_applied: {
+    status: string | null;
+    methodology: string | null;
+    from: string | null;
+    to: string | null;
+    parent_only: boolean;
+  };
+}
+
+export interface ProjectStatsFilters {
+  status?: string;
+  methodology?: string;
+  from?: string;
+  to?: string;
+  parent_only?: boolean;
+}
+
+export const fetchProjectsStats = async (
+  filters: ProjectStatsFilters = {}
+): Promise<ProjectDashboardStats> => {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.methodology) params.set("methodology", filters.methodology);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  if (filters.parent_only !== undefined) params.set("parent_only", String(filters.parent_only));
+
+  const query = params.toString();
+  const endpoint = query
+    ? `${API_ENDPOINTS.PROJECTS_STATS}?${query}`
+    : API_ENDPOINTS.PROJECTS_STATS;
+
+  const response = await apiClient.get(endpoint);
+  const raw = await handleResponse<unknown>(response);
+  return ProjectDashboardStatsSchema.parse(raw) as ProjectDashboardStats;
+};

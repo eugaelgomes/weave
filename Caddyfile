@@ -1,4 +1,4 @@
-apis.weavenotes.app, apis.theweave.tech {
+{$API_DOMAIN:localhost} {
     reverse_proxy server:8080 {
         lb_policy ip_hash
     }

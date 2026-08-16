@@ -1,0 +1,25 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build & TypeScript
+dist/
+build/
+*.tsbuildinfo
+
+# Logs & Temp
+*.log
+logs/
+temp/
+tmp/
+coverage/
+.nyc_output/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,57 @@
+{
+  "name": "weave-worker",
+  "version": "1.0.0",
+  "description": "Background worker for Weave Notes API",
+  "license": "ISC",
+  "author": {
+    "name": "Gael Renê Gomes",
+    "email": "hello@gaelgomes.dev",
+    "url": "https://gaelgomes.dev"
+  },
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon",
+    "dev:doppler": "doppler run --project theweave --config dev -- npm run dev",
+    "start:doppler": "doppler run --project theweave --config dev -- npm start",
+    "lint": "eslint \"src/**/*.js\"",
+    "lint:fix": "eslint \"src/**/*.js\" --fix",
+    "format": "prettier --write \"src/**/*.js\"",
+    "format:check": "prettier --check \"src/**/*.js\"",
+    "check": "npm run lint",
+    "test": "echo \"No tests yet\" && exit 0",
+    "diagnose:embeddings": "node scripts/diagnose-embeddings.js"
+  },
+  "keywords": [
+    "worker",
+    "background-jobs",
+    "weave-notes",
+    "job-processor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eugaelgomes/weave-notes.git"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.892.0",
+    "@sentry/node": "^10.53.1",
+    "@sentry/profiling-node": "^10.53.1",
+    "@theweave/shared": "*",
+    "dotenv": "^16.6.1",
+    "googleapis": "^173.0.0",
+    "ioredis": "^5.10.1",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.16.3",
+    "resend": "^6.11.0",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "eslint": "^9.9.0",
+    "eslint-plugin-sort-keys-fix": "^1.1.2",
+    "globals": "^15.9.0",
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.3"
+  }
+}
