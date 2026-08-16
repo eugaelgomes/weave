@@ -2,8 +2,7 @@
  * Shared helpers for list endpoints: pagination, sorting, envelopes, CSV parsing.
  */
 
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * @param {unknown} value
@@ -142,17 +141,8 @@ function parsePagination(page, limit, opts = {}) {
  * @param {string} params.legacyKey - e.g. "projects", "notes"
  * @returns {Record<string, unknown>}
  */
-function buildListEnvelope({
-  data,
-  page,
-  limit,
-  total,
-  sort,
-  filters,
-  legacyKey,
-}) {
-  const totalPages =
-    limit > 0 ? Math.max(1, Math.ceil(Number(total) / limit)) : 1;
+function buildListEnvelope({ data, page, limit, total, sort, filters, legacyKey }) {
+  const totalPages = limit > 0 ? Math.max(1, Math.ceil(Number(total) / limit)) : 1;
   const hasNext = page * limit < Number(total);
 
   return {

@@ -40,8 +40,7 @@ class NotesExportService {
     }
 
     // _validateNoteAccess does not populate blocks, so we get them manually
-    const blocks =
-      await NotesService.notesRepository.findNoteBlocksTreeByNoteId(noteId);
+    const blocks = await NotesService.notesRepository.findNoteBlocksTreeByNoteId(noteId);
 
     const dataForPDF = {
       ...note,

@@ -1,10 +1,8 @@
 /** @type {Record<string, string>} */
 module.exports = {
   "aiReport.cta": "Ver relatório completo",
-  "aiReport.footer":
-    "Este relatório foi gerado automaticamente pela IA do Weave.",
-  "aiReport.intro":
-    "O Weave Engine gerou um novo relatório para o projeto {projectTitle}.",
+  "aiReport.footer": "Este relatório foi gerado automaticamente pela IA do Weave.",
+  "aiReport.intro": "O Weave Engine gerou um novo relatório para o projeto {projectTitle}.",
   "aiReport.preheader": "Novo {reportType} para {projectTitle}",
   "aiReport.sprintSuffix": " (Sprint {sprintNumber})",
   "backup.cta": "Baixar backup",
@@ -12,8 +10,7 @@ module.exports = {
     "Este link expira em {hours} hora(s) ({expiresLabel}) e pode ser usado uma única vez.",
   "backup.intro1": "Seu backup de dados foi processado com sucesso.",
   "backup.intro2": "Use o botão abaixo para baixar o arquivo.",
-  "backup.outro":
-    "Mantenha este arquivo em segurança e faça o download em um local confiável.",
+  "backup.outro": "Mantenha este arquivo em segurança e faça o download em um local confiável.",
   "backup.preheader": "Seu backup está pronto para download.",
   "backup.subject": "Seu backup está pronto para download",
   "backup.subtitle": "Exportação de dados",
@@ -21,8 +18,7 @@ module.exports = {
   "calendarInvite.cta": "Entrar no Google Meet",
   "calendarInvite.description": "Descrição:",
   "calendarInvite.end": "Fim:",
-  "calendarInvite.footer":
-    "Esta é uma notificação automática do Weave Calendar.",
+  "calendarInvite.footer": "Esta é uma notificação automática do Weave Calendar.",
   "calendarInvite.info": "Aqui estão os detalhes do evento agendado.",
   "calendarInvite.intro1": "Você tem um evento agendado: {eventTitle}.",
   "calendarInvite.intro2": "Por favor, confira os detalhes abaixo.",
@@ -36,21 +32,17 @@ module.exports = {
   "calendarInvite.title": "Detalhes do Evento do Calendário",
   "collab.cta": "Abrir nota",
   "collab.intro": "{ownerName} adicionou você como colaborador(a).",
-  "collab.outro":
-    "Se você não esperava este convite de {ownerName}, pode ignorar este e-mail.",
-  "collab.permission":
-    "Permissão de colaboração ativa para visualizar e editar.",
+  "collab.outro": "Se você não esperava este convite de {ownerName}, pode ignorar este e-mail.",
+  "collab.permission": "Permissão de colaboração ativa para visualizar e editar.",
   "collab.preheader": "Você foi adicionado(a) como colaborador de uma nota.",
   "collab.subject": "Nova colaboração: {noteName}",
   "collab.subtitle": "Compartilhamento de nota",
   "collab.title": "Nova colaboração em nota",
-  "common.autoFooter":
-    "Este e-mail foi enviado automaticamente. Por favor, não responda.",
+  "common.autoFooter": "Este e-mail foi enviado automaticamente. Por favor, não responda.",
   "common.brandName": "Weave",
   "common.content": "Conteúdo",
   "common.contentNotesBlocks": "notas e blocos ativos",
-  "common.ctaHint":
-    "Use o botão no e-mail para continuar (abra no navegador se necessário).",
+  "common.ctaHint": "Use o botão no e-mail para continuar (abra no navegador se necessário).",
   "common.currentEmail": "E-mail atual",
   "common.dueDate": "Prazo",
   "common.format": "Formato",
@@ -62,13 +54,10 @@ module.exports = {
   "common.project": "Projeto",
   "common.role": "Cargo",
   "common.username": "Usuário",
-  "deleteMessage.bodyDetail":
-    "Todos os dados vinculados foram apagados de forma definitiva.",
+  "deleteMessage.bodyDetail": "Todos os dados vinculados foram apagados de forma definitiva.",
   "deleteMessage.bodyUser": "Usuário removido",
-  "deleteMessage.footer":
-    "Você recebeu este e-mail como confirmação da exclusão da sua conta.",
-  "deleteMessage.intro":
-    "Sua conta no Weave foi excluída permanentemente conforme solicitado.",
+  "deleteMessage.footer": "Você recebeu este e-mail como confirmação da exclusão da sua conta.",
+  "deleteMessage.intro": "Sua conta no Weave foi excluída permanentemente conforme solicitado.",
   "deleteMessage.outro":
     "Se você não reconhece esta ação, entre em contato com nosso suporte imediatamente.",
   "deleteMessage.preheader": "Sua conta foi excluída com sucesso.",
@@ -81,8 +70,7 @@ module.exports = {
   "deleteRequest.footer":
     "Você recebeu este e-mail porque uma solicitação de exclusão foi feita para esta conta.",
   "deleteRequest.info": "Este link expira em 7 dias ({expiration}).",
-  "deleteRequest.intro1":
-    "Recebemos uma solicitação para excluir permanentemente sua conta.",
+  "deleteRequest.intro1": "Recebemos uma solicitação para excluir permanentemente sua conta.",
   "deleteRequest.intro2": "Se deseja continuar, confirme no botão abaixo.",
   "deleteRequest.outro":
     "Se você não solicitou essa exclusão, ignore este e-mail e considere alterar sua senha.",
@@ -100,22 +88,18 @@ module.exports = {
   "dueReminder.untitled": "Nota",
   "invite.cta": "Aceitar convite",
   "invite.info": "Este convite expira em 7 dias.",
-  "invite.intro":
-    "{inviterName} convidou você para entrar na organização {organizationName}.",
+  "invite.intro": "{inviterName} convidou você para entrar na organização {organizationName}.",
   "invite.preheader": "Convite para participar de uma organização.",
   "invite.subject": "Convite para {organizationName} — Weave",
   "invite.subtitle": "Convite para organização",
   "invite.title": "Você foi convidado(a)",
   "inviteAccepted.cta": "Ir para Home",
   "inviteAccepted.feature1": "Criar notas e organizar ideias com blocos.",
-  "inviteAccepted.feature2":
-    "Trabalhar em projetos com etapas, prioridades e prazos.",
+  "inviteAccepted.feature2": "Trabalhar em projetos com etapas, prioridades e prazos.",
   "inviteAccepted.feature3": "Compartilhar conteúdo e colaborar com seu time.",
-  "inviteAccepted.feature4":
-    "Centralizar arquivos, links e contexto em um só lugar.",
+  "inviteAccepted.feature4": "Centralizar arquivos, links e contexto em um só lugar.",
   "inviteAccepted.featuresIntro": "No Weave você pode:",
-  "inviteAccepted.intro1":
-    "Seu acesso foi confirmado e você já pode usar o Weave.",
+  "inviteAccepted.intro1": "Seu acesso foi confirmado e você já pode usar o Weave.",
   "inviteAccepted.intro2":
     "Aqui você centraliza planejamento, execução e colaboração em um único lugar.",
   "inviteAccepted.preheader": "Convite aceito com sucesso.",
@@ -123,15 +107,11 @@ module.exports = {
   "inviteAccepted.subtitle": "Sua conta está pronta para uso",
   "inviteAccepted.title": "Bem-vindo(a) a {organizationName}",
   "project.cta": "Acessar projetos",
-  "project.footer":
-    "Você recebeu este e-mail porque foi adicionado a um projeto no Weave.",
-  "project.intro":
-    "{addedByName} adicionou você como colaborador(a) no projeto abaixo.",
-  "project.outro":
-    "Agora você pode visualizar e colaborar no projeto normalmente.",
+  "project.footer": "Você recebeu este e-mail porque foi adicionado a um projeto no Weave.",
+  "project.intro": "{addedByName} adicionou você como colaborador(a) no projeto abaixo.",
+  "project.outro": "Agora você pode visualizar e colaborar no projeto normalmente.",
   "project.preheader": "Você foi adicionado(a) a um projeto.",
-  "project.subject":
-    '{firstName}, você foi adicionado ao projeto "{projectName}"',
+  "project.subject": '{firstName}, você foi adicionado ao projeto "{projectName}"',
   "project.subtitle": "Colaboração em projetos",
   "project.title": "Novo projeto compartilhado com você",
   "project.untitled": "Sem título",
@@ -143,10 +123,8 @@ module.exports = {
   "reportType.sprint_review": "Sprint Review",
   "rescue.cta": "Redefinir senha",
   "rescue.info": "Este link expira em 1 hora.",
-  "rescue.intro1":
-    "Recebemos uma solicitação para redefinir a senha da sua conta.",
-  "rescue.intro2":
-    "Se você fez essa solicitação, use o botão abaixo para continuar.",
+  "rescue.intro1": "Recebemos uma solicitação para redefinir a senha da sua conta.",
+  "rescue.intro2": "Se você fez essa solicitação, use o botão abaixo para continuar.",
   "rescue.outro":
     "Se você não solicitou esta alteração, ignore este e-mail. Nenhuma mudança será realizada.",
   "rescue.preheader": "Solicitação de redefinição de senha.",
@@ -155,8 +133,7 @@ module.exports = {
   "rescue.title": "Redefinição de senha",
   "reset.cta": "Confirmar novo e-mail",
   "reset.info": "Este link expira em 1 hora.",
-  "reset.intro1":
-    "Recebemos uma solicitação para alterar o e-mail da sua conta.",
+  "reset.intro1": "Recebemos uma solicitação para alterar o e-mail da sua conta.",
   "reset.intro2": "Use o botão abaixo para validar essa alteração.",
   "reset.outro": "Se você não solicitou essa alteração, ignore este e-mail.",
   "reset.preheader": "Valide a mudança de e-mail da sua conta.",
@@ -173,8 +150,7 @@ module.exports = {
   "welcome.footer": "Você recebeu este e-mail porque criou uma conta no Weave.",
   "welcome.info": "Este link expira em 7 dias.",
   "welcome.intro1": "Sua conta foi criada com sucesso.",
-  "welcome.intro2":
-    "Para começar a usar a plataforma, confirme seu e-mail no botão abaixo.",
+  "welcome.intro2": "Para começar a usar a plataforma, confirme seu e-mail no botão abaixo.",
   "welcome.outro1": "Se você não se cadastrou, ignore este e-mail.",
   "welcome.preheader": "Ative sua conta no Weave.",
   "welcome.subject": "Bem-vindo ao Weave — Ative sua conta",

@@ -1,7 +1,5 @@
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const {
-  orgRoleHasPermission,
-} = require("@/modules/organizations/organization-role-policy");
+const { orgRoleHasPermission } = require("@/modules/organizations/organization-role-policy");
 
 /**
  * Exige organização ativa com papel que tenha a permissão indicada (ex.: super_admin).
@@ -22,9 +20,7 @@ function requireOrgPermission(permission) {
       }
 
       const organization =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
       if (!organization) {
         return res.status(404).json({

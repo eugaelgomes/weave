@@ -11,10 +11,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       // Ensure project exists and user has access (middleware should already enforce permission).
@@ -24,10 +21,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
 
       const result =
         orgWide && membership?.id
-          ? await this.projectsRepository.deleteProjectInOrganization(
-              id,
-              membership.id
-            )
+          ? await this.projectsRepository.deleteProjectInOrganization(id, membership.id)
           : await this.projectsRepository.deleteProject(id, userId);
 
       if (!result || result.length === 0) {
@@ -85,11 +79,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
             ctx.membership.id,
             collaboratorId
           )
-        : await this.projectsRepository.removeCollaborator(
-            projectId,
-            userId,
-            collaboratorId
-          );
+        : await this.projectsRepository.removeCollaborator(projectId, userId, collaboratorId);
 
       if (!result || result.length === 0) {
         throw new Error("Failed to remove collaborator");
@@ -114,18 +104,13 @@ class ProjectsDeleteController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
       const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
       if (!canWrite) {
-        throw new Error(
-          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
-        );
+        throw new Error("Acesso negado. Sua role no projeto não permite alterar conteúdos.");
       }
 
       const result =
@@ -136,11 +121,7 @@ class ProjectsDeleteController extends ProjectsCoreController {
               userId,
               membership.id
             )
-          : await this.projectsRepository.removeNoteFromProject(
-              projectId,
-              noteId,
-              userId
-            );
+          : await this.projectsRepository.removeNoteFromProject(projectId, noteId, userId);
 
       if (!result || result.length === 0) {
         throw new Error("Failed to remove note. Check your permissions.");

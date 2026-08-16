@@ -1,8 +1,5 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
 const { getUserEmailLocale, t } = require("@/services/email/i18n");
 
 /**
@@ -51,9 +48,7 @@ async function collabMail(
   try {
     const locale = await getUserEmailLocale({ email: collaboratorEmail });
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const notePath = notePublicId
-      ? `/app/notes/view/${notePublicId}`
-      : "/app/notes";
+    const notePath = notePublicId ? `/app/notes/view/${notePublicId}` : "/app/notes";
     const noteUrl = `${frontendUrl}/auth/?redirect=${encodeURIComponent(notePath)}`;
 
     const emailTemplate = createCollabTemplate({

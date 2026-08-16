@@ -1,6 +1,4 @@
-const {
-  normalizeOrganizationName,
-} = require("@/modules/organizations/normalizer");
+const { normalizeOrganizationName } = require("@/modules/organizations/normalizer");
 
 const STEP_ONE = "step_1";
 const ORGANIZATION_BUSINESS_ROLES = Object.freeze([
@@ -44,12 +42,7 @@ class OrganizationCreationStepsService {
     return {
       available_roles: [...ORGANIZATION_BUSINESS_ROLES],
       optional_fields: ["description", "logo_url"],
-      planned_optional_steps: [
-        "branding_properties",
-        "users",
-        "integrations",
-        "domains",
-      ],
+      planned_optional_steps: ["branding_properties", "users", "integrations", "domains"],
       required_fields: [
         "org_name",
         "unique_name",
@@ -145,15 +138,11 @@ class OrganizationCreationStepsService {
     if (!normalized) {
       throw new Error("unique_name is invalid after normalization");
     }
-    const existingNames =
-      await this.organizationsRepository.getAvailableOrgNames(normalized);
+    const existingNames = await this.organizationsRepository.getAvailableOrgNames(normalized);
     const normalizedCurrent = currentUniqueName
       ? normalizeOrganizationName(currentUniqueName)
       : null;
-    if (
-      existingNames.includes(normalized) &&
-      normalizedCurrent !== normalized
-    ) {
+    if (existingNames.includes(normalized) && normalizedCurrent !== normalized) {
       throw new Error("Unique name is already in use");
     }
     return normalized;
@@ -172,8 +161,7 @@ class OrganizationCreationStepsService {
    * }>}
    */
   async validateStepOnePayload(payload, currentOrganization = null) {
-    const orgName =
-      typeof payload.org_name === "string" ? payload.org_name.trim() : "";
+    const orgName = typeof payload.org_name === "string" ? payload.org_name.trim() : "";
     const uniqueNameSource =
       typeof payload.unique_name === "string" ? payload.unique_name.trim() : "";
     const normalizedRole = this._normalizeRole(payload.organization_role);

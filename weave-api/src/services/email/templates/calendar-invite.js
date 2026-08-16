@@ -1,8 +1,5 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
 const {
   resolveEmailLocale,
   resolveEmailLocaleFromAcceptLanguage,
@@ -36,14 +33,10 @@ async function calendar_invite_receipt(
     : resolveEmailLocaleFromAcceptLanguage(acceptLanguage);
 
   try {
-    const safeTitle = escapeHtml(
-      eventTitle || t(locale, "calendarInvite.noTitle")
-    );
+    const safeTitle = escapeHtml(eventTitle || t(locale, "calendarInvite.noTitle"));
     const safeStart = escapeHtml(startTime || "");
     const safeEnd = escapeHtml(endTime || "");
-    const safeLoc = escapeHtml(
-      location || t(locale, "calendarInvite.noLocation")
-    );
+    const safeLoc = escapeHtml(location || t(locale, "calendarInvite.noLocation"));
     const safeDesc = escapeHtml(description || "");
 
     const contentHtml = `

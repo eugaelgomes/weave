@@ -9,9 +9,7 @@ const signinSchema = z
       .min(3, "Invalid username or email length.")
       .max(255, "Invalid username or email length.")
       .trim()
-      .describe(
-        "O nome de usuário ou endereço de e-mail utilizado para autenticação."
-      ),
+      .describe("O nome de usuário ou endereço de e-mail utilizado para autenticação."),
     password: z
       .string({ required_error: "Password is required." })
       .min(1, "Password is required.")
@@ -45,9 +43,7 @@ const oauthCallbackSchema = z.object({
     .max(100, "Invalid OAuth error length.")
     .trim()
     .optional()
-    .describe(
-      "A mensagem de erro retornada pelo provedor OAuth em caso de falha na autorização."
-    ),
+    .describe("A mensagem de erro retornada pelo provedor OAuth em caso de falha na autorização."),
   state: z
     .string({ required_error: "OAuth state is required." })
     .min(8, "Invalid OAuth state length.")

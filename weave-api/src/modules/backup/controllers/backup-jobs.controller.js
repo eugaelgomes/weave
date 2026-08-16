@@ -33,9 +33,7 @@ class BackupJobsController extends BackupBaseController {
         });
       }
 
-      const elapsedMinutes = Math.floor(
-        (new Date() - new Date(job.createdAt)) / (1000 * 60)
-      );
+      const elapsedMinutes = Math.floor((new Date() - new Date(job.createdAt)) / (1000 * 60));
 
       res.status(200).json({
         details: {

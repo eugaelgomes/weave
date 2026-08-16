@@ -98,9 +98,7 @@ class TagsController extends TagsBaseController {
         projectId: project_id || null,
       });
       if (!tag) {
-        return res
-          .status(404)
-          .json({ error: "Tag not found or already deleted" });
+        return res.status(404).json({ error: "Tag not found or already deleted" });
       }
 
       res.status(200).json({ message: "Tag deleted successfully" });

@@ -120,9 +120,7 @@ const normalizeNewProject = (payload, userId, orgId, userProps = {}) => {
 
   const methodologyRaw = payload.methodology;
   const methodologyKey = String(
-    methodologyRaw === undefined ||
-      methodologyRaw === null ||
-      methodologyRaw === ""
+    methodologyRaw === undefined || methodologyRaw === null || methodologyRaw === ""
       ? DEFAULT_METHODOLOGY
       : methodologyRaw
   ).toLowerCase();

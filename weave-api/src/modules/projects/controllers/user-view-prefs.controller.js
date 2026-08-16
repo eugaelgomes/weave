@@ -37,11 +37,7 @@ class UserViewPrefsController extends ProjectsCoreController {
 
       const { id: projectId } = req.params;
       const { view } = req.body;
-      const saved = await userViewPrefsRepository.upsertUserView(
-        projectId,
-        userId,
-        view
-      );
+      const saved = await userViewPrefsRepository.upsertUserView(projectId, userId, view);
       res.status(200).json({ view: saved });
     } catch (error) {
       this._handleError(error, res, next);

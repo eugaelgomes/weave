@@ -79,10 +79,10 @@ class PlansService {
     );
 
     if (subscriberType === "user") {
-      await executeQuery(
-        `UPDATE users SET plan_id = $1, updated_at = NOW() WHERE user_id = $2`,
-        [planId, subscriberId]
-      );
+      await executeQuery(`UPDATE users SET plan_id = $1, updated_at = NOW() WHERE user_id = $2`, [
+        planId,
+        subscriberId,
+      ]);
     } else {
       await executeQuery(
         `UPDATE organizations SET plan_id = $1, updated_at = NOW() WHERE id = $2`,
@@ -90,11 +90,7 @@ class PlansService {
       );
     }
 
-    await this._refreshPlanUsageSnapshot(
-      subscriberType,
-      subscriberId,
-      targetPlan
-    );
+    await this._refreshPlanUsageSnapshot(subscriberType, subscriberId, targetPlan);
 
     const usageRecord = await PlansRepository.getPlanUsage(userId);
     const downgradWarnings = this._checkDowngradeWarnings(
@@ -200,9 +196,7 @@ class PlansService {
       const current = this.getNestedValue(usageDetails, check.usage) || 0;
       const limit = this.getNestedValue(newPlanDetails, check.limit);
       if (limit !== null && limit !== undefined && current > limit) {
-        warnings.push(
-          `Current ${check.label} (${current}) exceeds new plan limit (${limit}).`
-        );
+        warnings.push(`Current ${check.label} (${current}) exceeds new plan limit (${limit}).`);
       }
     }
 
@@ -228,9 +222,7 @@ class PlansService {
     }
 
     if (!usageRecord) {
-      throw new Error(
-        "Could not initialize usage: User without assigned plan."
-      );
+      throw new Error("Could not initialize usage: User without assigned plan.");
     }
 
     return usageRecord;
@@ -251,22 +243,11 @@ class PlansService {
   /**
    * Validates and fetches usage in a single step (Asynchronous)
    */
-  async canPerformAction(
-    userId,
-    planDetails,
-    actionPath,
-    limitPath,
-    orgId = null
-  ) {
+  async canPerformAction(userId, planDetails, actionPath, limitPath, orgId = null) {
     const usageRecord = await this.managePlanUsage(userId, orgId);
     if (!usageRecord) return false;
 
-    return this.checkLimit(
-      planDetails,
-      usageRecord.usage_details,
-      actionPath,
-      limitPath
-    );
+    return this.checkLimit(planDetails, usageRecord.usage_details, actionPath, limitPath);
   }
 
   // ==========================================
@@ -303,10 +284,7 @@ class PlansService {
     });
   }
 
-  async consumeAiMessage(
-    usageId,
-    { tokens = 0, reasoningLevel = "none", filesCount = 0 } = {}
-  ) {
+  async consumeAiMessage(usageId, { tokens = 0, reasoningLevel = "none", filesCount = 0 } = {}) {
     return enqueuePlanUsageJob({
       operation: "consume_ai_message",
       payload: { filesCount, reasoningLevel, tokens },
@@ -357,8 +335,7 @@ class PlansService {
   }
 
   async _initializeFirstUsage(userId, orgId) {
-    const effectivePlan =
-      await PlansRepository.getEffectivePlanByUserId(userId);
+    const effectivePlan = await PlansRepository.getEffectivePlanByUserId(userId);
     const user = await PlansRepository.getUserWithPlan(userId);
     if (!user && !effectivePlan) return null;
 
@@ -378,15 +355,13 @@ class PlansService {
     if (!planId || !appliedPlanSnapshot) return null;
 
     if (user && !user.plan_id) {
-      await executeQuery(
-        `UPDATE users SET plan_id = $1 WHERE user_id = $2 AND plan_id IS NULL`,
-        [planId, userId]
-      );
+      await executeQuery(`UPDATE users SET plan_id = $1 WHERE user_id = $2 AND plan_id IS NULL`, [
+        planId,
+        userId,
+      ]);
     }
 
-    const subscriberType = orgId
-      ? "organization"
-      : effectivePlan?.subscriber_type || "user";
+    const subscriberType = orgId ? "organization" : effectivePlan?.subscriber_type || "user";
     const subscriberId = orgId || effectivePlan?.subscriber_id || userId;
 
     const startDate = new Date();

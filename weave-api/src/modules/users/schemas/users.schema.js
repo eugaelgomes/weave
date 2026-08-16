@@ -43,9 +43,7 @@ const createAccountSchema = z.object({
   name: nameValidator,
   password: passwordValidator,
   phone_number: z.string().nullable().optional(),
-  private_profile: z
-    .union([z.boolean(), z.string().transform((val) => val === "true")])
-    .optional(),
+  private_profile: z.union([z.boolean(), z.string().transform((val) => val === "true")]).optional(),
   timezone: z.string().optional(),
   user_name: nameValidator,
   username: usernameValidator,
@@ -58,8 +56,7 @@ const activateAccountSchema = z
     token: z.string().optional(),
   })
   .refine((data) => data.token || (data.code && data.email), {
-    message:
-      "Activation token or both verification code and email are required",
+    message: "Activation token or both verification code and email are required",
     path: ["token"],
   });
 
@@ -74,13 +71,7 @@ const checkAvailabilitySchema = z.object({
 });
 
 const updateProfileSchema = z.object({
-  birth_date: z
-    .string()
-    .datetime()
-    .or(z.string().date())
-    .nullable()
-    .optional()
-    .or(z.literal("")),
+  birth_date: z.string().datetime().or(z.string().date()).nullable().optional().or(z.literal("")),
   currentPassword: z.string().optional(),
   email: emailValidator.optional().or(z.literal("")),
   emailValidationToken: z.string().optional(),
@@ -94,12 +85,8 @@ const updateProfileSchema = z.object({
     .optional()
     .or(z.literal("")),
   phone_number: z.string().nullable().optional().or(z.literal("")),
-  private_profile: z
-    .union([z.boolean(), z.string().transform((val) => val === "true")])
-    .optional(),
-  theme_mode: z
-    .enum(["light", "dark", "system", "LIGHT", "DARK", "SYSTEM"])
-    .optional(),
+  private_profile: z.union([z.boolean(), z.string().transform((val) => val === "true")]).optional(),
+  theme_mode: z.enum(["light", "dark", "system", "LIGHT", "DARK", "SYSTEM"]).optional(),
   usage_preference: z.record(z.unknown()).optional(),
   user_preference: z.record(z.unknown()).optional(),
   username: usernameValidator.optional(),
@@ -122,10 +109,7 @@ const manageUsersSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("search_users"),
-    limit: z
-      .number()
-      .optional()
-      .describe("Maximum number of results to return"),
+    limit: z.number().optional().describe("Maximum number of results to return"),
     query: z.string().describe("Search term (name or email)"),
   }),
 ]);

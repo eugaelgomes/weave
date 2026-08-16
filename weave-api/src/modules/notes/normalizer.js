@@ -1,5 +1,4 @@
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const PATH_NAMESPACE_PREFIX = "weave-notes/";
 
@@ -79,9 +78,7 @@ function normalizeCommentContent(raw) {
         return { properties: {}, text: "", type: "paragraph" };
       }
       const properties =
-        b.properties &&
-        typeof b.properties === "object" &&
-        !Array.isArray(b.properties)
+        b.properties && typeof b.properties === "object" && !Array.isArray(b.properties)
           ? b.properties
           : {};
       return {

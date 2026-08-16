@@ -1,8 +1,5 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
 const { getUserEmailLocale, t } = require("@/services/email/i18n");
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
@@ -23,8 +20,7 @@ async function inviteProjectMember(
   projectPublicId = null
 ) {
   const locale = await getUserEmailLocale({ email });
-  const firstName =
-    (nome || "").split(" ")[0] || t(locale, "common.greetingFallback");
+  const firstName = (nome || "").split(" ")[0] || t(locale, "common.greetingFallback");
   const targetId = projectPublicId || projectId;
   const projectUrl = `${frontendUrl}/auth/?redirect=${encodeURIComponent(`/app/projects/${targetId}`)}`;
 

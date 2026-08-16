@@ -6,8 +6,7 @@
  * @param {unknown} value
  * @returns {boolean}
  */
-const isNonEmptyString = (value) =>
-  typeof value === "string" && value.trim().length > 0;
+const isNonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
 
 /**
  * @param {UniqueUserField} field
@@ -72,10 +71,7 @@ const getUniqueFieldFromPgError = (error) => {
   const constraint = String(error.constraint || "").toLowerCase();
 
   // Explicit validation by constraint name
-  if (
-    constraint === "users_email_key" ||
-    constraint === "uq_users_email_lower"
-  ) {
+  if (constraint === "users_email_key" || constraint === "uq_users_email_lower") {
     return "email";
   }
 
@@ -83,10 +79,7 @@ const getUniqueFieldFromPgError = (error) => {
     return "username";
   }
 
-  if (
-    constraint === "users_phone_number_key" ||
-    constraint === "phone_number"
-  ) {
+  if (constraint === "users_phone_number_key" || constraint === "phone_number") {
     return "phone_number";
   }
 

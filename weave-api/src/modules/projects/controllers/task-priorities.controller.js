@@ -64,14 +64,11 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
       const { project_id, org_id, priority_id } = req.params;
       const { name, color, level } = req.body;
 
-      const priority = await TaskPrioritiesRepository.updatePriority(
-        priority_id,
-        {
-          orgId: org_id || null,
-          projectId: project_id || null,
-          updates: { color, level, name },
-        }
-      );
+      const priority = await TaskPrioritiesRepository.updatePriority(priority_id, {
+        orgId: org_id || null,
+        projectId: project_id || null,
+        updates: { color, level, name },
+      });
       if (!priority) {
         return res.status(404).json({ error: "Prioridade não encontrada" });
       }
@@ -96,18 +93,13 @@ class TaskPrioritiesController extends TaskPrioritiesBaseController {
 
       const { project_id, org_id, priority_id } = req.params;
 
-      const priority = await TaskPrioritiesRepository.deletePriority(
-        priority_id,
-        {
-          deletedBy: userId,
-          orgId: org_id || null,
-          projectId: project_id || null,
-        }
-      );
+      const priority = await TaskPrioritiesRepository.deletePriority(priority_id, {
+        deletedBy: userId,
+        orgId: org_id || null,
+        projectId: project_id || null,
+      });
       if (!priority) {
-        return res
-          .status(404)
-          .json({ error: "Prioridade não encontrada ou já deletada" });
+        return res.status(404).json({ error: "Prioridade não encontrada ou já deletada" });
       }
 
       res.status(200).json({ message: "Prioridade deletada com sucesso" });

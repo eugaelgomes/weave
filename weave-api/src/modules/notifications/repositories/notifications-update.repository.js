@@ -1,7 +1,5 @@
 const { executeQuery } = require("@/database/connection");
-const {
-  mapNotificationRow,
-} = require("@/modules/notifications/repositories/notification-mapping");
+const { mapNotificationRow } = require("@/modules/notifications/repositories/notification-mapping");
 
 class NotificationsUpdateRepository {
   async markNotificationRead({ notificationId, userId, isRead }) {

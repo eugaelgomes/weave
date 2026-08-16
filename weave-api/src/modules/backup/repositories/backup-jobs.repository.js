@@ -18,13 +18,7 @@ class BackupJobsRepository {
       RETURNING *
     `;
 
-    const [job] = await executeQuery(query, [
-      type,
-      userId,
-      "pending",
-      0,
-      JSON.stringify(metadata),
-    ]);
+    const [job] = await executeQuery(query, [type, userId, "pending", 0, JSON.stringify(metadata)]);
 
     const formattedJob = this.formatJob(job);
     this.jobs.set(formattedJob.id, formattedJob);
@@ -92,9 +86,7 @@ class BackupJobsRepository {
       return this.jobs.get(jobId);
     }
 
-    const [job] = await executeQuery("SELECT * FROM jobs WHERE job_id = $1", [
-      jobId,
-    ]);
+    const [job] = await executeQuery("SELECT * FROM jobs WHERE job_id = $1", [jobId]);
     if (!job) {
       return null;
     }

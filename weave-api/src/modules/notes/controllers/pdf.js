@@ -69,9 +69,7 @@ export class PDFService {
           width: availableWidth - padding * 2,
         });
 
-        doc
-          .rect(indent, doc.y, availableWidth, textHeight + padding * 2)
-          .fill("#f4f4f4");
+        doc.rect(indent, doc.y, availableWidth, textHeight + padding * 2).fill("#f4f4f4");
 
         doc
           .fillColor("#d63384")
@@ -102,8 +100,7 @@ export class PDFService {
         const start = Number(node?.attrs?.start) || 1;
         const items = Array.isArray(node.content) ? node.content : [];
         items.forEach((item, index) => {
-          const marker =
-            node.type === "orderedList" ? `${start + index}.` : "•";
+          const marker = node.type === "orderedList" ? `${start + index}.` : "•";
           const text = this.extractInlineText(item?.content);
           doc
             .font("Helvetica")
@@ -179,13 +176,8 @@ export class PDFService {
         const projectName = note.associated_project?.name;
 
         if (orgName || projectName) {
-          const headerText = [orgName, projectName]
-            .filter(Boolean)
-            .join("  |  ");
-          doc
-            .fontSize(10)
-            .fillColor("#666666")
-            .text(headerText, { align: "left" });
+          const headerText = [orgName, projectName].filter(Boolean).join("  |  ");
+          doc.fontSize(10).fillColor("#666666").text(headerText, { align: "left" });
           doc.moveDown(0.5);
         }
         doc.moveDown(0.5);
@@ -197,11 +189,7 @@ export class PDFService {
           .text(note.title, { align: "left" });
 
         doc.moveDown(0.5);
-        doc
-          .moveTo(50, doc.y)
-          .lineTo(545, doc.y)
-          .strokeColor("#cccccc")
-          .stroke();
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor("#cccccc").stroke();
 
         doc.moveDown(0.5);
         doc
@@ -214,16 +202,10 @@ export class PDFService {
         doc.fontSize(10).font("Helvetica").fillColor("#444444");
         const dateStr = new Date(note.created_at).toLocaleDateString("pt-BR");
         doc.text(`Autor: ${note.user_name} (${note.user_email})`);
-        doc.text(
-          `Criado em: ${dateStr}  |  Status: ${note.status?.toUpperCase() || "N/A"}`
-        );
+        doc.text(`Criado em: ${dateStr}  |  Status: ${note.status?.toUpperCase() || "N/A"}`);
 
         doc.moveDown(1);
-        doc
-          .moveTo(50, doc.y)
-          .lineTo(545, doc.y)
-          .strokeColor("#cccccc")
-          .stroke();
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor("#cccccc").stroke();
 
         const noteDocument = this.getDocumentNode(note.document);
         if (noteDocument && Array.isArray(noteDocument.content)) {
@@ -244,9 +226,7 @@ export class PDFService {
                 width: availableWidth - padding * 2,
               });
 
-              doc
-                .rect(indent, doc.y, availableWidth, textHeight + padding * 2)
-                .fill("#f4f4f4");
+              doc.rect(indent, doc.y, availableWidth, textHeight + padding * 2).fill("#f4f4f4");
 
               doc
                 .fillColor("#d63384")
@@ -283,11 +263,7 @@ export class PDFService {
           if (doc.y > 600) doc.addPage();
 
           doc.moveDown(3);
-          doc
-            .fontSize(14)
-            .font("Helvetica-Bold")
-            .fillColor("#000000")
-            .text("Colaboradores");
+          doc.fontSize(14).font("Helvetica-Bold").fillColor("#000000").text("Colaboradores");
           doc.moveDown(1);
 
           const cardWidth = 155;
@@ -309,12 +285,7 @@ export class PDFService {
                   signal: controller.signal,
                 });
                 const arrayBuffer = await response.arrayBuffer();
-                doc.image(
-                  Buffer.from(arrayBuffer),
-                  currentX + 8,
-                  currentY + 7,
-                  { fit: [30, 30] }
-                );
+                doc.image(Buffer.from(arrayBuffer), currentX + 8, currentY + 7, { fit: [30, 30] });
               } else {
                 throw new Error();
               }
@@ -325,11 +296,7 @@ export class PDFService {
                 .fontSize(10)
                 .fillColor("#ffffff")
                 .font("Helvetica-Bold")
-                .text(
-                  collab.username?.[0].toUpperCase() || "?",
-                  currentX + 19,
-                  currentY + 17
-                );
+                .text(collab.username?.[0].toUpperCase() || "?", currentX + 19, currentY + 17);
             } finally {
               clearTimeout(timeoutId);
             }

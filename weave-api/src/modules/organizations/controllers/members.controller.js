@@ -15,17 +15,13 @@ const areasRepository = require("@/modules/organizations/repositories/areas.repo
 const spacesService = require("@/services/storage");
 const bcrypt = require("bcrypt");
 
-const {
-  send_organization_invite,
-} = require("@/services/email/templates/invite-member");
+const { send_organization_invite } = require("@/services/email/templates/invite-member");
 const {
   send_organization_invite_accepted,
 } = require("@/services/email/templates/invite-member-accepted");
 const { getUserEmailLocale } = require("@/services/email/i18n");
 
-const {
-  ORG_ROLES,
-} = require("@/modules/organizations/organization-role-policy");
+const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
 const {
   buildUniqueConflictPayload,
   getUniqueFieldFromPgError,
@@ -40,13 +36,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
   }
 
   async _ensureCanManageMembers(currentOrg, res) {
-    if (
-      !this._ensureOrgPermission(
-        currentOrg,
-        this._orgPermissions.MANAGE_MEMBERS,
-        res
-      )
-    ) {
+    if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_MEMBERS, res)) {
       return false;
     }
     return true;
@@ -109,16 +99,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       if (currentOrg.user_id === memberId) {
-        return res
-          .status(400)
-          .json({ error: "Cannot change the organization owner's role" });
+        return res.status(400).json({ error: "Cannot change the organization owner's role" });
       }
 
-      await this.organizationsRepository.updateMemberRole(
-        currentOrg.id,
-        memberId,
-        role
-      );
+      await this.organizationsRepository.updateMemberRole(currentOrg.id, memberId, role);
 
       res.status(200).json({
         data: { role },
@@ -146,9 +130,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
       if (!(await this._ensureCanManageMembers(currentOrg, res))) {
@@ -164,31 +146,23 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       // ADMIN/SUPER_ADMIN must always keep their org-level record.
       // They need to be demoted first before removal.
-      const targetMember =
-        await this.organizationsRepository.getOrganizationMember(
-          currentOrg.id,
-          memberId
-        );
-      if (
-        targetMember &&
-        ["ADMIN", "SUPER_ADMIN"].includes(targetMember.role)
-      ) {
+      const targetMember = await this.organizationsRepository.getOrganizationMember(
+        currentOrg.id,
+        memberId
+      );
+      if (targetMember && ["ADMIN", "SUPER_ADMIN"].includes(targetMember.role)) {
         return res.status(400).json({
-          error:
-            "Cannot remove an administrator. Change role to MEMBER before removing.",
+          error: "Cannot remove an administrator. Change role to MEMBER before removing.",
           success: false,
         });
       }
 
-      const removed =
-        await this.organizationsRepository.removeOrganizationMember(
-          currentOrg.id,
-          memberId
-        );
+      const removed = await this.organizationsRepository.removeOrganizationMember(
+        currentOrg.id,
+        memberId
+      );
       if (!removed) {
-        return res
-          .status(404)
-          .json({ error: "Member not found", success: false });
+        return res.status(404).json({ error: "Member not found", success: false });
       }
 
       res.status(200).json({
@@ -215,24 +189,14 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      if (
-        !this._ensureOrgPermission(
-          currentOrg,
-          this._orgPermissions.VIEW_MEMBER_DIRECTORY,
-          res
-        )
-      ) {
+      if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.VIEW_MEMBER_DIRECTORY, res)) {
         return;
       }
 
-      const members = await this.organizationsRepository.getOrganizationMembers(
-        currentOrg.id
-      );
+      const members = await this.organizationsRepository.getOrganizationMembers(currentOrg.id);
 
       res.status(200).json({
         count: members.length,
@@ -279,9 +243,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error fetching members:", error);
-      res
-        .status(500)
-        .json({ error: "Error fetching members", status: "ERROR" });
+      res.status(500).json({ error: "Error fetching members", status: "ERROR" });
     }
   }
 
@@ -296,16 +258,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
 
-      const {
-        email,
-        role = ORG_ROLES.MEMBER,
-        name,
-        username,
-        target_areas = [],
-      } = req.body;
+      const { email, role = ORG_ROLES.MEMBER, name, username, target_areas = [] } = req.body;
 
-      const normalizedRole =
-        typeof role === "string" ? role.trim().toUpperCase() : "";
+      const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
 
       const currentOrg = await this._getUserOrganization(authUserId);
       if (!currentOrg) {
@@ -316,23 +271,15 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return;
       }
 
-      if (
-        !(await this._ensureSuperAdminLimit(currentOrg.id, normalizedRole, res))
-      ) {
+      if (!(await this._ensureSuperAdminLimit(currentOrg.id, normalizedRole, res))) {
         return;
       }
 
       const validTargetAreas = [];
       for (const tArea of target_areas) {
         if (!tArea.area_id) continue;
-        const area = await this.areasRepository.getAreaById(
-          tArea.area_id,
-          currentOrg.id
-        );
-        if (!area)
-          return res
-            .status(404)
-            .json({ error: `Area not found: ${tArea.area_id}` });
+        const area = await this.areasRepository.getAreaById(tArea.area_id, currentOrg.id);
+        if (!area) return res.status(404).json({ error: `Area not found: ${tArea.area_id}` });
 
         const resolvedProjectRole = this._resolveProjectMemberRole(tArea.role);
         validTargetAreas.push({
@@ -341,20 +288,14 @@ class OrganizationMembersController extends OrganizationsBaseController {
         });
       }
 
-      const pending = await this.organizationsRepository.checkExistingInvite(
-        currentOrg.id,
-        email
-      );
+      const pending = await this.organizationsRepository.checkExistingInvite(currentOrg.id, email);
       if (pending) {
         return res.status(400).json({
           error: "There is already a pending invite for this email",
         });
       }
 
-      const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
-        "",
-        email
-      );
+      const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", email);
       const targetUser = existingUsers.find((u) => u.email === email);
 
       if (targetUser) {
@@ -436,32 +377,21 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
       token = uuidMatch[0];
 
-      const invite =
-        await this.organizationsRepository.findOrgInviteByToken(token);
+      const invite = await this.organizationsRepository.findOrgInviteByToken(token);
       if (!invite) {
-        const diag =
-          await this.organizationsRepository.findOrgInviteByTokenDiagnostic(
-            token
-          );
+        const diag = await this.organizationsRepository.findOrgInviteByTokenDiagnostic(token);
         if (!diag) return res.status(404).json({ error: "Invite not found" });
-        if (diag.deleted)
-          return res.status(410).json({ error: "This invite was canceled" });
+        if (diag.deleted) return res.status(410).json({ error: "This invite was canceled" });
         if (diag.invite_verified)
-          return res
-            .status(409)
-            .json({ error: "This invite has already been used" });
+          return res.status(409).json({ error: "This invite has already been used" });
         if (new Date(diag.expires_at) < new Date())
           return res.status(410).json({
-            error:
-              "This invite has expired. Ask the administrator for a new invite.",
+            error: "This invite has expired. Ask the administrator for a new invite.",
           });
         return res.status(400).json({ error: "Invalid or expired invite" });
       }
 
-      const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
-        "",
-        invite.email
-      );
+      const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", invite.email);
       const has_account = existingUsers.some((u) => u.email === invite.email);
 
       return res.status(200).json({
@@ -470,9 +400,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           expires_at: invite.expires_at,
           has_account,
           invited_name: invite.name || null,
-          org_logo_url: invite.logo_url
-            ? spacesService.getFileUrl(invite.logo_url)
-            : null,
+          org_logo_url: invite.logo_url ? spacesService.getFileUrl(invite.logo_url) : null,
           org_name: invite.org_name,
           role: invite.role,
           target_areas: invite.target_areas || [],
@@ -506,16 +434,11 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
       token = uuidMatch[0];
 
-      const invite =
-        await this.organizationsRepository.findOrgInviteByToken(token);
+      const invite = await this.organizationsRepository.findOrgInviteByToken(token);
       if (!invite) {
-        const diag =
-          await this.organizationsRepository.findOrgInviteByTokenDiagnostic(
-            token
-          );
+        const diag = await this.organizationsRepository.findOrgInviteByTokenDiagnostic(token);
         if (!diag) return res.status(404).json({ error: "Invite not found" });
-        if (diag.deleted)
-          return res.status(410).json({ error: "This invite was canceled" });
+        if (diag.deleted) return res.status(410).json({ error: "This invite was canceled" });
         if (diag.invite_verified)
           return res.status(409).json({
             error:
@@ -523,16 +446,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
           });
         if (new Date(diag.expires_at) < new Date())
           return res.status(410).json({
-            error:
-              "This invite has expired. Ask the administrator for a new invite.",
+            error: "This invite has expired. Ask the administrator for a new invite.",
           });
         return res.status(400).json({ error: "Invalid or expired invite" });
       }
 
-      const existingUsers = await SearchUsersRepository.findByUsernameOrEmail(
-        "",
-        invite.email
-      );
+      const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", invite.email);
       const targetUser = existingUsers.find((u) => u.email === invite.email);
 
       let targetUserId;
@@ -546,10 +465,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
           });
         }
 
-        const usernameAvailability =
-          await SearchUsersRepository.checkUniqueAvailability({
-            username,
-          });
+        const usernameAvailability = await SearchUsersRepository.checkUniqueAvailability({
+          username,
+        });
         if (!usernameAvailability.username.available) {
           return res.status(409).json(buildUniqueConflictPayload("username"));
         }
@@ -566,9 +484,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         });
 
         if (!createdUser || !createdUser[0]) {
-          return res
-            .status(500)
-            .json({ error: "Failed to create user account" });
+          return res.status(500).json({ error: "Failed to create user account" });
         }
 
         targetUserId = createdUser[0].user_id;
@@ -582,10 +498,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
               targetUserId
             );
             if (saveResult.success) {
-              await UserDataRepository.updateProfileImage(
-                targetUserId,
-                saveResult.key
-              );
+              await UserDataRepository.updateProfileImage(targetUserId, saveResult.key);
             }
           } catch (imageError) {
             console.error("Error uploading image:", imageError);
@@ -597,8 +510,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
         if (authUserId && authUserId !== targetUserId) {
           return res.status(403).json({
-            error:
-              "You are logged in with a different account than the invited one.",
+            error: "You are logged in with a different account than the invited one.",
           });
         }
 
@@ -606,10 +518,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           // Verify their email if it wasn't, perhaps update their account
           const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
           const hashedPassword = await bcrypt.hash(password, saltRounds);
-          await UserDataRepository.updateUserPassword(
-            targetUserId,
-            hashedPassword
-          );
+          await UserDataRepository.updateUserPassword(targetUserId, hashedPassword);
           await UserTokensRepository.verifyUserEmail(targetUserId);
         }
       }
@@ -662,10 +571,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         homePath
       );
       if (!confirmEmail.success) {
-        console.warn(
-          "Failed to send invite-accepted email:",
-          confirmEmail.error
-        );
+        console.warn("Failed to send invite-accepted email:", confirmEmail.error);
       }
 
       res.status(200).json({
@@ -715,9 +621,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return;
       }
 
-      const invites = await this.organizationsRepository.getAllOrgInvites(
-        currentOrg.id
-      );
+      const invites = await this.organizationsRepository.getAllOrgInvites(currentOrg.id);
 
       res.status(200).json({
         data: invites,
@@ -750,16 +654,13 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return;
       }
 
-      const invite =
-        await this.organizationsRepository.findOrgInviteByToken(invite_id);
+      const invite = await this.organizationsRepository.findOrgInviteByToken(invite_id);
       if (!invite) {
         return res.status(404).json({ error: "Invite not found" });
       }
 
       if (String(invite.organization_id) !== String(currentOrg.id)) {
-        return res
-          .status(403)
-          .json({ error: "No permission to cancel this invite" });
+        return res.status(403).json({ error: "No permission to cancel this invite" });
       }
 
       await this.organizationsRepository.deleteOrgInvite(invite_id);
@@ -794,13 +695,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
         return;
       }
 
-      let invite =
-        await this.organizationsRepository.findOrgInviteByToken(invite_id);
+      let invite = await this.organizationsRepository.findOrgInviteByToken(invite_id);
       if (!invite) {
         // Might be expired, let's try to fetch it anyway to resend
-        const pending = await this.organizationsRepository.getPendingOrgInvites(
-          currentOrg.id
-        );
+        const pending = await this.organizationsRepository.getPendingOrgInvites(currentOrg.id);
         invite = pending.find((i) => i.invite_id === invite_id);
         if (!invite) {
           return res.status(404).json({ error: "Invite not found" });
@@ -812,8 +710,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       // Update expiration
-      const updatedInvite =
-        await this.organizationsRepository.resendOrgInvite(invite_id);
+      const updatedInvite = await this.organizationsRepository.resendOrgInvite(invite_id);
 
       const inviter = await SearchUsersRepository.findById(authUserId);
       const inviterLocale = await getUserEmailLocale({ userId: authUserId });
@@ -872,29 +769,20 @@ class OrganizationMembersController extends OrganizationsBaseController {
       };
 
       for (const inviteData of invites) {
-        const {
-          email,
-          role = ORG_ROLES.MEMBER,
-          name,
-          username,
-          target_areas = [],
-        } = inviteData;
+        const { email, role = ORG_ROLES.MEMBER, name, username, target_areas = [] } = inviteData;
 
         try {
-          const normalizedRole =
-            typeof role === "string" ? role.trim().toUpperCase() : "";
+          const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
 
-          const pending =
-            await this.organizationsRepository.checkExistingInvite(
-              currentOrg.id,
-              email
-            );
+          const pending = await this.organizationsRepository.checkExistingInvite(
+            currentOrg.id,
+            email
+          );
           if (pending) {
             throw new Error("Invite already pending");
           }
 
-          const existingUsers =
-            await SearchUsersRepository.findByUsernameOrEmail("", email);
+          const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", email);
           const targetUser = existingUsers.find((u) => u.email === email);
           if (targetUser) {
             const isMember = await this.organizationsRepository.isMember(
@@ -910,10 +798,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           const validTargetAreas = [];
           for (const tArea of target_areas) {
             if (!tArea.area_id) continue;
-            const area = await this.areasRepository.getAreaById(
-              tArea.area_id,
-              currentOrg.id
-            );
+            const area = await this.areasRepository.getAreaById(tArea.area_id, currentOrg.id);
             if (area) {
               const resolvedRole = this._resolveProjectMemberRole(tArea.role);
               validTargetAreas.push({

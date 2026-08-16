@@ -58,9 +58,7 @@ class ChatFormatterUtil {
     }
 
     return files.map((file) => ({
-      base64Data: Buffer.isBuffer(file.buffer)
-        ? file.buffer.toString("base64")
-        : "",
+      base64Data: Buffer.isBuffer(file.buffer) ? file.buffer.toString("base64") : "",
       mimeType: file.mimetype || "application/octet-stream",
       name: file.originalname || "file",
       sizeBytes: Number(file.size || 0),
@@ -82,8 +80,7 @@ class ChatFormatterUtil {
     return messages
       .map((message) => {
         const role = message?.role === "assistant" ? "assistant" : "user";
-        const rawContent =
-          typeof message?.content === "string" ? message.content.trim() : "";
+        const rawContent = typeof message?.content === "string" ? message.content.trim() : "";
         if (!rawContent) {
           return null;
         }
@@ -138,9 +135,7 @@ class ChatFormatterUtil {
     }
     const lines = trimmed.split(/\r?\n/);
     const firstLine =
-      lines
-        .find((line) => typeof line === "string" && line.trim().length > 0)
-        ?.trim() || trimmed;
+      lines.find((line) => typeof line === "string" && line.trim().length > 0)?.trim() || trimmed;
     const collapsed = firstLine.replace(/\s+/g, " ").trim();
     if (!collapsed) {
       return "";
@@ -161,9 +156,7 @@ class ChatFormatterUtil {
     if (rawError && typeof rawError === "object") {
       return {
         code:
-          typeof rawError.code === "string" && rawError.code
-            ? rawError.code
-            : "ENGINE_TASK_FAILED",
+          typeof rawError.code === "string" && rawError.code ? rawError.code : "ENGINE_TASK_FAILED",
         message:
           typeof rawError.message === "string" && rawError.message
             ? rawError.message
@@ -220,11 +213,7 @@ class ChatFormatterUtil {
   extractTokenUsage(enginePayload = {}) {
     const usage = enginePayload?.data?.usage || enginePayload?.usage || {};
     const inputTokens =
-      usage.inputTokens ||
-      usage.input_tokens ||
-      usage.promptTokens ||
-      usage.prompt_tokens ||
-      null;
+      usage.inputTokens || usage.input_tokens || usage.promptTokens || usage.prompt_tokens || null;
     const outputTokens =
       usage.outputTokens ||
       usage.output_tokens ||
@@ -234,15 +223,9 @@ class ChatFormatterUtil {
     const totalTokens = usage.totalTokens || usage.total_tokens || null;
 
     return {
-      inputTokens: Number.isFinite(Number(inputTokens))
-        ? Number(inputTokens)
-        : null,
-      outputTokens: Number.isFinite(Number(outputTokens))
-        ? Number(outputTokens)
-        : null,
-      totalTokens: Number.isFinite(Number(totalTokens))
-        ? Number(totalTokens)
-        : null,
+      inputTokens: Number.isFinite(Number(inputTokens)) ? Number(inputTokens) : null,
+      outputTokens: Number.isFinite(Number(outputTokens)) ? Number(outputTokens) : null,
+      totalTokens: Number.isFinite(Number(totalTokens)) ? Number(totalTokens) : null,
     };
   }
 
@@ -273,10 +256,7 @@ class ChatFormatterUtil {
       const node = stack.pop();
       if (!node || typeof node !== "object") continue;
 
-      const props =
-        node.properties && typeof node.properties === "object"
-          ? node.properties
-          : {};
+      const props = node.properties && typeof node.properties === "object" ? node.properties : {};
       const t =
         typeof node.text === "string"
           ? node.text

@@ -27,10 +27,7 @@ function getBlockPlainText(node) {
   const fromTop = typeof n.text === "string" ? n.text : "";
   const props = n.properties;
   const fromProps =
-    props &&
-    typeof props === "object" &&
-    props !== null &&
-    typeof props.text === "string"
+    props && typeof props === "object" && props !== null && typeof props.text === "string"
       ? props.text
       : "";
   return (fromTop || fromProps || "").replace(/\r\n/g, "\n");
@@ -73,21 +70,15 @@ function resolveNoteTitle(input, maxLen = DEFAULT_MAX_TITLE_LEN) {
   const title = typeof input.title === "string" ? input.title.trim() : "";
   if (title) return title.length > maxLen ? title.slice(0, maxLen) : title;
 
-  const description =
-    typeof input.description === "string" ? input.description : "";
+  const description = typeof input.description === "string" ? input.description : "";
   const fromDesc = firstLineUpTo(description, maxLen);
   if (fromDesc) return fromDesc;
 
   const plain =
-    typeof input.plainFallback === "string"
-      ? firstLineUpTo(input.plainFallback, maxLen)
-      : "";
+    typeof input.plainFallback === "string" ? firstLineUpTo(input.plainFallback, maxLen) : "";
   if (plain) return plain;
 
-  const fromBlocks = deriveTitleFromBlocks(
-    Array.isArray(input.blocks) ? input.blocks : [],
-    maxLen
-  );
+  const fromBlocks = deriveTitleFromBlocks(Array.isArray(input.blocks) ? input.blocks : [], maxLen);
   return fromBlocks;
 }
 

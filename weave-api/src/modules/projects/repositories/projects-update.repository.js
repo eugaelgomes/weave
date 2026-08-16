@@ -1,21 +1,13 @@
 const { executeQuery } = require("@/database/connection");
-const {
-  PROJECT_WRITE_CAPABLE_ROLES,
-} = require("@/modules/projects/project-role-policy");
+const { PROJECT_WRITE_CAPABLE_ROLES } = require("@/modules/projects/project-role-policy");
 
-const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map(
-  (role) => `'${role}'`
-).join(", ");
+const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map((role) => `'${role}'`).join(
+  ", "
+);
 
 class ProjectsUpdateRepository {
   async updateProject(projectId, userId, updates) {
-    const allowedFields = [
-      "title",
-      "description",
-      "status",
-      "properties",
-      "projects_files",
-    ];
+    const allowedFields = ["title", "description", "status", "properties", "projects_files"];
 
     const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
 
@@ -85,22 +77,14 @@ class ProjectsUpdateRepository {
       projectId,
       userId,
       ...keys.map((k) =>
-        k === "properties" || k === "projects_files"
-          ? JSON.stringify(updates[k])
-          : updates[k]
+        k === "properties" || k === "projects_files" ? JSON.stringify(updates[k]) : updates[k]
       ),
     ];
 
     return executeQuery(query, values);
   }
   async updateProjectInOrganization(projectId, organizationId, updates) {
-    const allowedFields = [
-      "title",
-      "description",
-      "status",
-      "properties",
-      "projects_files",
-    ];
+    const allowedFields = ["title", "description", "status", "properties", "projects_files"];
 
     const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
 
@@ -168,9 +152,7 @@ class ProjectsUpdateRepository {
       projectId,
       organizationId,
       ...keys.map((k) =>
-        k === "properties" || k === "projects_files"
-          ? JSON.stringify(updates[k])
-          : updates[k]
+        k === "properties" || k === "projects_files" ? JSON.stringify(updates[k]) : updates[k]
       ),
     ];
 
@@ -219,20 +201,10 @@ class ProjectsUpdateRepository {
       GROUP BY p.id;
     `;
 
-    return executeQuery(query, [
-      projectId,
-      organizationId,
-      collaboratorUserId,
-      newRole,
-    ]);
+    return executeQuery(query, [projectId, organizationId, collaboratorUserId, newRole]);
   }
 
-  async updateCollaboratorPermission(
-    projectId,
-    ownerId,
-    collaboratorUserId,
-    newRole
-  ) {
+  async updateCollaboratorPermission(projectId, ownerId, collaboratorUserId, newRole) {
     const query = `
       WITH updated_member AS (
         UPDATE project_members
@@ -270,20 +242,10 @@ class ProjectsUpdateRepository {
       GROUP BY p.id;
     `;
 
-    return executeQuery(query, [
-      projectId,
-      ownerId,
-      collaboratorUserId,
-      newRole,
-    ]);
+    return executeQuery(query, [projectId, ownerId, collaboratorUserId, newRole]);
   }
 
-  async updateNoteInProjectWithOrgScope(
-    projectId,
-    noteId,
-    userId,
-    organizationId
-  ) {
+  async updateNoteInProjectWithOrgScope(projectId, noteId, userId, organizationId) {
     const query = `
       UPDATE projects
       SET 
@@ -492,9 +454,7 @@ class ProjectsUpdateRepository {
       projectId,
       userId,
       stageId,
-      ...keys.map((k) =>
-        k === "properties" ? JSON.stringify(updates[k] ?? {}) : updates[k]
-      ),
+      ...keys.map((k) => (k === "properties" ? JSON.stringify(updates[k] ?? {}) : updates[k])),
     ];
 
     const query = `
@@ -548,12 +508,7 @@ class ProjectsUpdateRepository {
     ];
   }
 
-  async updateProjectStageInOrganization(
-    projectId,
-    organizationId,
-    stageId,
-    updates
-  ) {
+  async updateProjectStageInOrganization(projectId, organizationId, stageId, updates) {
     const allowedFields = ["name", "position", "color", "properties"];
     const keys = Object.keys(updates).filter((k) => allowedFields.includes(k));
 
@@ -577,9 +532,7 @@ class ProjectsUpdateRepository {
       projectId,
       organizationId,
       stageId,
-      ...keys.map((k) =>
-        k === "properties" ? JSON.stringify(updates[k] ?? {}) : updates[k]
-      ),
+      ...keys.map((k) => (k === "properties" ? JSON.stringify(updates[k] ?? {}) : updates[k])),
     ];
 
     const query = `

@@ -12,10 +12,7 @@ const manageProjectsSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
     description: z.string().optional().describe("Description of the project"),
-    methodology: z
-      .enum(["KANBAN", "SCRUM"])
-      .optional()
-      .describe("Project methodology"),
+    methodology: z.enum(["KANBAN", "SCRUM"]).optional().describe("Project methodology"),
     name: z.string().describe("Name of the project"),
   }),
   z.object({
@@ -102,16 +99,14 @@ const createProjectsTools = (user) => ({
         const { action, projectId, stageId, name, order } = args;
 
         if (action === "list") {
-          const result =
-            await projectsReadRepository.getProjectStages(projectId);
+          const result = await projectsReadRepository.getProjectStages(projectId);
           return {
             content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
           };
         }
 
         if (action === "update") {
-          if (!stageId)
-            throw new Error("stageId is required for update action");
+          if (!stageId) throw new Error("stageId is required for update action");
           const result = await projectsUpdateRepository.updateProjectStage(
             projectId,
             user.userId,
@@ -124,13 +119,8 @@ const createProjectsTools = (user) => ({
         }
 
         if (action === "delete") {
-          if (!stageId)
-            throw new Error("stageId is required for delete action");
-          await projectsDeleteRepository.deleteProjectStage(
-            projectId,
-            user.userId,
-            stageId
-          );
+          if (!stageId) throw new Error("stageId is required for delete action");
+          await projectsDeleteRepository.deleteProjectStage(projectId, user.userId, stageId);
           return {
             content: [
               {
@@ -154,17 +144,13 @@ const createProjectsTools = (user) => ({
   },
 
   manage_project_tasks: {
-    description:
-      "Manage tasks/notes inside a project (list, create, update_stage).",
+    description: "Manage tasks/notes inside a project (list, create, update_stage).",
     handler: async (args) => {
       try {
         const { action, projectId, stageId, noteId, title, content } = args;
 
         if (action === "list") {
-          const result = await projectsReadRepository.getAssociatedNotes(
-            projectId,
-            user.userId
-          );
+          const result = await projectsReadRepository.getAssociatedNotes(projectId, user.userId);
           return {
             content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
           };
@@ -186,8 +172,7 @@ const createProjectsTools = (user) => ({
         }
 
         if (action === "update_stage") {
-          if (!noteId)
-            throw new Error("noteId is required for update_stage action");
+          if (!noteId) throw new Error("noteId is required for update_stage action");
           const result = await mutateNotesRepository.updateNoteStage(
             noteId,
             stageId,
@@ -212,10 +197,21 @@ const createProjectsTools = (user) => ({
   },
 
   manage_projects: {
-    description: "Manage projects (create, update, delete, get, list, stats, upload_file, read_file, delete_file).",
+    description:
+      "Manage projects (create, update, delete, get, list, stats, upload_file, read_file, delete_file).",
     handler: async (args) => {
       try {
-        const { action, projectId, name, description, methodology, fileName, mimeType, base64Data, url } = args;
+        const {
+          action,
+          projectId,
+          name,
+          description,
+          methodology,
+          fileName,
+          mimeType,
+          base64Data,
+          url,
+        } = args;
 
         if (action === "create") {
           if (!name) throw new Error("name is required for create action");
@@ -236,13 +232,11 @@ const createProjectsTools = (user) => ({
         }
 
         if (action === "update") {
-          if (!projectId)
-            throw new Error("projectId is required for update action");
-          const result = await projectsUpdateRepository.updateProject(
-            projectId,
-            user.userId,
-            { description, title: name }
-          );
+          if (!projectId) throw new Error("projectId is required for update action");
+          const result = await projectsUpdateRepository.updateProject(projectId, user.userId, {
+            description,
+            title: name,
+          });
           const enriched = McpLinksUtil.enrichWithAppUrl(result, "project", "id");
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
@@ -250,8 +244,7 @@ const createProjectsTools = (user) => ({
         }
 
         if (action === "delete") {
-          if (!projectId)
-            throw new Error("projectId is required for delete action");
+          if (!projectId) throw new Error("projectId is required for delete action");
           await projectsDeleteRepository.deleteProject(projectId, user.userId);
           return {
             content: [
@@ -264,12 +257,8 @@ const createProjectsTools = (user) => ({
         }
 
         if (action === "get") {
-          if (!projectId)
-            throw new Error("projectId is required for get action");
-          const result = await projectsReadRepository.getProjectById(
-            projectId,
-            user.userId
-          );
+          if (!projectId) throw new Error("projectId is required for get action");
+          const result = await projectsReadRepository.getProjectById(projectId, user.userId);
           if (!result) throw new Error("Project not found or access denied.");
           const enriched = McpLinksUtil.enrichWithAppUrl(result, "project", "id");
           return {
@@ -278,19 +267,15 @@ const createProjectsTools = (user) => ({
         }
 
         if (action === "list") {
-          const result = await projectsReadRepository.getProjectsForUser(
-            user.userId
-          );
-          const enriched = result.map(p => McpLinksUtil.enrichWithAppUrl(p, "project", "id"));
+          const result = await projectsReadRepository.getProjectsForUser(user.userId);
+          const enriched = result.map((p) => McpLinksUtil.enrichWithAppUrl(p, "project", "id"));
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
         }
 
         if (action === "stats") {
-          const result = await projectsReadRepository.getProjectStats(
-            user.userId
-          );
+          const result = await projectsReadRepository.getProjectStats(user.userId);
           return {
             content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
           };
@@ -299,10 +284,19 @@ const createProjectsTools = (user) => ({
         if (action === "upload_file") {
           if (!projectId) throw new Error("projectId is required for upload_file action");
           const buffer = Buffer.from(base64Data, "base64");
-          const result = await spacesService.uploadProjectFile(buffer, mimeType, projectId, user.userId, fileName);
+          const result = await spacesService.uploadProjectFile(
+            buffer,
+            mimeType,
+            projectId,
+            user.userId,
+            fileName
+          );
           return {
             content: [
-              { text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key, type: "text" },
+              {
+                text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key,
+                type: "text",
+              },
             ],
           };
         }
@@ -315,7 +309,7 @@ const createProjectsTools = (user) => ({
           return {
             content: [
               { text: `File successfully read. Extracted ${buffer.length} bytes.`, type: "text" },
-              { text: "data:application/octet-stream;base64," + base64Str, type: "text" }
+              { text: "data:application/octet-stream;base64," + base64Str, type: "text" },
             ],
           };
         }
@@ -326,9 +320,7 @@ const createProjectsTools = (user) => ({
           const success = await spacesService.deleteImage(key);
           if (!success) throw new Error("Failed to delete file from storage.");
           return {
-            content: [
-              { text: "File deleted successfully (Key: " + key + ")", type: "text" },
-            ],
+            content: [{ text: "File deleted successfully (Key: " + key + ")", type: "text" }],
           };
         }
 

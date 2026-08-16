@@ -1,8 +1,5 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
 const { getUserEmailLocale, t } = require("@/services/email/i18n");
 
 /**
@@ -10,11 +7,7 @@ const { getUserEmailLocale, t } = require("@/services/email/i18n");
  * @param {string} organizationName
  * @param {string} homeUrl
  */
-async function send_organization_invite_accepted(
-  toEmail,
-  organizationName,
-  homeUrl
-) {
+async function send_organization_invite_accepted(toEmail, organizationName, homeUrl) {
   const locale = await getUserEmailLocale({ email: toEmail });
   const safeOrg = organizationName || t(locale, "common.organization");
 
@@ -34,10 +27,7 @@ async function send_organization_invite_accepted(
       `,
       ctaText: t(locale, "inviteAccepted.cta"),
       ctaUrl: homeUrl,
-      introLines: [
-        t(locale, "inviteAccepted.intro1"),
-        t(locale, "inviteAccepted.intro2"),
-      ],
+      introLines: [t(locale, "inviteAccepted.intro1"), t(locale, "inviteAccepted.intro2")],
       locale,
       preheader: t(locale, "inviteAccepted.preheader"),
       subtitle: t(locale, "inviteAccepted.subtitle"),

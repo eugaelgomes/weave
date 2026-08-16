@@ -74,11 +74,7 @@ class OrganizationDomainsRepository {
       RETURNING *;
     `;
 
-    const results = await executeQuery(query, [
-      organizationId,
-      domainName,
-      verificationToken,
-    ]);
+    const results = await executeQuery(query, [organizationId, domainName, verificationToken]);
 
     return results[0];
   }
@@ -93,11 +89,7 @@ class OrganizationDomainsRepository {
       RETURNING *;
     `;
 
-    const results = await executeQuery(query, [
-      domainId,
-      status,
-      verified ? new Date() : null,
-    ]);
+    const results = await executeQuery(query, [domainId, status, verified ? new Date() : null]);
 
     return results[0] || null;
   }

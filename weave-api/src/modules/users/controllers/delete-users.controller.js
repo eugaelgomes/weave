@@ -4,9 +4,7 @@ const DeleteUsersRepository = require("@/modules/users/repositories/delete-users
 const {
   delete_account_notification,
 } = require("@/services/email/templates/delete-account-message");
-const {
-  delete_account_request,
-} = require("@/services/email/templates/delete-account-request");
+const { delete_account_request } = require("@/services/email/templates/delete-account-request");
 const crypto = require("crypto");
 
 /**
@@ -35,31 +33,21 @@ class DeleteUsersController extends BaseController {
 
       const token = crypto.randomBytes(12).toString("hex");
 
-      const result = await DeleteUsersRepository.createDeleteAccountToken(
-        userId,
-        token
-      );
+      const result = await DeleteUsersRepository.createDeleteAccountToken(userId, token);
 
       if (result && result.length > 0) {
         try {
-          await delete_account_request(
-            userData.name,
-            userData.email,
-            userData.username,
-            token
-          );
+          await delete_account_request(userData.name, userData.email, userData.username, token);
         } catch (emailError) {
           console.error("Failed to send email to:", emailError);
           return res.status(500).json({
             error: "Email error",
-            message:
-              "Failed to send confirmation email. Please try again later.",
+            message: "Failed to send confirmation email. Please try again later.",
           });
         }
 
         res.status(200).json({
-          message:
-            "Confirmation email sent. Please check your inbox to confirm account deletion.",
+          message: "Confirmation email sent. Please check your inbox to confirm account deletion.",
           status: "OK",
         });
       } else {
@@ -92,8 +80,7 @@ class DeleteUsersController extends BaseController {
         });
       }
 
-      const tokenData =
-        await DeleteUsersRepository.findDeleteAccountToken(token);
+      const tokenData = await DeleteUsersRepository.findDeleteAccountToken(token);
 
       if (!tokenData) {
         return res.status(400).json({
@@ -120,16 +107,9 @@ class DeleteUsersController extends BaseController {
 
       if (deleteResult && deleteResult.length > 0) {
         try {
-          await delete_account_notification(
-            userData.name,
-            userData.email,
-            userData.username
-          );
+          await delete_account_notification(userData.name, userData.email, userData.username);
         } catch (emailError) {
-          console.error(
-            "Failed to send deletion confirmation email:",
-            emailError
-          );
+          console.error("Failed to send deletion confirmation email:", emailError);
         }
 
         res.status(200).json({

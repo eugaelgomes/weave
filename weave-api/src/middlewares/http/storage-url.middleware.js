@@ -73,4 +73,3 @@ function storageUrlInterceptorMiddleware(req, res, next) {
 }
 
 module.exports = { storageUrlInterceptorMiddleware, traverseAndReplaceStorageUrlsAsync };
-

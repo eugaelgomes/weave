@@ -6,10 +6,7 @@ const {
   getFunctionSchema,
   toOpenAIFormat,
 } = require("./ai-function-schemas.util");
-const {
-  getOwnershipRules,
-  isFunctionForbidden,
-} = require("./ai-security-policies.util");
+const { getOwnershipRules, isFunctionForbidden } = require("./ai-security-policies.util");
 
 /**
  * @param {object} params
@@ -42,16 +39,13 @@ async function loadResourceAccessContext({ userId, context = {} }) {
       result.note.accessible = false;
     } else {
       const ownerId = String(note.user_id || "");
-      const collaborators = Array.isArray(note.collaborators)
-        ? note.collaborators
-        : [];
+      const collaborators = Array.isArray(note.collaborators) ? note.collaborators : [];
       const isCollaborator = collaborators.some(
         (item) => String(item.id || item.user_id || "") === String(userId)
       );
       result.note.isOwner = ownerId === String(userId);
       result.note.isCollaborator = isCollaborator;
-      result.note.accessible =
-        result.note.isOwner || result.note.isCollaborator;
+      result.note.accessible = result.note.isOwner || result.note.isCollaborator;
     }
   }
 
@@ -60,24 +54,19 @@ async function loadResourceAccessContext({ userId, context = {} }) {
       context.projectId,
       userId
     );
-    const project = Array.isArray(projectResult)
-      ? projectResult[0]
-      : projectResult;
+    const project = Array.isArray(projectResult) ? projectResult[0] : projectResult;
     result.project.exists = Boolean(project);
     if (!project) {
       result.project.accessible = false;
     } else {
       const ownerId = String(project.user_id || "");
-      const collaborators = Array.isArray(project.collaborators)
-        ? project.collaborators
-        : [];
+      const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
       const isCollaborator = collaborators.some(
         (item) => String(item.user_id || item.id || "") === String(userId)
       );
       result.project.isOwner = ownerId === String(userId);
       result.project.isCollaborator = isCollaborator;
-      result.project.accessible =
-        result.project.isOwner || result.project.isCollaborator;
+      result.project.accessible = result.project.isOwner || result.project.isCollaborator;
     }
   }
 
@@ -103,8 +92,7 @@ function isFunctionAuthorized({ access, functionName, schema, context }) {
     return false;
   }
 
-  const noteScoped =
-    category === FunctionCategory.NOTES || category === FunctionCategory.BLOCKS;
+  const noteScoped = category === FunctionCategory.NOTES || category === FunctionCategory.BLOCKS;
   const projectScoped = category === FunctionCategory.PROJECTS;
   const orgScoped =
     category === FunctionCategory.ORGANIZATIONS ||
@@ -180,9 +168,7 @@ async function resolveAuthorizedFunctions({ allowEdit, context = {}, userId }) {
     })
   );
 
-  const functions = authorizedNames
-    .map((name) => toOpenAIFormat(name))
-    .filter(Boolean);
+  const functions = authorizedNames.map((name) => toOpenAIFormat(name)).filter(Boolean);
 
   return {
     access,

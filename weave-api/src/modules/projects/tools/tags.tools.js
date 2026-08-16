@@ -4,10 +4,7 @@ const tagsRepository = require("@/modules/projects/repositories/tags.repository"
 const manageTagsSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
-    color: z
-      .string()
-      .optional()
-      .describe("Color of the tag in hexadecimal format"),
+    color: z.string().optional().describe("Color of the tag in hexadecimal format"),
     name: z.string().describe("Name of the tag"),
     orgId: z.string().uuid().optional().describe("ID of the organization"),
     projectId: z.string().uuid().optional().describe("ID of the project"),
@@ -35,8 +32,7 @@ const manageTagsSchema = z.discriminatedUnion("action", [
 
 const createTagsTools = (user) => ({
   manage_tags: {
-    description:
-      "Manage tags for a project or organization (create, update, delete, list).",
+    description: "Manage tags for a project or organization (create, update, delete, list).",
     handler: async (args) => {
       try {
         const { action, orgId, projectId, tagId, name, color } = args;
@@ -96,9 +92,7 @@ const createTagsTools = (user) => ({
         throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
-          content: [
-            { text: `Error managing tags: ${error.message}`, type: "text" },
-          ],
+          content: [{ text: `Error managing tags: ${error.message}`, type: "text" }],
           isError: true,
         };
       }

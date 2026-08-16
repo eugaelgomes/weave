@@ -3,7 +3,11 @@ const agentCustomToolsService = require("../services/agent-custom-tools.service"
 async function createCustomTool(req, res, next) {
   try {
     const userId = req.user.userId || req.user.id;
-    const organizationId = req.user.organizationId || req.user.current_organization_id || req.body.organizationId || null;
+    const organizationId =
+      req.user.organizationId ||
+      req.user.current_organization_id ||
+      req.body.organizationId ||
+      null;
     const payload = { ...req.body, organizationId };
 
     const tool = await agentCustomToolsService.createCustomTool(userId, payload);

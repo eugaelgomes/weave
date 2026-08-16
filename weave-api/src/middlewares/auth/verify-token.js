@@ -1,9 +1,7 @@
 const bcrypt = require("bcrypt");
 const Sentry = require("@sentry/node");
 const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
-const {
-  jwtPayloadSchema,
-} = require("@/modules/authentication/schemas/jwt-payload.schema");
+const { jwtPayloadSchema } = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 /**
  * Middleware that verifies the authentication of the request.
@@ -28,9 +26,7 @@ const verifyToken = async (req, res, next) => {
       const tokenParts = apiTokenRaw.split(".");
 
       if (tokenParts.length !== 2) {
-        return res
-          .status(401)
-          .json({ error: "Invalid or malformed API token." });
+        return res.status(401).json({ error: "Invalid or malformed API token." });
       }
 
       const prefixPart = tokenParts[0]; // wn_abc123
@@ -38,33 +34,23 @@ const verifyToken = async (req, res, next) => {
       const keyPrefix = prefixPart.replace("wn_", "");
 
       // Fetch and validate business rules of the API Token
-      const tokenRecord =
-        await LookupApiTokensRepository.getTokenByKeyPrefix(keyPrefix);
+      const tokenRecord = await LookupApiTokensRepository.getTokenByKeyPrefix(keyPrefix);
 
       if (!tokenRecord) {
-        return res
-          .status(401)
-          .json({ error: "API Token not found or inactive." });
+        return res.status(401).json({ error: "API Token not found or inactive." });
       }
 
       if (tokenRecord.revoked_at) {
-        return res
-          .status(401)
-          .json({ error: "This API token has been revoked." });
+        return res.status(401).json({ error: "This API token has been revoked." });
       }
 
-      if (
-        tokenRecord.expires_at &&
-        new Date() > new Date(tokenRecord.expires_at)
-      ) {
+      if (tokenRecord.expires_at && new Date() > new Date(tokenRecord.expires_at)) {
         return res.status(401).json({ error: "This API token has expired." });
       }
 
       const isValid = await bcrypt.compare(secretPart, tokenRecord.token_hash);
       if (!isValid) {
-        return res
-          .status(401)
-          .json({ error: "Invalid API token (Secret incorrect)." });
+        return res.status(401).json({ error: "Invalid API token (Secret incorrect)." });
       }
 
       // Populates the request data with the token owner
@@ -82,14 +68,9 @@ const verifyToken = async (req, res, next) => {
 
       return next(); // Follows the public API flow
     } catch (error) {
-      console.error(
-        "[Auth Error] Error validating public API token:",
-        error.message
-      );
+      console.error("[Auth Error] Error validating public API token:", error.message);
       Sentry.captureException(error);
-      return res
-        .status(500)
-        .json({ error: "Internal error validating the API token." });
+      return res.status(500).json({ error: "Internal error validating the API token." });
     }
   }
 

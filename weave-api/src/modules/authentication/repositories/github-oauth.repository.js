@@ -74,11 +74,7 @@ class GithubOauthRepository extends BaseRepository {
       WHERE user_id = $3
       RETURNING *
     `;
-    const results = await this.executeQuery(query, [
-      githubId,
-      avatarUrl,
-      userId,
-    ]);
+    const results = await this.executeQuery(query, [githubId, avatarUrl, userId]);
     return results[0];
   }
 

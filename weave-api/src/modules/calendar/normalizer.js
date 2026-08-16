@@ -1,5 +1,4 @@
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const isValidUUID = (value) => {
   return !!value && UUID_REGEX.test(value);
@@ -71,10 +70,8 @@ const normalizeAttendees = (attendees) => {
 
 const normalizeCreatePayload = (body, creatorId) => {
   const title = typeof body?.title === "string" ? body.title.trim() : "";
-  const description =
-    typeof body?.description === "string" ? body.description.trim() : null;
-  const location =
-    typeof body?.location === "string" ? body.location.trim() : null;
+  const description = typeof body?.description === "string" ? body.description.trim() : null;
+  const location = typeof body?.location === "string" ? body.location.trim() : null;
 
   const organizationId = body?.organization_id || body?.organizationId || null;
   const noteId = body?.note_id || body?.noteId || null;
@@ -85,20 +82,14 @@ const normalizeCreatePayload = (body, creatorId) => {
   const lastSyncedAt = parseDate(body?.last_synced_at || body?.lastSyncedAt);
 
   const isAllDay = extractBoolean(body?.is_all_day ?? body?.isAllDay, false);
-  const isFromNoteRaw = extractBoolean(
-    body?.is_from_note ?? body?.isFromNote,
-    !!noteId
-  );
+  const isFromNoteRaw = extractBoolean(body?.is_from_note ?? body?.isFromNote, !!noteId);
   const isFromProjectRaw = extractBoolean(
     body?.is_from_project ?? body?.isFromProject,
     !!projectId
   );
 
   const syncStatus = parseSyncStatus(body?.sync_status || body?.syncStatus);
-  const syncWithGoogle = extractBoolean(
-    body?.sync_with_google ?? body?.syncWithGoogle,
-    false
-  );
+  const syncWithGoogle = extractBoolean(body?.sync_with_google ?? body?.syncWithGoogle, false);
   const createGoogleMeet = extractBoolean(
     body?.create_google_meet ?? body?.createGoogleMeet,
     false
@@ -112,8 +103,7 @@ const normalizeCreatePayload = (body, creatorId) => {
     description,
     endTime,
     etag: body?.etag || null,
-    googleCalendarId:
-      body?.google_calendar_id || body?.googleCalendarId || null,
+    googleCalendarId: body?.google_calendar_id || body?.googleCalendarId || null,
     googleEventId: body?.google_event_id || body?.googleEventId || null,
     isAllDay,
     isFromNote: isFromNoteRaw,
@@ -122,8 +112,7 @@ const normalizeCreatePayload = (body, creatorId) => {
     location,
     noteId,
     organizationId,
-    outlookCalendarId:
-      body?.outlook_calendar_id || body?.outlookCalendarId || null,
+    outlookCalendarId: body?.outlook_calendar_id || body?.outlookCalendarId || null,
     outlookEventId: body?.outlook_event_id || body?.outlookEventId || null,
     projectId,
     startTime,
@@ -177,13 +166,11 @@ const normalizeUpdateFields = (body) => {
   }
 
   if (body?.description !== undefined) {
-    fields.description =
-      typeof body.description === "string" ? body.description.trim() : null;
+    fields.description = typeof body.description === "string" ? body.description.trim() : null;
   }
 
   if (body?.location !== undefined) {
-    fields.location =
-      typeof body.location === "string" ? body.location.trim() : null;
+    fields.location = typeof body.location === "string" ? body.location.trim() : null;
   }
 
   if (body?.start_time !== undefined || body?.startTime !== undefined) {
@@ -196,12 +183,8 @@ const normalizeUpdateFields = (body) => {
     fields.end_time = parseDate(value);
   }
 
-  if (
-    body?.organization_id !== undefined ||
-    body?.organizationId !== undefined
-  ) {
-    fields.organization_id =
-      body?.organization_id || body?.organizationId || null;
+  if (body?.organization_id !== undefined || body?.organizationId !== undefined) {
+    fields.organization_id = body?.organization_id || body?.organizationId || null;
   }
 
   if (body?.note_id !== undefined || body?.noteId !== undefined) {
@@ -213,27 +196,15 @@ const normalizeUpdateFields = (body) => {
   }
 
   if (body?.is_all_day !== undefined || body?.isAllDay !== undefined) {
-    fields.is_all_day = extractBoolean(
-      body?.is_all_day ?? body?.isAllDay,
-      false
-    );
+    fields.is_all_day = extractBoolean(body?.is_all_day ?? body?.isAllDay, false);
   }
 
   if (body?.is_from_note !== undefined || body?.isFromNote !== undefined) {
-    fields.is_from_note = extractBoolean(
-      body?.is_from_note ?? body?.isFromNote,
-      false
-    );
+    fields.is_from_note = extractBoolean(body?.is_from_note ?? body?.isFromNote, false);
   }
 
-  if (
-    body?.is_from_project !== undefined ||
-    body?.isFromProject !== undefined
-  ) {
-    fields.is_from_project = extractBoolean(
-      body?.is_from_project ?? body?.isFromProject,
-      false
-    );
+  if (body?.is_from_project !== undefined || body?.isFromProject !== undefined) {
+    fields.is_from_project = extractBoolean(body?.is_from_project ?? body?.isFromProject, false);
   }
 
   if (body?.sync_status !== undefined || body?.syncStatus !== undefined) {
@@ -249,36 +220,20 @@ const normalizeUpdateFields = (body) => {
     fields.etag = body.etag || null;
   }
 
-  if (
-    body?.google_event_id !== undefined ||
-    body?.googleEventId !== undefined
-  ) {
-    fields.google_event_id =
-      body?.google_event_id || body?.googleEventId || null;
+  if (body?.google_event_id !== undefined || body?.googleEventId !== undefined) {
+    fields.google_event_id = body?.google_event_id || body?.googleEventId || null;
   }
 
-  if (
-    body?.google_calendar_id !== undefined ||
-    body?.googleCalendarId !== undefined
-  ) {
-    fields.google_calendar_id =
-      body?.google_calendar_id || body?.googleCalendarId || null;
+  if (body?.google_calendar_id !== undefined || body?.googleCalendarId !== undefined) {
+    fields.google_calendar_id = body?.google_calendar_id || body?.googleCalendarId || null;
   }
 
-  if (
-    body?.outlook_event_id !== undefined ||
-    body?.outlookEventId !== undefined
-  ) {
-    fields.outlook_event_id =
-      body?.outlook_event_id || body?.outlookEventId || null;
+  if (body?.outlook_event_id !== undefined || body?.outlookEventId !== undefined) {
+    fields.outlook_event_id = body?.outlook_event_id || body?.outlookEventId || null;
   }
 
-  if (
-    body?.outlook_calendar_id !== undefined ||
-    body?.outlookCalendarId !== undefined
-  ) {
-    fields.outlook_calendar_id =
-      body?.outlook_calendar_id || body?.outlookCalendarId || null;
+  if (body?.outlook_calendar_id !== undefined || body?.outlookCalendarId !== undefined) {
+    fields.outlook_calendar_id = body?.outlook_calendar_id || body?.outlookCalendarId || null;
   }
 
   return fields;

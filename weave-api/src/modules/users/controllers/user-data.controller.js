@@ -173,9 +173,7 @@ class UserDataController extends BaseController {
     try {
       this._validateAuthentication(req, res, next);
 
-      const user = await this.signinRepository.findUserByUsername(
-        req.user.username
-      );
+      const user = await this.signinRepository.findUserByUsername(req.user.username);
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -222,7 +220,7 @@ class UserDataController extends BaseController {
               notes: true,
               agent_house: true,
               weave_flow: true,
-              calendar: true
+              calendar: true,
             },
           },
           user_profile: {
@@ -262,9 +260,7 @@ class UserDataController extends BaseController {
     try {
       const username = normalizeUsername(req.query?.username);
       if (!username) {
-        return res
-          .status(400)
-          .json({ error: "username query param is required" });
+        return res.status(400).json({ error: "username query param is required" });
       }
       const availability = await SearchUsersRepository.checkUniqueAvailability({
         username,
@@ -314,9 +310,7 @@ class UserDataController extends BaseController {
    */
   async updateProfile(req, res, next) {
     try {
-      const currentUser = await this.signinRepository.findUserByUsername(
-        req.user.username
-      );
+      const currentUser = await this.signinRepository.findUserByUsername(req.user.username);
 
       if (!currentUser) {
         return res.status(404).json({ message: "User not found" });
@@ -332,14 +326,10 @@ class UserDataController extends BaseController {
         );
 
       const mockUserForPresign = { avatar_url: updatedUser.avatar_url };
-      const protectedMock = await presignObjectFields(
-        mockUserForPresign,
-        ["avatar_url"],
-        {
-          expiresIn: 12 * 60 * 60,
-          userId: req.user.userId,
-        }
-      );
+      const protectedMock = await presignObjectFields(mockUserForPresign, ["avatar_url"], {
+        expiresIn: 12 * 60 * 60,
+        userId: req.user.userId,
+      });
 
       const response = {
         user: {
@@ -371,9 +361,7 @@ class UserDataController extends BaseController {
       return res.status(200).json(response);
     } catch (error) {
       if (error.message === "INCORRECT_PASSWORD") {
-        return res
-          .status(401)
-          .json({ message: "Current password is incorrect" });
+        return res.status(401).json({ message: "Current password is incorrect" });
       }
       if (error.message === "INVALID_TOKEN") {
         return res.status(400).json({ message: "Invalid or expired token" });
@@ -390,16 +378,10 @@ class UserDataController extends BaseController {
 
       console.error("Error updating profile:", error);
 
-      updateProfileLogs.createLog(
-        req.user?.userId,
-        "system_error",
-        req,
-        "failure",
-        {
-          context: "updateProfile",
-          error: error.message,
-        }
-      );
+      updateProfileLogs.createLog(req.user?.userId, "system_error", req, "failure", {
+        context: "updateProfile",
+        error: error.message,
+      });
 
       this._handleError(error, res, next);
     }

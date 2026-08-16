@@ -83,10 +83,7 @@ class ReadNotesRepository extends BaseRepository {
       )
     ORDER BY n.updated_at DESC;
     `;
-    const results = await this.executeQuery(query, [
-      userId,
-      orgWideOrganizationId,
-    ]);
+    const results = await this.executeQuery(query, [userId, orgWideOrganizationId]);
     return await this.processNotesWithSignedUrls(results);
   }
 
@@ -180,10 +177,7 @@ class ReadNotesRepository extends BaseRepository {
         AND n.deleted = false
       ORDER BY n.updated_at DESC;
     `;
-    const results = await this.executeQuery(query, [
-      userId,
-      orgWideOrganizationId,
-    ]);
+    const results = await this.executeQuery(query, [userId, orgWideOrganizationId]);
     return await this.processNotesWithSignedUrls(results);
   }
 
@@ -239,9 +233,7 @@ class ReadNotesRepository extends BaseRepository {
     }
 
     const validSortFields = ["updated_at", "created_at", "title"];
-    const validSortField = validSortFields.includes(sortBy)
-      ? sortBy
-      : "updated_at";
+    const validSortField = validSortFields.includes(sortBy) ? sortBy : "updated_at";
     const validSortOrder = sortOrder.toLowerCase() === "asc" ? "ASC" : "DESC";
 
     const notesQuery = `
@@ -314,11 +306,7 @@ class ReadNotesRepository extends BaseRepository {
       WHERE ${whereConditions.join(" AND ")};
     `;
 
-    const notes = await this.executeQuery(notesQuery, [
-      ...queryParams,
-      limit,
-      offset,
-    ]);
+    const notes = await this.executeQuery(notesQuery, [...queryParams, limit, offset]);
     const [countResult] = await this.executeQuery(countQuery, queryParams);
     const total = parseInt(countResult.total);
 
@@ -536,10 +524,7 @@ class ReadNotesRepository extends BaseRepository {
             FROM user_scope_notes
         ) AS activity_metrics
 `;
-    const results = await this.executeQuery(query, [
-      userId,
-      orgWideOrganizationId,
-    ]);
+    const results = await this.executeQuery(query, [userId, orgWideOrganizationId]);
     return results[0];
   }
 
@@ -582,10 +567,7 @@ class ReadNotesRepository extends BaseRepository {
         const processedNote = { ...note };
 
         // Processar avatares dos colaboradores
-        if (
-          processedNote.collaborators &&
-          Array.isArray(processedNote.collaborators)
-        ) {
+        if (processedNote.collaborators && Array.isArray(processedNote.collaborators)) {
           processedNote.collaborators = await Promise.all(
             processedNote.collaborators.map(async (collab) => {
               return collab;

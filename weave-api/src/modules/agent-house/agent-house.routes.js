@@ -8,19 +8,33 @@ const {
   submitFeedback,
   shareChatSession,
   getSharedChatPreview,
-  forkSharedChat
+  forkSharedChat,
 } = require("./controllers/chat.controller");
 
 // Agent House Controllers
-const { createLlmConfig, getLlmConfigs, updateLlmConfig, deleteLlmConfig } = require("./controllers/agent-llms.controller");
-const { createCustomTool, getCustomTools, updateCustomTool, deleteCustomTool } = require("./controllers/agent-custom-tools.controller");
-const { createAgent, getAgents, getAgentById, updateAgent, deleteAgent } = require("./controllers/agents.controller");
+const {
+  createLlmConfig,
+  getLlmConfigs,
+  updateLlmConfig,
+  deleteLlmConfig,
+} = require("./controllers/agent-llms.controller");
+const {
+  createCustomTool,
+  getCustomTools,
+  updateCustomTool,
+  deleteCustomTool,
+} = require("./controllers/agent-custom-tools.controller");
+const {
+  createAgent,
+  getAgents,
+  getAgentById,
+  updateAgent,
+  deleteAgent,
+} = require("./controllers/agents.controller");
 
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
-const {
-  requireOrgPermission,
-} = require("@/middlewares/auth/require-org-permission");
+const { requireOrgPermission } = require("@/middlewares/auth/require-org-permission");
 const { validate } = require("@/middlewares/validation/validate");
 const {
   chatPayloadSchema,
@@ -35,19 +49,13 @@ const {
   createCustomToolSchema,
   updateCustomToolSchema,
 } = require("./schemas/agent-house.schema");
-const {
-  ORG_PERMISSIONS,
-} = require("@/modules/organizations/organization-role-policy");
+const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
 const { strictLimiter } = require("@/middlewares/security/request-limiters");
-const {
-  handleChatFilesUpload,
-} = require("./utils/chat-upload.util");
+const { handleChatFilesUpload } = require("./utils/chat-upload.util");
 
 const router = express.Router();
 
-const requireManageWeaveAi = requireOrgPermission(
-  ORG_PERMISSIONS.MANAGE_WEAVE_AI
-);
+const requireManageWeaveAi = requireOrgPermission(ORG_PERMISSIONS.MANAGE_WEAVE_AI);
 
 router.use(verifyToken, strictLimiter);
 const { requireModule } = require("@/middlewares/auth/require-module");
@@ -63,17 +71,8 @@ router.use((req, res, next) => {
 });
 
 // Chat endpoints
-router.post(
-  "/chat",
-  handleChatFilesUpload,
-  validate(chatPayloadSchema, "body"),
-  chat
-);
-router.get(
-  "/chat/history",
-  validate(getChatHistorySchema, "query"),
-  getChatHistory
-);
+router.post("/chat", handleChatFilesUpload, validate(chatPayloadSchema, "body"), chat);
+router.get("/chat/history", validate(getChatHistorySchema, "query"), getChatHistory);
 router.delete("/chat/:sessionId", deleteChatSession);
 router.post(
   "/chat/messages/:messageId/feedback",
@@ -94,19 +93,36 @@ router.get("/agents/:id", getAgentById);
 router.put("/agents/:id", requireManageWeaveAi, validate(updateAgentSchema, "body"), updateAgent);
 router.delete("/agents/:id", requireManageWeaveAi, deleteAgent);
 
-
 // Agent House - LLMs
-router.post("/agents/llms", requireManageWeaveAi, validate(createLlmSchema, "body"), createLlmConfig);
+router.post(
+  "/agents/llms",
+  requireManageWeaveAi,
+  validate(createLlmSchema, "body"),
+  createLlmConfig
+);
 router.get("/agents/llms", getLlmConfigs);
-router.put("/agents/llms/:id", requireManageWeaveAi, validate(updateLlmSchema, "body"), updateLlmConfig);
+router.put(
+  "/agents/llms/:id",
+  requireManageWeaveAi,
+  validate(updateLlmSchema, "body"),
+  updateLlmConfig
+);
 router.delete("/agents/llms/:id", requireManageWeaveAi, deleteLlmConfig);
 
 // Agent House - Custom Tools
-router.post("/agents/tools", requireManageWeaveAi, validate(createCustomToolSchema, "body"), createCustomTool);
+router.post(
+  "/agents/tools",
+  requireManageWeaveAi,
+  validate(createCustomToolSchema, "body"),
+  createCustomTool
+);
 router.get("/agents/tools", getCustomTools);
-router.put("/agents/tools/:id", requireManageWeaveAi, validate(updateCustomToolSchema, "body"), updateCustomTool);
+router.put(
+  "/agents/tools/:id",
+  requireManageWeaveAi,
+  validate(updateCustomToolSchema, "body"),
+  updateCustomTool
+);
 router.delete("/agents/tools/:id", requireManageWeaveAi, deleteCustomTool);
-
-
 
 module.exports = router;

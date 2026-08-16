@@ -18,8 +18,7 @@ const {
  * @param {unknown} error
  * @returns {error is PgError}
  */
-const isPgError = (error) =>
-  Boolean(error && typeof error === "object" && "code" in error);
+const isPgError = (error) => Boolean(error && typeof error === "object" && "code" in error);
 
 /**
  * Maps a Postgres error to a safe operational result when possible.

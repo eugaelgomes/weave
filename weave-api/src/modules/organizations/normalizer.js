@@ -1,9 +1,7 @@
 const {
   getAvailableOrgNames,
 } = require("@/modules/organizations/repositories/organizations.repository");
-const {
-  ORG_ROLES,
-} = require("@/modules/organizations/organization-role-policy");
+const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
 
 const PREDEFINED_PROPERTIES = Object.freeze({
   allowPublicNotes: {
@@ -73,8 +71,7 @@ const PREDEFINED_PROPERTIES = Object.freeze({
 });
 
 const normalizeOrganizationName = (name) => {
-  if (typeof name !== "string" || !name)
-    throw new Error("Nome inválido para normalização");
+  if (typeof name !== "string" || !name) throw new Error("Nome inválido para normalização");
 
   return name
     .toLowerCase()
@@ -88,8 +85,7 @@ const normalizeOrganizationName = (name) => {
 };
 
 const suggestUniqueOrganizationName = (baseName, existingNames) => {
-  if (!Array.isArray(existingNames))
-    throw new Error("Lista de nomes existentes inválida");
+  if (!Array.isArray(existingNames)) throw new Error("Lista de nomes existentes inválida");
 
   const normalized = normalizeOrganizationName(baseName);
   if (!normalized) throw new Error("Nome base inválido após normalização");
@@ -112,8 +108,7 @@ const generateUniqueOrganizationName = async (baseName) => {
 
 const isValidValue = (value, def) => {
   // Validação de Tipo
-  if (def.type === "object" && (value === null || typeof value !== "object"))
-    return false;
+  if (def.type === "object" && (value === null || typeof value !== "object")) return false;
   if (typeof value !== def.type) return false;
 
   // Validação de Enum (Allowed values)
@@ -141,8 +136,7 @@ const normalizeOrganizationProperties = (properties = {}) => {
 };
 
 const updateOrganizationProperties = (currentProperties = {}, updates = {}) => {
-  if (!currentProperties || !updates)
-    throw new Error("Parâmetros inválidos para atualização");
+  if (!currentProperties || !updates) throw new Error("Parâmetros inválidos para atualização");
 
   const nextProps = { ...currentProperties };
 
@@ -163,9 +157,7 @@ const updateOrganizationProperties = (currentProperties = {}, updates = {}) => {
 
 // Getters utilitários
 const getDefaultOrganizationProperties = () => {
-  return Object.fromEntries(
-    Object.entries(PREDEFINED_PROPERTIES).map(([k, v]) => [k, v.default])
-  );
+  return Object.fromEntries(Object.entries(PREDEFINED_PROPERTIES).map(([k, v]) => [k, v.default]));
 };
 
 const getPropertiesSchema = () => {

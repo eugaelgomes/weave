@@ -19,14 +19,10 @@ class MutateApiTokensController {
       const revoked = await MutateApiTokensRepository.revokeToken(id, userId);
 
       if (!revoked) {
-        return res
-          .status(404)
-          .json({ error: "Token not found or already revoked." });
+        return res.status(404).json({ error: "Token not found or already revoked." });
       }
 
-      res
-        .status(200)
-        .json({ message: "Token revoked successfully.", record: revoked });
+      res.status(200).json({ message: "Token revoked successfully.", record: revoked });
     } catch (error) {
       next(fromUnknown(error));
     }

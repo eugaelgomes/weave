@@ -18,13 +18,7 @@ class TagsRepository {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const result = await executeQuery(query, [
-      projectId,
-      orgId,
-      name,
-      color,
-      createdBy,
-    ]);
+    const result = await executeQuery(query, [projectId, orgId, name, color, createdBy]);
     return result[0];
   }
 
@@ -76,13 +70,7 @@ class TagsRepository {
         )
       RETURNING *;
     `;
-    const result = await executeQuery(query, [
-      name,
-      color,
-      tagId,
-      projectId,
-      orgId,
-    ]);
+    const result = await executeQuery(query, [name, color, tagId, projectId, orgId]);
     return result[0];
   }
 
@@ -107,12 +95,7 @@ class TagsRepository {
         )
       RETURNING *;
     `;
-    const result = await executeQuery(query, [
-      deletedBy,
-      tagId,
-      projectId,
-      orgId,
-    ]);
+    const result = await executeQuery(query, [deletedBy, tagId, projectId, orgId]);
     return result[0];
   }
 }

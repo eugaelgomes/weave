@@ -40,7 +40,7 @@ class FileManagerService {
    */
   async listFiles(prefix = "") {
     await this.ensureReady();
-    
+
     // Garantir que pastas terminem com barra para o S3
     const normalizedPrefix = prefix && !prefix.endsWith("/") ? `${prefix}/` : prefix;
 
@@ -90,7 +90,7 @@ class FileManagerService {
     }
 
     const key = folderPath.endsWith("/") ? folderPath : `${folderPath}/`;
-    
+
     const command = new PutObjectCommand({
       Bucket: spacesService.bucketName,
       Key: key,
@@ -111,7 +111,7 @@ class FileManagerService {
     }
 
     // Nota: Se for uma pasta, deletar apenas a pasta no S3 não deleta os arquivos dentro.
-    // Para simplificar no File Manager, o front deve deletar itens específicos, ou teríamos que 
+    // Para simplificar no File Manager, o front deve deletar itens específicos, ou teríamos que
     // listar e deletar em massa. Assumimos que 'key' é o item exato.
     const command = new DeleteObjectCommand({
       Bucket: spacesService.bucketName,

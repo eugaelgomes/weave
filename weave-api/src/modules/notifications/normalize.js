@@ -6,12 +6,7 @@ const ROLE_LABELS = {
   viewer: "viewer",
 };
 
-const RESERVED_CONTEXT_KEYS = new Set([
-  "message",
-  "summary",
-  "description",
-  "preview",
-]);
+const RESERVED_CONTEXT_KEYS = new Set(["message", "summary", "description", "preview"]);
 
 const ensureObject = (value) => {
   if (!value) {
@@ -51,9 +46,7 @@ const sanitizeValue = (value) => {
   }
 
   if (Array.isArray(value)) {
-    return value
-      .map((item) => sanitizeValue(item))
-      .filter((item) => item !== undefined);
+    return value.map((item) => sanitizeValue(item)).filter((item) => item !== undefined);
   }
 
   if (typeof value === "object") {
@@ -146,14 +139,10 @@ const createBaseContent = (payload, options = {}) => {
     "You have a new notification.";
 
   const resolvedSummary =
-    cleanSentence(options.summary) ||
-    cleanSentence(rawContent.summary) ||
-    resolvedMessage;
+    cleanSentence(options.summary) || cleanSentence(rawContent.summary) || resolvedMessage;
 
   const resolvedDescription =
-    cleanSentence(options.description) ||
-    cleanSentence(rawContent.description) ||
-    resolvedSummary;
+    cleanSentence(options.description) || cleanSentence(rawContent.description) || resolvedSummary;
 
   const normalizedContent = {
     action: options.actionText || null,

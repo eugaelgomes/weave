@@ -58,7 +58,13 @@ class AgentLlmsRepository {
    */
   async update(id, userId, updates) {
     const allowedColumns = [
-      "title", "provider", "model", "api_key", "temperature", "max_tokens", "reasoning_effort"
+      "title",
+      "provider",
+      "model",
+      "api_key",
+      "temperature",
+      "max_tokens",
+      "reasoning_effort",
     ];
 
     const fields = [];

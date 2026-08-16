@@ -1,7 +1,5 @@
 const BaseRepository = require("./base.repository");
-const {
-  enqueueNoteEmbeddingJob,
-} = require("../../../services/queue/queue-controller");
+const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
 const {
   buildNoteIdWhereClause,
   buildNotesBulkDeleteWhere,
@@ -34,9 +32,7 @@ class MutateNotesRepository extends BaseRepository {
     allowedFields.forEach((field) => {
       if (updateData[field] !== undefined) {
         if (field === "properties") {
-          updates.push(
-            `properties = COALESCE(properties, '{}'::jsonb) || $${paramIndex}::jsonb`
-          );
+          updates.push(`properties = COALESCE(properties, '{}'::jsonb) || $${paramIndex}::jsonb`);
           values.push(JSON.stringify(updateData[field]));
         } else {
           updates.push(`${field} = $${paramIndex}`);
@@ -79,15 +75,9 @@ class MutateNotesRepository extends BaseRepository {
     });
 
     if (updatedNote) {
-      console.info(
-        "[MutateNotesRepository] Enqueueing embedding job for",
-        updatedNote.id
-      );
+      console.info("[MutateNotesRepository] Enqueueing embedding job for", updatedNote.id);
       await enqueueNoteEmbeddingJob(updatedNote.id).catch((err) => {
-        console.error(
-          "[MutateNotesRepository] Failed to enqueue embedding job",
-          err
-        );
+        console.error("[MutateNotesRepository] Failed to enqueue embedding job", err);
       });
     }
 

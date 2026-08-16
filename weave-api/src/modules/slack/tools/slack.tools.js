@@ -20,17 +20,14 @@ const manageSlackSchema = z.discriminatedUnion("action", [
 
 const createSlackTools = (_user) => ({
   manage_slack: {
-    description:
-      "Manage Slack integrations (add_default_channel, list, remove).",
+    description: "Manage Slack integrations (add_default_channel, list, remove).",
     handler: async (args) => {
       try {
         const { action, organization_id, channel_id } = args;
 
         if (action === "add_default_channel") {
           if (!channel_id)
-            throw new Error(
-              "channel_id is required for add_default_channel action."
-            );
+            throw new Error("channel_id is required for add_default_channel action.");
           await MutateSlackIntegrationsRepository.updateDefaultChannel(
             organization_id,
             channel_id,
@@ -48,9 +45,7 @@ const createSlackTools = (_user) => ({
 
         if (action === "list") {
           const result =
-            await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
-              organization_id
-            );
+            await ReadSlackIntegrationsRepository.findActiveByOrganizationId(organization_id);
           return {
             content: [
               {
@@ -64,9 +59,7 @@ const createSlackTools = (_user) => ({
         }
 
         if (action === "remove") {
-          await MutateSlackIntegrationsRepository.softDeleteByOrganizationId(
-            organization_id
-          );
+          await MutateSlackIntegrationsRepository.softDeleteByOrganizationId(organization_id);
           return {
             content: [
               {

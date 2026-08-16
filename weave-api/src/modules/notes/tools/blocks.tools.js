@@ -40,7 +40,7 @@ FUNCTIONALITIES (Actions):
 
           await NoteBlocksService.syncBlocks(userId, resolvedNoteId, {
             base_revision: note.revision || 1,
-            blocks
+            blocks,
           });
           return { content: [{ text: "Note successfully updated.", type: "text" }] };
         }
@@ -57,7 +57,7 @@ FUNCTIONALITIES (Actions):
 
           await NoteBlocksService.syncBlocks(userId, resolvedNoteId, {
             base_revision: note.revision || 1,
-            blocks
+            blocks,
           });
           return { content: [{ text: "Content successfully appended.", type: "text" }] };
         }

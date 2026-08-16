@@ -4,9 +4,7 @@ const detectUserRegion = (req) => {
   const timezone = req.headers["cf-timezone"];
   const countryCode = req.headers["cf-ipcountry"];
   const realIp =
-    req.headers["cf-connecting-ip"] ||
-    req.headers["x-forwarded-for"] ||
-    req.socket.remoteAddress;
+    req.headers["cf-connecting-ip"] || req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
   if (!timezone) {
     return {

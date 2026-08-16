@@ -47,10 +47,7 @@ function logPublicApiRequest(req, res, next) {
       userId: req.user?.userId ?? null,
     }).catch((err) => {
       // Never break the response for a logging failure.
-      console.error(
-        "[PublicApiLog] Failed to insert request log:",
-        err.message
-      );
+      console.error("[PublicApiLog] Failed to insert request log:", err.message);
     });
   });
 

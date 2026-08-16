@@ -111,11 +111,7 @@ class GoogleOauthRepository extends BaseRepository {
       WHERE user_id = $3
       RETURNING user_id, username, name, email, avatar_url, auth_with_google, created_at;
     `;
-    const results = await this.executeQuery(query, [
-      googleId,
-      avatarUrl,
-      userId,
-    ]);
+    const results = await this.executeQuery(query, [googleId, avatarUrl, userId]);
     return results[0];
   }
 }

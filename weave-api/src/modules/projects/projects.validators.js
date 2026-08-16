@@ -14,19 +14,11 @@ const {
 function isUuid(v) {
   return (
     typeof v === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      v
-    )
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
   );
 }
 
-const PROJECT_STATUSES = [
-  "OPEN",
-  "IN_PROGRESS",
-  "PAUSED",
-  "COMPLETED",
-  "ARCHIVED",
-];
+const PROJECT_STATUSES = ["OPEN", "IN_PROGRESS", "PAUSED", "COMPLETED", "ARCHIVED"];
 const METHODOLOGIES = ["KANBAN", "SCRUM"];
 const VISIBILITIES = ["PRIVATE", "ORG_WIDE", "PUBLIC"];
 const OWNERSHIPS = ["owned", "collaborating", "all"];
@@ -39,12 +31,7 @@ const PROJECT_SORT_FIELDS = [
   "target_end_date",
 ];
 const PRIORITIES = ["alta", "media", "baixa"];
-const PROJECT_MEMBER_ROLES = [
-  "PROJECT_MANAGER",
-  "CONTRIBUTOR",
-  "COMMENTER",
-  "VIEWER",
-];
+const PROJECT_MEMBER_ROLES = ["PROJECT_MANAGER", "CONTRIBUTOR", "COMMENTER", "VIEWER"];
 const NOTES_STATUSES = ["VISIBLE", "SECURE", "ARCHIVED"];
 const NOTE_SORT_FIELDS = ["updated_at", "created_at", "due_date", "title"];
 const STAGE_SORT_FIELDS = ["position", "name", "created_at"];
@@ -63,12 +50,9 @@ function attachParsedProjectsList(req) {
   });
 
   const includeRaw = typeof q.include === "string" ? q.include : "";
-  const includeParts = parseCsvStrings(includeRaw, { maxItems: 10 }).map((s) =>
-    s.toLowerCase()
-  );
+  const includeParts = parseCsvStrings(includeRaw, { maxItems: 10 }).map((s) => s.toLowerCase());
   const include = INCLUDE_PROJECT_LIST.filter((k) => includeParts.includes(k));
-  if (include.length === 0)
-    include.push("collaborators", "notes", "subprojects");
+  if (include.length === 0) include.push("collaborators", "notes", "subprojects");
 
   let parentOnly = true;
   if (q.parent_only !== undefined && q.parent_only !== "") {
@@ -94,34 +78,22 @@ function attachParsedProjectsList(req) {
     filters: {
       active: activeFilter,
       collaborator_user_id:
-        q.collaborator_user_id && isUuid(q.collaborator_user_id)
-          ? q.collaborator_user_id
-          : null,
+        q.collaborator_user_id && isUuid(q.collaborator_user_id) ? q.collaborator_user_id : null,
       created_from: parseIsoDateTime(q.created_from),
       created_to: parseIsoDateTime(q.created_to),
       has_parent: hasParent,
       methodology: parseCsvEnum(q.methodology, METHODOLOGIES, {
         maxItems: 10,
       }),
-      organization_id:
-        q.organization_id && isUuid(q.organization_id)
-          ? q.organization_id
-          : null,
-      owner_user_id:
-        q.owner_user_id && isUuid(q.owner_user_id) ? q.owner_user_id : null,
+      organization_id: q.organization_id && isUuid(q.organization_id) ? q.organization_id : null,
+      owner_user_id: q.owner_user_id && isUuid(q.owner_user_id) ? q.owner_user_id : null,
       ownership,
       parent_only: parentOnly,
-      priority: parseCsvEnum(q.priority, PRIORITIES, { maxItems: 10 }).map(
-        (p) => p.toLowerCase()
-      ),
+      priority: parseCsvEnum(q.priority, PRIORITIES, { maxItems: 10 }).map((p) => p.toLowerCase()),
       progress_max:
-        q.progress_max !== undefined && q.progress_max !== ""
-          ? Number(q.progress_max)
-          : null,
+        q.progress_max !== undefined && q.progress_max !== "" ? Number(q.progress_max) : null,
       progress_min:
-        q.progress_min !== undefined && q.progress_min !== ""
-          ? Number(q.progress_min)
-          : null,
+        q.progress_min !== undefined && q.progress_min !== "" ? Number(q.progress_min) : null,
       search: trimSearch(q.search, 120),
       start_from: parseIsoDateOnly(q.start_from),
       start_to: parseIsoDateOnly(q.start_to),
@@ -190,9 +162,7 @@ const validateGetProjects = [
 function attachParsedProjectDetail(req) {
   const q = req.query;
   const includeRaw = typeof q.include === "string" ? q.include : "";
-  const parts = parseCsvStrings(includeRaw, { maxItems: 10 }).map((s) =>
-    s.toLowerCase()
-  );
+  const parts = parseCsvStrings(includeRaw, { maxItems: 10 }).map((s) => s.toLowerCase());
   const allowed = ["collaborators", "notes", "subprojects", "stages"];
   let include = allowed.filter((k) => parts.includes(k));
   if (include.length === 0) {
@@ -320,13 +290,7 @@ const validateGetProjectCollaborators = [
 ];
 
 /** Query keys that enable list envelope + filtering for GET /projects/:id/stages */
-const PROJECT_STAGES_LIST_TRIGGER_KEYS = [
-  "page",
-  "limit",
-  "sort",
-  "include_done",
-  "search",
-];
+const PROJECT_STAGES_LIST_TRIGGER_KEYS = ["page", "limit", "sort", "include_done", "search"];
 
 /** GET /projects/:projectId/notes */
 const PROJECT_NOTES_LIST_TRIGGER_KEYS = [
@@ -359,13 +323,9 @@ const PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS = [
   "added_to",
 ];
 
-const validateProjectIdParam = [
-  validate(schemas.projectIdParamSchema, "params"),
-];
+const validateProjectIdParam = [validate(schemas.projectIdParamSchema, "params")];
 
-const validateGetMyViewPref = [
-  validate(schemas.projectIdParamSchema, "params"),
-];
+const validateGetMyViewPref = [validate(schemas.projectIdParamSchema, "params")];
 
 const validateSetMyViewPref = [
   validate(schemas.projectIdParamSchema, "params"),

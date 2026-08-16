@@ -65,12 +65,7 @@ class SprintContextBuilder {
     }
 
     // Calculate stats
-    const stats = this._calculateStats(
-      notes,
-      blocksByNoteId,
-      stages,
-      notesByStageId
-    );
+    const stats = this._calculateStats(notes, blocksByNoteId, stages, notesByStageId);
 
     // Build full markdown context
     const fullContext = this._buildMarkdown(
@@ -225,8 +220,7 @@ class SprintContextBuilder {
     const walk = (parentKey, depth) => {
       const siblings = byParent.get(parentKey) || [];
       return siblings.map((r) => {
-        const props =
-          r.properties && typeof r.properties === "object" ? r.properties : {};
+        const props = r.properties && typeof r.properties === "object" ? r.properties : {};
         const node = {
           children: [],
           id: String(r.id),
@@ -307,22 +301,18 @@ class SprintContextBuilder {
     parts.push(`- **ID**: ${project.id}`);
     parts.push(`- **Status**: ${project.status || "OPEN"}`);
     parts.push(`- **Methodology**: ${project.methodology || "N/A"}`);
-    if (project.organization_name)
-      parts.push(`- **Organization**: ${project.organization_name}`);
-    if (project.description)
-      parts.push(`- **Description**: ${project.description}`);
+    if (project.organization_name) parts.push(`- **Organization**: ${project.organization_name}`);
+    if (project.description) parts.push(`- **Description**: ${project.description}`);
     parts.push("");
 
     if (config.sprint_id) {
       parts.push(
         `## Sprint ${config.sprint_number || "?"} (${this._formatDate(config.sprint_start)} – ${this._formatDate(config.sprint_end)})`
       );
-      if (config.sprint_title)
-        parts.push(`- **Title**: ${config.sprint_title}`);
+      if (config.sprint_title) parts.push(`- **Title**: ${config.sprint_title}`);
       parts.push(`- **Status**: ${config.sprint_status || "active"}`);
       const daysRemaining = this._daysUntil(config.sprint_end);
-      if (daysRemaining !== null)
-        parts.push(`- **Days Remaining**: ${daysRemaining}`);
+      if (daysRemaining !== null) parts.push(`- **Days Remaining**: ${daysRemaining}`);
       parts.push("");
     }
 
@@ -345,12 +335,7 @@ class SprintContextBuilder {
       parts.push("");
     }
 
-    const notesSection = notesGroupedByStage(
-      stages,
-      notesByStageId,
-      blocksByNoteId,
-      unstagedNotes
-    );
+    const notesSection = notesGroupedByStage(stages, notesByStageId, blocksByNoteId, unstagedNotes);
     parts.push(notesSection);
 
     return parts.join("\n");
@@ -359,22 +344,16 @@ class SprintContextBuilder {
   _formatDate(date) {
     if (!date) return "?";
     const d =
-      typeof date === "string"
-        ? date.split("T")[0]
-        : new Date(date).toISOString().split("T")[0];
+      typeof date === "string" ? date.split("T")[0] : new Date(date).toISOString().split("T")[0];
     const [y, m, day] = d.split("-");
     return `${day}/${m}/${y}`;
   }
 
   _daysUntil(date) {
     if (!date) return null;
-    const target = new Date(
-      typeof date === "string" ? date : date.toISOString()
-    );
+    const target = new Date(typeof date === "string" ? date : date.toISOString());
     const now = new Date();
-    const diff = Math.ceil(
-      (target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0, diff);
   }
 }

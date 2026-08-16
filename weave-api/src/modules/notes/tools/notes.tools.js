@@ -64,36 +64,23 @@ FUNCTIONALITIES (Actions):
             tags,
             title,
           });
-          const enrichedNote = McpLinksUtil.enrichWithAppUrl(
-            newNote,
-            "note",
-            "public_note_id"
-          );
+          const enrichedNote = McpLinksUtil.enrichWithAppUrl(newNote, "note", "public_note_id");
           return {
-            content: [
-              { text: JSON.stringify(enrichedNote, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(enrichedNote, null, 2), type: "text" }],
           };
         }
 
         if (action === "get") {
           if (!note_id) throw new Error("note_id is required for get action");
           const note = await NotesService.getNoteById(note_id, userId);
-          const enrichedNote = McpLinksUtil.enrichWithAppUrl(
-            note,
-            "note",
-            "public_note_id"
-          );
+          const enrichedNote = McpLinksUtil.enrichWithAppUrl(note, "note", "public_note_id");
           return {
-            content: [
-              { text: JSON.stringify(enrichedNote, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(enrichedNote, null, 2), type: "text" }],
           };
         }
 
         if (action === "update") {
-          if (!note_id)
-            throw new Error("note_id is required for update action");
+          if (!note_id) throw new Error("note_id is required for update action");
           const currentNote = await NotesService.getNoteById(note_id, userId);
           const updated = await NotesService.updateNote(userId, note_id, {
             baseRevision: currentNote.revision,
@@ -101,26 +88,17 @@ FUNCTIONALITIES (Actions):
             tags,
             title,
           });
-          const enrichedNote = McpLinksUtil.enrichWithAppUrl(
-            updated,
-            "note",
-            "public_note_id"
-          );
+          const enrichedNote = McpLinksUtil.enrichWithAppUrl(updated, "note", "public_note_id");
           return {
-            content: [
-              { text: JSON.stringify(enrichedNote, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(enrichedNote, null, 2), type: "text" }],
           };
         }
 
         if (action === "delete") {
-          if (!note_id)
-            throw new Error("note_id is required for delete action");
+          if (!note_id) throw new Error("note_id is required for delete action");
           const count = await NotesService.deleteNote(userId, note_id);
           return {
-            content: [
-              { text: `Successfully deleted ${count} note(s).`, type: "text" },
-            ],
+            content: [{ text: `Successfully deleted ${count} note(s).`, type: "text" }],
           };
         }
 
@@ -141,11 +119,7 @@ FUNCTIONALITIES (Actions):
           } else if (Array.isArray(result)) {
             // Fallback se não for paginado
             for (let i = 0; i < result.length; i++) {
-              result[i] = McpLinksUtil.enrichWithAppUrl(
-                result[i],
-                "note",
-                "public_note_id"
-              );
+              result[i] = McpLinksUtil.enrichWithAppUrl(result[i], "note", "public_note_id");
             }
           }
 
@@ -157,16 +131,31 @@ FUNCTIONALITIES (Actions):
         if (action === "upload_file") {
           if (!note_id) throw new Error("note_id is required for upload_file action");
           const buffer = Buffer.from(base64_data, "base64");
-          const noteUuid = await resolveNoteIdToUuid(note_id) || note_id;
+          const noteUuid = (await resolveNoteIdToUuid(note_id)) || note_id;
           let result;
           if (is_image) {
-            result = await spacesService.uploadNoteDocumentImage(buffer, mime_type, noteUuid, userId, file_name);
+            result = await spacesService.uploadNoteDocumentImage(
+              buffer,
+              mime_type,
+              noteUuid,
+              userId,
+              file_name
+            );
           } else {
-            result = await spacesService.uploadNoteFile(buffer, mime_type, noteUuid, userId, file_name);
+            result = await spacesService.uploadNoteFile(
+              buffer,
+              mime_type,
+              noteUuid,
+              userId,
+              file_name
+            );
           }
           return {
             content: [
-              { text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key, type: "text" }
+              {
+                text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key,
+                type: "text",
+              },
             ],
           };
         }
@@ -179,7 +168,7 @@ FUNCTIONALITIES (Actions):
           return {
             content: [
               { text: `File successfully read. Extracted ${buffer.length} bytes.`, type: "text" },
-              { text: "data:application/octet-stream;base64," + base64Str, type: "text" }
+              { text: "data:application/octet-stream;base64," + base64Str, type: "text" },
             ],
           };
         }
@@ -190,29 +179,21 @@ FUNCTIONALITIES (Actions):
           const success = await spacesService.deleteImage(key);
           if (!success) throw new Error("Failed to delete file from storage.");
           return {
-            content: [
-              { text: "File deleted successfully (Key: " + key + ")", type: "text" },
-            ],
+            content: [{ text: "File deleted successfully (Key: " + key + ")", type: "text" }],
           };
         }
 
         throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
-          content: [
-            { text: `Error in manage_notes: ${error.message}`, type: "text" },
-          ],
+          content: [{ text: `Error in manage_notes: ${error.message}`, type: "text" }],
           isError: true,
         };
       }
     },
     name: "manage_notes",
     schema: manageNotesSchema,
-    scopes: [
-      API_SCOPES.NOTES_READ,
-      API_SCOPES.NOTES_WRITE,
-      API_SCOPES.NOTES_DELETE,
-    ],
+    scopes: [API_SCOPES.NOTES_READ, API_SCOPES.NOTES_WRITE, API_SCOPES.NOTES_DELETE],
   },
 });
 

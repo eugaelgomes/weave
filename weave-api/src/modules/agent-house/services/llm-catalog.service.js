@@ -14,7 +14,7 @@ async function getProvidersWithModels() {
     "SELECT * FROM ai_llm_models WHERE deprecated = false AND supported_for_agents = true ORDER BY name ASC"
   );
   const models = result.rows;
-  
+
   // Agrupar por provider_id
   const providersMap = {};
   for (const m of models) {
@@ -27,7 +27,7 @@ async function getProvidersWithModels() {
         models: [],
       };
     }
-    
+
     providersMap[m.provider_id].models.push({
       id: m.identifier,
       name: m.name,
@@ -52,10 +52,7 @@ async function getProvidersWithModels() {
  * @returns {Promise<Array<any>>}
  */
 async function getModelEntries(provider) {
-  const result = await pool.query(
-    "SELECT * FROM ai_llm_models WHERE provider_id = $1",
-    [provider]
-  );
+  const result = await pool.query("SELECT * FROM ai_llm_models WHERE provider_id = $1", [provider]);
   return result.rows.map((m) => ({
     id: m.identifier,
     name: m.name,

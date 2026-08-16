@@ -1,7 +1,5 @@
 const { executeQuery, getConnection } = require("@/database/connection");
-const {
-  ORG_ROLES,
-} = require("@/modules/organizations/organization-role-policy");
+const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
 
 class OrganizationsRepository {
   /**
@@ -225,14 +223,7 @@ class OrganizationsRepository {
     return results[0]?.total || 0;
   }
 
-  async addOrganizationMember(
-    organization_id,
-    user_id,
-    role,
-    status,
-    invited_by,
-    txClient = null
-  ) {
+  async addOrganizationMember(organization_id, user_id, role, status, invited_by, txClient = null) {
     const inviterId = invited_by || user_id;
     const query = `
       WITH existing AS (
@@ -370,11 +361,7 @@ class OrganizationsRepository {
       WHERE organization_id = $1 AND user_id = $2 
       RETURNING *;
     `;
-    const results = await executeQuery(query, [
-      organization_id,
-      user_id,
-      status,
-    ]);
+    const results = await executeQuery(query, [organization_id, user_id, status]);
     return results[0];
   }
 
@@ -530,21 +517,10 @@ class OrganizationsRepository {
       WHERE user_id = $2;
     `;
 
-      await client.query(updateUserQuery, [
-        organization.id,
-        user_id,
-        defaultPlanId,
-      ]);
+      await client.query(updateUserQuery, [organization.id, user_id, defaultPlanId]);
 
       // Add association of the user to the org
-      await this.addOrganizationMember(
-        organization.id,
-        user_id,
-        "ADMIN",
-        "ACTIVE",
-        null,
-        client
-      );
+      await this.addOrganizationMember(organization.id, user_id, "ADMIN", "ACTIVE", null, client);
 
       // Create root (central) area of the organization
       const rootAreaSlug = unique_name || "central";
@@ -918,11 +894,7 @@ SET logo_url = $2, updated_at = NOW()
 WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
 RETURNING *;
     `;
-    const results = await executeQuery(query, [
-      organization_id,
-      logo_url,
-      user_id,
-    ]);
+    const results = await executeQuery(query, [organization_id, logo_url, user_id]);
     return results[0];
   }
 
@@ -937,11 +909,7 @@ SET banner_url = $2, updated_at = NOW()
 WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
 RETURNING *;
     `;
-    const results = await executeQuery(query, [
-      organization_id,
-      banner_url,
-      user_id,
-    ]);
+    const results = await executeQuery(query, [organization_id, banner_url, user_id]);
     return results[0];
   }
 

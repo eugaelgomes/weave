@@ -59,13 +59,12 @@ EXAMPLES (How to structure data):
         const userId = user?.userId || user?.id;
         if (!userId) throw new Error("Unauthorized");
 
-        const { action, note_id, comment_id, content, base64_data, file_name, mime_type, url } = args;
+        const { action, note_id, comment_id, content, base64_data, file_name, mime_type, url } =
+          args;
 
         if (action === "create") {
           if (!note_id || !content) {
-            throw new Error(
-              "note_id and content are required for create action."
-            );
+            throw new Error("note_id and content are required for create action.");
           }
           const finalContent =
             typeof content === "string"
@@ -75,15 +74,11 @@ EXAMPLES (How to structure data):
                 }
               : content;
 
-          const newComment = await NotesCommentsService.createComment(
-            userId,
-            note_id,
-            {
-              content: finalContent,
-              files: [],
-              parentId: null,
-            }
-          );
+          const newComment = await NotesCommentsService.createComment(userId, note_id, {
+            content: finalContent,
+            files: [],
+            parentId: null,
+          });
           newComment.note_id = note_id; // Ensures we have note_id for enrichment
           const enriched = McpLinksUtil.enrichWithAppUrl(newComment, "comment", "note_id", "id");
           return {
@@ -98,9 +93,7 @@ EXAMPLES (How to structure data):
 
         if (action === "update") {
           if (!comment_id || !content) {
-            throw new Error(
-              "comment_id and content are required for update action."
-            );
+            throw new Error("comment_id and content are required for update action.");
           }
           const existing = await notesCommentsRepository.getById(comment_id);
           if (!existing) throw new Error("Comment not found.");
@@ -136,11 +129,7 @@ EXAMPLES (How to structure data):
           const existing = await notesCommentsRepository.getById(comment_id);
           if (!existing) throw new Error("Comment not found.");
 
-          await NotesCommentsService.deleteComment(
-            userId,
-            String(existing.note_id),
-            comment_id
-          );
+          await NotesCommentsService.deleteComment(userId, String(existing.note_id), comment_id);
           return {
             content: [
               {
@@ -153,32 +142,36 @@ EXAMPLES (How to structure data):
 
         if (action === "list") {
           if (!note_id) throw new Error("note_id is required for list action.");
-          const comments = await NotesCommentsService.listComments(
-            userId,
-            note_id
-          );
-          const enriched = comments.map(c => {
-             c.note_id = note_id;
-             if (c.content && c.content.blocks) {
-               c.markdown = serializeBlocksToMarkdown(c.content.blocks);
-             }
-             return McpLinksUtil.enrichWithAppUrl(c, "comment", "note_id", "id");
+          const comments = await NotesCommentsService.listComments(userId, note_id);
+          const enriched = comments.map((c) => {
+            c.note_id = note_id;
+            if (c.content && c.content.blocks) {
+              c.markdown = serializeBlocksToMarkdown(c.content.blocks);
+            }
+            return McpLinksUtil.enrichWithAppUrl(c, "comment", "note_id", "id");
           });
           return {
-            content: [
-              { text: JSON.stringify(enriched, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
         }
 
         if (action === "upload_file") {
           if (!note_id) throw new Error("note_id is required for upload_file action");
           const buffer = Buffer.from(base64_data, "base64");
-          const noteUuid = await resolveNoteIdToUuid(note_id) || note_id;
-          const result = await spacesService.uploadNoteCommentFile(buffer, mime_type, noteUuid, userId, file_name);
+          const noteUuid = (await resolveNoteIdToUuid(note_id)) || note_id;
+          const result = await spacesService.uploadNoteCommentFile(
+            buffer,
+            mime_type,
+            noteUuid,
+            userId,
+            file_name
+          );
           return {
             content: [
-              { text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key, type: "text" },
+              {
+                text: "File uploaded successfully!\nURL: " + result.url + "\nKey: " + result.key,
+                type: "text",
+              },
             ],
           };
         }
@@ -191,7 +184,7 @@ EXAMPLES (How to structure data):
           return {
             content: [
               { text: `File successfully read. Extracted ${buffer.length} bytes.`, type: "text" },
-              { text: "data:application/octet-stream;base64," + base64Str, type: "text" }
+              { text: "data:application/octet-stream;base64," + base64Str, type: "text" },
             ],
           };
         }
@@ -202,9 +195,7 @@ EXAMPLES (How to structure data):
           const success = await spacesService.deleteImage(key);
           if (!success) throw new Error("Failed to delete file from storage.");
           return {
-            content: [
-              { text: "File deleted successfully (Key: " + key + ")", type: "text" },
-            ],
+            content: [{ text: "File deleted successfully (Key: " + key + ")", type: "text" }],
           };
         }
 

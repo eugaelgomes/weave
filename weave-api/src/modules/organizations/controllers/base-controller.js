@@ -45,9 +45,7 @@ class OrganizationsBaseController {
    * @returns {Promise<Object|null>} Organization data with injected `member_role` or null if not found
    */
   async _getUserOrganization(userId) {
-    return this.organizationsRepository.getActiveOrganizationWithMembership(
-      userId
-    );
+    return this.organizationsRepository.getActiveOrganizationWithMembership(userId);
   }
 
   /**
@@ -166,9 +164,7 @@ class OrganizationsBaseController {
     const normalized = this._normalizeDomain(domain);
 
     if (!normalized || !DOMAIN_REGEX.test(normalized)) {
-      throw new Error(
-        "Invalid domain. Please use a valid domain such as example.com"
-      );
+      throw new Error("Invalid domain. Please use a valid domain such as example.com");
     }
 
     return normalized;

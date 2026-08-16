@@ -5,9 +5,7 @@ const AuthBaseController = require("./base.controller");
 const SigninRepository = require("@/modules/authentication/repositories/signin.repository");
 const authLogs = require("../utils/auth-logs.util");
 const storageFileUtils = require("@/utils/data/presign-storage-files");
-const {
-  buildJwtPayload,
-} = require("@/modules/authentication/schemas/jwt-payload.schema");
+const { buildJwtPayload } = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const presignObjectFields = storageFileUtils.presignObjectFields;
 
@@ -33,22 +31,15 @@ class SigninController extends AuthBaseController {
       }
 
       if (user.auth_with_google && !user.password) {
-        return next(
-          AppError.unauthorized("This account uses SSO authentication.")
-        );
+        return next(AppError.unauthorized("This account uses SSO authentication."));
       }
 
       const verifiedAccount = user.email_verified;
       if (!verifiedAccount) {
         return next(
-          new AppError(
-            "EMAIL_NOT_VERIFIED",
-            "Please verify your email before logging in.",
-            403,
-            {
-              body: { email: user.email },
-            }
-          )
+          new AppError("EMAIL_NOT_VERIFIED", "Please verify your email before logging in.", 403, {
+            body: { email: user.email },
+          })
         );
       }
 
@@ -58,9 +49,7 @@ class SigninController extends AuthBaseController {
       }
 
       if (req.body.verify_only) {
-        return res
-          .status(200)
-          .json({ message: "Credentials verified.", status: "OK" });
+        return res.status(200).json({ message: "Credentials verified.", status: "OK" });
       }
 
       const organization = this._normalizeOrganization(user.organization);

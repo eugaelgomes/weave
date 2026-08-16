@@ -28,9 +28,7 @@ class GoogleOauthController extends WebhooksBaseController {
       res.redirect(url);
     } catch (error) {
       console.error("[Google Auth]", error);
-      res
-        .status(500)
-        .json({ error: "Falha ao gerar URL de autenticação Google" });
+      res.status(500).json({ error: "Falha ao gerar URL de autenticação Google" });
     }
   }
 
@@ -44,19 +42,13 @@ class GoogleOauthController extends WebhooksBaseController {
     try {
       const { code, state } = req.query;
 
-      const { userId } = JSON.parse(
-        Buffer.from(state, "base64").toString("utf-8")
-      );
+      const { userId } = JSON.parse(Buffer.from(state, "base64").toString("utf-8"));
       if (!userId) {
-        return res
-          .status(400)
-          .json({ error: "userId não encontrado no state" });
+        return res.status(400).json({ error: "userId não encontrado no state" });
       }
 
       const tokens = await googleService.getTokens(code);
-      const expiresAt = tokens.expiry_date
-        ? new Date(tokens.expiry_date)
-        : null;
+      const expiresAt = tokens.expiry_date ? new Date(tokens.expiry_date) : null;
 
       await GoogleOauthTokensRepository.saveGoogleTokens(
         userId,

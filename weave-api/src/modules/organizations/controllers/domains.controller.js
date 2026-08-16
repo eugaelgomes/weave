@@ -8,9 +8,7 @@ const crypto = require("crypto");
 
 const OrganizationsBaseController = require("./base-controller");
 const domainRepository = require("../repositories/domains.repository");
-const {
-  enqueueDomainVerificationJob,
-} = require("@/services/queue/queue-controller");
+const { enqueueDomainVerificationJob } = require("@/services/queue/queue-controller");
 
 /**
  * Controller for organizations domains management.
@@ -79,14 +77,10 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
       const organization = await this._getUserOrganization(userId);
       if (!organization) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      const domains = await this.domainRepository.listByOrganization(
-        organization.id
-      );
+      const domains = await this.domainRepository.listByOrganization(organization.id);
 
       res.status(200).json({
         domains: domains.map((domain) => this._serializeDomain(domain)),
@@ -115,29 +109,20 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
       const organization = await this._getUserOrganization(userId);
       if (!organization) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      if (
-        !this._ensureOrgPermission(
-          organization,
-          this._orgPermissions.MANAGE_DOMAINS,
-          res
-        )
-      )
+      if (!this._ensureOrgPermission(organization, this._orgPermissions.MANAGE_DOMAINS, res))
         return;
 
       const { domain_name: domainName } = req.body;
 
       const normalizedDomain = this._validateDomainName(domainName);
 
-      const duplicatedInOrg =
-        await this.domainRepository.findByOrganizationAndName(
-          organization.id,
-          normalizedDomain
-        );
+      const duplicatedInOrg = await this.domainRepository.findByOrganizationAndName(
+        organization.id,
+        normalizedDomain
+      );
 
       if (duplicatedInOrg) {
         return res.status(400).json({
@@ -146,8 +131,7 @@ class OrganizationDomainsController extends OrganizationsBaseController {
         });
       }
 
-      const existingDomain =
-        await this.domainRepository.findActiveByDomain(normalizedDomain);
+      const existingDomain = await this.domainRepository.findActiveByDomain(normalizedDomain);
 
       if (
         existingDomain &&
@@ -170,15 +154,12 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
       res.status(201).json({
         data: this._serializeDomain(domain),
-        message:
-          "Domain registered. Configure the TXT record and click verify.",
+        message: "Domain registered. Configure the TXT record and click verify.",
         status: "OK",
       });
     } catch (error) {
       console.error("Error registering domain:", error);
-      res
-        .status(500)
-        .json({ error: "Error registering domain", success: false });
+      res.status(500).json({ error: "Error registering domain", success: false });
     }
   }
 
@@ -196,27 +177,17 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
       const organization = await this._getUserOrganization(userId);
       if (!organization) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      if (
-        !this._ensureOrgPermission(
-          organization,
-          this._orgPermissions.MANAGE_DOMAINS,
-          res
-        )
-      )
+      if (!this._ensureOrgPermission(organization, this._orgPermissions.MANAGE_DOMAINS, res))
         return;
 
       const { domainId } = req.params;
       const domain = await this.domainRepository.findById(domainId);
 
       if (!domain || domain.organization_id !== organization.id) {
-        return res
-          .status(404)
-          .json({ error: "Domain not found", success: false });
+        return res.status(404).json({ error: "Domain not found", success: false });
       }
 
       await enqueueDomainVerificationJob({
@@ -250,33 +221,22 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
       const organization = await this._getUserOrganization(userId);
       if (!organization) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      if (
-        !this._ensureOrgPermission(
-          organization,
-          this._orgPermissions.MANAGE_DOMAINS,
-          res
-        )
-      )
+      if (!this._ensureOrgPermission(organization, this._orgPermissions.MANAGE_DOMAINS, res))
         return;
 
       const { domainId } = req.params;
       const domain = await this.domainRepository.findById(domainId);
 
       if (!domain || domain.organization_id !== organization.id) {
-        return res
-          .status(404)
-          .json({ error: "Domain not found", success: false });
+        return res.status(404).json({ error: "Domain not found", success: false });
       }
 
       if (domain.sso_enabled) {
         return res.status(400).json({
-          error:
-            "Disable SSO for this domain before removing it from the organization",
+          error: "Disable SSO for this domain before removing it from the organization",
           success: false,
         });
       }
@@ -307,27 +267,17 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
       const organization = await this._getUserOrganization(userId);
       if (!organization) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      if (
-        !this._ensureOrgPermission(
-          organization,
-          this._orgPermissions.MANAGE_DOMAINS,
-          res
-        )
-      )
+      if (!this._ensureOrgPermission(organization, this._orgPermissions.MANAGE_DOMAINS, res))
         return;
 
       const { domainId } = req.params;
       const domain = await this.domainRepository.findById(domainId);
 
       if (!domain || domain.organization_id !== organization.id) {
-        return res
-          .status(404)
-          .json({ error: "Domain not found", success: false });
+        return res.status(404).json({ error: "Domain not found", success: false });
       }
 
       if (domain.status !== "VERIFIED") {
@@ -342,25 +292,20 @@ class OrganizationDomainsController extends OrganizationsBaseController {
 
       const normalizedProvider = provider.trim().toLowerCase();
 
-      const sanitizeString = (value) =>
-        typeof value === "string" ? value.trim() : null;
+      const sanitizeString = (value) => (typeof value === "string" ? value.trim() : null);
 
       const samlMetadata = {
         certificate: sanitizeString(metadata.certificate),
         entityId: sanitizeString(metadata.entityId),
         sloUrl: sanitizeString(metadata.sloUrl),
-        ssoUrl:
-          sanitizeString(metadata.ssoUrl) || sanitizeString(metadata.acsUrl),
+        ssoUrl: sanitizeString(metadata.ssoUrl) || sanitizeString(metadata.acsUrl),
       };
 
-      const updatedDomain = await this.domainRepository.updateSsoConfiguration(
-        domain.id,
-        {
-          enabled: shouldEnable,
-          metadata: samlMetadata,
-          provider: normalizedProvider,
-        }
-      );
+      const updatedDomain = await this.domainRepository.updateSsoConfiguration(domain.id, {
+        enabled: shouldEnable,
+        metadata: samlMetadata,
+        provider: normalizedProvider,
+      });
 
       res.status(200).json({
         data: this._serializeDomain(updatedDomain),

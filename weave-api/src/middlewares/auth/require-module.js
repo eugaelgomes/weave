@@ -3,7 +3,7 @@ const organizationsRepository = require("@/modules/organizations/repositories/or
 /**
  * Middleware para bloquear acesso a módulos desativados pela organização.
  * Requer que o usuário esteja autenticado (`verifyToken`).
- * 
+ *
  * @param {string} moduleName - Nome do módulo ("projects", "notes", "agent_house", "weave_flow", "calendar")
  * @returns {import('express').RequestHandler}
  */
@@ -18,7 +18,8 @@ function requireModule(moduleName) {
         });
       }
 
-      const organization = await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const organization =
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
       if (!organization) {
         // Se o usuário não tem organização, não pode acessar os módulos corporativos

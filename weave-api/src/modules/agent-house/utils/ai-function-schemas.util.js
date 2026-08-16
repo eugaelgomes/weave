@@ -54,13 +54,11 @@ const BLOCKS_SCHEMA = Object.freeze({
             description: "Type-specific attributes.",
             properties: {
               checked: {
-                description:
-                  "Whether the todo item is checked. Only for type=todo.",
+                description: "Whether the todo item is checked. Only for type=todo.",
                 type: "boolean",
               },
               language: {
-                description:
-                  "Programming language identifier. Only for type=code.",
+                description: "Programming language identifier. Only for type=code.",
                 type: "string",
               },
               level: {
@@ -83,15 +81,7 @@ const BLOCKS_SCHEMA = Object.freeze({
       },
       type: {
         description: "Block type.",
-        enum: [
-          "paragraph",
-          "heading",
-          "quote",
-          "code",
-          "list",
-          "todo",
-          "divider",
-        ],
+        enum: ["paragraph", "heading", "quote", "code", "list", "todo", "divider"],
         type: "string",
       },
     },
@@ -167,8 +157,7 @@ const FUNCTION_SCHEMAS = Object.freeze({
         },
         title: { type: "string" },
         urls: {
-          description:
-            "Array of external URLs. Each object needs 'title' and 'url'.",
+          description: "Array of external URLs. Each object needs 'title' and 'url'.",
           items: {
             properties: {
               title: { type: "string" },

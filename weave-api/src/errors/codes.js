@@ -25,12 +25,10 @@ const ERROR_CODES = {
  * @type {Record<string, string>}
  */
 const DEFAULT_MESSAGES = {
-  [ERROR_CODES.INTERNAL_ERROR]:
-    "Unexpected server error. Please try again later.",
+  [ERROR_CODES.INTERNAL_ERROR]: "Unexpected server error. Please try again later.",
   [ERROR_CODES.VALIDATION_ERROR]: "Invalid request. Please review your input.",
   [ERROR_CODES.RESOURCE_NOT_FOUND]: "The requested resource was not found.",
-  [ERROR_CODES.AUTH_REQUIRED]:
-    "Authentication is required to perform this action.",
+  [ERROR_CODES.AUTH_REQUIRED]: "Authentication is required to perform this action.",
   [ERROR_CODES.ROUTE_NOT_FOUND]: "The requested route was not found.",
   [ERROR_CODES.USER_UNIQUE_CONFLICT]: "This value is already in use.",
   [ERROR_CODES.NOTE_NOT_FOUND]: "Note not found.",

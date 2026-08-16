@@ -93,15 +93,11 @@ async function exchangeOAuthCode(code) {
     redirect_uri: redirectUri,
   });
 
-  const { data } = await axios.post(
-    `${SLACK_API}/oauth.v2.access`,
-    body.toString(),
-    {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      timeout: 20000,
-      validateStatus: () => true,
-    }
-  );
+  const { data } = await axios.post(`${SLACK_API}/oauth.v2.access`, body.toString(), {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 20000,
+    validateStatus: () => true,
+  });
 
   return /** @type {SlackOauthAccessResponse} */ (data);
 }
@@ -161,15 +157,11 @@ async function conversationsInfo({ channel, token }) {
  * @returns {Promise<{ ok: boolean }>}
  */
 async function authRevoke(token) {
-  const { data } = await axios.post(
-    `${SLACK_API}/auth.revoke`,
-    new URLSearchParams({ token }),
-    {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      timeout: 20000,
-      validateStatus: () => true,
-    }
-  );
+  const { data } = await axios.post(`${SLACK_API}/auth.revoke`, new URLSearchParams({ token }), {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    timeout: 20000,
+    validateStatus: () => true,
+  });
   return data;
 }
 
@@ -183,12 +175,7 @@ async function authRevoke(token) {
  * @param {Buffer|string} rawBody Raw request body as received
  * @returns {boolean}
  */
-function verifySlackSignature({
-  rawBody,
-  signingSecret,
-  slackSignature,
-  slackTimestamp,
-}) {
+function verifySlackSignature({ rawBody, signingSecret, slackSignature, slackTimestamp }) {
   if (
     !signingSecret ||
     !slackSignature ||
@@ -205,10 +192,7 @@ function verifySlackSignature({
     return false;
   }
   const base = `v0:${slackTimestamp}:${Buffer.isBuffer(rawBody) ? rawBody.toString("utf8") : String(rawBody)}`;
-  const hmac = crypto
-    .createHmac("sha256", signingSecret)
-    .update(base)
-    .digest("hex");
+  const hmac = crypto.createHmac("sha256", signingSecret).update(base).digest("hex");
   const expected = `v0=${hmac}`;
   try {
     const a = Buffer.from(expected, "utf8");

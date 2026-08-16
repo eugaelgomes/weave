@@ -8,9 +8,7 @@ const addAreaMemberSchema = z.object({
     .enum(["ADMIN", "MEMBER", "GUEST"])
     .optional()
     .default("MEMBER")
-    .describe(
-      "The role of the member in the area. Valid roles: ADMIN, MEMBER, GUEST."
-    ),
+    .describe("The role of the member in the area. Valid roles: ADMIN, MEMBER, GUEST."),
   user_id: z
     .string()
     .uuid("Invalid user ID format")
@@ -27,9 +25,7 @@ const updateAreaMemberSchema = z.object({
         message: "Invalid area member role. Use ADMIN, MEMBER or GUEST",
       }),
     })
-    .describe(
-      "The role of the member in the area. Valid roles: ADMIN, MEMBER, GUEST."
-    ),
+    .describe("The role of the member in the area. Valid roles: ADMIN, MEMBER, GUEST."),
 });
 
 /**
@@ -52,9 +48,7 @@ const createAreaSchema = z.object({
     .uuid("Invalid parent area ID")
     .optional()
     .nullable()
-    .describe(
-      "The universally unique identifier of the parent area, if this is a sub-area."
-    ),
+    .describe("The universally unique identifier of the parent area, if this is a sub-area."),
   properties: z
     .record(z.any())
     .optional()
@@ -72,10 +66,7 @@ const createAreaSchema = z.object({
  * Validates the request body for updating an area.
  */
 const updateAreaSchema = z.object({
-  active: z
-    .boolean()
-    .optional()
-    .describe("Indicates whether the area is active."),
+  active: z.boolean().optional().describe("Indicates whether the area is active."),
   area_name: z
     .string()
     .trim()
@@ -93,18 +84,12 @@ const updateAreaSchema = z.object({
     .uuid("Invalid parent area ID")
     .optional()
     .nullable()
-    .describe(
-      "The universally unique identifier of the parent area, if this is a sub-area."
-    ),
+    .describe("The universally unique identifier of the parent area, if this is a sub-area."),
   properties: z
     .record(z.any())
     .optional()
     .describe("A configuration object for custom area properties."),
-  slug: z
-    .string()
-    .trim()
-    .optional()
-    .describe("A URL-friendly identifier string for the area."),
+  slug: z.string().trim().optional().describe("A URL-friendly identifier string for the area."),
 });
 
 module.exports = {

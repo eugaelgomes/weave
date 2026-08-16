@@ -22,11 +22,7 @@ const createBackupTools = (user) => ({
         const { action, jobId } = args;
 
         if (action === "trigger") {
-          const job = await backupJobsRepository.createJob(
-            "user_backup",
-            user.userId,
-            {}
-          );
+          const job = await backupJobsRepository.createJob("user_backup", user.userId, {});
           return {
             content: [{ text: JSON.stringify(job, null, 2), type: "text" }],
           };
@@ -40,8 +36,7 @@ const createBackupTools = (user) => ({
         }
 
         if (action === "get_status") {
-          if (!jobId)
-            throw new Error("jobId is required for get_status action.");
+          if (!jobId) throw new Error("jobId is required for get_status action.");
           const job = await backupJobsRepository.getJob(jobId);
           if (!job || job.userId !== user.userId)
             throw new Error("Job not found or access denied.");
@@ -53,9 +48,7 @@ const createBackupTools = (user) => ({
         throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
-          content: [
-            { text: `Error managing backups: ${error.message}`, type: "text" },
-          ],
+          content: [{ text: `Error managing backups: ${error.message}`, type: "text" }],
           isError: true,
         };
       }

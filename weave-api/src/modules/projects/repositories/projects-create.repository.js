@@ -1,12 +1,10 @@
 const { executeQuery } = require("@/database/connection");
-const {
-  PROJECT_WRITE_CAPABLE_ROLES,
-} = require("@/modules/projects/project-role-policy");
+const { PROJECT_WRITE_CAPABLE_ROLES } = require("@/modules/projects/project-role-policy");
 const { generatePublicId } = require("@/utils/generate-public-id");
 
-const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map(
-  (role) => `'${role}'`
-).join(", ");
+const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map((role) => `'${role}'`).join(
+  ", "
+);
 
 class ProjectsCreateRepository {
   async createProjectWithStages(projectData, stagesData) {
@@ -129,12 +127,7 @@ class ProjectsCreateRepository {
     return executeQuery(query, [projectId, userIds, roles, addedBys]);
   }
 
-  async addCollaborator(
-    projectId,
-    ownerId,
-    collaboratorUserId,
-    role = "viewer"
-  ) {
+  async addCollaborator(projectId, ownerId, collaboratorUserId, role = "viewer") {
     const query = `
       WITH inserted_member AS (
         INSERT INTO project_members (project_id, user_id, role, added_by)
@@ -206,13 +199,7 @@ class ProjectsCreateRepository {
       GROUP BY p.id;
     `;
 
-    return executeQuery(query, [
-      projectId,
-      organizationId,
-      actingUserId,
-      collaboratorUserId,
-      role,
-    ]);
+    return executeQuery(query, [projectId, organizationId, actingUserId, collaboratorUserId, role]);
   }
   async addNoteToProject(projectId, noteId, userId) {
     const query = `
@@ -297,12 +284,7 @@ class ProjectsCreateRepository {
 
     return executeQuery(query, [projectId, noteId, userId]);
   }
-  async addNoteToProjectWithOrgScope(
-    projectId,
-    noteId,
-    userId,
-    organizationId
-  ) {
+  async addNoteToProjectWithOrgScope(projectId, noteId, userId, organizationId) {
     const query = `
       WITH first_stage AS (
         SELECT id FROM project_stages

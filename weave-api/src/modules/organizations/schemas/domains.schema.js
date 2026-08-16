@@ -25,34 +25,24 @@ const updateSsoSettingsSchema = z.object({
         .string()
         .trim()
         .optional()
-        .describe(
-          "The Assertion Consumer Service URL for the Single Sign-On provider."
-        ),
+        .describe("The Assertion Consumer Service URL for the Single Sign-On provider."),
       certificate: z
         .string()
         .trim()
         .min(1, "certificate is required")
-        .describe(
-          "The public certificate provided by the Single Sign-On Identity Provider."
-        ),
+        .describe("The public certificate provided by the Single Sign-On Identity Provider."),
       entityId: z
         .string()
         .trim()
         .min(1, "entityId is required")
-        .describe(
-          "The Entity Identifier for the Single Sign-On Identity Provider."
-        ),
+        .describe("The Entity Identifier for the Single Sign-On Identity Provider."),
       sloUrl: z
         .string()
         .trim()
         .optional()
         .nullable()
         .describe("The Single Logout URL for the Single Sign-On provider."),
-      ssoUrl: z
-        .string()
-        .trim()
-        .optional()
-        .describe("The Single Sign-On login URL."),
+      ssoUrl: z.string().trim().optional().describe("The Single Sign-On login URL."),
     })
     .refine((data) => data.ssoUrl || data.acsUrl, {
       message: "ssoUrl or acsUrl is required",

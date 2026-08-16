@@ -95,10 +95,7 @@ class SearchUsersRepository extends BaseRepository {
       if (username && normalizeUsername(user.username) === username) {
         availability.username = { available: false, reason: "already_in_use" };
       }
-      if (
-        phoneNumber &&
-        normalizePhoneNumber(user.phone_number) === phoneNumber
-      ) {
+      if (phoneNumber && normalizePhoneNumber(user.phone_number) === phoneNumber) {
         availability.phone_number = {
           available: false,
           reason: "already_in_use",

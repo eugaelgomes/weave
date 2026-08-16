@@ -60,9 +60,7 @@ const PROJECT_WRITE_CAPABLE_ROLES = Object.freeze([
 function normalizeProjectRole(role) {
   if (!role || typeof role !== "string") return null;
   const normalized = role.toUpperCase();
-  return (
-    LEGACY_PROJECT_ROLE_ALIASES[role] || PROJECT_ROLES[normalized] || normalized
-  );
+  return LEGACY_PROJECT_ROLE_ALIASES[role] || PROJECT_ROLES[normalized] || normalized;
 }
 
 function getPermissionsForProjectRole(role) {

@@ -1,10 +1,7 @@
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const spacesService = require("../../services/storage");
-const {
-  assertFileAccess,
-  StorageAccessError,
-} = require("@/services/storage/access-control");
+const { assertFileAccess, StorageAccessError } = require("@/services/storage/access-control");
 const redis = require("@/services/queue/connection");
 
 function getSpacesHostname() {
@@ -21,13 +18,10 @@ const SPACES_PREFIXES = [
   spacesService.constructor?.FOLDER_PATHS?.BACKUPS || "backups",
   spacesService.constructor?.FOLDER_PATHS?.IMAGES || "images",
   spacesService.constructor?.FOLDER_PATHS?.NOTES?.ROOT || "notes",
-  spacesService.constructor?.FOLDER_PATHS?.NOTES_COMMENTS_FILES?.ROOT ||
-    "notes-comments-files",
+  spacesService.constructor?.FOLDER_PATHS?.NOTES_COMMENTS_FILES?.ROOT || "notes-comments-files",
   spacesService.constructor?.FOLDER_PATHS?.PROJECTS?.ROOT || "projects",
-  spacesService.constructor?.FOLDER_PATHS?.USERS_CONTENT?.ROOT ||
-    "users-content",
-  spacesService.constructor?.FOLDER_PATHS?.ORGANIZATIONS?.ROOT ||
-    "organizations",
+  spacesService.constructor?.FOLDER_PATHS?.USERS_CONTENT?.ROOT || "users-content",
+  spacesService.constructor?.FOLDER_PATHS?.ORGANIZATIONS?.ROOT || "organizations",
   spacesService.constructor?.FOLDER_PATHS?.AGENTS?.ROOT || "agents",
 ];
 
@@ -38,16 +32,12 @@ function isSpacesManagedValue(value) {
   const trimmed = value.trim();
   if (!trimmed || trimmed.startsWith("blob:")) return false;
 
-  const hasProtocol =
-    trimmed.startsWith("http://") || trimmed.startsWith("https://");
+  const hasProtocol = trimmed.startsWith("http://") || trimmed.startsWith("https://");
   if (hasProtocol) {
     try {
       const { hostname } = new URL(trimmed);
       const host = getSpacesHostname();
-      return (
-        (host && hostname === host) ||
-        hostname.includes(spacesService.bucketName)
-      );
+      return (host && hostname === host) || hostname.includes(spacesService.bucketName);
     } catch (error) {
       console.error("URL inválida ao verificar domínio do Spaces:", error);
       return false;
@@ -124,9 +114,7 @@ async function presignObjectFields(data, fields = [], options = {}) {
   const { expiresIn, userId } = normalizeOptions(options);
 
   if (!userId) {
-    throw new StorageAccessError(
-      "Contexto do usuário é obrigatório para gerar URLs assinadas."
-    );
+    throw new StorageAccessError("Contexto do usuário é obrigatório para gerar URLs assinadas.");
   }
 
   const result = { ...data };
@@ -163,9 +151,7 @@ async function presignObjectFields(data, fields = [], options = {}) {
  */
 async function presignListFields(list, fields = [], options = {}) {
   if (!list || !Array.isArray(list)) return [];
-  return Promise.all(
-    list.map((item) => presignObjectFields(item, fields, options))
-  );
+  return Promise.all(list.map((item) => presignObjectFields(item, fields, options)));
 }
 
 module.exports = {

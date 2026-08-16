@@ -206,10 +206,7 @@ class PlansRepository {
 
     return {
       ...effective,
-      plan_details: this.mergePlanDetails(
-        effective.plan_details || {},
-        overrides || {}
-      ),
+      plan_details: this.mergePlanDetails(effective.plan_details || {}, overrides || {}),
     };
   }
 
@@ -265,10 +262,7 @@ class PlansRepository {
         AND subscriber_id = $2
       LIMIT 1
     `;
-    const results = await executeQuery(query, [
-      effective.subscriber_type,
-      effective.subscriber_id,
-    ]);
+    const results = await executeQuery(query, [effective.subscriber_type, effective.subscriber_id]);
     return results[0];
   }
 
@@ -419,11 +413,7 @@ class PlansRepository {
           updated_at = NOW()
       WHERE id = $3
       RETURNING usage_details`;
-    const results = await executeQuery(query, [
-      jsonPath,
-      JSON.stringify(value),
-      usageId,
-    ]);
+    const results = await executeQuery(query, [jsonPath, JSON.stringify(value), usageId]);
     return results[0];
   }
 
@@ -439,11 +429,7 @@ class PlansRepository {
           updated_at = NOW() 
       WHERE id = $3 
       RETURNING *`;
-    const results = await executeQuery(query, [
-      usageDetails,
-      lastResetAt,
-      usageId,
-    ]);
+    const results = await executeQuery(query, [usageDetails, lastResetAt, usageId]);
     return results[0];
   }
 

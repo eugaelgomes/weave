@@ -25,16 +25,15 @@ class NotificationsCreateController extends NotificationsBaseController {
 
       const userId = targetUserId || target_user_id;
 
-      const notification =
-        await this.notificationsRepository.createNotification({
-          actorId,
-          content: content && typeof content === "object" ? content : {},
-          entityId: entity_id,
-          entityType: entity_type,
-          title,
-          type,
-          userId,
-        });
+      const notification = await this.notificationsRepository.createNotification({
+        actorId,
+        content: content && typeof content === "object" ? content : {},
+        entityId: entity_id,
+        entityType: entity_type,
+        title,
+        type,
+        userId,
+      });
 
       res.status(201).json({ notification });
     } catch (error) {

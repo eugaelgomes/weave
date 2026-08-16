@@ -9,9 +9,7 @@ const { randomUUID } = require("crypto");
  */
 function requestIdMiddleware(req, res, next) {
   const incoming =
-    typeof req.headers["x-request-id"] === "string"
-      ? req.headers["x-request-id"].trim()
-      : "";
+    typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"].trim() : "";
   const requestId = incoming || randomUUID();
   req.requestId = requestId;
   res.setHeader("x-request-id", requestId);

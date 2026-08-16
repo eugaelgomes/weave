@@ -86,12 +86,7 @@ class ProjectsCollaboratorsRepository {
    * @param {string} [role="viewer"] - `project_member_role_enum` value (stored uppercased).
    * @returns {Promise<ProjectCollaboratorsAggregateRow[]>}
    */
-  async addCollaborator(
-    projectId,
-    ownerId,
-    collaboratorUserId,
-    role = "viewer"
-  ) {
+  async addCollaborator(projectId, ownerId, collaboratorUserId, role = "viewer") {
     const query = `
       WITH inserted_member AS (
         INSERT INTO project_members (project_id, user_id, role, added_by)
@@ -171,13 +166,7 @@ class ProjectsCollaboratorsRepository {
       WHERE p.id = $1::uuid
       GROUP BY p.id;
     `;
-    return executeQuery(query, [
-      projectId,
-      organizationId,
-      actingUserId,
-      collaboratorUserId,
-      role,
-    ]);
+    return executeQuery(query, [projectId, organizationId, actingUserId, collaboratorUserId, role]);
   }
 
   /**
@@ -230,12 +219,7 @@ class ProjectsCollaboratorsRepository {
       WHERE p.id = $1::uuid
       GROUP BY p.id;
     `;
-    return executeQuery(query, [
-      projectId,
-      organizationId,
-      collaboratorUserId,
-      newRole,
-    ]);
+    return executeQuery(query, [projectId, organizationId, collaboratorUserId, newRole]);
   }
 
   /**
@@ -246,12 +230,7 @@ class ProjectsCollaboratorsRepository {
    * @param {string} newRole - New `project_member_role_enum` value (stored uppercased).
    * @returns {Promise<ProjectCollaboratorsAggregateRow[]>}
    */
-  async updateCollaboratorPermission(
-    projectId,
-    ownerId,
-    collaboratorUserId,
-    newRole
-  ) {
+  async updateCollaboratorPermission(projectId, ownerId, collaboratorUserId, newRole) {
     const query = `
       WITH updated_member AS (
         UPDATE project_members
@@ -288,12 +267,7 @@ class ProjectsCollaboratorsRepository {
       WHERE p.id = $1::uuid
       GROUP BY p.id;
     `;
-    return executeQuery(query, [
-      projectId,
-      ownerId,
-      collaboratorUserId,
-      newRole,
-    ]);
+    return executeQuery(query, [projectId, ownerId, collaboratorUserId, newRole]);
   }
 
   /**
@@ -349,11 +323,7 @@ class ProjectsCollaboratorsRepository {
    * @param {string} collaboratorUserId - Member user UUID.
    * @returns {Promise<ProjectCollaboratorsAggregateRow[]>}
    */
-  async removeCollaboratorWithOrgManagement(
-    projectId,
-    organizationId,
-    collaboratorUserId
-  ) {
+  async removeCollaboratorWithOrgManagement(projectId, organizationId, collaboratorUserId) {
     const query = `
       WITH deleted_member AS (
         UPDATE project_members

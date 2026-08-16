@@ -45,46 +45,36 @@ const createArtifactsTools = (user) => ({
             userId: user.id,
           });
           return {
-            content: [
-              { text: JSON.stringify(artifact, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(artifact, null, 2), type: "text" }],
           };
         }
 
         if (action === "get") {
           if (!id) throw new Error("id is required for get action.");
-          const artifact = await artifactsRepository.getArtifactById(
-            id,
-            user.id
-          );
+          const artifact = await artifactsRepository.getArtifactById(id, user.id);
           if (!artifact) throw new Error("Artifact not found.");
           return {
-            content: [
-              { text: JSON.stringify(artifact, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(artifact, null, 2), type: "text" }],
           };
         }
 
         if (action === "update") {
           if (!id) throw new Error("id is required for update action.");
-          const artifact = await artifactsRepository.updateArtifact(
-            id,
-            user.id,
-            { content, title, type }
-          );
+          const artifact = await artifactsRepository.updateArtifact(id, user.id, {
+            content,
+            title,
+            type,
+          });
           if (!artifact) throw new Error("Artifact not found.");
           return {
-            content: [
-              { text: JSON.stringify(artifact, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(artifact, null, 2), type: "text" }],
           };
         }
 
         if (action === "delete") {
           if (!id) throw new Error("id is required for delete action.");
           const result = await artifactsRepository.deleteArtifact(id, user.id);
-          if (!result)
-            throw new Error("Artifact not found or already deleted.");
+          if (!result) throw new Error("Artifact not found or already deleted.");
           return {
             content: [
               {
@@ -104,9 +94,7 @@ const createArtifactsTools = (user) => ({
             parsedOffset
           );
           return {
-            content: [
-              { text: JSON.stringify(artifacts, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(artifacts, null, 2), type: "text" }],
           };
         }
 

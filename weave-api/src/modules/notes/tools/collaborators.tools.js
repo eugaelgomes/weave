@@ -1,7 +1,5 @@
 const { manageNoteCollaboratorsSchema } = require("../schemas/tools.schema");
-const {
-  NotesCollaboratorsService,
-} = require("../services/notes-collaborators.service");
+const { NotesCollaboratorsService } = require("../services/notes-collaborators.service");
 const { API_SCOPES } = require("@/config/api-scopes");
 
 const createNoteCollaboratorsTools = (user) => ({
@@ -28,8 +26,7 @@ FUNCTIONALITIES (Actions):
         const target_user_id = args.user_id || targetUserId;
 
         if (action === "add") {
-          if (!target_user_id)
-            throw new Error("user_id is required for add action.");
+          if (!target_user_id) throw new Error("user_id is required for add action.");
           const added = await NotesCollaboratorsService.addCollaborator(
             userId,
             note_id,
@@ -41,25 +38,15 @@ FUNCTIONALITIES (Actions):
         }
 
         if (action === "remove") {
-          if (!target_user_id)
-            throw new Error("user_id is required for remove action.");
-          await NotesCollaboratorsService.removeCollaborator(
-            userId,
-            note_id,
-            target_user_id
-          );
+          if (!target_user_id) throw new Error("user_id is required for remove action.");
+          await NotesCollaboratorsService.removeCollaborator(userId, note_id, target_user_id);
           return {
-            content: [
-              { text: `Successfully removed collaborator.`, type: "text" },
-            ],
+            content: [{ text: `Successfully removed collaborator.`, type: "text" }],
           };
         }
 
         if (action === "list") {
-          const collabs = await NotesCollaboratorsService.listCollaborators(
-            userId,
-            note_id
-          );
+          const collabs = await NotesCollaboratorsService.listCollaborators(userId, note_id);
           return {
             content: [{ text: JSON.stringify(collabs, null, 2), type: "text" }],
           };

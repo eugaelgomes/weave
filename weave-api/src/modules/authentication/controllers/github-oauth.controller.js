@@ -7,9 +7,7 @@ const FindUserRepository = require("@/modules/authentication/repositories/find-u
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const oauthState = require("@/modules/authentication/oauth-state");
-const {
-  buildJwtPayload,
-} = require("@/modules/authentication/schemas/jwt-payload.schema");
+const { buildJwtPayload } = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
@@ -110,35 +108,26 @@ class GithubOauthController extends AuthBaseController {
 
       const githubUserResult = githubUserSchema.safeParse(userResponse.data);
       if (!githubUserResult.success) {
-        throw new Error(
-          "Incomplete or invalid user data received from GitHub."
-        );
+        throw new Error("Incomplete or invalid user data received from GitHub.");
       }
       const githubUser = githubUserResult.data;
 
-      const emailsResponse = await axios.get(
-        "https://api.github.com/user/emails",
-        {
-          headers: {
-            Accept: "application/vnd.github.v3+json",
-            Authorization: `Bearer ${access_token}`,
-            "User-Agent": "Weave-Notes-App",
-          },
-        }
-      );
+      const emailsResponse = await axios.get("https://api.github.com/user/emails", {
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          Authorization: `Bearer ${access_token}`,
+          "User-Agent": "Weave-Notes-App",
+        },
+      });
 
-      const rawEmails = Array.isArray(emailsResponse.data)
-        ? emailsResponse.data
-        : [];
+      const rawEmails = Array.isArray(emailsResponse.data) ? emailsResponse.data : [];
       const emails = rawEmails
         .map((e) => githubEmailSchema.safeParse(e))
         .filter((r) => r.success)
         .map((r) => r.data);
 
       const primaryEmailObj =
-        emails.find((e) => e.primary && e.verified) ||
-        emails.find((e) => e.verified) ||
-        emails[0];
+        emails.find((e) => e.primary && e.verified) || emails.find((e) => e.verified) || emails[0];
 
       const userEmail = primaryEmailObj?.email;
       const githubId = String(githubUser.id);
@@ -150,8 +139,7 @@ class GithubOauthController extends AuthBaseController {
       let user = await GithubOauthRepository.findUserByGithubId(githubId);
 
       if (!user) {
-        const existingUser =
-          await FindUserRepository.findUserByEmail(userEmail);
+        const existingUser = await FindUserRepository.findUserByEmail(userEmail);
 
         if (existingUser) {
           await GithubOauthRepository.updateUserWithGithub(
@@ -163,22 +151,16 @@ class GithubOauthController extends AuthBaseController {
         } else {
           const emailDomain = userEmail.split("@")[1];
           if (emailDomain) {
-            const domainInfo =
-              await OrganizationDomainsRepository.findActiveByDomain(
-                emailDomain
-              );
+            const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
 
             if (domainInfo && domainInfo.status === "VERIFIED") {
-              const existingInvite =
-                await OrganizationsRepository.checkExistingInvite(
-                  domainInfo.organization_id,
-                  userEmail
-                );
+              const existingInvite = await OrganizationsRepository.checkExistingInvite(
+                domainInfo.organization_id,
+                userEmail
+              );
 
               if (!existingInvite) {
-                throw new Error(
-                  "This email belongs to a restricted corporate domain."
-                );
+                throw new Error("This email belongs to a restricted corporate domain.");
               }
             }
           }

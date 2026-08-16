@@ -19,10 +19,7 @@ class UsersService {
    */
   async searchWithContext(searchTerm, searcherUserId, contextType, contextId) {
     // 1. Raw search (isolated by searcher's workspace)
-    const users = await SearchUsersRepository.searchUsers(
-      searchTerm,
-      searcherUserId
-    );
+    const users = await SearchUsersRepository.searchUsers(searchTerm, searcherUserId);
 
     if (!users || users.length === 0) {
       return [];
@@ -33,11 +30,7 @@ class UsersService {
 
     // 2. Context Lookup (Decoupled Data Fetching)
     if (contextType && contextId) {
-      contextMap = await this._fetchContextData(
-        userIds,
-        contextType,
-        contextId
-      );
+      contextMap = await this._fetchContextData(userIds, contextType, contextId);
     }
 
     // 3. Merge data
@@ -65,28 +58,23 @@ class UsersService {
     const map = {};
     try {
       if (contextType === "organization") {
-        const members = await OrganizationsRepository.getMembershipsByUserIds(
-          userIds,
-          contextId
-        );
+        const members = await OrganizationsRepository.getMembershipsByUserIds(userIds, contextId);
         members.forEach((m) => {
           map[m.user_id] = { is_member: true, role: m.role, status: m.status };
         });
       } else if (contextType === "project") {
-        const collabs =
-          await ProjectsCollaboratorsRepository.getCollaboratorsByUserIds(
-            userIds,
-            contextId
-          );
+        const collabs = await ProjectsCollaboratorsRepository.getCollaboratorsByUserIds(
+          userIds,
+          contextId
+        );
         collabs.forEach((c) => {
           map[c.user_id] = { is_member: true, role: c.role, status: "ACTIVE" };
         });
       } else if (contextType === "note" || contextType === "task") {
-        const collabs =
-          await NoteCollaboratorsRepository.getCollaboratorsByUserIds(
-            userIds,
-            contextId
-          );
+        const collabs = await NoteCollaboratorsRepository.getCollaboratorsByUserIds(
+          userIds,
+          contextId
+        );
         collabs.forEach((c) => {
           map[c.user_id] = { is_member: true, role: c.role, status: "ACTIVE" };
         });
@@ -94,11 +82,10 @@ class UsersService {
         // Resolve comment note_id to check access
         const comment = await NotesCommentsRepository.getById(contextId);
         if (comment && comment.note_id) {
-          const collabs =
-            await NoteCollaboratorsRepository.getCollaboratorsByUserIds(
-              userIds,
-              comment.note_id
-            );
+          const collabs = await NoteCollaboratorsRepository.getCollaboratorsByUserIds(
+            userIds,
+            comment.note_id
+          );
           collabs.forEach((c) => {
             map[c.user_id] = {
               is_member: true,
@@ -109,10 +96,7 @@ class UsersService {
         }
       }
     } catch (err) {
-      console.error(
-        `[UsersService] Error fetching context ${contextType}:`,
-        err
-      );
+      console.error(`[UsersService] Error fetching context ${contextType}:`, err);
     }
     return map;
   }

@@ -1,9 +1,6 @@
 const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
-const {
-  defaultAppPreferences,
-  normalizeAppPreferences,
-} = require("@/modules/users/normalize");
+const { defaultAppPreferences, normalizeAppPreferences } = require("@/modules/users/normalize");
 
 /**
  * @typedef {Object} UserProfileUpdates

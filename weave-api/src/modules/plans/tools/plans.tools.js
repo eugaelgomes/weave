@@ -57,9 +57,7 @@ FUNCTIONALITIES (Actions):
         throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
-          content: [
-            { text: `Error managing plans: ${error.message}`, type: "text" },
-          ],
+          content: [{ text: `Error managing plans: ${error.message}`, type: "text" }],
           isError: true,
         };
       }

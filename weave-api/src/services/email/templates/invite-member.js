@@ -1,13 +1,6 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
-const {
-  getRoleLabel,
-  resolveEmailLocale,
-  t,
-} = require("@/services/email/i18n");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const { getRoleLabel, resolveEmailLocale, t } = require("@/services/email/i18n");
 const { buildAuthInviteUrl } = require("../utils/frontend-url");
 
 /**
@@ -41,9 +34,7 @@ async function send_organization_invite(
       ctaText: t(locale, "invite.cta"),
       ctaUrl: acceptInviteLink,
       infoText: t(locale, "invite.info"),
-      introLines: [
-        t(locale, "invite.intro", { inviterName, organizationName }),
-      ],
+      introLines: [t(locale, "invite.intro", { inviterName, organizationName })],
       locale,
       preheader: t(locale, "invite.preheader"),
       subtitle: t(locale, "invite.subtitle"),

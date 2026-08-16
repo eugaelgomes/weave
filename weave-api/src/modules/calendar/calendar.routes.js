@@ -102,9 +102,7 @@ router.delete(
 router.get(
   "/google/settings",
   highTrafficLimiter,
-  calendarController.getGoogleCalendarSettings.bind(
-    calendarController
-  )
+  calendarController.getGoogleCalendarSettings.bind(calendarController)
 );
 
 router.get(

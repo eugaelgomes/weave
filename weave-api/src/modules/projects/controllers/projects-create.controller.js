@@ -5,20 +5,13 @@ const {
 } = require("@/utils/patterns/product-patterns");
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const {
-  PLAN_PATHS,
-  USAGE_PATHS,
-} = require("@/modules/plans/utils/plan-paths.util");
-const {
-  sendPlanLimitExceeded,
-} = require("@/modules/plans/utils/plan-limit-http.util");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
 const {
   respondIfWorkspaceShareDenied,
 } = require("@/modules/organizations/utils/workspace-share-guard.util");
 const { normalizeNewProject } = require("../normalizer");
-const {
-  ASSIGNABLE_PROJECT_ROLES,
-} = require("@/modules/projects/project-role-policy");
+const { ASSIGNABLE_PROJECT_ROLES } = require("@/modules/projects/project-role-policy");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 
 class ProjectsCreateController extends ProjectsCoreController {
@@ -28,15 +21,8 @@ class ProjectsCreateController extends ProjectsCoreController {
    */
   async createProject(req, res, next) {
     try {
-      const {
-        title,
-        description,
-        status,
-        properties,
-        methodology,
-        org_id,
-        parent_project_id,
-      } = req.body;
+      const { title, description, status, properties, methodology, org_id, parent_project_id } =
+        req.body;
 
       // Validação de autenticação
       const userId = this._requireAuthenticatedUser(req, res);
@@ -44,9 +30,7 @@ class ProjectsCreateController extends ProjectsCoreController {
 
       const usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-      const planDetails = await PlansRepository.getPlanById(
-        getUserPlan.plan_id
-      );
+      const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
 
       if (!usageRecord || !planDetails) {
         return res.status(404).json({
@@ -57,17 +41,13 @@ class ProjectsCreateController extends ProjectsCoreController {
       if (!planDetails.details) {
         return res.status(500).json({
           error: "Configuração de plano inválida",
-          message:
-            "O plano não possui configuração (details) no banco de dados.",
+          message: "O plano não possui configuração (details) no banco de dados.",
         });
       }
 
       const getNestedValue = (obj, path) =>
         path.split(".").reduce((acc, part) => acc && acc[part], obj);
-      const maxProjects = getNestedValue(
-        planDetails.details,
-        PLAN_PATHS.LIMITS.MAX_PROJECTS
-      );
+      const maxProjects = getNestedValue(planDetails.details, PLAN_PATHS.LIMITS.MAX_PROJECTS);
 
       if (maxProjects === undefined) {
         return res.status(500).json({
@@ -104,9 +84,7 @@ class ProjectsCreateController extends ProjectsCoreController {
       }
 
       // 🟢 2. Valida as propriedades de UI/Design que o usuário enviou (color, icon, tags)
-      const userValidatedProps = properties
-        ? this._validateProperties(properties)
-        : {};
+      const userValidatedProps = properties ? this._validateProperties(properties) : {};
 
       // 🟢 3. CHAMADA AO NORMALIZER
       // Passamos os dados da requisição + as propriedades validadas pelo usuário
@@ -132,11 +110,7 @@ class ProjectsCreateController extends ProjectsCoreController {
         payload,
         userId,
         org_id ||
-          (
-            await organizationsRepository.getActiveOrganizationWithMembership(
-              userId
-            )
-          )?.id ||
+          (await organizationsRepository.getActiveOrganizationWithMembership(userId))?.id ||
           null,
         userValidatedProps // Injetamos as props do usuário para mesclar com as props de negócio
       );
@@ -144,10 +118,7 @@ class ProjectsCreateController extends ProjectsCoreController {
       // 🟢 4. Persistência no banco de dados
       // NOTA ARQUITETURAL: Como agora você tem projectData e stagesData,
       // o método no Repository precisa salvar ambos usando uma Transaction SQL.
-      const result = await this.projectsRepository.createProjectWithStages(
-        projectData,
-        stagesData
-      );
+      const result = await this.projectsRepository.createProjectWithStages(projectData, stagesData);
 
       if (!result || result.length === 0) {
         throw new Error("Failed to create project");
@@ -163,11 +134,10 @@ class ProjectsCreateController extends ProjectsCoreController {
       // ═══════════════════════════════════════════════════════════════
       if (newProject.organization_id) {
         try {
-          const autoMembers =
-            await organizationsRepository.getAutoAssignableProjectMembers(
-              newProject.organization_id,
-              userId
-            );
+          const autoMembers = await organizationsRepository.getAutoAssignableProjectMembers(
+            newProject.organization_id,
+            userId
+          );
 
           if (autoMembers.length > 0) {
             const membersToInsert = autoMembers.map((m) => ({
@@ -176,17 +146,11 @@ class ProjectsCreateController extends ProjectsCoreController {
               userId: m.user_id,
             }));
 
-            await this.projectsRepository.bulkAddProjectMembers(
-              newProject.id,
-              membersToInsert
-            );
+            await this.projectsRepository.bulkAddProjectMembers(newProject.id, membersToInsert);
           }
         } catch (autoAddError) {
           // Non-blocking: log and continue
-          console.error(
-            "[Auto-Add Members] Failed to auto-add members:",
-            autoAddError
-          );
+          console.error("[Auto-Add Members] Failed to auto-add members:", autoAddError);
         }
       }
 
@@ -220,9 +184,7 @@ class ProjectsCreateController extends ProjectsCoreController {
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
 
       // Buscar detalhes do plano
-      const planDetails = await PlansRepository.getPlanById(
-        getUserPlan.plan_id
-      );
+      const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
 
       if (!usageRecord || !planDetails) {
         return res.status(404).json({
@@ -234,14 +196,10 @@ class ProjectsCreateController extends ProjectsCoreController {
 
       // Validar limite de colaboradores por projeto
       const collaborators = ctx.orgWide
-        ? await this.projectsRepository.getCollaboratorsWithOrgScope(
-            projectId,
-            ctx.membership.id
-          )
+        ? await this.projectsRepository.getCollaboratorsWithOrgScope(projectId, ctx.membership.id)
         : await this.projectsRepository.getCollaborators(projectId, userId);
       const currentCollaborators = collaborators[0]?.collaborators || [];
-      const maxCollaborators =
-        planDetails.details?.limits?.max_collaborators_per_project;
+      const maxCollaborators = planDetails.details?.limits?.max_collaborators_per_project;
 
       if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
         return sendPlanLimitExceeded(res, {
@@ -274,8 +232,10 @@ class ProjectsCreateController extends ProjectsCoreController {
       }
 
       // Verificar se o colaborador já está ativo
-      const isAlreadyCollaborator =
-        await this.projectsRepository.isCollaborator(projectId, collaboratorId);
+      const isAlreadyCollaborator = await this.projectsRepository.isCollaborator(
+        projectId,
+        collaboratorId
+      );
 
       if (isAlreadyCollaborator) {
         throw new Error("Usuário já é colaborador deste projeto");
@@ -289,12 +249,7 @@ class ProjectsCreateController extends ProjectsCoreController {
             collaboratorId,
             role
           )
-        : await this.projectsRepository.addCollaborator(
-            projectId,
-            userId,
-            collaboratorId,
-            role
-          );
+        : await this.projectsRepository.addCollaborator(projectId, userId, collaboratorId, role);
 
       if (!result || result.length === 0) {
         throw new Error("Failed to add collaborator");

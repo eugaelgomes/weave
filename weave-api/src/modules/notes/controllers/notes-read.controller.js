@@ -7,10 +7,7 @@ class NotesReadController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const { notes, pagination } = await NotesService.getAllNotes(
-        userId,
-        req.query
-      );
+      const { notes, pagination } = await NotesService.getAllNotes(userId, req.query);
 
       if (pagination) {
         res.status(200).json({ notes, pagination });

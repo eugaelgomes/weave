@@ -3,9 +3,7 @@ const bcrypt = require("bcrypt");
 
 const { fromUnknown } = require("@/errors");
 const PasswordRepository = require("@/modules/authentication/repositories/password.repository");
-const {
-  mail_rescue_pass,
-} = require("@/services/email/templates/rescue-password");
+const { mail_rescue_pass } = require("@/services/email/templates/rescue-password");
 
 class PasswordController {
   /**
@@ -40,10 +38,7 @@ class PasswordController {
       const emailResult = await mail_rescue_pass(email, token, userExists.name);
 
       if (!emailResult.success) {
-        console.error(
-          "Forgot password email provider error:",
-          emailResult.error || "unknown"
-        );
+        console.error("Forgot password email provider error:", emailResult.error || "unknown");
         return res.status(500).json({
           message:
             process.env.NODE_ENV === "development"
@@ -81,9 +76,7 @@ class PasswordController {
       }
 
       // Find the user by the ID associated with the token
-      const userExists = await PasswordRepository.findUserById(
-        tokenRecord.user_id
-      );
+      const userExists = await PasswordRepository.findUserById(tokenRecord.user_id);
 
       if (!userExists) {
         return res.status(400).json({
@@ -96,10 +89,7 @@ class PasswordController {
         parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12
       );
 
-      await PasswordRepository.updateUserPassword(
-        userExists.user_id,
-        hashedPassword
-      );
+      await PasswordRepository.updateUserPassword(userExists.user_id, hashedPassword);
       await PasswordRepository.deactivateToken(token);
       return res.status(200).json({
         message: "Password updated successfully!",

@@ -128,9 +128,7 @@ async function getUserEmailLocale({ userId, email } = {}) {
 
   const prefs = rows[0]?.user_preference;
   const interfaceLocale =
-    prefs && typeof prefs === "object" && prefs.language
-      ? prefs.language.interface
-      : undefined;
+    prefs && typeof prefs === "object" && prefs.language ? prefs.language.interface : undefined;
 
   return resolveEmailLocale(interfaceLocale);
 }

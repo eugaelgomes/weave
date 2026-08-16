@@ -6,8 +6,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // Resolve session cookie domain: COOKIE_DOMAIN → APP_DOMAIN → undefined
 const sessionCookieDomain = isProduction
-  ? process.env.COOKIE_DOMAIN ||
-    (process.env.APP_DOMAIN ? `.${process.env.APP_DOMAIN}` : undefined)
+  ? process.env.COOKIE_DOMAIN || (process.env.APP_DOMAIN ? `.${process.env.APP_DOMAIN}` : undefined)
   : undefined;
 
 const sameSite = isProduction ? detectSameSitePolicy() : "lax";

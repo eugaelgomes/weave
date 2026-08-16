@@ -37,16 +37,10 @@ function configureGlobalMiddlewares(app) {
     // Ignore CORS for:
     // - Webhooks (POST do Google Calendar)
     // - SSO OAuth (GET redirects do browser, wi header Origin)
-    if (
-      req.method === "POST" &&
-      req.path === "/api/v1/webhooks/google/calendar"
-    ) {
+    if (req.method === "POST" && req.path === "/api/v1/webhooks/google/calendar") {
       return next();
     }
-    if (
-      req.method === "POST" &&
-      req.path.startsWith("/api/v1/webhooks/slack")
-    ) {
+    if (req.method === "POST" && req.path.startsWith("/api/v1/webhooks/slack")) {
       return next();
     }
     if (
@@ -56,22 +50,13 @@ function configureGlobalMiddlewares(app) {
     ) {
       return next();
     }
-    if (
-      req.method === "GET" &&
-      req.path.startsWith("/api/v1/auth/signin/sso/")
-    ) {
+    if (req.method === "GET" && req.path.startsWith("/api/v1/auth/signin/sso/")) {
       return next();
     }
-    if (
-      req.method === "GET" &&
-      req.path.startsWith("/api/v1/webhooks/google/callback")
-    ) {
+    if (req.method === "GET" && req.path.startsWith("/api/v1/webhooks/google/callback")) {
       return next();
     }
-    if (
-      req.method === "GET" &&
-      req.path.startsWith("/api/v1/webhooks/google/auth")
-    ) {
+    if (req.method === "GET" && req.path.startsWith("/api/v1/webhooks/google/auth")) {
       return next();
     }
     if (req.method === "GET" && req.path.startsWith("/api/v1/slack/install")) {

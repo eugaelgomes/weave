@@ -30,14 +30,7 @@ class GoogleCalendarWebhooksRepository {
    * @param {Date|null} params.expiresAt - Data de expiração do webhook
    * @returns {Promise<object>} Registro criado
    */
-  async createWebhook({
-    userId,
-    calendarId,
-    channelId,
-    resourceId,
-    syncToken,
-    expiresAt,
-  }) {
+  async createWebhook({ userId, calendarId, channelId, resourceId, syncToken, expiresAt }) {
     const results = await executeQuery(
       `INSERT INTO google_calendar_webhooks
          (user_id, calendar_id, channel_id, resource_id, sync_token, expires_at)

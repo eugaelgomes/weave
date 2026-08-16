@@ -50,8 +50,7 @@ class CreateUsersRepository extends BaseRepository {
       plan_id,
     } = userData;
 
-    const resolvedPlanId =
-      plan_id || (await PlansRepository.getDefaultSignupPlanId());
+    const resolvedPlanId = plan_id || (await PlansRepository.getDefaultSignupPlanId());
 
     const publicUserId = generatePublicId();
 
@@ -115,11 +114,7 @@ class CreateUsersRepository extends BaseRepository {
       )
       RETURNING user_id, public_user_id;
     `;
-    return await executeQuery(
-      query,
-      [username, name, githubId, planId, publicUserId],
-      client
-    );
+    return await executeQuery(query, [username, name, githubId, planId, publicUserId], client);
   }
 }
 module.exports = new CreateUsersRepository();

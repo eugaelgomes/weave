@@ -2,10 +2,7 @@ const ProjectsCoreController = require("@/modules/projects/controllers/projects-
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const { normalizeProjectStatus } = require("@/utils/patterns/product-patterns");
 
-const {
-  buildListEnvelope,
-  hasAnyQueryKey,
-} = require("@/utils/http/list-query");
+const { buildListEnvelope, hasAnyQueryKey } = require("@/utils/http/list-query");
 const {
   PROJECTS_LIST_TRIGGER_KEYS,
   PROJECT_STAGES_LIST_TRIGGER_KEYS,
@@ -22,8 +19,7 @@ class ProjectsReadController extends ProjectsCoreController {
    * @returns {Promise<object>}
    */
   async _loadProjectForRead(projectId, userId) {
-    const membership =
-      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
     if (this._canAccessAllOrganizationProjects(membership) && membership.id) {
       const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
@@ -50,23 +46,12 @@ class ProjectsReadController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
-      const wantsEnvelope = hasAnyQueryKey(
-        req.query,
-        PROJECTS_LIST_TRIGGER_KEYS
-      );
+      const wantsEnvelope = hasAnyQueryKey(req.query, PROJECTS_LIST_TRIGGER_KEYS);
 
       if (wantsEnvelope) {
-        const {
-          pagination,
-          sort,
-          include: includeArr,
-          filters,
-        } = req.parsedQuery;
+        const { pagination, sort, include: includeArr, filters } = req.parsedQuery;
 
         const filtersForRepo = { ...filters };
         if (!this._canAccessAllOrganizationProjects(membership)) {
@@ -79,21 +64,19 @@ class ProjectsReadController extends ProjectsCoreController {
           subprojects: false,
         };
 
-        const orgWide =
-          this._canAccessAllOrganizationProjects(membership) && membership.id;
+        const orgWide = this._canAccessAllOrganizationProjects(membership) && membership.id;
         const scope = orgWide
           ? { mode: "organization", organizationId: membership.id }
           : { mode: "user", userId };
 
-        const { rows, total } =
-          await this.projectsRepository.getAllProjectsFiltered(
-            scope,
-            filtersForRepo,
-            pagination,
-            sort,
-            include,
-            userId
-          );
+        const { rows, total } = await this.projectsRepository.getAllProjectsFiltered(
+          scope,
+          filtersForRepo,
+          pagination,
+          sort,
+          include,
+          userId
+        );
 
         const formattedProjects = rows.map((project) => {
           const formatted = this._formatProjectResponse(project);
@@ -135,9 +118,7 @@ class ProjectsReadController extends ProjectsCoreController {
 
       const projects =
         this._canAccessAllOrganizationProjects(membership) && membership.id
-          ? await this.projectsRepository.getAllProjectsInOrganization(
-              membership.id
-            )
+          ? await this.projectsRepository.getAllProjectsInOrganization(membership.id)
           : await this.projectsRepository.getAllProjects(userId);
 
       const formattedProjects = projects.map((project) => {
@@ -217,17 +198,12 @@ class ProjectsReadController extends ProjectsCoreController {
       }
 
       if (include.includes("subprojects")) {
-        formattedProject.subprojects =
-          await this.projectsRepository.getSubprojectsLight(id);
+        formattedProject.subprojects = await this.projectsRepository.getSubprojectsLight(id);
       }
 
       if (include.includes("stages")) {
-        const stages = await this.projectsRepository.getProjectStages(
-          project.id
-        );
-        formattedProject.stages = (stages || []).map((s) =>
-          this._formatProjectStage(s)
-        );
+        const stages = await this.projectsRepository.getProjectStages(project.id);
+        formattedProject.stages = (stages || []).map((s) => this._formatProjectStage(s));
       }
 
       res.status(200).json(formattedProject);
@@ -244,8 +220,7 @@ class ProjectsReadController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const projects =
-        await this.projectsRepository.getProjectsWithUserInfo(userId);
+      const projects = await this.projectsRepository.getProjectsWithUserInfo(userId);
 
       if (!projects || projects.length === 0) {
         return res.status(200).json({ projects: [] });
@@ -285,20 +260,16 @@ class ProjectsReadController extends ProjectsCoreController {
       const project = await this._loadProjectForRead(id, userId);
       const projectId = project.id;
 
-      const wantsEnvelope = hasAnyQueryKey(
-        req.query,
-        PROJECT_STAGES_LIST_TRIGGER_KEYS
-      );
+      const wantsEnvelope = hasAnyQueryKey(req.query, PROJECT_STAGES_LIST_TRIGGER_KEYS);
 
       if (wantsEnvelope) {
         const { pagination, sort, filters } = req.parsedQuery;
-        const { rows, total } =
-          await this.projectsRepository.getProjectStagesFiltered(
-            id,
-            filters,
-            pagination,
-            sort
-          );
+        const { rows, total } = await this.projectsRepository.getProjectStagesFiltered(
+          id,
+          filters,
+          pagination,
+          sort
+        );
         const formatted = rows.map((s) => this._formatProjectStage(s));
         return res.status(200).json(
           buildListEnvelope({
@@ -337,23 +308,17 @@ class ProjectsReadController extends ProjectsCoreController {
       const project = await this._loadProjectForRead(projectId, userId);
       projectId = project.id;
 
-      const wantsEnvelope = hasAnyQueryKey(
-        req.query,
-        PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS
-      );
+      const wantsEnvelope = hasAnyQueryKey(req.query, PROJECT_COLLABORATORS_LIST_TRIGGER_KEYS);
 
       const { pagination, sort, filters } = req.parsedQuery;
-      const effectivePagination = wantsEnvelope
-        ? pagination
-        : { limit: 500, offset: 0, page: 1 };
+      const effectivePagination = wantsEnvelope ? pagination : { limit: 500, offset: 0, page: 1 };
 
-      const { rows, total } =
-        await this.projectsRepository.listProjectCollaboratorsFiltered(
-          projectId,
-          filters,
-          effectivePagination,
-          sort
-        );
+      const { rows, total } = await this.projectsRepository.listProjectCollaboratorsFiltered(
+        projectId,
+        filters,
+        effectivePagination,
+        sort
+      );
 
       const collaborators = rows.map((r) => ({
         added_at: r.added_at,
@@ -401,32 +366,24 @@ class ProjectsReadController extends ProjectsCoreController {
       const project = await this._loadProjectForRead(projectId, userId);
       projectId = project.id;
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
-      const wantsEnvelope = hasAnyQueryKey(
-        req.query,
-        PROJECT_NOTES_LIST_TRIGGER_KEYS
-      );
+      const wantsEnvelope = hasAnyQueryKey(req.query, PROJECT_NOTES_LIST_TRIGGER_KEYS);
 
-      const orgWide =
-        this._canAccessAllOrganizationProjects(membership) && membership.id;
+      const orgWide = this._canAccessAllOrganizationProjects(membership) && membership.id;
       const scope = orgWide
         ? { organizationId: membership.id, type: "organization" }
         : { type: "member", userId };
 
       if (wantsEnvelope) {
         const { pagination, sort, filters } = req.parsedQuery;
-        const { rows, total } =
-          await this.projectsRepository.getAssociatedNotesFiltered(
-            projectId,
-            scope,
-            filters,
-            pagination,
-            sort
-          );
+        const { rows, total } = await this.projectsRepository.getAssociatedNotesFiltered(
+          projectId,
+          scope,
+          filters,
+          pagination,
+          sort
+        );
 
         return res.status(200).json(
           buildListEnvelope({
@@ -442,10 +399,7 @@ class ProjectsReadController extends ProjectsCoreController {
       }
 
       const notes = orgWide
-        ? await this.projectsRepository.getAssociatedNotesWithOrgScope(
-            projectId,
-            membership.id
-          )
+        ? await this.projectsRepository.getAssociatedNotesWithOrgScope(projectId, membership.id)
         : await this.projectsRepository.getAssociatedNotes(projectId, userId);
 
       res.status(200).json({
@@ -470,10 +424,7 @@ class ProjectsReadController extends ProjectsCoreController {
         if (normalizedStatus) filters.status = normalizedStatus;
       }
 
-      if (
-        req.query.methodology &&
-        VALID_METHODOLOGIES.includes(req.query.methodology)
-      ) {
+      if (req.query.methodology && VALID_METHODOLOGIES.includes(req.query.methodology)) {
         filters.methodology = req.query.methodology;
       }
 
@@ -489,10 +440,7 @@ class ProjectsReadController extends ProjectsCoreController {
 
       filters.parent_only = req.query.parent_only !== "false";
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
       const result =
         this._canAccessAllOrganizationProjects(membership) && membership.id
@@ -554,10 +502,7 @@ class ProjectsReadController extends ProjectsCoreController {
         overview: formattedOverview,
         progress: formattedProgress,
         tasks: {
-          completion_rate:
-            tasksTotal > 0
-              ? Math.round((tasksDone / tasksTotal) * 1000) / 10
-              : 0,
+          completion_rate: tasksTotal > 0 ? Math.round((tasksDone / tasksTotal) * 1000) / 10 : 0,
           done: tasksDone,
           pending: parseInt(tasks.pending) || 0,
           total: tasksTotal,

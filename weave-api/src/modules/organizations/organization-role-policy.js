@@ -87,9 +87,7 @@ const PERMISSIONS_BY_ROLE = Object.freeze({
 function getPermissionsForRole(role) {
   if (!role || typeof role !== "string") return [];
   const normalizedRole = role.toUpperCase();
-  return PERMISSIONS_BY_ROLE[normalizedRole]
-    ? [...PERMISSIONS_BY_ROLE[normalizedRole]]
-    : [];
+  return PERMISSIONS_BY_ROLE[normalizedRole] ? [...PERMISSIONS_BY_ROLE[normalizedRole]] : [];
 }
 
 /**

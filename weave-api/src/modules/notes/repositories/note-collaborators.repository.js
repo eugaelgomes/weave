@@ -22,10 +22,7 @@ class NoteCollaboratorsRepository extends BaseRepository {
       WHERE note_id = $1::uuid AND user_id = $2::uuid
       LIMIT 1;
     `;
-    const existing = await this.executeQuery(checkQuery, [
-      internalNoteId,
-      userId,
-    ]);
+    const existing = await this.executeQuery(checkQuery, [internalNoteId, userId]);
 
     if (existing.length > 0) {
       if (existing[0].removed) {
@@ -35,10 +32,7 @@ class NoteCollaboratorsRepository extends BaseRepository {
           WHERE note_id = $1::uuid AND user_id = $2::uuid
           RETURNING *;
         `;
-        const results = await this.executeQuery(reactivateQuery, [
-          internalNoteId,
-          userId,
-        ]);
+        const results = await this.executeQuery(reactivateQuery, [internalNoteId, userId]);
         return results[0];
       }
       return null;
@@ -49,10 +43,7 @@ class NoteCollaboratorsRepository extends BaseRepository {
       VALUES ($1::uuid, $2::uuid)
       RETURNING *;
     `;
-    const results = await this.executeQuery(insertQuery, [
-      internalNoteId,
-      userId,
-    ]);
+    const results = await this.executeQuery(insertQuery, [internalNoteId, userId]);
     return results[0];
   }
 

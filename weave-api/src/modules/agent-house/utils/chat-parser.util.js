@@ -89,10 +89,7 @@ class ChatParserUtil {
         if (parsed === null) {
           return null;
         }
-        if (
-          Array.isArray(parsed) &&
-          parsed.every((item) => typeof item === "string")
-        ) {
+        if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
           return parsed;
         }
       } catch {
@@ -101,10 +98,7 @@ class ChatParserUtil {
     }
 
     // Return if it is already a clean array of strings.
-    if (
-      Array.isArray(value) &&
-      value.every((item) => typeof item === "string")
-    ) {
+    if (Array.isArray(value) && value.every((item) => typeof item === "string")) {
       return value;
     }
 
@@ -256,26 +250,17 @@ class ChatParserUtil {
 
     // Normalize IDs to handle frontend-defined null/undefined representations
     const parsedAgentId =
-      agentId === undefined ||
-      agentId === null ||
-      agentId === "" ||
-      agentId === "null"
+      agentId === undefined || agentId === null || agentId === "" || agentId === "null"
         ? null
         : String(agentId);
 
     const parsedSessionId =
-      sessionId === undefined ||
-      sessionId === null ||
-      sessionId === "" ||
-      sessionId === "null"
+      sessionId === undefined || sessionId === null || sessionId === "" || sessionId === "null"
         ? null
         : String(sessionId);
 
     const parsedRequestId =
-      requestId === undefined ||
-      requestId === null ||
-      requestId === "" ||
-      requestId === "null"
+      requestId === undefined || requestId === null || requestId === "" || requestId === "null"
         ? null
         : String(requestId).trim();
 
@@ -288,10 +273,7 @@ class ChatParserUtil {
     }
 
     const parsedUseCase =
-      useCase === undefined ||
-      useCase === null ||
-      useCase === "" ||
-      useCase === "null"
+      useCase === undefined || useCase === null || useCase === "" || useCase === "null"
         ? null
         : String(useCase).trim() || null;
 

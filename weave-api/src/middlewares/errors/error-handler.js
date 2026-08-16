@@ -21,10 +21,7 @@ function buildDevDetails(appError, originalError) {
   }
 
   const details = {
-    originalMessage:
-      originalError instanceof Error
-        ? originalError.message
-        : String(originalError),
+    originalMessage: originalError instanceof Error ? originalError.message : String(originalError),
     ...getPgLogContext(originalError),
   };
 
@@ -65,8 +62,7 @@ function buildErrorBody(appError) {
  */
 function logServerError(err, req) {
   const appError = AppError.isAppError(err) ? err : fromUnknown(err);
-  const shouldLog =
-    !appError.isOperational || appError.statusCode >= 500 || !isProduction();
+  const shouldLog = !appError.isOperational || appError.statusCode >= 500 || !isProduction();
 
   if (!shouldLog) return;
 

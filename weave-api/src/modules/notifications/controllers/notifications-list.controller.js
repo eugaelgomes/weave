@@ -44,17 +44,16 @@ class NotificationsListController extends NotificationsBaseController {
       const filter = this._normalizeFilter(req.query.status);
       const order = this._normalizeOrder(req.query.order);
 
-      const { notifications, total } =
-        await this.notificationsRepository.listUserNotifications({
-          entityType: req.query.entity_type,
-          filter,
-          limit,
-          offset,
-          order,
-          search: req.query.search,
-          type: req.query.type,
-          userId,
-        });
+      const { notifications, total } = await this.notificationsRepository.listUserNotifications({
+        entityType: req.query.entity_type,
+        filter,
+        limit,
+        offset,
+        order,
+        search: req.query.search,
+        type: req.query.type,
+        userId,
+      });
 
       const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
 

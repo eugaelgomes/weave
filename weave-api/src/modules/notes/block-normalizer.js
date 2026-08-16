@@ -30,9 +30,7 @@ const NOTE_DOCUMENT_HEX_COLOR_PALETTE = Object.freeze([
   "#ec4899",
 ]);
 
-const NOTE_DOCUMENT_HEX_COLOR_PALETTE_SET = new Set(
-  NOTE_DOCUMENT_HEX_COLOR_PALETTE
-);
+const NOTE_DOCUMENT_HEX_COLOR_PALETTE_SET = new Set(NOTE_DOCUMENT_HEX_COLOR_PALETTE);
 
 const ALLOWED_MARK_TYPES = Object.freeze([
   "bold",
@@ -47,8 +45,7 @@ const ALLOWED_MARK_TYPES = Object.freeze([
   "underline",
 ]);
 
-const isPlainObject = (value) =>
-  !!value && typeof value === "object" && !Array.isArray(value);
+const isPlainObject = (value) => !!value && typeof value === "object" && !Array.isArray(value);
 
 const expandShorthandHex = (hexBody) => {
   if (hexBody.length === 3) {
@@ -89,8 +86,7 @@ const isStorageImageSource = (value) => {
   const src = value.trim();
   if (!src) return false;
   if (src.startsWith("upload://")) return true;
-  if (src.startsWith("notes/") || src.startsWith("weave-notes/notes/"))
-    return true;
+  if (src.startsWith("notes/") || src.startsWith("weave-notes/notes/")) return true;
   if (/^https?:\/\//i.test(src)) return true;
   if (/^data:(image|video)\//i.test(src)) return true;
   if (/^blob:/i.test(src)) return true;
@@ -115,10 +111,7 @@ const validateMarkAttrs = (type, attrs) => {
   }
   if (type === "textStyle" || type === "highlight") {
     if (attrs.color !== undefined) {
-      attrs.color = parseAllowedHexColor(
-        attrs.color,
-        `mark '${type}'.attrs.color`
-      );
+      attrs.color = parseAllowedHexColor(attrs.color, `mark '${type}'.attrs.color`);
     }
   }
 };
@@ -244,11 +237,7 @@ const normalizeBlockProperties = (blockType, rawProperties, path) => {
   /** @type {Record<string, unknown>} */
   const props = { ...rawProperties };
 
-  if (
-    props.text !== undefined &&
-    props.text !== null &&
-    typeof props.text !== "string"
-  ) {
+  if (props.text !== undefined && props.text !== null && typeof props.text !== "string") {
     throw new Error(`${path}.text deve ser string`);
   }
 
@@ -260,12 +249,7 @@ const normalizeBlockProperties = (blockType, rawProperties, path) => {
     props.marks.forEach((m, i) => {
       const start = Number(m.start);
       const end = Number(m.end);
-      if (
-        !Number.isInteger(start) ||
-        !Number.isInteger(end) ||
-        start < 0 ||
-        end < start
-      ) {
+      if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start) {
         throw new Error(`${path}.marks[${i}]: start/end inválidos`);
       }
     });
@@ -292,8 +276,7 @@ const normalizeBlockProperties = (blockType, rawProperties, path) => {
   return props;
 };
 
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const newBlockId = () => crypto.randomUUID();
 
@@ -313,9 +296,7 @@ const validateBlockPayload = (node, path = "blocks", depth = 0) => {
   }
 
   const id =
-    typeof node.id === "string" && UUID_REGEX.test(node.id.trim())
-      ? node.id.trim()
-      : newBlockId();
+    typeof node.id === "string" && UUID_REGEX.test(node.id.trim()) ? node.id.trim() : newBlockId();
 
   const type = typeof node.type === "string" ? node.type.trim() : "";
   if (!ALLOWED_BLOCK_TYPES.includes(type)) {
@@ -324,9 +305,7 @@ const validateBlockPayload = (node, path = "blocks", depth = 0) => {
 
   /** @type {Record<string, unknown>} */
   let properties =
-    node.properties !== undefined && isPlainObject(node.properties)
-      ? { ...node.properties }
-      : {};
+    node.properties !== undefined && isPlainObject(node.properties) ? { ...node.properties } : {};
 
   if (typeof node.text === "string" && node.text !== "") {
     properties.text = node.text;
@@ -377,13 +356,7 @@ const normalizeBlocksTree = (blocks) => {
  * @param {number} depth
  * @returns {Array<{ id: string, note_id: string, parent_id: string | null, type: string, properties: Record<string, unknown>, position: number, created_by: string }>}
  */
-const flattenBlocksForInsert = (
-  tree,
-  noteId,
-  userId,
-  parentId = null,
-  depth = 0
-) => {
+const flattenBlocksForInsert = (tree, noteId, userId, parentId = null, depth = 0) => {
   const normalized = normalizeBlocksTree(tree);
   /** @type {Array<{ id: string, note_id: string, parent_id: string | null, type: string, properties: Record<string, unknown>, position: number, created_by: string }>} */
   const rows = [];
@@ -419,24 +392,14 @@ const flattenBlocksForInsert = (
  * @param {unknown} patchProperties - merge parcial de properties (para PATCH)
  * @param {Record<string, unknown> | null} existingProperties
  */
-const mergeBlockPropertiesPatch = (
-  blockType,
-  patchProperties,
-  existingProperties = {}
-) => {
+const mergeBlockPropertiesPatch = (blockType, patchProperties, existingProperties = {}) => {
   if (patchProperties === undefined) {
-    return normalizeBlockProperties(
-      blockType,
-      existingProperties || {},
-      "properties"
-    );
+    return normalizeBlockProperties(blockType, existingProperties || {}, "properties");
   }
   if (!isPlainObject(patchProperties)) {
     throw new Error("properties deve ser objeto");
   }
-  const base = isPlainObject(existingProperties)
-    ? { ...existingProperties }
-    : {};
+  const base = isPlainObject(existingProperties) ? { ...existingProperties } : {};
   const merged = { ...base, ...patchProperties };
   if (
     patchProperties.attrs !== undefined &&

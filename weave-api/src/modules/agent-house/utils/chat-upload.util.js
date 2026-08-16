@@ -39,11 +39,7 @@ const CHAT_ALLOWED_FILE_RULES = {
   ".xls": {
     label: "XLS",
     maxSizeBytes: CHAT_DOCUMENT_MAX_SIZE_BYTES,
-    mimeTypes: [
-      "application/vnd.ms-excel",
-      "application/octet-stream",
-      "application/excel",
-    ],
+    mimeTypes: ["application/vnd.ms-excel", "application/octet-stream", "application/excel"],
   },
 };
 
@@ -102,14 +98,10 @@ const knowledgeUpload = multer({
 function handleChatFilesUpload(req, res, next) {
   chatUpload(req, res, (error) => {
     if (error) {
-      if (
-        error instanceof multer.MulterError &&
-        error.code === "LIMIT_FILE_SIZE"
-      ) {
+      if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
         return res.status(400).json({
           code: ERROR_CODES.FILE_TOO_LARGE,
-          error:
-            "Attached file exceeds the allowed size (5MB for images, 10MB for documents).",
+          error: "Attached file exceeds the allowed size (5MB for images, 10MB for documents).",
           success: false,
         });
       }
@@ -133,10 +125,7 @@ function handleChatFilesUpload(req, res, next) {
         });
       }
 
-      if (
-        typeof file.size === "number" &&
-        file.size > allowedRule.maxSizeBytes
-      ) {
+      if (typeof file.size === "number" && file.size > allowedRule.maxSizeBytes) {
         const maxSizeMb = allowedRule.maxSizeBytes / (1024 * 1024);
         return res.status(400).json({
           code: ERROR_CODES.FILE_TOO_LARGE,

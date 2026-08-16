@@ -9,10 +9,7 @@ const {
   issueSlackInstallState,
   verifySlackInstallState,
 } = require("@/modules/slack/utils/slack-oauth-state.util");
-const {
-  buildAuthorizeUrl,
-  exchangeOAuthCode,
-} = require("@/modules/slack/utils/slack-client.util");
+const { buildAuthorizeUrl, exchangeOAuthCode } = require("@/modules/slack/utils/slack-client.util");
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -33,18 +30,13 @@ class SlackOauthController extends WebhooksBaseController {
       if (userId === null || userId === undefined) return;
 
       const organization =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+        await organizationsRepository.getActiveOrganizationWithMembership(userId);
       if (!organization?.id) {
         return res.status(404).json({ error: "Organization not found" });
       }
 
       const role = organization.member_role;
-      if (
-        !role ||
-        !orgRoleHasPermission(role, ORG_PERMISSIONS.MANAGE_GLOBAL_INTEGRATIONS)
-      ) {
+      if (!role || !orgRoleHasPermission(role, ORG_PERMISSIONS.MANAGE_GLOBAL_INTEGRATIONS)) {
         return res.status(403).json({
           code: "ORG_FORBIDDEN",
           error: "Insufficient organization permissions",
@@ -76,9 +68,7 @@ class SlackOauthController extends WebhooksBaseController {
 
       if (error) {
         console.error("[Slack OAuth callback] provider error:", error);
-        return res.redirect(
-          `${FRONTEND_URL}/app/settings/integrations?slack=error`
-        );
+        return res.redirect(`${FRONTEND_URL}/app/settings/integrations?slack=error`);
       }
 
       const decoded = verifySlackInstallState(String(state));
@@ -89,24 +79,19 @@ class SlackOauthController extends WebhooksBaseController {
       const data = await exchangeOAuthCode(String(code));
       if (!data?.ok) {
         console.error("[Slack OAuth callback] oauth.v2.access:", data?.error);
-        return res.redirect(
-          `${FRONTEND_URL}/app/settings/integrations?slack=error`
-        );
+        return res.redirect(`${FRONTEND_URL}/app/settings/integrations?slack=error`);
       }
 
       const accessToken = data.access_token;
       const tokenType = data.token_type;
       const botToken =
-        tokenType === "bot" ||
-        (typeof accessToken === "string" && accessToken.startsWith("xoxb-"))
+        tokenType === "bot" || (typeof accessToken === "string" && accessToken.startsWith("xoxb-"))
           ? accessToken
           : null;
 
       if (!botToken || !data.team?.id) {
         console.error("[Slack OAuth callback] Missing bot token or team id");
-        return res.redirect(
-          `${FRONTEND_URL}/app/settings/integrations?slack=error`
-        );
+        return res.redirect(`${FRONTEND_URL}/app/settings/integrations?slack=error`);
       }
 
       await MutateSlackIntegrationsRepository.upsertInstallation({
@@ -120,14 +105,10 @@ class SlackOauthController extends WebhooksBaseController {
         slackTeamName: data.team.name ? String(data.team.name) : null,
       });
 
-      return res.redirect(
-        `${FRONTEND_URL}/app/settings/integrations?slack=connected`
-      );
+      return res.redirect(`${FRONTEND_URL}/app/settings/integrations?slack=connected`);
     } catch (err) {
       console.error("[Slack OAuth callback]", err);
-      return res.redirect(
-        `${FRONTEND_URL}/app/settings/integrations?slack=error`
-      );
+      return res.redirect(`${FRONTEND_URL}/app/settings/integrations?slack=error`);
     }
   }
 }

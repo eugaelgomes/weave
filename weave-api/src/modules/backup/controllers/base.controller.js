@@ -29,9 +29,7 @@ class BackupBaseController {
   _validateUserId(userId) {
     const isNumeric = /^\d+$/.test(userId);
     const isUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        userId
-      );
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
     return isNumeric || isUUID;
   }
 
@@ -54,21 +52,13 @@ class BackupBaseController {
 
     if (/too much data|payload too large/i.test(message)) {
       return next(
-        new AppError(
-          "PAYLOAD_TOO_LARGE",
-          "Data volume exceeds the supported limit.",
-          413
-        )
+        new AppError("PAYLOAD_TOO_LARGE", "Data volume exceeds the supported limit.", 413)
       );
     }
 
     if (/limit/i.test(message)) {
       return next(
-        new AppError(
-          "RATE_LIMIT_EXCEEDED",
-          "Too many requests. Please try again later.",
-          429
-        )
+        new AppError("RATE_LIMIT_EXCEEDED", "Too many requests. Please try again later.", 429)
       );
     }
 

@@ -1,10 +1,7 @@
 const OrganizationsBaseController = require("@/modules/organizations/controllers/base-controller");
 const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
 const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/mutate-slack-integrations.repository");
-const {
-  conversationsInfo,
-  authRevoke,
-} = require("@/modules/slack/utils/slack-client.util");
+const { conversationsInfo, authRevoke } = require("@/modules/slack/utils/slack-client.util");
 
 /**
  * Slack integration settings for the active organization.
@@ -32,10 +29,9 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         return;
       }
 
-      const row =
-        await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
-          String(organization.id)
-        );
+      const row = await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
+        String(organization.id)
+      );
 
       if (!row) {
         return res.status(200).json({
@@ -58,9 +54,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("[getSlackIntegration]", error);
-      return res
-        .status(500)
-        .json({ error: "Failed to load Slack integration" });
+      return res.status(500).json({ error: "Failed to load Slack integration" });
     }
   }
 
@@ -86,19 +80,13 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         return;
       }
 
-      const channelId =
-        req.body?.channel_id ??
-        req.body?.channelId ??
-        req.body?.default_channel_id;
+      const channelId = req.body?.channel_id ?? req.body?.channelId ?? req.body?.default_channel_id;
 
-      const integration =
-        await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
-          String(organization.id)
-        );
+      const integration = await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
+        String(organization.id)
+      );
       if (!integration?.bot_access_token) {
-        return res
-          .status(400)
-          .json({ error: "Slack is not connected for this organization" });
+        return res.status(400).json({ error: "Slack is not connected for this organization" });
       }
 
       const info = await conversationsInfo({
@@ -107,8 +95,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       });
       if (!info?.ok || !info.channel) {
         return res.status(400).json({
-          error:
-            "Unable to access Slack channel. Check the channel ID and bot scopes.",
+          error: "Unable to access Slack channel. Check the channel ID and bot scopes.",
           slack_error: info?.error,
         });
       }
@@ -127,9 +114,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("[setDefaultChannel]", error);
-      return res
-        .status(500)
-        .json({ error: "Failed to update default Slack channel" });
+      return res.status(500).json({ error: "Failed to update default Slack channel" });
     }
   }
 
@@ -155,10 +140,9 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         return;
       }
 
-      const integration =
-        await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
-          String(organization.id)
-        );
+      const integration = await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
+        String(organization.id)
+      );
       if (integration?.bot_access_token) {
         try {
           await authRevoke(integration.bot_access_token);
@@ -167,9 +151,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         }
       }
 
-      await MutateSlackIntegrationsRepository.softDeleteByOrganizationId(
-        String(organization.id)
-      );
+      await MutateSlackIntegrationsRepository.softDeleteByOrganizationId(String(organization.id));
 
       return res.status(204).send();
     } catch (error) {

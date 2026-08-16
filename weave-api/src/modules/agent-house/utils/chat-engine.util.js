@@ -21,13 +21,8 @@ const chatFormatterUtil = require("../utils/chat-formatter.util");
 const { getI18n } = require("../utils/agent-house-i18n.util");
 
 const Redis = require("ioredis");
-const {
-  getBlockingRedisOptions,
-} = require("@/services/queue/blocking-redis-options");
-const subscriberClient = new Redis(
-  process.env.REDIS_URL,
-  getBlockingRedisOptions()
-);
+const { getBlockingRedisOptions } = require("@/services/queue/blocking-redis-options");
+const subscriberClient = new Redis(process.env.REDIS_URL, getBlockingRedisOptions());
 const streamCallbacks = new Map();
 
 subscriberClient.on("message", (channel, message) => {
@@ -69,9 +64,7 @@ class ChatEngineService {
       const planDetails = effectivePlan?.plan_details || {};
       const usageDetails = usageRecord?.usage_details || {};
 
-      const aiEnabled = Boolean(
-        chatFormatterUtil.getNestedValue(planDetails, "weave_ai.enabled")
-      );
+      const aiEnabled = Boolean(chatFormatterUtil.getNestedValue(planDetails, "weave_ai.enabled"));
       const monthlyMessagesLimit = chatFormatterUtil.getNestedValue(
         planDetails,
         "weave_ai.config.monthly_messages"
@@ -93,15 +86,11 @@ class ChatEngineService {
         },
         usage: {
           periodEnd:
-            chatFormatterUtil.getNestedValue(
-              usageDetails,
-              "monthly_cycle.current_period_end"
-            ) || null,
+            chatFormatterUtil.getNestedValue(usageDetails, "monthly_cycle.current_period_end") ||
+            null,
           periodStart:
-            chatFormatterUtil.getNestedValue(
-              usageDetails,
-              "monthly_cycle.current_period_start"
-            ) || null,
+            chatFormatterUtil.getNestedValue(usageDetails, "monthly_cycle.current_period_start") ||
+            null,
           weaveAi: {
             aiEnabled,
             monthlyMessagesLimit: Number.isFinite(Number(monthlyMessagesLimit))
@@ -159,10 +148,7 @@ class ChatEngineService {
     await engineRpcRedis.lpush(requestQueueKey, JSON.stringify(job));
 
     try {
-      const queueResult = await engineRpcRedis.blpop(
-        responseQueueKey,
-        ENGINE_CHAT_TIMEOUT_SECONDS
-      );
+      const queueResult = await engineRpcRedis.blpop(responseQueueKey, ENGINE_CHAT_TIMEOUT_SECONDS);
       if (!queueResult) {
         await engineRpcRedis.del(responseQueueKey);
         const timeoutError = new Error(t.engineTimeout);

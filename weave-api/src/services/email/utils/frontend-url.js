@@ -4,10 +4,7 @@
  * @returns {string}
  */
 function normalizeFrontendBase(url) {
-  return (url || process.env.FRONTEND_URL || "http://localhost:3000").replace(
-    /\/+$/,
-    ""
-  );
+  return (url || process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/+$/, "");
 }
 
 /**

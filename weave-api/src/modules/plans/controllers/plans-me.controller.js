@@ -1,9 +1,6 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlansService = require("../services/plans.service");
-const {
-  PLAN_PATHS,
-  USAGE_PATHS,
-} = require("@/modules/plans/utils/plan-paths.util");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 
 /**
  * Authenticated, minimal plan + usage snapshot for web clients (polling / gates).
@@ -20,16 +17,9 @@ class PlansMeController {
   _gate(planDetails, usageDetails, usagePath, limitPath) {
     const rawCurrent = PlansService.getNestedValue(usageDetails, usagePath);
     const rawLimit = PlansService.getNestedValue(planDetails, limitPath);
-    const allowed = PlansService.checkLimit(
-      planDetails,
-      usageDetails,
-      usagePath,
-      limitPath
-    );
-    const current =
-      rawCurrent === null || rawCurrent === undefined ? 0 : Number(rawCurrent);
-    const limit =
-      rawLimit === null || rawLimit === undefined ? null : Number(rawLimit);
+    const allowed = PlansService.checkLimit(planDetails, usageDetails, usagePath, limitPath);
+    const current = rawCurrent === null || rawCurrent === undefined ? 0 : Number(rawCurrent);
+    const limit = rawLimit === null || rawLimit === undefined ? null : Number(rawLimit);
 
     return {
       allowed,
@@ -50,8 +40,7 @@ class PlansMeController {
       if (req.user?.isApiCall) {
         return res.status(403).json({
           error: "Not available for API token session",
-          message:
-            "Plan usage snapshot is only available for web sessions at this time.",
+          message: "Plan usage snapshot is only available for web sessions at this time.",
         });
       }
 
@@ -75,53 +64,28 @@ class PlansMeController {
       }
 
       const planDetails =
-        usageRecord.applied_plan_snapshot ||
-        userPlan.plan_details ||
-        planRow.details ||
-        {};
+        usageRecord.applied_plan_snapshot || userPlan.plan_details || planRow.details || {};
 
       const ud = usageRecord.usage_details || {};
 
       const usage_summary = {
         backups_monthly:
-          PlansService.getNestedValue(
-            ud,
-            USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
-          ) ?? 0,
+          PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT) ?? 0,
         exports_notes_monthly:
-          PlansService.getNestedValue(
-            ud,
-            USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT
-          ) ?? 0,
-        notes_total:
-          PlansService.getNestedValue(ud, USAGE_PATHS.SUMMARY.NOTES_TOTAL) ?? 0,
-        projects_total:
-          PlansService.getNestedValue(ud, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) ??
-          0,
+          PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT) ?? 0,
+        notes_total: PlansService.getNestedValue(ud, USAGE_PATHS.SUMMARY.NOTES_TOTAL) ?? 0,
+        projects_total: PlansService.getNestedValue(ud, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) ?? 0,
         storage_uploaded_mb_monthly:
-          PlansService.getNestedValue(
-            ud,
-            USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
-          ) ?? 0,
+          PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB) ?? 0,
         team_members_total:
-          PlansService.getNestedValue(
-            ud,
-            USAGE_PATHS.SUMMARY.TEAM_MEMBERS_TOTAL
-          ) ?? 0,
+          PlansService.getNestedValue(ud, USAGE_PATHS.SUMMARY.TEAM_MEMBERS_TOTAL) ?? 0,
         weave_ai_messages_monthly:
-          PlansService.getNestedValue(
-            ud,
-            USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT
-          ) ?? 0,
+          PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT) ?? 0,
       };
 
       const usage_period = {
-        period_end:
-          PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_END) ??
-          null,
-        period_start:
-          PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_START) ??
-          null,
+        period_end: PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_END) ?? null,
+        period_start: PlansService.getNestedValue(ud, USAGE_PATHS.MONTHLY.PERIOD_START) ?? null,
         plan_id: usageRecord.plan_id || userPlan.plan_id,
       };
 

@@ -1,8 +1,5 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
 const { getUserEmailLocale, t } = require("@/services/email/i18n");
 
 /**
@@ -44,8 +41,7 @@ async function delete_account_notification(nome, email, username) {
   } catch (error) {
     console.error("Delete account email failed:", error);
     return {
-      error:
-        error.message || "Failed to send delete account notification email.",
+      error: error.message || "Failed to send delete account notification email.",
       success: false,
     };
   }

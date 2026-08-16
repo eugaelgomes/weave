@@ -62,7 +62,11 @@ class StorageController {
       return res.status(200).json(result);
     } catch (error) {
       console.error("[StorageController] Erro ao renomear arquivo:", error);
-      if (error.message.includes("sistema") || error.message.includes("conflita") || error.message.includes("configurado")) {
+      if (
+        error.message.includes("sistema") ||
+        error.message.includes("conflita") ||
+        error.message.includes("configurado")
+      ) {
         return res.status(403).json({ error: error.message });
       }
       return res.status(500).json({ error: "Erro interno ao renomear arquivo." });

@@ -18,12 +18,7 @@ class BackupDownloadTokensRepository extends BaseRepository {
       RETURNING *
     `;
 
-    const [result] = await this.executeQuery(query, [
-      token,
-      userId,
-      type,
-      expiresAt,
-    ]);
+    const [result] = await this.executeQuery(query, [token, userId, type, expiresAt]);
     return result;
   }
 

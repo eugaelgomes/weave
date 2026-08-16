@@ -6,9 +6,7 @@ const UserDataRepository = require("@/modules/users/repositories/user-data.repos
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
-const {
-  sendEmailChangeValidation,
-} = require("@/services/email/templates/reset-password");
+const { sendEmailChangeValidation } = require("@/services/email/templates/reset-password");
 const spacesService = require("@/services/storage");
 const updateProfileLogs = require("@/modules/users/utils/update-profile-logs.util");
 const {
@@ -43,30 +41,19 @@ class UserDataService {
     const result = await withTransaction(async (_client) => {
       // 1. Process Password Update
       if (currentPassword && newPassword) {
-        const match = await bcrypt.compare(
-          currentPassword,
-          currentUser.password
-        );
+        const match = await bcrypt.compare(currentPassword, currentUser.password);
         if (!match) {
-          updateProfileLogs.createLog(
-            userId,
-            "security_change",
-            reqObj,
-            "failure",
-            { reason: "wrong_current_password" }
-          );
+          updateProfileLogs.createLog(userId, "security_change", reqObj, "failure", {
+            reason: "wrong_current_password",
+          });
           throw new Error("INCORRECT_PASSWORD");
         }
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
         await UserDataRepository.updateUserPassword(userId, hashedPassword);
         auditChanges.password_changed = true;
-        updateProfileLogs.createLog(
-          userId,
-          "security_change",
-          reqObj,
-          "success",
-          { action: "password_update" }
-        );
+        updateProfileLogs.createLog(userId, "security_change", reqObj, "success", {
+          action: "password_update",
+        });
       }
 
       // 2. Process Email Token Validation
@@ -95,13 +82,11 @@ class UserDataService {
         normalizeEmail(email) !== normalizeEmail(currentUser.email) &&
         !emailValidationToken
       ) {
-        const emailAvailability =
-          await SearchUsersRepository.checkUniqueAvailability(
-            { email },
-            { excludeUserId: userId }
-          );
-        if (!emailAvailability.email.available)
-          throw new Error("CONFLICT_EMAIL");
+        const emailAvailability = await SearchUsersRepository.checkUniqueAvailability(
+          { email },
+          { excludeUserId: userId }
+        );
+        if (!emailAvailability.email.available) throw new Error("CONFLICT_EMAIL");
 
         const token = crypto.randomBytes(10).toString("hex");
         await UserTokensRepository.deactivateOldEmailTokens(userId);
@@ -113,11 +98,7 @@ class UserDataService {
         );
 
         // Dispatch validation email
-        const emailResult = await sendEmailChangeValidation(
-          currentUser.email,
-          email,
-          token
-        );
+        const emailResult = await sendEmailChangeValidation(currentUser.email, email, token);
         if (!emailResult.success) throw new Error("EMAIL_SEND_ERROR");
 
         emailPendingValidation = true;
@@ -131,10 +112,8 @@ class UserDataService {
       if (name !== undefined) updates.name = name;
       if (theme_mode !== undefined) updates.theme_mode = theme_mode;
       if (birth_date !== undefined) updates.birth_date = birth_date || null;
-      if (phone_number !== undefined)
-        updates.phone_number = phone_number || null;
-      if (private_profile !== undefined)
-        updates.private_profile = private_profile;
+      if (phone_number !== undefined) updates.phone_number = phone_number || null;
+      if (private_profile !== undefined) updates.private_profile = private_profile;
 
       const resolvedPreference = usage_preference ?? user_preference;
       if (resolvedPreference !== undefined) {
@@ -149,36 +128,28 @@ class UserDataService {
         username !== undefined &&
         normalizeUsername(username) !== normalizeUsername(currentUser.username)
       ) {
-        const usernameAvailability =
-          await SearchUsersRepository.checkUniqueAvailability(
-            { username },
-            { excludeUserId: userId }
-          );
-        if (!usernameAvailability.username.available)
-          throw new Error("CONFLICT_USERNAME");
+        const usernameAvailability = await SearchUsersRepository.checkUniqueAvailability(
+          { username },
+          { excludeUserId: userId }
+        );
+        if (!usernameAvailability.username.available) throw new Error("CONFLICT_USERNAME");
         updates.username = username;
       }
 
       if (
         phone_number !== undefined &&
-        normalizePhoneNumber(phone_number) !==
-          normalizePhoneNumber(currentUser.phone_number)
+        normalizePhoneNumber(phone_number) !== normalizePhoneNumber(currentUser.phone_number)
       ) {
-        const phoneAvailability =
-          await SearchUsersRepository.checkUniqueAvailability(
-            { phone_number },
-            { excludeUserId: userId }
-          );
-        if (!phoneAvailability.phone_number.available)
-          throw new Error("CONFLICT_PHONE");
+        const phoneAvailability = await SearchUsersRepository.checkUniqueAvailability(
+          { phone_number },
+          { excludeUserId: userId }
+        );
+        if (!phoneAvailability.phone_number.available) throw new Error("CONFLICT_PHONE");
       }
 
       let updatedUser = currentUser;
       if (Object.keys(updates).length > 0) {
-        updatedUser = await UserDataRepository.updateUserProfile(
-          userId,
-          updates
-        );
+        updatedUser = await UserDataRepository.updateUserProfile(userId, updates);
         Object.assign(auditChanges, updates);
       }
 
@@ -200,23 +171,14 @@ class UserDataService {
       });
 
       if (uploadResult.success) {
-        const updateImage = await UserDataRepository.updateProfileImage(
-          userId,
-          uploadResult.key
-        );
+        const updateImage = await UserDataRepository.updateProfileImage(userId, uploadResult.key);
         avatarUrl = updateImage[0].avatar_url;
         auditChanges.avatar_updated = true;
       }
     }
 
     if (Object.keys(auditChanges).length > 0) {
-      updateProfileLogs.createLog(
-        userId,
-        "profile_update",
-        reqObj,
-        "success",
-        auditChanges
-      );
+      updateProfileLogs.createLog(userId, "profile_update", reqObj, "success", auditChanges);
     }
 
     return {

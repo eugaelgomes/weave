@@ -14,9 +14,7 @@
  */
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
-const {
-  PROJECT_WRITE_CAPABLE_ROLES,
-} = require("@/modules/projects/project-role-policy");
+const { PROJECT_WRITE_CAPABLE_ROLES } = require("@/modules/projects/project-role-policy");
 const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 const { getI18n } = require("./agent-house-i18n.util");
 
@@ -36,12 +34,7 @@ class ChatAccessUtil {
    * @returns {Promise<string>} The resolved internal note UUID.
    * @throws {Error} If note is not found or access is denied.
    */
-  async assertNoteMutationAccess(
-    userId,
-    noteId,
-    organizationId = null,
-    lang = "pt"
-  ) {
+  async assertNoteMutationAccess(userId, noteId, organizationId = null, lang = "pt") {
     const t = getI18n(lang);
 
     // 1. Enforce presence of note identifier.
@@ -76,10 +69,7 @@ class ChatAccessUtil {
     }
 
     // Policy B: Explicit note collaborator checks.
-    const isCollaborator = await notesRepository.isCollaborator(
-      internalNoteId,
-      userId
-    );
+    const isCollaborator = await notesRepository.isCollaborator(internalNoteId, userId);
     if (isCollaborator) {
       return internalNoteId;
     }
@@ -88,11 +78,10 @@ class ChatAccessUtil {
     // If the note belongs to a project, and the project is bound to the user's current
     // organization workspace, the user is authorized.
     if (organizationId && summary.project_id) {
-      const scopedProjectRows =
-        await projectsReadRepository.getProjectByIdWithOrgScope(
-          summary.project_id,
-          organizationId
-        );
+      const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
+        summary.project_id,
+        organizationId
+      );
       if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
         return internalNoteId;
       }
@@ -116,12 +105,7 @@ class ChatAccessUtil {
    * @returns {Promise<void>} Resolves if access is authorized.
    * @throws {Error} If project ID is missing or access is denied.
    */
-  async assertProjectMutationAccess(
-    userId,
-    projectId,
-    organizationId = null,
-    lang = "pt"
-  ) {
+  async assertProjectMutationAccess(userId, projectId, organizationId = null, lang = "pt") {
     const t = getI18n(lang);
 
     // 1. Enforce presence of project identifier.
@@ -135,36 +119,27 @@ class ChatAccessUtil {
     // Policy A: Organization scoping check.
     // If the project is linked to the active workspace organization, verify existence/membership.
     if (organizationId) {
-      const scopedProjectRows =
-        await projectsReadRepository.getProjectByIdWithOrgScope(
-          projectId,
-          organizationId
-        );
+      const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
+        projectId,
+        organizationId
+      );
       if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
         return;
       }
     }
 
     // Policy B: Direct project owner check.
-    const ownerProjectRows = await projectsReadRepository.getProjectById(
-      projectId,
-      userId
-    );
+    const ownerProjectRows = await projectsReadRepository.getProjectById(projectId, userId);
     if (Array.isArray(ownerProjectRows) && ownerProjectRows.length > 0) {
       return;
     }
 
     // Policy C: Collaborator roles check.
     // Ensure user has a role inside the project that grants write permissions (e.g. PROJECT_MANAGER, CONTRIBUTOR).
-    const collaboratorRole = await projectsReadRepository.getProjectMemberRole(
-      projectId,
-      userId
-    );
+    const collaboratorRole = await projectsReadRepository.getProjectMemberRole(projectId, userId);
     if (
       collaboratorRole &&
-      PROJECT_WRITE_CAPABLE_ROLES.includes(
-        String(collaboratorRole).toUpperCase()
-      )
+      PROJECT_WRITE_CAPABLE_ROLES.includes(String(collaboratorRole).toUpperCase())
     ) {
       return;
     }

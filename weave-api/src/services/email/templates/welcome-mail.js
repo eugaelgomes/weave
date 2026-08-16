@@ -1,8 +1,5 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
 const {
   resolveEmailLocale,
   resolveEmailLocaleFromAcceptLanguage,
@@ -17,14 +14,7 @@ const {
  * @param {string} [acceptLanguage]
  * @param {string} [localeHint]
  */
-async function welcome_message(
-  nome,
-  email,
-  username,
-  activationToken,
-  acceptLanguage,
-  localeHint
-) {
+async function welcome_message(nome, email, username, activationToken, acceptLanguage, localeHint) {
   const locale = localeHint
     ? resolveEmailLocale(localeHint)
     : resolveEmailLocaleFromAcceptLanguage(acceptLanguage);

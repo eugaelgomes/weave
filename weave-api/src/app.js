@@ -1,9 +1,7 @@
 const express = require("express");
 const path = require("path");
 const Sentry = require("@sentry/node");
-const {
-  configureGlobalMiddlewares,
-} = require("@/middlewares/http/apply-http-middleware");
+const { configureGlobalMiddlewares } = require("@/middlewares/http/apply-http-middleware");
 const { errorHandler } = require("@/middlewares/errors/error-handler");
 const { registerApiRoutes } = require("@/routes/weave.routes");
 
@@ -16,11 +14,7 @@ app.get("/health", (req, res) => {
   const origin = req.headers.origin;
   const isDev = process.env.NODE_ENV !== "production";
 
-  if (
-    isDev &&
-    origin &&
-    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
-  ) {
+  if (isDev && origin && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }

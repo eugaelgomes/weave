@@ -1,8 +1,5 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
 const {
   formatDateForLocale,
   getUserEmailLocale,
@@ -14,16 +11,9 @@ const {
  * @param {object} params
  * @returns {{ subject: string, html: string, text: string }}
  */
-function buildDueReminderTemplate({
-  locale,
-  recipientName,
-  noteTitle,
-  dueDateLabel,
-  noteUrl,
-}) {
+function buildDueReminderTemplate({ locale, recipientName, noteTitle, dueDateLabel, noteUrl }) {
   const resolvedLocale = resolveEmailLocale(locale);
-  const displayName =
-    recipientName || t(resolvedLocale, "common.greetingFallback");
+  const displayName = recipientName || t(resolvedLocale, "common.greetingFallback");
   const safeTitle = noteTitle || t(resolvedLocale, "dueReminder.untitled");
 
   const subject = t(resolvedLocale, "dueReminder.subject", {

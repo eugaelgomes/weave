@@ -100,9 +100,7 @@ class ProjectsCoreController extends ProjectsBaseController {
         if (value !== null) {
           const date = new Date(value);
           if (isNaN(date.getTime())) {
-            throw new Error(
-              "estimated_time deve ser uma data válida (ISO 8601)"
-            );
+            throw new Error("estimated_time deve ser uma data válida (ISO 8601)");
           }
         }
         validated[key] = value;
@@ -113,9 +111,7 @@ class ProjectsCoreController extends ProjectsBaseController {
         if (value !== null) {
           const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
           if (!hexRegex.test(value)) {
-            throw new Error(
-              "Color deve ser uma cor hexadecimal válida (ex: #ff0000)"
-            );
+            throw new Error("Color deve ser uma cor hexadecimal válida (ex: #ff0000)");
           }
         }
         validated[key] = value;
@@ -128,24 +124,13 @@ class ProjectsCoreController extends ProjectsBaseController {
             validated[key] = value;
           } else if (typeof value === "object" && value.path !== undefined) {
             validated[key] = {
-              name:
-                value.name !== null && value.name !== undefined
-                  ? String(value.name)
-                  : "",
+              name: value.name !== null && value.name !== undefined ? String(value.name) : "",
               path: String(value.path),
-              size:
-                value.size !== null && value.size !== undefined
-                  ? String(value.size)
-                  : "",
-              type:
-                value.type !== null && value.type !== undefined
-                  ? String(value.type)
-                  : "",
+              size: value.size !== null && value.size !== undefined ? String(value.size) : "",
+              type: value.type !== null && value.type !== undefined ? String(value.type) : "",
             };
           } else {
-            throw new Error(
-              "Icon deve ser uma string (emoji) ou objeto de imagem"
-            );
+            throw new Error("Icon deve ser uma string (emoji) ou objeto de imagem");
           }
         } else {
           validated[key] = value;
@@ -165,9 +150,7 @@ class ProjectsCoreController extends ProjectsBaseController {
         if (value !== null) {
           const date = new Date(value);
           if (isNaN(date.getTime())) {
-            throw new Error(
-              "due_date_reminder_time deve ser uma data válida (ISO 8601)"
-            );
+            throw new Error("due_date_reminder_time deve ser uma data válida (ISO 8601)");
           }
         }
         validated[key] = value;
@@ -179,10 +162,7 @@ class ProjectsCoreController extends ProjectsBaseController {
 
   _canAccessAllOrganizationProjects(membership) {
     if (!membership?.id) return false;
-    return orgRoleHasPermission(
-      membership.member_role,
-      ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
-    );
+    return orgRoleHasPermission(membership.member_role, ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS);
   }
 
   /**
@@ -194,8 +174,7 @@ class ProjectsCoreController extends ProjectsBaseController {
       throw new Error("ID do projeto é obrigatório");
     }
 
-    const membership =
-      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
     if (this._canAccessAllOrganizationProjects(membership)) {
       const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
@@ -208,10 +187,7 @@ class ProjectsCoreController extends ProjectsBaseController {
       return { membership, orgWide: true, project: rows[0] };
     }
 
-    const rows = await this.projectsRepository.getProjectById(
-      projectId,
-      userId
-    );
+    const rows = await this.projectsRepository.getProjectById(projectId, userId);
     if (!rows?.length) {
       throw new Error("Projeto não encontrado");
     }
@@ -242,8 +218,7 @@ class ProjectsCoreController extends ProjectsBaseController {
       throw new Error("ID do projeto é obrigatório");
     }
 
-    const membership =
-      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
 
     if (this._canAccessAllOrganizationProjects(membership)) {
       const rows = await this.projectsRepository.getProjectByIdWithOrgScope(
@@ -256,10 +231,7 @@ class ProjectsCoreController extends ProjectsBaseController {
       return rows[0];
     }
 
-    const result = await this.projectsRepository.getProjectByIdWithAccess(
-      projectId,
-      userId
-    );
+    const result = await this.projectsRepository.getProjectByIdWithAccess(projectId, userId);
 
     if (!result || result.length === 0) {
       throw new Error("Projeto não encontrado ou você não tem acesso");
@@ -278,20 +250,13 @@ class ProjectsCoreController extends ProjectsBaseController {
     const project = await this._validateProjectAccess(projectId, userId);
     if (String(project.user_id) === String(userId)) return true;
 
-    const membership =
-      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
     if (this._canAccessAllOrganizationProjects(membership)) {
       return true;
     }
 
-    const projectRole = await this.projectsRepository.getProjectMemberRole(
-      project.id,
-      userId
-    );
-    return projectRoleHasPermission(
-      projectRole,
-      PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT
-    );
+    const projectRole = await this.projectsRepository.getProjectMemberRole(project.id, userId);
+    return projectRoleHasPermission(projectRole, PROJECT_PERMISSIONS.WRITE_PROJECT_CONTENT);
   }
 
   /**
@@ -332,14 +297,9 @@ class ProjectsCoreController extends ProjectsBaseController {
       id: row.id,
       name: row.name,
       position:
-        row.position !== undefined && row.position !== null
-          ? Number(row.position)
-          : row.position,
+        row.position !== undefined && row.position !== null ? Number(row.position) : row.position,
       project_id: row.project_id,
-      properties:
-        row.properties && typeof row.properties === "object"
-          ? row.properties
-          : {},
+      properties: row.properties && typeof row.properties === "object" ? row.properties : {},
       updated_at: row.updated_at,
     };
   }

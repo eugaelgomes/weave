@@ -45,9 +45,7 @@ const manageCalendarSchema = z.discriminatedUnion("action", [
     ),
   z
     .object({ action: z.literal("get_google_settings") })
-    .describe(
-      "Retrieve user's Google Calendar settings (e.g. default timezone)."
-    ),
+    .describe("Retrieve user's Google Calendar settings (e.g. default timezone)."),
   z
     .object({ action: z.literal("check_free_busy") })
     .extend(checkFreeBusySchema.shape)
@@ -95,33 +93,23 @@ FUNCTIONALITIES (Actions):
         }
 
         if (action === "get") {
-          if (!event_id)
-            throw new Error("event_id is required for get action.");
-          const event = await calendarService.getEventById(
-            event_id,
-            userId
-          );
+          if (!event_id) throw new Error("event_id is required for get action.");
+          const event = await calendarService.getEventById(event_id, userId);
           return {
             content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
           };
         }
 
         if (action === "update") {
-          if (!event_id)
-            throw new Error("event_id is required for update action.");
-          const event = await calendarService.updateEvent(
-            event_id,
-            args,
-            userId
-          );
+          if (!event_id) throw new Error("event_id is required for update action.");
+          const event = await calendarService.updateEvent(event_id, args, userId);
           return {
             content: [{ text: JSON.stringify(event, null, 2), type: "text" }],
           };
         }
 
         if (action === "delete") {
-          if (!event_id)
-            throw new Error("event_id is required for delete action.");
+          if (!event_id) throw new Error("event_id is required for delete action.");
           await calendarService.deleteEvent(event_id, userId);
           return {
             content: [
@@ -148,22 +136,16 @@ FUNCTIONALITIES (Actions):
         }
 
         if (action === "list_google_calendars") {
-          const calendars =
-            await calendarService.listGoogleCalendars(userId);
+          const calendars = await calendarService.listGoogleCalendars(userId);
           return {
-            content: [
-              { text: JSON.stringify(calendars, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(calendars, null, 2), type: "text" }],
           };
         }
 
         if (action === "get_google_settings") {
-          const settings =
-            await calendarService.getGoogleCalendarSettings(userId);
+          const settings = await calendarService.getGoogleCalendarSettings(userId);
           return {
-            content: [
-              { text: JSON.stringify(settings, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(settings, null, 2), type: "text" }],
           };
         }
 
@@ -174,9 +156,7 @@ FUNCTIONALITIES (Actions):
             timeMin: time_min,
           });
           return {
-            content: [
-              { text: JSON.stringify(freebusy, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(freebusy, null, 2), type: "text" }],
           };
         }
 

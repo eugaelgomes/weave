@@ -5,8 +5,7 @@ const { API_SCOPES: SCOPES } = require("@/config/api-scopes");
 
 const API_SCOPES = [
   {
-    description:
-      "Allows listing and viewing the content of all notes the user has access to.",
+    description: "Allows listing and viewing the content of all notes the user has access to.",
     id: SCOPES.NOTES_READ,
     name: "Read Notes",
   },
@@ -42,8 +41,7 @@ const API_SCOPES = [
     name: "Read Organizations",
   },
   {
-    description:
-      "Allows reading events related to calendars and scheduled tasks.",
+    description: "Allows reading events related to calendars and scheduled tasks.",
     id: SCOPES.CALENDAR_READ,
     name: "Read Calendar Events",
   },
@@ -73,8 +71,7 @@ const API_SCOPES = [
     name: "Manage Task Priorities",
   },
   {
-    description:
-      "Allows searching and reading user profiles within the organization.",
+    description: "Allows searching and reading user profiles within the organization.",
     id: SCOPES.USERS_READ,
     name: "Read Users",
   },

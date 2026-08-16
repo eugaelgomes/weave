@@ -22,26 +22,21 @@ const createUsersTools = (user) => ({
         }
 
         if (action === "search_users") {
-          if (!query)
-            throw new Error("query is required for search_users action.");
+          if (!query) throw new Error("query is required for search_users action.");
           const result = await UsersService.searchWithContext(query, userId);
           let finalResult = result;
           if (limit && Array.isArray(result)) {
             finalResult = result.slice(0, limit);
           }
           return {
-            content: [
-              { text: JSON.stringify(finalResult, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(finalResult, null, 2), type: "text" }],
           };
         }
 
         throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
-          content: [
-            { text: `Error managing users: ${error.message}`, type: "text" },
-          ],
+          content: [{ text: `Error managing users: ${error.message}`, type: "text" }],
           isError: true,
         };
       }

@@ -151,18 +151,12 @@ class ProjectsReadRepository {
       i++;
     }
 
-    if (
-      typeof filters.progress_min === "number" &&
-      !Number.isNaN(filters.progress_min)
-    ) {
+    if (typeof filters.progress_min === "number" && !Number.isNaN(filters.progress_min)) {
       params.push(filters.progress_min);
       conditions.push(`p.progress >= $${i}::numeric`);
       i++;
     }
-    if (
-      typeof filters.progress_max === "number" &&
-      !Number.isNaN(filters.progress_max)
-    ) {
+    if (typeof filters.progress_max === "number" && !Number.isNaN(filters.progress_max)) {
       params.push(filters.progress_max);
       conditions.push(`p.progress <= $${i}::numeric`);
       i++;
@@ -185,9 +179,7 @@ class ProjectsReadRepository {
 
     if (filters.tags?.length) {
       params.push(JSON.stringify(filters.tags));
-      conditions.push(
-        `COALESCE(p.properties->'tags','[]'::jsonb) @> $${i}::jsonb`
-      );
+      conditions.push(`COALESCE(p.properties->'tags','[]'::jsonb) @> $${i}::jsonb`);
       i++;
     }
 
@@ -205,14 +197,7 @@ class ProjectsReadRepository {
    * @param {string} actorUserId
    * @returns {Promise<{ rows: object[], total: number }>}
    */
-  async getAllProjectsFiltered(
-    scope,
-    filters,
-    pagination,
-    sort,
-    include,
-    actorUserId
-  ) {
+  async getAllProjectsFiltered(scope, filters, pagination, sort, include, actorUserId) {
     const { conditions, params, nextIndex } = this._buildProjectsListConditions(
       scope,
       filters,
@@ -341,8 +326,7 @@ class ProjectsReadRepository {
     `;
 
     const rows = await executeQuery(query, params);
-    const total =
-      rows.length > 0 ? parseInt(String(rows[0].total_count), 10) || 0 : 0;
+    const total = rows.length > 0 ? parseInt(String(rows[0].total_count), 10) || 0 : 0;
     const stripped = rows.map((r) => {
       const row = { ...r };
       delete row.total_count;
@@ -802,9 +786,7 @@ class ProjectsReadRepository {
     let i = 2;
 
     if (filters.include_done === false) {
-      conditions.push(
-        `COALESCE((properties->>'is_done')::boolean, false) = false`
-      );
+      conditions.push(`COALESCE((properties->>'is_done')::boolean, false) = false`);
     }
 
     if (filters.search) {
@@ -846,8 +828,7 @@ class ProjectsReadRepository {
     `;
 
     const rows = await executeQuery(query, params);
-    const total =
-      rows.length > 0 ? parseInt(String(rows[0].total_count), 10) || 0 : 0;
+    const total = rows.length > 0 ? parseInt(String(rows[0].total_count), 10) || 0 : 0;
     const stripped = rows.map((r) => {
       const row = { ...r };
       delete row.total_count;
@@ -1113,13 +1094,7 @@ class ProjectsReadRepository {
    * @param {{ field: string, order: string }} sort
    * @returns {Promise<{ rows: object[], total: number }>}
    */
-  async getAssociatedNotesFiltered(
-    projectId,
-    scope,
-    filters,
-    pagination,
-    sort
-  ) {
+  async getAssociatedNotesFiltered(projectId, scope, filters, pagination, sort) {
     const params = [projectId];
     let i = 2;
 
@@ -1152,11 +1127,7 @@ class ProjectsReadRepository {
       i++;
     }
 
-    const conditions = [
-      "n.project_id = $1::uuid",
-      "n.deleted = false",
-      accessClause,
-    ];
+    const conditions = ["n.project_id = $1::uuid", "n.deleted = false", accessClause];
 
     if (filters.status?.length) {
       params.push(filters.status);
@@ -1301,8 +1272,7 @@ class ProjectsReadRepository {
     `;
 
     const rows = await executeQuery(query, params);
-    const total =
-      rows.length > 0 ? parseInt(String(rows[0].total_count), 10) || 0 : 0;
+    const total = rows.length > 0 ? parseInt(String(rows[0].total_count), 10) || 0 : 0;
     const stripped = rows.map((r) => {
       const row = { ...r };
       delete row.total_count;
@@ -1388,8 +1358,7 @@ class ProjectsReadRepository {
     `;
 
     const rows = await executeQuery(query, params);
-    const total =
-      rows.length > 0 ? parseInt(String(rows[0].total_count), 10) || 0 : 0;
+    const total = rows.length > 0 ? parseInt(String(rows[0].total_count), 10) || 0 : 0;
     const stripped = rows.map((r) => {
       const row = { ...r };
       delete row.total_count;
@@ -1425,9 +1394,7 @@ class ProjectsReadRepository {
     }
 
     if (methodology) {
-      conditions.push(
-        `p.methodology = $${paramIndex}::project_methodology_enum`
-      );
+      conditions.push(`p.methodology = $${paramIndex}::project_methodology_enum`);
       params.push(String(methodology).toUpperCase());
       paramIndex++;
     }
@@ -1528,11 +1495,7 @@ class ProjectsReadRepository {
   async getProjectStatsForOrganization(organizationId, userId, filters = {}) {
     const { status, methodology, from, to, parent_only = true } = filters;
 
-    const conditions = [
-      "p.deleted = false",
-      "p.active = true",
-      "p.organization_id = $1::uuid",
-    ];
+    const conditions = ["p.deleted = false", "p.active = true", "p.organization_id = $1::uuid"];
 
     const params = [organizationId, userId];
     let paramIndex = 3;
@@ -1544,9 +1507,7 @@ class ProjectsReadRepository {
     }
 
     if (methodology) {
-      conditions.push(
-        `p.methodology = $${paramIndex}::project_methodology_enum`
-      );
+      conditions.push(`p.methodology = $${paramIndex}::project_methodology_enum`);
       params.push(String(methodology).toUpperCase());
       paramIndex++;
     }

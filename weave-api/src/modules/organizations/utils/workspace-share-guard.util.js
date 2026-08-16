@@ -15,10 +15,7 @@ const WORKSPACE_SHARE_DENIED = {
  * @returns {Promise<boolean>} True if response was sent (denied).
  */
 async function respondIfWorkspaceShareDenied(res, actorUserId, targetUserId) {
-  const ok = await workspaceUserScopeRepository.usersMayInteract(
-    actorUserId,
-    targetUserId
-  );
+  const ok = await workspaceUserScopeRepository.usersMayInteract(actorUserId, targetUserId);
   if (ok) return false;
   res.status(403).json(WORKSPACE_SHARE_DENIED);
   return true;

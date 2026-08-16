@@ -1,7 +1,5 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
-const {
-  ASSIGNABLE_PROJECT_ROLES,
-} = require("@/modules/projects/project-role-policy");
+const { ASSIGNABLE_PROJECT_ROLES } = require("@/modules/projects/project-role-policy");
 const projectsCollaboratorsRepository = require("@/modules/projects/repositories/projects-collaborators.repository");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 
@@ -23,10 +21,7 @@ class ProjectsCollaboratorsUpdateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       // Ensure user has access (permission is enforced by route middleware).

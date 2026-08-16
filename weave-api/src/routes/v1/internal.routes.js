@@ -24,6 +24,7 @@ const storageRoutes = require("@/modules/storage/storage.routes");
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 const slackRoutes = require("@/modules/slack/slack.routes");
 const artifactsRoutes = require("@/modules/agent-house/artifacts.routes");
+const tracingRoutes = require("@/modules/tracing/tracing.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -46,8 +47,7 @@ const parseOriginList = (rawValue = "") =>
  * @returns {Array<string>} Array of allowed production origins
  */
 const resolveProductionOrigins = () => {
-  const envValue =
-    process.env.PRODUCTION_ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS || "";
+  const envValue = process.env.PRODUCTION_ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS || "";
   return parseOriginList(envValue);
 };
 
@@ -143,6 +143,7 @@ const routeRegistry = [
   { basePath: "/weave-ai", handler: agentHouseRoutes },
   { basePath: "/slack", handler: slackRoutes },
   { basePath: "/artifacts", handler: artifactsRoutes },
+  { basePath: "/organizations", handler: tracingRoutes },
 ];
 
 /**
@@ -175,9 +176,7 @@ const createInternalRouter = ({ version = DEFAULT_VERSION } = {}) => {
   router.get("/_internal/challenge", issueInternalChallenge);
   router.use(verifyInternalWebChallenge);
 
-  routeRegistry.forEach(({ basePath, handler }) =>
-    router.use(basePath, handler)
-  );
+  routeRegistry.forEach(({ basePath, handler }) => router.use(basePath, handler));
 
   return router;
 };

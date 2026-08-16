@@ -12,10 +12,7 @@ const manageWebhooksSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("delete"),
-    all: z
-      .boolean()
-      .optional()
-      .describe("Set to true to delete all active webhooks for the user"),
+    all: z.boolean().optional().describe("Set to true to delete all active webhooks for the user"),
     channelId: z.string().optional().describe("ID of the channel"),
     resourceId: z.string().optional().describe("ID of the resource"),
   }),
@@ -32,9 +29,7 @@ const createWebhooksTools = (user) => ({
         const { action, calendarId, channelId, resourceId, all } = args;
 
         if (action === "create") {
-          const tokens = await GoogleOauthTokensRepository.getGoogleTokens(
-            user.id
-          );
+          const tokens = await GoogleOauthTokensRepository.getGoogleTokens(user.id);
           if (!tokens)
             throw new Error(
               "Google account is not connected. Please connect Google Calendar first before registering a webhook."
@@ -43,8 +38,7 @@ const createWebhooksTools = (user) => ({
           const newChannelId = uuidv4();
           const targetCalendarId = calendarId || "primary";
           const calendar = googleService.getCalendarClient(tokens);
-          const WEBHOOK_BASE =
-            process.env.GOOGLE_WEBHOOK_URL || "http://localhost:8080";
+          const WEBHOOK_BASE = process.env.GOOGLE_WEBHOOK_URL || "http://localhost:8080";
           const CALENDAR_WEBHOOK_ADDRESS = `${WEBHOOK_BASE}/api/v1/webhooks/google/calendar`;
 
           const { data } = await calendar.events.watch({
@@ -56,29 +50,22 @@ const createWebhooksTools = (user) => ({
             },
           });
 
-          const newWebhook =
-            await GoogleCalendarWebhooksRepository.createWebhook({
-              calendarId: targetCalendarId,
-              channelId: newChannelId,
-              expiresAt: data.expiration
-                ? new Date(Number(data.expiration))
-                : null,
-              resourceId: data.resourceId,
-              syncToken: null,
-              userId: user.id,
-            });
+          const newWebhook = await GoogleCalendarWebhooksRepository.createWebhook({
+            calendarId: targetCalendarId,
+            channelId: newChannelId,
+            expiresAt: data.expiration ? new Date(Number(data.expiration)) : null,
+            resourceId: data.resourceId,
+            syncToken: null,
+            userId: user.id,
+          });
 
           return {
-            content: [
-              { text: JSON.stringify(newWebhook, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(newWebhook, null, 2), type: "text" }],
           };
         }
 
         if (action === "delete") {
-          const tokens = await GoogleOauthTokensRepository.getGoogleTokens(
-            user.id
-          );
+          const tokens = await GoogleOauthTokensRepository.getGoogleTokens(user.id);
           if (channelId && resourceId) {
             if (tokens) {
               try {
@@ -105,8 +92,9 @@ const createWebhooksTools = (user) => ({
               ],
             };
           } else if (all === true) {
-            const activeWebhooks =
-              await GoogleCalendarWebhooksRepository.getActiveWebhooks(user.id);
+            const activeWebhooks = await GoogleCalendarWebhooksRepository.getActiveWebhooks(
+              user.id
+            );
             for (const wh of activeWebhooks) {
               if (tokens) {
                 try {
@@ -141,8 +129,7 @@ const createWebhooksTools = (user) => ({
         }
 
         if (action === "list") {
-          const active =
-            await GoogleCalendarWebhooksRepository.getActiveWebhooks(user.id);
+          const active = await GoogleCalendarWebhooksRepository.getActiveWebhooks(user.id);
           return {
             content: [{ text: JSON.stringify(active, null, 2), type: "text" }],
           };
@@ -151,9 +138,7 @@ const createWebhooksTools = (user) => ({
         throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
-          content: [
-            { text: `Error managing webhooks: ${error.message}`, type: "text" },
-          ],
+          content: [{ text: `Error managing webhooks: ${error.message}`, type: "text" }],
           isError: true,
         };
       }

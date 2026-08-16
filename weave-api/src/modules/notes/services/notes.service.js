@@ -14,18 +14,13 @@ const {
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
 const { PLAN_PATHS } = require("@/modules/plans/utils/plan-paths.util");
-const {
-  ALLOWED_NOTE_STATUSES,
-  normalizeNoteStatus,
-} = require("@/utils/patterns/product-patterns");
+const { ALLOWED_NOTE_STATUSES, normalizeNoteStatus } = require("@/utils/patterns/product-patterns");
 const { normalizeBlocksTree } = require("../block-normalizer");
 const {
   resolveNoteTitle,
   deriveTitleFromBlocks,
 } = require("@/modules/notes/utils/derive-note-title");
-const {
-  resolveProjectIdToUuid,
-} = require("@/modules/projects/utils/project-id-lookup.util");
+const { resolveProjectIdToUuid } = require("@/modules/projects/utils/project-id-lookup.util");
 
 class PlanLimitError extends Error {
   constructor(message, limitKey, resource) {
@@ -54,18 +49,13 @@ class NotesService {
 
   _canAccessAllOrganizationProjects(membership) {
     if (!membership?.id) return false;
-    return orgRoleHasPermission(
-      membership.member_role,
-      ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
-    );
+    return orgRoleHasPermission(membership.member_role, ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS);
   }
 
   async _hasOrgWideAccessToProjectNote(note, userId) {
     if (!note?.project_id) return false;
-    const membership =
-      await organizationsRepository.getActiveOrganizationWithMembership(userId);
-    if (!this._canAccessAllOrganizationProjects(membership) || !membership.id)
-      return false;
+    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    if (!this._canAccessAllOrganizationProjects(membership) || !membership.id) return false;
     const rows = await projectsRepository.getProjectByIdWithOrgScope(
       String(note.project_id),
       membership.id
@@ -74,33 +64,24 @@ class NotesService {
   }
 
   async _getOrgWideNotesScopeOrganizationId(userId) {
-    const membership =
-      await organizationsRepository.getActiveOrganizationWithMembership(userId);
-    if (this._canAccessAllOrganizationProjects(membership) && membership.id)
-      return membership.id;
+    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    if (this._canAccessAllOrganizationProjects(membership) && membership.id) return membership.id;
     return null;
   }
 
   async _validateNoteAccess(noteId, userId) {
     if (!noteId) throw AppError.badRequest("Note ID is required");
     const note = await this.notesRepository.getNoteById(noteId);
-    if (!note)
-      throw AppError.notFound("Note not found", ERROR_CODES.NOTE_NOT_FOUND);
+    if (!note) throw AppError.notFound("Note not found", ERROR_CODES.NOTE_NOT_FOUND);
 
     const isOwner = note.user_id === userId;
-    const isCollaborator = await this.notesRepository.isCollaborator(
-      noteId,
-      userId
-    );
+    const isCollaborator = await this.notesRepository.isCollaborator(noteId, userId);
 
     if (isOwner || isCollaborator) {
       return { hasOrgProjectAccess: false, isCollaborator, isOwner, note };
     }
 
-    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(
-      note,
-      userId
-    );
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(note, userId);
     if (hasOrgProjectAccess) {
       return {
         hasOrgProjectAccess: true,
@@ -116,15 +97,11 @@ class NotesService {
   async _validateNoteOwnership(noteId, userId) {
     if (!noteId) throw AppError.badRequest("Note ID is required");
     const note = await this.notesRepository.getNoteById(noteId);
-    if (!note)
-      throw AppError.notFound("Note not found", ERROR_CODES.NOTE_NOT_FOUND);
+    if (!note) throw AppError.notFound("Note not found", ERROR_CODES.NOTE_NOT_FOUND);
 
     if (note.user_id === userId) return note;
 
-    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(
-      note,
-      userId
-    );
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(note, userId);
     if (hasOrgProjectAccess) return note;
 
     throw AppError.forbidden("Access denied");
@@ -138,9 +115,7 @@ class NotesService {
         ? {
             id: projectId,
             name: note.project_name || "",
-            stage_id: note.project_stage_id
-              ? String(note.project_stage_id)
-              : null,
+            stage_id: note.project_stage_id ? String(note.project_stage_id) : null,
             stage_name: note.project_stage_name || null,
           }
         : null,
@@ -155,9 +130,7 @@ class NotesService {
       properties: note.properties || {},
       public_id: note.public_note_id || null,
       revision:
-        note.revision === undefined || note.revision === null
-          ? null
-          : Number(note.revision),
+        note.revision === undefined || note.revision === null ? null : Number(note.revision),
       status: note.status,
       tags: note.tags || [],
       title: note.title,
@@ -170,11 +143,11 @@ class NotesService {
   // ==========================================
 
   async getNoteById(noteId, userId) {
-    const { note, isOwner, isCollaborator, hasOrgProjectAccess } =
-      await this._validateNoteAccess(noteId, userId);
-    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
-      String(note.id)
+    const { note, isOwner, isCollaborator, hasOrgProjectAccess } = await this._validateNoteAccess(
+      noteId,
+      userId
     );
+    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(String(note.id));
 
     const completeNote = {
       access: {
@@ -215,9 +188,7 @@ class NotesService {
       properties: note.properties || {},
       public_id: note.public_note_id || null,
       revision:
-        note.revision === undefined || note.revision === null
-          ? null
-          : Number(note.revision),
+        note.revision === undefined || note.revision === null ? null : Number(note.revision),
       status: note.status || null,
       tags: note.tags || [] || null,
       title: note.title,
@@ -260,25 +231,16 @@ class NotesService {
         : [],
     };
 
-    const orgWideOrganizationId =
-      await this._getOrgWideNotesScopeOrganizationId(userId);
+    const orgWideOrganizationId = await this._getOrgWideNotesScopeOrganizationId(userId);
 
     let result;
-    if (
-      queryParams.page ||
-      queryParams.limit ||
-      queryParams.search ||
-      queryParams.tags
-    ) {
+    if (queryParams.page || queryParams.limit || queryParams.search || queryParams.tags) {
       result = await this.notesRepository.getAllNotesWithPagination(userId, {
         ...paginationOptions,
         orgWideOrganizationId,
       });
     } else {
-      const notes = await this.notesRepository.getAllNotesFormatted(
-        userId,
-        orgWideOrganizationId
-      );
+      const notes = await this.notesRepository.getAllNotesFormatted(userId, orgWideOrganizationId);
       result = { notes, pagination: null };
     }
 
@@ -320,13 +282,9 @@ class NotesService {
       priority_name: note.priority_name ?? null,
       properties: note.properties || {},
       public_id: note.public_note_id || null,
-      resolved_tags: Array.isArray(note.resolved_tags)
-        ? note.resolved_tags
-        : [],
+      resolved_tags: Array.isArray(note.resolved_tags) ? note.resolved_tags : [],
       revision:
-        note.revision === undefined || note.revision === null
-          ? null
-          : Number(note.revision),
+        note.revision === undefined || note.revision === null ? null : Number(note.revision),
       status: note.status || null,
       tags: note.tags || [] || null,
       title: note.title,
@@ -337,12 +295,8 @@ class NotesService {
   }
 
   async getNotesStats(userId) {
-    const orgWideOrganizationId =
-      await this._getOrgWideNotesScopeOrganizationId(userId);
-    const stats = await this.notesRepository.getAllNotesStats(
-      userId,
-      orgWideOrganizationId
-    );
+    const orgWideOrganizationId = await this._getOrgWideNotesScopeOrganizationId(userId);
+    const stats = await this.notesRepository.getAllNotesStats(userId, orgWideOrganizationId);
     return {
       mostUsedTags: (stats.top_tags || []).map((tag) => ({
         count: parseInt(tag.count) || 0,
@@ -391,15 +345,12 @@ class NotesService {
 
     const noteStatus = normalizeNoteStatus(status);
     if (!noteStatus || !ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
-      throw AppError.badRequest(
-        `Invalid status. Allowed: ${ALLOWED_NOTE_STATUSES.join(", ")}`
-      );
+      throw AppError.badRequest(`Invalid status. Allowed: ${ALLOWED_NOTE_STATUSES.join(", ")}`);
     }
 
     let normalizedBlocks = null;
     if (blocksPayload !== undefined && blocksPayload !== null) {
-      if (!Array.isArray(blocksPayload))
-        throw AppError.badRequest("blocks must be an array");
+      if (!Array.isArray(blocksPayload)) throw AppError.badRequest("blocks must be an array");
       normalizedBlocks = normalizeBlocksTree(blocksPayload);
     }
 
@@ -409,9 +360,7 @@ class NotesService {
       title,
     });
     if (!resolvedTitle)
-      throw AppError.badRequest(
-        "Provide a title or text in the description or blocks."
-      );
+      throw AppError.badRequest("Provide a title or text in the description or blocks.");
 
     const newNote = await this.notesRepository.createNotesQuery(
       userId,
@@ -425,31 +374,19 @@ class NotesService {
     );
 
     if (normalizedBlocks?.length) {
-      await this.notesRepository.bulkInsertNoteBlocks(
-        newNote.id,
-        userId,
-        normalizedBlocks
-      );
+      await this.notesRepository.bulkInsertNoteBlocks(newNote.id, userId, normalizedBlocks);
     } else {
       await this.notesRepository.insertDefaultNoteBlock(newNote.id, userId);
     }
 
     await PlansService.consumeNoteCreation(usageRecord.id);
 
-    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
-      String(newNote.id)
-    );
+    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(String(newNote.id));
     return this._formatNoteResponse(newNote, blocks);
   }
 
   async createCompleteNote(userId, payload) {
-    const {
-      title,
-      description,
-      initialBlockContent = "",
-      status,
-      project_id,
-    } = payload;
+    const { title, description, initialBlockContent = "", status, project_id } = payload;
     const { tags = [] } = payload;
     let { blocks: blocksPayload } = payload;
 
@@ -485,15 +422,12 @@ class NotesService {
 
     const noteStatus = normalizeNoteStatus(status);
     if (!noteStatus || !ALLOWED_NOTE_STATUSES.includes(noteStatus)) {
-      throw AppError.badRequest(
-        `Invalid status. Allowed: ${ALLOWED_NOTE_STATUSES.join(", ")}`
-      );
+      throw AppError.badRequest(`Invalid status. Allowed: ${ALLOWED_NOTE_STATUSES.join(", ")}`);
     }
 
     let normalizedBlocks = null;
     if (blocksPayload !== undefined && blocksPayload !== null) {
-      if (!Array.isArray(blocksPayload))
-        throw AppError.badRequest("blocks must be an array");
+      if (!Array.isArray(blocksPayload)) throw AppError.badRequest("blocks must be an array");
       normalizedBlocks = normalizeBlocksTree(blocksPayload);
     }
 
@@ -519,20 +453,14 @@ class NotesService {
     );
 
     if (normalizedBlocks?.length) {
-      await this.notesRepository.bulkInsertNoteBlocks(
-        result.note_id,
-        userId,
-        normalizedBlocks
-      );
+      await this.notesRepository.bulkInsertNoteBlocks(result.note_id, userId, normalizedBlocks);
     } else {
       await this.notesRepository.insertDefaultNoteBlock(result.note_id, userId);
     }
 
     await PlansService.consumeNoteCreation(usageRecord.id);
 
-    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(
-      String(result.note_id)
-    );
+    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(String(result.note_id));
 
     return {
       blocks,
@@ -595,14 +523,15 @@ class NotesService {
 
     const parsedBaseRevision = baseRevision ? Number(baseRevision) : null;
     const occEnforced =
-      String(process.env.ENABLE_NOTES_OCC_REQUIRED || "false").toLowerCase() ===
-      "true";
+      String(process.env.ENABLE_NOTES_OCC_REQUIRED || "false").toLowerCase() === "true";
     if (occEnforced && parsedBaseRevision === null) {
       throw AppError.badRequest("baseRevision is required to update the note");
     }
 
-    const { note, isOwner, isCollaborator, hasOrgProjectAccess } =
-      await this._validateNoteAccess(noteId, userId);
+    const { note, isOwner, isCollaborator, hasOrgProjectAccess } = await this._validateNoteAccess(
+      noteId,
+      userId
+    );
 
     if (priority_id !== undefined) {
       const pid = priority_id ? String(priority_id) : null;
@@ -612,19 +541,14 @@ class NotesService {
         const scopeOrg = note.scope_org_id || null;
         const noteProjectId = note.project_id || null;
         if (tp.project_id && tp.project_id !== noteProjectId)
-          throw AppError.badRequest(
-            "Priority does not belong to the project of this note"
-          );
+          throw AppError.badRequest("Priority does not belong to the project of this note");
         if (tp.org_id && (!scopeOrg || tp.org_id !== scopeOrg))
-          throw AppError.badRequest(
-            "Priority does not belong to the organization of this note"
-          );
+          throw AppError.badRequest("Priority does not belong to the organization of this note");
       }
     }
 
     if (due_date) {
-      if (Number.isNaN(new Date(due_date).getTime()))
-        throw AppError.badRequest("Invalid due_date");
+      if (Number.isNaN(new Date(due_date).getTime())) throw AppError.badRequest("Invalid due_date");
     }
 
     if (deleted !== undefined && !isOwner && !hasOrgProjectAccess) {
@@ -635,8 +559,7 @@ class NotesService {
     if (title !== undefined) {
       const trimmed = title ? String(title).trim() : "";
       if (trimmed === "") {
-        const blocksFromDb =
-          await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
+        const blocksFromDb = await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
         updateData.title = deriveTitleFromBlocks(blocksFromDb) || "Untitled";
       } else {
         updateData.title = title;
@@ -657,8 +580,7 @@ class NotesService {
       const prevProjectId = note.project_id ? String(note.project_id) : null;
       if (nextProjectId !== prevProjectId) {
         if (nextProjectId) {
-          const firstStageId =
-            await projectsRepository.getFirstProjectStageId(nextProjectId);
+          const firstStageId = await projectsRepository.getFirstProjectStageId(nextProjectId);
           if (!firstStageId)
             throw AppError.badRequest(
               "The project has no stages. Create at least one stage before associating tasks."
@@ -689,17 +611,13 @@ class NotesService {
     if (allUploadedFiles.length > 0) {
       usageRecord = await PlansService.managePlanUsage(userId);
       const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-      const planDetails = await PlansRepository.getPlanById(
-        getUserPlan.plan_id
-      );
+      const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
 
       if (!usageRecord || !planDetails)
         throw AppError.notFound("Plan configuration not found for this user.");
 
-      const maxFileSizeMb =
-        planDetails.details?.limits?.storage?.max_file_size_mb;
-      const totalMonthlyUploadMb =
-        planDetails.details?.limits?.storage?.total_monthly_upload_mb;
+      const maxFileSizeMb = planDetails.details?.limits?.storage?.max_file_size_mb;
+      const totalMonthlyUploadMb = planDetails.details?.limits?.storage?.total_monthly_upload_mb;
 
       if (maxFileSizeMb) {
         for (const file of allUploadedFiles) {
@@ -829,20 +747,17 @@ class NotesService {
       const removedFiles = currentFiles.filter(
         (f) => !propertiesUpdate.files.find((nf) => nf.id === f.id)
       );
-      for (const file of removedFiles)
-        if (file.path) await spacesService.deleteImage(file.path);
+      for (const file of removedFiles) if (file.path) await spacesService.deleteImage(file.path);
     }
 
     if (usageRecord && totalUploadSizeMb > 0) {
       await PlansService.consumeStorage(usageRecord.id, totalUploadSizeMb);
     }
 
-    if (Object.keys(propertiesUpdate).length > 0)
-      updateData.properties = propertiesUpdate;
+    if (Object.keys(propertiesUpdate).length > 0) updateData.properties = propertiesUpdate;
 
     const hadOtherUpdates = Object.keys(updateData).length > 0;
-    const hadFilesWithoutDbRow =
-      !hadOtherUpdates && allUploadedFiles.length > 0;
+    const hadFilesWithoutDbRow = !hadOtherUpdates && allUploadedFiles.length > 0;
 
     if (!hadOtherUpdates && !hadFilesWithoutDbRow)
       throw AppError.badRequest("No fields provided for update");
@@ -859,8 +774,7 @@ class NotesService {
         if (!latestNote) throw AppError.notFound("Note not found");
         const conflictFields = Object.keys(updateData).filter(
           (fieldName) =>
-            JSON.stringify(latestNote[fieldName]) !==
-            JSON.stringify(updateData[fieldName])
+            JSON.stringify(latestNote[fieldName]) !== JSON.stringify(updateData[fieldName])
         );
         throw new NoteConflictError(
           "Edit conflict detected",
@@ -873,12 +787,8 @@ class NotesService {
     }
 
     const refreshed = await this.notesRepository.getNoteById(noteId);
-    const blocks =
-      await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
-    const formattedNote = this._formatNoteResponse(
-      refreshed || updatedNote || note,
-      blocks
-    );
+    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
+    const formattedNote = this._formatNoteResponse(refreshed || updatedNote || note, blocks);
 
     if (uploadedDocumentImages.length > 0)
       formattedNote.uploaded_document_images = uploadedDocumentImages;
@@ -895,8 +805,7 @@ class NotesService {
     if (hadOtherUpdates || hadFilesWithoutDbRow) {
       try {
         const updaterData = await SearchUsersRepository.findById(userId);
-        const collaborators =
-          await this.notesRepository.getCollaboratorsByNoteId(noteId);
+        const collaborators = await this.notesRepository.getCollaboratorsByNoteId(noteId);
         const notifyUserIds = new Set();
 
         if (note.user_id && note.user_id !== userId) {
@@ -909,19 +818,15 @@ class NotesService {
         const changedFields = [];
         if (updateData.due_date !== undefined) changedFields.push("due date");
         if (updateData.project_id !== undefined) changedFields.push("project");
-        if (updateData.project_stage_id !== undefined)
-          changedFields.push("stage");
+        if (updateData.project_stage_id !== undefined) changedFields.push("stage");
         if (updateData.status !== undefined) changedFields.push("status");
-        if (updateData.priority_id !== undefined)
-          changedFields.push("priority");
+        if (updateData.priority_id !== undefined) changedFields.push("priority");
         if (updateData.title !== undefined) changedFields.push("title");
-        if (updateData.description !== undefined)
-          changedFields.push("description");
+        if (updateData.description !== undefined) changedFields.push("description");
         if (updateData.tags !== undefined) changedFields.push("tags");
         if (
           hadFilesWithoutDbRow ||
-          (updateData.properties &&
-            Object.keys(updateData.properties).length > 0)
+          (updateData.properties && Object.keys(updateData.properties).length > 0)
         )
           changedFields.push("files/properties");
 
@@ -960,10 +865,8 @@ class NotesService {
     if (!usageRecord || !planDetails)
       throw AppError.notFound("Plan configuration not found for this user.");
 
-    const maxFileSizeMb =
-      planDetails.details?.limits?.storage?.max_file_size_mb;
-    const totalMonthlyUploadMb =
-      planDetails.details?.limits?.storage?.total_monthly_upload_mb;
+    const maxFileSizeMb = planDetails.details?.limits?.storage?.max_file_size_mb;
+    const totalMonthlyUploadMb = planDetails.details?.limits?.storage?.total_monthly_upload_mb;
 
     if (maxFileSizeMb) {
       for (const file of uploads) {
@@ -977,10 +880,7 @@ class NotesService {
       }
     }
 
-    const totalUploadSizeMb = uploads.reduce(
-      (sum, file) => sum + file.size / (1024 * 1024),
-      0
-    );
+    const totalUploadSizeMb = uploads.reduce((sum, file) => sum + file.size / (1024 * 1024), 0);
 
     if (totalMonthlyUploadMb) {
       const currentUsageMb =
@@ -1033,10 +933,7 @@ class NotesService {
       await this._validateNoteOwnership(noteId, userId);
     }
 
-    const affectedRows = await this.notesRepository.deleteNoteById(
-      noteIds,
-      userId
-    );
+    const affectedRows = await this.notesRepository.deleteNoteById(noteIds, userId);
 
     if (usageRecord) {
       await PlansService.decrementNoteUsage(usageRecord.id, affectedRows);

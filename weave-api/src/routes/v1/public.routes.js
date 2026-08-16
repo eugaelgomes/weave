@@ -1,9 +1,7 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { API_SCOPES } = require("@/config/api-scopes");
-const {
-  logPublicApiRequest,
-} = require("@/middlewares/http/log-public-api-request");
+const { logPublicApiRequest } = require("@/middlewares/http/log-public-api-request");
 
 const notesRoutes = require("@/modules/notes/notes.routes");
 const projectsRoutes = require("@/modules/projects/projects.routes");
@@ -11,9 +9,7 @@ const calendarRoutes = require("@/modules/calendar/calendar.routes");
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
 const { requireScope } = require("@/middlewares/auth/require-scope");
-const {
-  highTrafficLimiter,
-} = require("@/middlewares/security/request-limiters");
+const { highTrafficLimiter } = require("@/middlewares/security/request-limiters");
 
 const DEFAULT_VERSION = "v1";
 

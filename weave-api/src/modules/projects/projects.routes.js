@@ -33,7 +33,11 @@ const {
   validateSetMyViewPref,
 } = require("@/modules/projects/projects.validators");
 const { tagsParamsSchema, createTagSchema, updateTagSchema } = require("./schemas/tags.schema");
-const { taskPrioritiesParamsSchema, createTaskPrioritySchema, updateTaskPrioritySchema } = require("./schemas/task-priorities.schema");
+const {
+  taskPrioritiesParamsSchema,
+  createTaskPrioritySchema,
+  updateTaskPrioritySchema,
+} = require("./schemas/task-priorities.schema");
 const {
   resolveProjectPublicIdParam,
   resolveNotePublicIdParam,

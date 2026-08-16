@@ -3,10 +3,7 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlansService = require("@/modules/plans/services/plans.service");
-const {
-  PLAN_PATHS,
-  USAGE_PATHS,
-} = require("@/modules/plans/utils/plan-paths.util");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 const { enqueueBackupExportJob } = require("@/services/queue/queue-controller");
 
 /**
@@ -44,9 +41,7 @@ class BackupExportController extends BackupBaseController {
       const usageRecord = await PlansService.managePlanUsage(userId);
       const planDetails = await PlansRepository.getPlanById(userPlan.plan_id);
       const appliedPlanDetails =
-        usageRecord?.applied_plan_snapshot ||
-        userPlan.plan_details ||
-        planDetails?.details;
+        usageRecord?.applied_plan_snapshot || userPlan.plan_details || planDetails?.details;
 
       const canBackup = PlansService.checkLimit(
         appliedPlanDetails,
@@ -82,9 +77,7 @@ class BackupExportController extends BackupBaseController {
 
       const existingJobs = await backupJobsRepository.getUserJobs(userId);
       const activeJob = existingJobs.find(
-        (job) =>
-          job.type === "backup_export" &&
-          ["pending", "processing"].includes(job.status)
+        (job) => job.type === "backup_export" && ["pending", "processing"].includes(job.status)
       );
 
       if (activeJob) {
@@ -95,8 +88,7 @@ class BackupExportController extends BackupBaseController {
             progress: activeJob.progress,
           },
           error: "Backup already in progress",
-          message:
-            "Please wait for the current backup to complete before requesting another",
+          message: "Please wait for the current backup to complete before requesting another",
           status: "Conflict",
         });
       }
@@ -108,15 +100,11 @@ class BackupExportController extends BackupBaseController {
           status: "Not Found",
         });
 
-      const job = await backupJobsRepository.createJob(
-        "backup_export",
-        userId,
-        {
-          email: user.email,
-          requestedAt: new Date().toISOString(),
-          username: user.name || user.username,
-        }
-      );
+      const job = await backupJobsRepository.createJob("backup_export", userId, {
+        email: user.email,
+        requestedAt: new Date().toISOString(),
+        username: user.name || user.username,
+      });
 
       await PlansService.consumeExport(usageRecord.id, "backup");
 
@@ -145,8 +133,7 @@ class BackupExportController extends BackupBaseController {
           user_email: user.email,
         },
         job_id: job.id,
-        message:
-          "Backup requested successfully! You will receive an email when it is ready.",
+        message: "Backup requested successfully! You will receive an email when it is ready.",
         status: "OK",
       });
     } catch (error) {

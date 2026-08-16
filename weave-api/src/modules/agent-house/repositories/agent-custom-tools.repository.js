@@ -57,7 +57,12 @@ class AgentCustomToolsRepository {
    */
   async update(id, userId, updates) {
     const allowedColumns = [
-      "name", "description", "webhook_url", "method", "headers", "payload_schema"
+      "name",
+      "description",
+      "webhook_url",
+      "method",
+      "headers",
+      "payload_schema",
     ];
 
     const fields = [];

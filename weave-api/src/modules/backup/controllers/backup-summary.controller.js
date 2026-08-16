@@ -21,17 +21,11 @@ class BackupSummaryController extends BackupBaseController {
       const summary = {
         collaborated_notes: rawData.filter((n) => n.owner_id !== userId).length,
         last_updated:
-          rawData.length > 0
-            ? Math.max(...rawData.map((n) => new Date(n.updated_at)))
-            : null,
+          rawData.length > 0 ? Math.max(...rawData.map((n) => new Date(n.updated_at))) : null,
         newest_note:
-          rawData.length > 0
-            ? Math.max(...rawData.map((n) => new Date(n.created_at)))
-            : null,
+          rawData.length > 0 ? Math.max(...rawData.map((n) => new Date(n.created_at))) : null,
         oldest_note:
-          rawData.length > 0
-            ? Math.min(...rawData.map((n) => new Date(n.created_at)))
-            : null,
+          rawData.length > 0 ? Math.min(...rawData.map((n) => new Date(n.created_at))) : null,
         owned_notes: rawData.filter((n) => n.owner_id === userId).length,
         total_blocks: rawData.reduce(
           (sum, n) => sum + (n.blocks?.filter((b) => !b.deleted).length || 0),
@@ -39,10 +33,7 @@ class BackupSummaryController extends BackupBaseController {
         ),
         total_collaborators: new Set(
           rawData.flatMap(
-            (n) =>
-              n.collaborators
-                ?.filter((c) => !c.removed)
-                .map((c) => c.collaborator_id) || []
+            (n) => n.collaborators?.filter((c) => !c.removed).map((c) => c.collaborator_id) || []
           )
         ).size,
         total_notes: rawData.length,
@@ -58,8 +49,7 @@ class BackupSummaryController extends BackupBaseController {
 
       rawData.forEach((note) => {
         const key = `${new Date(note.created_at).getFullYear()}-${String(new Date(note.created_at).getMonth() + 1).padStart(2, "0")}`;
-        if (Object.prototype.hasOwnProperty.call(notesByMonth, key))
-          notesByMonth[key]++;
+        if (Object.prototype.hasOwnProperty.call(notesByMonth, key)) notesByMonth[key]++;
       });
 
       const thirtyDaysAgo = new Date();
@@ -69,12 +59,8 @@ class BackupSummaryController extends BackupBaseController {
         details: {
           notes_by_month: notesByMonth,
           recent_activity: {
-            notes_created: rawData.filter(
-              (n) => new Date(n.created_at) > thirtyDaysAgo
-            ).length,
-            notes_updated: rawData.filter(
-              (n) => new Date(n.updated_at) > thirtyDaysAgo
-            ).length,
+            notes_created: rawData.filter((n) => new Date(n.created_at) > thirtyDaysAgo).length,
+            notes_updated: rawData.filter((n) => new Date(n.updated_at) > thirtyDaysAgo).length,
           },
           summary,
         },

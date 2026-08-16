@@ -7,9 +7,7 @@ const {
   generateUniqueOrganizationName,
   orgDataResponse,
 } = require("../normalizer");
-const {
-  ORG_ROLES,
-} = require("@/modules/organizations/organization-role-policy");
+const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
 
 /**
  * Controller for organization management.
@@ -35,10 +33,7 @@ class OrganizationsController extends OrganizationsBaseController {
       return null;
     }
 
-    const existingSlugs = await this.areasRepository.getMatchingSlugs(
-      organizationId,
-      slugBase
-    );
+    const existingSlugs = await this.areasRepository.getMatchingSlugs(organizationId, slugBase);
 
     if (!existingSlugs.includes(slugBase)) {
       return slugBase;
@@ -62,13 +57,9 @@ class OrganizationsController extends OrganizationsBaseController {
    */
   async _createDefaultOrganizationArea(organization, createdBy) {
     const defaultName = "Area Central";
-    const slugBase =
-      organization.unique_name || normalizeOrganizationName(defaultName);
+    const slugBase = organization.unique_name || normalizeOrganizationName(defaultName);
     try {
-      const uniqueSlug = await this._generateUniqueAreaSlug(
-        organization.id,
-        slugBase
-      );
+      const uniqueSlug = await this._generateUniqueAreaSlug(organization.id, slugBase);
 
       const newArea = await this.areasRepository.createArea({
         areaName: defaultName,
@@ -125,13 +116,10 @@ class OrganizationsController extends OrganizationsBaseController {
       if (providedUniqueName) {
         unique_name = normalizeOrganizationName(providedUniqueName);
         if (!unique_name) {
-          throw new Error(
-            "Provided unique name is invalid after normalization"
-          );
+          throw new Error("Provided unique name is invalid after normalization");
         }
 
-        const existingNames =
-          await this.organizationsRepository.getAvailableOrgNames(unique_name);
+        const existingNames = await this.organizationsRepository.getAvailableOrgNames(unique_name);
         if (existingNames.includes(unique_name)) {
           throw new Error(`Unique name '${unique_name}' is already in use`);
         }
@@ -212,14 +200,10 @@ class OrganizationsController extends OrganizationsBaseController {
         updated_at: organization.updated_at,
       };
 
-      res
-        .status(200)
-        .json({ organization_data: formattedOrganization, status: "OK" });
+      res.status(200).json({ organization_data: formattedOrganization, status: "OK" });
     } catch (error) {
       console.error("Error getting organization:", error);
-      res
-        .status(500)
-        .json({ error: "Error getting organization", success: false });
+      res.status(500).json({ error: "Error getting organization", success: false });
     }
   }
 
@@ -234,20 +218,11 @@ class OrganizationsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const {
-        org_name,
-        unique_name,
-        logo_url,
-        banner_url,
-        description,
-        settings,
-      } = req.body;
+      const { org_name, unique_name, logo_url, banner_url, description, settings } = req.body;
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
       const P = this._orgPermissions;
@@ -261,11 +236,7 @@ class OrganizationsController extends OrganizationsBaseController {
         "settings",
       ].some((k) => Object.prototype.hasOwnProperty.call(body, k));
 
-      if (
-        touchesBrand &&
-        !this._ensureOrgPermission(currentOrg, P.MANAGE_BRAND, res)
-      )
-        return;
+      if (touchesBrand && !this._ensureOrgPermission(currentOrg, P.MANAGE_BRAND, res)) return;
 
       let updatedUniqueName = currentOrg.unique_name;
 
@@ -276,9 +247,7 @@ class OrganizationsController extends OrganizationsBaseController {
       if (unique_name && unique_name !== currentOrg.unique_name) {
         const normalizedName = normalizeOrganizationName(unique_name);
         const existingNames =
-          await this.organizationsRepository.getAvailableOrgNames(
-            normalizedName
-          );
+          await this.organizationsRepository.getAvailableOrgNames(normalizedName);
 
         if (existingNames.includes(normalizedName)) {
           throw new Error("Unique name is already in use");
@@ -297,9 +266,7 @@ class OrganizationsController extends OrganizationsBaseController {
         updatedUniqueName,
         logo_url !== undefined ? logo_url : currentOrg.logo_url,
         banner_url !== undefined ? banner_url : currentOrg.banner_url,
-        description !== undefined
-          ? description?.trim()
-          : currentOrg.description,
+        description !== undefined ? description?.trim() : currentOrg.description,
         updatedSettings,
         currentOrg.deleted
       );
@@ -321,12 +288,7 @@ class OrganizationsController extends OrganizationsBaseController {
     } catch (error) {
       console.error("Error updating organization:", error);
       if (error instanceof Error && /not found/i.test(error.message)) {
-        return next(
-          AppError.notFound(
-            "Organization not found",
-            ERROR_CODES.RESOURCE_NOT_FOUND
-          )
-        );
+        return next(AppError.notFound("Organization not found", ERROR_CODES.RESOURCE_NOT_FOUND));
       }
       return next(fromUnknown(error));
     }
@@ -366,18 +328,10 @@ class OrganizationsController extends OrganizationsBaseController {
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      if (
-        !this._ensureOrgPermission(
-          currentOrg,
-          this._orgPermissions.MANAGE_ORG_LIFECYCLE,
-          res
-        )
-      )
+      if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_ORG_LIFECYCLE, res))
         return;
 
       const deletedOrg = await this.organizationsRepository.updateOrg(
@@ -408,9 +362,7 @@ class OrganizationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error deleting organization:", error);
-      res
-        .status(500)
-        .json({ error: "Error deleting organization", success: false });
+      res.status(500).json({ error: "Error deleting organization", success: false });
     }
   }
 
@@ -425,8 +377,7 @@ class OrganizationsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const organizations =
-        await this.organizationsRepository.getOrgsByUserId(userId);
+      const organizations = await this.organizationsRepository.getOrgsByUserId(userId);
       const organization = organizations.find((org) => org.deleted);
 
       if (!organization) {
@@ -445,13 +396,7 @@ class OrganizationsController extends OrganizationsBaseController {
         member_role: memberRole || ORG_ROLES.SUPER_ADMIN,
       };
 
-      if (
-        !this._ensureOrgPermission(
-          orgWithRole,
-          this._orgPermissions.MANAGE_ORG_LIFECYCLE,
-          res
-        )
-      )
+      if (!this._ensureOrgPermission(orgWithRole, this._orgPermissions.MANAGE_ORG_LIFECYCLE, res))
         return;
 
       const restoredOrg = await this.organizationsRepository.updateOrg(
@@ -482,9 +427,7 @@ class OrganizationsController extends OrganizationsBaseController {
       });
     } catch (error) {
       console.error("Error restoring organization:", error);
-      res
-        .status(500)
-        .json({ error: "Error restoring organization", success: false });
+      res.status(500).json({ error: "Error restoring organization", success: false });
     }
   }
 
@@ -500,26 +443,15 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!userId) return;
 
       if (!req.file) {
-        return res
-          .status(400)
-          .json({ error: "No file was uploaded", success: false });
+        return res.status(400).json({ error: "No file was uploaded", success: false });
       }
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      if (
-        !this._ensureOrgPermission(
-          currentOrg,
-          this._orgPermissions.MANAGE_BRAND,
-          res
-        )
-      )
-        return;
+      if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_BRAND, res)) return;
 
       const result = await spacesService.uploadOrganizationLogo(
         req.file.buffer,
@@ -528,9 +460,7 @@ class OrganizationsController extends OrganizationsBaseController {
       );
 
       if (!result.success) {
-        return res
-          .status(500)
-          .json({ error: "Error saving logo", success: false });
+        return res.status(500).json({ error: "Error saving logo", success: false });
       }
 
       const updatedOrg = await this.organizationsRepository.updateOrgLogo(
@@ -579,26 +509,15 @@ class OrganizationsController extends OrganizationsBaseController {
       if (!userId) return;
 
       if (!req.file) {
-        return res
-          .status(400)
-          .json({ error: "No file was uploaded", success: false });
+        return res.status(400).json({ error: "No file was uploaded", success: false });
       }
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      if (
-        !this._ensureOrgPermission(
-          currentOrg,
-          this._orgPermissions.MANAGE_BRAND,
-          res
-        )
-      )
-        return;
+      if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_BRAND, res)) return;
 
       const result = await spacesService.uploadOrganizationBanner(
         req.file.buffer,
@@ -607,9 +526,7 @@ class OrganizationsController extends OrganizationsBaseController {
       );
 
       if (!result.success) {
-        return res
-          .status(500)
-          .json({ error: "Error saving banner", success: false });
+        return res.status(500).json({ error: "Error saving banner", success: false });
       }
 
       const updatedOrg = await this.organizationsRepository.updateOrgBanner(
@@ -657,15 +574,10 @@ class OrganizationsController extends OrganizationsBaseController {
 
       const currentOrg = await this._getUserOrganization(userId);
       if (!currentOrg) {
-        return res
-          .status(404)
-          .json({ error: "Organization not found", success: false });
+        return res.status(404).json({ error: "Organization not found", success: false });
       }
 
-      const projects =
-        await this.organizationsRepository.getOrganizationProjects(
-          currentOrg.id
-        );
+      const projects = await this.organizationsRepository.getOrganizationProjects(currentOrg.id);
 
       res.status(200).json({
         organization_id: currentOrg.id,

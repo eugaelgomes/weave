@@ -15,15 +15,7 @@ class CreateApiTokensRepository extends BaseRepository {
    * @param {Date|string} [params.expiresAt]
    * @returns {Promise<Record<string, unknown>>}
    */
-  async createToken({
-    name,
-    keyPrefix,
-    tokenHash,
-    userId,
-    organizationId,
-    scopes,
-    expiresAt,
-  }) {
+  async createToken({ name, keyPrefix, tokenHash, userId, organizationId, scopes, expiresAt }) {
     const query = `
       INSERT INTO api_tokens (
         name, key_prefix, token_hash, user_id, organization_id, scopes, expires_at

@@ -71,10 +71,7 @@ class ChatLoopService {
             userLanguage,
           },
           conversationHistory: currentConversationHistory,
-          files:
-            currentLoop === 0
-              ? chatFormatterUtil.buildEngineFilesPayload(files)
-              : [],
+          files: currentLoop === 0 ? chatFormatterUtil.buildEngineFilesPayload(files) : [],
           functions: authorizedFunctions,
           isSubAgent: payload.isSubAgent,
           message: currentMessage,
@@ -95,9 +92,7 @@ class ChatLoopService {
       totalLatencyMs += engineResponse?.latencyMs || 0;
       const enginePayload = engineResponse?.data || {};
 
-      const engineExecutedActions = Array.isArray(
-        enginePayload?.executedActions
-      )
+      const engineExecutedActions = Array.isArray(enginePayload?.executedActions)
         ? enginePayload.executedActions
         : [];
       if (engineExecutedActions.length > 0) {
@@ -114,36 +109,30 @@ class ChatLoopService {
         : [];
 
       providerUsed = enginePayload?.providerUsed || providerUsed;
-      const currentTokenUsage =
-        chatFormatterUtil.extractTokenUsage(enginePayload);
+      const currentTokenUsage = chatFormatterUtil.extractTokenUsage(enginePayload);
       tokenUsage.inputTokens += currentTokenUsage.inputTokens || 0;
       tokenUsage.outputTokens += currentTokenUsage.outputTokens || 0;
       tokenUsage.totalTokens += currentTokenUsage.totalTokens || 0;
 
       if (Array.isArray(enginePayload?.data?.citations)) {
-        messageMetadata.citations = [
-          ...messageMetadata.citations,
-          ...enginePayload.data.citations,
-        ];
+        messageMetadata.citations = [...messageMetadata.citations, ...enginePayload.data.citations];
       }
 
       if (currentFunctions.length > 0) {
         messageStatus = "function_call";
-        const currentExecutions =
-          await chatFunctionsService.executeFunctionCalls(
-            userId,
-            currentFunctions,
-            organizationId,
-            userLanguage,
-            onChunk,
-            files
-          );
+        const currentExecutions = await chatFunctionsService.executeFunctionCalls(
+          userId,
+          currentFunctions,
+          organizationId,
+          userLanguage,
+          onChunk,
+          files
+        );
         functionExecution = [...functionExecution, ...currentExecutions];
         responseFunctions = [...responseFunctions, ...currentFunctions];
 
         if (assistantText) {
-          finalAssistantText +=
-            (finalAssistantText ? "\n\n" : "") + assistantText;
+          finalAssistantText += (finalAssistantText ? "\n\n" : "") + assistantText;
         }
 
         await chatRepository.saveMessageIdempotent({
@@ -205,14 +194,11 @@ class ChatLoopService {
           role: "assistant",
         });
 
-        currentMessage = chatI18n.functionResults(
-          JSON.stringify(currentExecutions, null, 2)
-        );
+        currentMessage = chatI18n.functionResults(JSON.stringify(currentExecutions, null, 2));
         currentLoop++;
       } else {
         if (assistantText) {
-          finalAssistantText +=
-            (finalAssistantText ? "\n\n" : "") + assistantText;
+          finalAssistantText += (finalAssistantText ? "\n\n" : "") + assistantText;
         } else if (!finalAssistantText) {
           finalAssistantText =
             functionExecution.length > 0
@@ -268,13 +254,10 @@ class ChatLoopService {
         reasoningLevel,
         tokens: tokenUsage.totalTokens || 0,
       }).catch((err) => {
-        console.error(
-          "[agent-house/chat] failed to enqueue AI usage consumption",
-          {
-            error: err?.message || String(err),
-            usageId: usageRecord.id,
-          }
-        );
+        console.error("[agent-house/chat] failed to enqueue AI usage consumption", {
+          error: err?.message || String(err),
+          usageId: usageRecord.id,
+        });
       });
     }
 
@@ -291,8 +274,7 @@ class ChatLoopService {
                 },
               ]
             : {
-                _warning:
-                  "Result payload too large, truncated for UI rendering.",
+                _warning: "Result payload too large, truncated for UI rendering.",
               };
         }
       }

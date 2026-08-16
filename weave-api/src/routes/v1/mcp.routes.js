@@ -1,11 +1,7 @@
 const express = require("express");
-const {
-  SSEServerTransport,
-} = require("@modelcontextprotocol/sdk/server/sse.js");
+const { SSEServerTransport } = require("@modelcontextprotocol/sdk/server/sse.js");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
-const {
-  verifyInternalService,
-} = require("@/middlewares/security/verify-internal-service");
+const { verifyInternalService } = require("@/middlewares/security/verify-internal-service");
 const { configureServerForUser } = require("@/config/mcp");
 const redisPublisher = require("@/services/queue/connection");
 
@@ -32,10 +28,7 @@ redisSubscriber.on("message", async (channel, message) => {
           session.transport.onmessage(parsed);
         }
       } catch (err) {
-        console.error(
-          `[MCP Redis Error] Failed to process message for session ${sessionId}:`,
-          err
-        );
+        console.error(`[MCP Redis Error] Failed to process message for session ${sessionId}:`, err);
       }
     }
   }
@@ -60,10 +53,7 @@ const handleSSE = async (req, res, messagesPathPrefix) => {
     // Inscreve no Redis para escutar mensagens direcionadas a esta sessão
     const redisChannel = `mcp-session:${sessionId}`;
     await redisSubscriber.subscribe(redisChannel).catch((err) => {
-      console.error(
-        `[MCP Error] Failed to subscribe to Redis channel ${redisChannel}:`,
-        err
-      );
+      console.error(`[MCP Error] Failed to subscribe to Redis channel ${redisChannel}:`, err);
     });
 
     // Connect the server to the transport
@@ -104,10 +94,7 @@ const handleMessages = async (req, res) => {
     try {
       await session.transport.handlePostMessage(req, res, req.body);
     } catch (error) {
-      console.error(
-        `[MCP Error] Error handling post message for session ${sessionId}:`,
-        error
-      );
+      console.error(`[MCP Error] Error handling post message for session ${sessionId}:`, error);
       if (!res.headersSent) {
         res.status(500).send("Internal server error.");
       }
@@ -115,8 +102,7 @@ const handleMessages = async (req, res) => {
   } else {
     // A sessão NÃO está neste container. Publica no Redis para chegar no container correto.
     try {
-      const payload =
-        typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+      const payload = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
       const redisChannel = `mcp-session:${sessionId}`;
 
       const receivers = await redisPublisher.publish(redisChannel, payload);
@@ -129,10 +115,7 @@ const handleMessages = async (req, res) => {
       // Responde ao Foundry que a mensagem foi enfileirada com sucesso
       return res.status(202).send("Accepted");
     } catch (error) {
-      console.error(
-        `[MCP Error] Failed to publish message for session ${sessionId}:`,
-        error
-      );
+      console.error(`[MCP Error] Failed to publish message for session ${sessionId}:`, error);
       if (!res.headersSent) {
         res.status(500).send("Internal server error.");
       }
@@ -142,9 +125,7 @@ const handleMessages = async (req, res) => {
 
 const createMCPRouter = ({ version: _version = "v1" } = {}) => {
   const router = express.Router();
-  router.get("/sse", verifyToken, (req, res) =>
-    handleSSE(req, res, "/api/v1/mcp/messages")
-  );
+  router.get("/sse", verifyToken, (req, res) => handleSSE(req, res, "/api/v1/mcp/messages"));
   router.post("/messages", verifyToken, handleMessages);
   return router;
 };

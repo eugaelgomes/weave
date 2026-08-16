@@ -1,21 +1,15 @@
 const calendarRepository = require("../repositories/calendar.repository");
 const GoogleOauthTokensRepository = require("../../webhooks/repositories/google-oauth-tokens.repository");
 const googleService = require("../utils/google-calendar.util");
-const {
-  resolveNoteIdToUuid,
-} = require("../../notes/utils/note-id-lookup.util");
-const {
-  resolveProjectIdToUuid,
-} = require("../../projects/utils/project-id-lookup.util");
+const { resolveNoteIdToUuid } = require("../../notes/utils/note-id-lookup.util");
+const { resolveProjectIdToUuid } = require("../../projects/utils/project-id-lookup.util");
 const {
   normalizeCreatePayload,
   buildGoogleEventBody,
   normalizeUpdateFields,
 } = require("../normalizer");
 const usersService = require("../../users/services/users.service");
-const {
-  calendar_invite_receipt,
-} = require("../../../services/email/templates/calendar-invite");
+const { calendar_invite_receipt } = require("../../../services/email/templates/calendar-invite");
 
 class CalendarEventsService {
   async _syncEventToGoogle(payload, creatorId) {
@@ -27,9 +21,7 @@ class CalendarEventsService {
     const calendarId = payload.googleCalendarId || "primary";
     const { calendar, auth } = googleService.getCalendarClientWithAuth({
       access_token: tokens.access_token,
-      expiry_date: tokens.expires_at
-        ? new Date(tokens.expires_at).getTime()
-        : null,
+      expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
       refresh_token: tokens.refresh_token,
     });
 
@@ -42,13 +34,8 @@ class CalendarEventsService {
     });
 
     const refreshed = auth.credentials;
-    if (
-      refreshed.access_token &&
-      refreshed.access_token !== tokens.access_token
-    ) {
-      const newExpiry = refreshed.expiry_date
-        ? new Date(refreshed.expiry_date)
-        : null;
+    if (refreshed.access_token && refreshed.access_token !== tokens.access_token) {
+      const newExpiry = refreshed.expiry_date ? new Date(refreshed.expiry_date) : null;
       await GoogleOauthTokensRepository.updateGoogleAccessToken(
         creatorId,
         refreshed.access_token,
@@ -67,23 +54,18 @@ class CalendarEventsService {
 
   async _fetchGoogleEvents(creatorId, from, to) {
     try {
-      const tokens =
-        await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
+      const tokens = await GoogleOauthTokensRepository.getGoogleTokens(creatorId);
       if (!tokens) return [];
 
       const { calendar } = googleService.getCalendarClientWithAuth({
         access_token: tokens.access_token,
-        expiry_date: tokens.expires_at
-          ? new Date(tokens.expires_at).getTime()
-          : null,
+        expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
         refresh_token: tokens.refresh_token,
       });
 
       // Se from/to não forem passados, define default (1 semana atrás até 6 meses frente)
-      const timeMin =
-        from || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const timeMax =
-        to || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+      const timeMin = from || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const timeMax = to || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
 
       const { data } = await calendar.events.list({
         calendarId: "primary",
@@ -144,9 +126,7 @@ class CalendarEventsService {
         payload.syncStatus = syncData.syncStatus;
         payload.etag = syncData.etag;
       } catch (syncError) {
-        const error = new Error(
-          syncError.message || "Failed to synchronize with Google Calendar"
-        );
+        const error = new Error(syncError.message || "Failed to synchronize with Google Calendar");
         error.status = 400;
         throw error;
       }
@@ -187,14 +167,7 @@ class CalendarEventsService {
     return createdEvent;
   }
 
-  async listEvents({
-    creatorId,
-    organizationId,
-    includeDeleted,
-    from,
-    to,
-    includeGoogleEvents,
-  }) {
+  async listEvents({ creatorId, organizationId, includeDeleted, from, to, includeGoogleEvents }) {
     const weaveEvents = await calendarRepository.listEvents({
       creatorId,
       from,
@@ -274,21 +247,13 @@ class CalendarEventsService {
       throw error;
     }
 
-    if (
-      fields.start_time &&
-      !fields.end_time &&
-      current.end_time <= fields.start_time
-    ) {
+    if (fields.start_time && !fields.end_time && current.end_time <= fields.start_time) {
       const error = new Error("end_time must be greater than start_time");
       error.status = 400;
       throw error;
     }
 
-    if (
-      fields.end_time &&
-      !fields.start_time &&
-      fields.end_time <= current.start_time
-    ) {
+    if (fields.end_time && !fields.start_time && fields.end_time <= current.start_time) {
       const error = new Error("end_time must be greater than start_time");
       error.status = 400;
       throw error;
@@ -333,9 +298,7 @@ class CalendarEventsService {
 
     const { calendar } = googleService.getCalendarClientWithAuth({
       access_token: tokens.access_token,
-      expiry_date: tokens.expires_at
-        ? new Date(tokens.expires_at).getTime()
-        : null,
+      expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
       refresh_token: tokens.refresh_token,
     });
 
@@ -353,9 +316,7 @@ class CalendarEventsService {
 
     const { calendar } = googleService.getCalendarClientWithAuth({
       access_token: tokens.access_token,
-      expiry_date: tokens.expires_at
-        ? new Date(tokens.expires_at).getTime()
-        : null,
+      expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
       refresh_token: tokens.refresh_token,
     });
 
@@ -373,9 +334,7 @@ class CalendarEventsService {
 
     const { calendar } = googleService.getCalendarClientWithAuth({
       access_token: tokens.access_token,
-      expiry_date: tokens.expires_at
-        ? new Date(tokens.expires_at).getTime()
-        : null,
+      expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
       refresh_token: tokens.refresh_token,
     });
 

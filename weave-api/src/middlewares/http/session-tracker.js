@@ -25,8 +25,7 @@ const sessionTrackerMiddleware = (req, res, next) => {
       modified = true;
     }
 
-    const isPublic =
-      req.originalUrl && req.originalUrl.includes("/api/public/");
+    const isPublic = req.originalUrl && req.originalUrl.includes("/api/public/");
     const apiType = isPublic ? "public" : "internal";
     if (req.session.api_type !== apiType) {
       req.session.api_type = apiType;

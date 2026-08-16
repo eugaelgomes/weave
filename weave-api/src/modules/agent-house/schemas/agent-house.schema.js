@@ -10,9 +10,7 @@ const listUserAgentsSchema = z
         "The unique identifier of the project to filter the AI agents. This must be a valid UUID. If omitted, the list will include agents across all projects."
       ),
   })
-  .describe(
-    "Schema configuration for listing AI agents available to the user."
-  );
+  .describe("Schema configuration for listing AI agents available to the user.");
 
 const createUserAgentSchema = z
   .object({
@@ -50,9 +48,7 @@ const createUserAgentSchema = z
     model_provider: z
       .string()
       .min(1, "Model provider is required")
-      .describe(
-        "The provider of the AI model, such as OpenAI, Anthropic, or Google."
-      ),
+      .describe("The provider of the AI model, such as OpenAI, Anthropic, or Google."),
     name: z
       .string()
       .min(1, "Agent name is required")
@@ -115,9 +111,7 @@ const updateAgentSchema = z
     instructions: z
       .string()
       .optional()
-      .describe(
-        "The updated instructions defining how the agent should behave and handle tasks."
-      ),
+      .describe("The updated instructions defining how the agent should behave and handle tasks."),
     is_active: z
       .boolean()
       .optional()
@@ -127,21 +121,13 @@ const updateAgentSchema = z
     language: z
       .string()
       .optional()
-      .describe(
-        "The updated default language the AI agent will use to communicate."
-      ),
+      .describe("The updated default language the AI agent will use to communicate."),
     model_name: z
       .string()
       .optional()
       .describe("The updated name of the AI model that powers this agent."),
-    model_provider: z
-      .string()
-      .optional()
-      .describe("The updated provider of the AI model."),
-    name: z
-      .string()
-      .optional()
-      .describe("The updated human-readable name of the custom AI agent."),
+    model_provider: z.string().optional().describe("The updated provider of the AI model."),
+    name: z.string().optional().describe("The updated human-readable name of the custom AI agent."),
     project_id: z
       .string()
       .uuid("Invalid project ID")
@@ -150,10 +136,7 @@ const updateAgentSchema = z
       .describe(
         "The updated unique identifier of the project to which this agent is assigned. Can be set to null to unassign the agent from any project."
       ),
-    role: z
-      .string()
-      .optional()
-      .describe("The updated defined role or persona of the AI agent."),
+    role: z.string().optional().describe("The updated defined role or persona of the AI agent."),
     rules: z
       .union([z.string(), z.array(z.string())])
       .optional()
@@ -169,9 +152,7 @@ const updateAgentSchema = z
     tone: z
       .string()
       .optional()
-      .describe(
-        "The updated tone of voice the AI agent should use in its responses."
-      ),
+      .describe("The updated tone of voice the AI agent should use in its responses."),
     tools: z
       .union([z.string(), z.array(z.string())])
       .optional()
@@ -190,9 +171,7 @@ const shareAgentSchema = z
         "An array of unique user identifiers (UUIDs) representing the users with whom this AI agent will be shared."
       ),
   })
-  .describe(
-    "Schema configuration for sharing an AI agent with other users in the platform."
-  );
+  .describe("Schema configuration for sharing an AI agent with other users in the platform.");
 
 const assignToProjectSchema = z
   .object({
@@ -203,9 +182,7 @@ const assignToProjectSchema = z
         "The unique identifier of the project to which the agent is being assigned. Must be a valid UUID."
       ),
   })
-  .describe(
-    "Schema configuration for assigning an AI agent to a specific project."
-  );
+  .describe("Schema configuration for assigning an AI agent to a specific project.");
 
 const toggleActiveSchema = z
   .object({
@@ -215,9 +192,7 @@ const toggleActiveSchema = z
         "A boolean flag indicating whether the AI agent should be activated (true) or deactivated (false)."
       ),
   })
-  .describe(
-    "Schema configuration for toggling the active status of an AI agent."
-  );
+  .describe("Schema configuration for toggling the active status of an AI agent.");
 
 const chatPayloadSchema = z
   .object({
@@ -284,22 +259,16 @@ const chatPayloadSchema = z
           name: z
             .string()
             .min(1)
-            .describe(
-              "The name of the model to use for this chat request, such as gpt-4o."
-            ),
+            .describe("The name of the model to use for this chat request, such as gpt-4o."),
           reasoningLevel: z
             .enum(["none", "low", "medium", "high"])
             .optional()
             .default("none")
-            .describe(
-              "The reasoning level to apply for the model (if supported by the model)."
-            ),
+            .describe("The reasoning level to apply for the model (if supported by the model)."),
           version: z
             .string()
             .min(1)
-            .describe(
-              "The specific version identifier of the model to use for this chat request."
-            ),
+            .describe("The specific version identifier of the model to use for this chat request."),
         })
       )
       .describe(
@@ -361,9 +330,7 @@ const chatPayloadSchema = z
         "An optional string indicating the specific use case or intent of this chat request."
       ),
   })
-  .describe(
-    "Schema configuration for sending a message to an AI agent (chat)."
-  );
+  .describe("Schema configuration for sending a message to an AI agent (chat).");
 
 const submitFeedbackSchema = z
   .object({
@@ -371,19 +338,13 @@ const submitFeedbackSchema = z
       .string()
       .nullable()
       .optional()
-      .describe(
-        "An optional text comment or explanation describing the user feedback in detail."
-      ),
+      .describe("An optional text comment or explanation describing the user feedback in detail."),
     rating: z
       .enum(["like", "dislike"])
       .nullable()
-      .describe(
-        "The rating value for the chat response, which must be either like or dislike."
-      ),
+      .describe("The rating value for the chat response, which must be either like or dislike."),
   })
-  .describe(
-    "Schema configuration for submitting user feedback on an AI agent response."
-  );
+  .describe("Schema configuration for submitting user feedback on an AI agent response.");
 
 const getChatHistorySchema = z
   .object({
@@ -401,9 +362,7 @@ const getChatHistorySchema = z
       .min(0)
       .optional()
       .default(0)
-      .describe(
-        "The number of initial history records to skip for pagination, defaulting to 0."
-      ),
+      .describe("The number of initial history records to skip for pagination, defaulting to 0."),
     sessionId: z
       .string()
       .uuid("Invalid session ID")
@@ -412,9 +371,7 @@ const getChatHistorySchema = z
         "The unique identifier of the chat session to retrieve the history for. Must be a valid UUID."
       ),
   })
-  .describe(
-    "Schema configuration for retrieving the chat history for a session."
-  );
+  .describe("Schema configuration for retrieving the chat history for a session.");
 
 module.exports = {
   assignToProjectSchema,

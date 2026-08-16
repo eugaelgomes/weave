@@ -47,9 +47,7 @@ class GoogleCalendarController extends WebhooksBaseController {
         userId,
       });
     } catch (error) {
-      console.warn(
-        `[Google Calendar] Watch falhou (tokens salvos): ${error.message}`
-      );
+      console.warn(`[Google Calendar] Watch falhou (tokens salvos): ${error.message}`);
     }
   }
 
@@ -119,9 +117,7 @@ class GoogleCalendarController extends WebhooksBaseController {
     const clients = this.calendarSseClients.get(userId);
     clients.add(res);
 
-    res.write(
-      `event: connected\ndata: ${JSON.stringify({ connected: true, ts: Date.now() })}\n\n`
-    );
+    res.write(`event: connected\ndata: ${JSON.stringify({ connected: true, ts: Date.now() })}\n\n`);
 
     const heartbeat = setInterval(() => {
       res.write(`event: ping\ndata: ${Date.now()}\n\n`);
@@ -158,31 +154,18 @@ class GoogleCalendarController extends WebhooksBaseController {
 
       const { timeMin, timeMax } = req.query;
       const now = new Date();
-      const defaultMin = new Date(
-        now.getFullYear(),
-        now.getMonth() - 1,
-        1
-      ).toISOString();
-      const defaultMax = new Date(
-        now.getFullYear(),
-        now.getMonth() + 3,
-        0
-      ).toISOString();
+      const defaultMin = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+      const defaultMax = new Date(now.getFullYear(), now.getMonth() + 3, 0).toISOString();
 
       const { calendar, auth } = googleService.getCalendarClientWithAuth({
         access_token: tokens.access_token,
-        expiry_date: tokens.expires_at
-          ? new Date(tokens.expires_at).getTime()
-          : null,
+        expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : null,
         refresh_token: tokens.refresh_token,
       });
 
       const calendarList = await calendar.calendarList.list();
       const calendars = (calendarList.data.items || []).filter(
-        (c) =>
-          c.accessRole === "owner" ||
-          c.accessRole === "writer" ||
-          c.accessRole === "reader"
+        (c) => c.accessRole === "owner" || c.accessRole === "writer" || c.accessRole === "reader"
       );
 
       const allItems = [];
@@ -199,20 +182,13 @@ class GoogleCalendarController extends WebhooksBaseController {
           const items = calData.items || [];
           allItems.push(...items);
         } catch (calErr) {
-          console.warn(
-            `[Google Calendar] Falha ao buscar ${cal.id}: ${calErr.message}`
-          );
+          console.warn(`[Google Calendar] Falha ao buscar ${cal.id}: ${calErr.message}`);
         }
       }
 
       const refreshed = auth.credentials;
-      if (
-        refreshed.access_token &&
-        refreshed.access_token !== tokens.access_token
-      ) {
-        const newExpiry = refreshed.expiry_date
-          ? new Date(refreshed.expiry_date)
-          : null;
+      if (refreshed.access_token && refreshed.access_token !== tokens.access_token) {
+        const newExpiry = refreshed.expiry_date ? new Date(refreshed.expiry_date) : null;
         await GoogleOauthTokensRepository.updateGoogleAccessToken(
           userId,
           refreshed.access_token,
@@ -248,9 +224,7 @@ class GoogleCalendarController extends WebhooksBaseController {
     } catch (error) {
       const httpStatus = error?.response?.status ?? error?.status;
       const isUnauthorized =
-        error?.code === 401 ||
-        httpStatus === 401 ||
-        String(error?.code) === "401";
+        error?.code === 401 || httpStatus === 401 || String(error?.code) === "401";
       if (isUnauthorized) {
         return res.status(200).json({
           connected: false,
@@ -277,13 +251,10 @@ class GoogleCalendarController extends WebhooksBaseController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const connected =
-        await GoogleOauthTokensRepository.hasGoogleTokens(userId);
+      const connected = await GoogleOauthTokensRepository.hasGoogleTokens(userId);
       res.json({ connected });
     } catch {
-      res
-        .status(500)
-        .json({ error: "Falha ao verificar status do Google Calendar" });
+      res.status(500).json({ error: "Falha ao verificar status do Google Calendar" });
     }
   }
 
@@ -300,8 +271,7 @@ class GoogleCalendarController extends WebhooksBaseController {
 
       const tokens = await GoogleOauthTokensRepository.getGoogleTokens(userId);
       if (tokens) {
-        const activeWebhooks =
-          await GoogleCalendarWebhooksRepository.getActiveWebhooks(userId);
+        const activeWebhooks = await GoogleCalendarWebhooksRepository.getActiveWebhooks(userId);
         for (const wh of activeWebhooks) {
           try {
             const calendar = googleService.getCalendarClient(tokens);
@@ -336,14 +306,9 @@ class GoogleCalendarController extends WebhooksBaseController {
    * @param {{channelId: string, resourceState: string, messageNumber?: string}} params
    * @private
    */
-  async _processCalendarWebhookNotification({
-    channelId,
-    resourceState,
-    messageNumber,
-  }) {
+  async _processCalendarWebhookNotification({ channelId, resourceState, messageNumber }) {
     try {
-      const webhook =
-        await GoogleCalendarWebhooksRepository.getWebhookByChannelId(channelId);
+      const webhook = await GoogleCalendarWebhooksRepository.getWebhookByChannelId(channelId);
       if (!webhook?.user_id) return;
 
       this._broadcastCalendarUpdate(webhook.user_id, {

@@ -8,10 +8,7 @@ const { getBlockingRedisOptions } = require("./blocking-redis-options");
  *
  * @type {import("ioredis").default}
  */
-const redisConsumer = new Redis(
-  process.env.REDIS_URL,
-  getBlockingRedisOptions()
-);
+const redisConsumer = new Redis(process.env.REDIS_URL, getBlockingRedisOptions());
 
 redisConsumer.on("error", (error) => {
   console.error("[RedisConsumer] Error:", error);

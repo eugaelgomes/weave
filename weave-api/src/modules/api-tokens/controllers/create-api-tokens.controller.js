@@ -4,9 +4,7 @@ const bcrypt = require("bcrypt");
 const { fromUnknown } = require("@/errors");
 const CreateApiTokensRepository = require("@/modules/api-tokens/repositories/create-api-tokens.repository");
 const ApiTokensNormalizer = require("@/modules/api-tokens/normalizer");
-const {
-  ORG_ROLES,
-} = require("@/modules/organizations/organization-role-policy");
+const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
 
 const TOKEN_PREFIX = "wn_";
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS, 10) || 12;
@@ -37,16 +35,12 @@ class CreateApiTokensController {
       if (!scopes || scopes.length === 0) {
         cleanScopes = ["profile:read", "notes:read"];
       } else if (!ApiTokensNormalizer.areScopesValid(scopes)) {
-        return res
-          .status(400)
-          .json({ error: "One or more provided scopes are invalid." });
+        return res.status(400).json({ error: "One or more provided scopes are invalid." });
       }
 
       const isOrgScope = cleanScopes.some(
         (s) =>
-          s.startsWith("organizations:") ||
-          s.startsWith("projects:") ||
-          s.startsWith("calendar:")
+          s.startsWith("organizations:") || s.startsWith("projects:") || s.startsWith("calendar:")
       );
 
       if (organizationId || isOrgScope) {
@@ -57,15 +51,11 @@ class CreateApiTokensController {
           });
         }
 
-        const role = await CreateApiTokensRepository.getUserOrgRole(
-          userId,
-          organizationId
-        );
+        const role = await CreateApiTokensRepository.getUserOrgRole(userId, organizationId);
 
         if (role !== ORG_ROLES.SUPER_ADMIN && role !== ORG_ROLES.ADMIN) {
           return res.status(403).json({
-            error:
-              "Only administrators can create API tokens with organization-level permissions.",
+            error: "Only administrators can create API tokens with organization-level permissions.",
           });
         }
       }

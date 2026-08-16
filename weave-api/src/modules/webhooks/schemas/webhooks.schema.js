@@ -67,19 +67,14 @@ const createWebhookSchema = z
         "The unique identifier of the Google Calendar to watch for changes. If omitted, it defaults to 'primary' representing the user's primary calendar."
       ),
   })
-  .describe(
-    "Schema configuration for registering a new Google Calendar webhook watch channel."
-  );
+  .describe("Schema configuration for registering a new Google Calendar webhook watch channel.");
 
 /**
  * Schema for deleting/disconnecting a Google Calendar webhook watch.
  */
 const deleteWebhookSchema = z
   .object({
-    all: z
-      .boolean()
-      .optional()
-      .describe("Set to true to delete all active webhooks for the user."),
+    all: z.boolean().optional().describe("Set to true to delete all active webhooks for the user."),
     channelId: z
       .string()
       .optional()

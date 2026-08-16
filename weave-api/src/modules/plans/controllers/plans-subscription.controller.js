@@ -18,9 +18,7 @@ class PlansSubscriptionController {
 
       const effective = await PlansRepository.getEffectivePlanByUserId(userId);
       if (!effective?.plan_id) {
-        return res
-          .status(404)
-          .json({ message: "No active subscription found" });
+        return res.status(404).json({ message: "No active subscription found" });
       }
 
       const subscription = await this._getSubscriptionRow(

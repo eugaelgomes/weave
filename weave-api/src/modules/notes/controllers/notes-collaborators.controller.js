@@ -1,11 +1,7 @@
 const NotesBaseController = require("./base.controller");
-const {
-  NotesCollaboratorsService,
-} = require("../services/notes-collaborators.service");
+const { NotesCollaboratorsService } = require("../services/notes-collaborators.service");
 const { PlanLimitError } = require("../services/notes.service");
-const {
-  sendPlanLimitExceeded,
-} = require("@/modules/plans/utils/plan-limit-http.util");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
 
 class NotesCollaboratorsController extends NotesBaseController {
   async addCollaborator(req, res, next) {
@@ -49,11 +45,7 @@ class NotesCollaboratorsController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      await NotesCollaboratorsService.removeCollaborator(
-        userId,
-        noteId,
-        collaboratorId
-      );
+      await NotesCollaboratorsService.removeCollaborator(userId, noteId, collaboratorId);
 
       res.status(200).json({
         message: "Collaborator removed successfully",
@@ -80,9 +72,7 @@ class NotesCollaboratorsController extends NotesBaseController {
       });
     } catch (error) {
       if (error.statusCode) {
-        return res
-          .status(error.statusCode)
-          .json({ message: error.message, success: false });
+        return res.status(error.statusCode).json({ message: error.message, success: false });
       }
       this._handleError(error, res, next);
     }
@@ -95,10 +85,7 @@ class NotesCollaboratorsController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const collaborators = await NotesCollaboratorsService.listCollaborators(
-        userId,
-        noteId
-      );
+      const collaborators = await NotesCollaboratorsService.listCollaborators(userId, noteId);
 
       if (collaborators.length === 0) {
         return res.status(200).json({

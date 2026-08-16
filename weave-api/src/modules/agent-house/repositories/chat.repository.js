@@ -203,12 +203,7 @@ class WeaveAIRepository {
       ORDER BY created_at DESC
       LIMIT 1
     `;
-    const existingResult = await pool.query(existingQuery, [
-      sessionId,
-      userId,
-      role,
-      requestId,
-    ]);
+    const existingResult = await pool.query(existingQuery, [sessionId, userId, role, requestId]);
     if (existingResult.rows[0]) {
       return existingResult.rows[0];
     }
@@ -297,11 +292,7 @@ class WeaveAIRepository {
 
     const normalizedLimit =
       Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : 20;
-    const result = await pool.query(query, [
-      sessionId,
-      userId,
-      normalizedLimit,
-    ]);
+    const result = await pool.query(query, [sessionId, userId, normalizedLimit]);
     return result.rows;
   }
 
@@ -397,12 +388,7 @@ class WeaveAIRepository {
         AND user_id = $4
       RETURNING id
     `;
-    const result = await pool.query(query, [
-      rating,
-      comment,
-      messageId,
-      userId,
-    ]);
+    const result = await pool.query(query, [rating, comment, messageId, userId]);
     return result.rowCount > 0;
   }
 

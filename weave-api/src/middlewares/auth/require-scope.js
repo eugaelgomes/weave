@@ -16,9 +16,7 @@ const { AppError } = require("@/errors/app-error");
  */
 function requireScope(requiredScopes) {
   return (req, res, next) => {
-    const scopesToCheck = Array.isArray(requiredScopes)
-      ? requiredScopes
-      : [requiredScopes];
+    const scopesToCheck = Array.isArray(requiredScopes) ? requiredScopes : [requiredScopes];
 
     // Expose required scopes for the observability log middleware.
     res.locals.scopesRequired = scopesToCheck;
@@ -30,9 +28,7 @@ function requireScope(requiredScopes) {
 
     const tokenScopes = req.apiToken?.scopes || [];
 
-    const hasAllRequiredScopes = scopesToCheck.every((scope) =>
-      tokenScopes.includes(scope)
-    );
+    const hasAllRequiredScopes = scopesToCheck.every((scope) => tokenScopes.includes(scope));
 
     if (!hasAllRequiredScopes) {
       return next(

@@ -37,10 +37,7 @@ const {
   addAreaMemberSchema,
   updateAreaMemberSchema,
 } = require("./schemas/areas.schema");
-const {
-  createDomainSchema,
-  updateSsoSettingsSchema,
-} = require("./schemas/domains.schema");
+const { createDomainSchema, updateSsoSettingsSchema } = require("./schemas/domains.schema");
 const { saveStepOneSchema } = require("./schemas/creation-steps.schema");
 
 const router = express.Router();
@@ -48,9 +45,7 @@ const router = express.Router();
 router.get(
   "/invites/preview",
   standardTrafficLimiter,
-  organizationMembersController.previewInvite.bind(
-    organizationMembersController
-  )
+  organizationMembersController.previewInvite.bind(organizationMembersController)
 );
 
 router.post(
@@ -99,9 +94,7 @@ router.patch(
   "/domains/:domainId/sso",
   structuralLimiter,
   validate(updateSsoSettingsSchema, "body"),
-  organizationDomainsController.updateSsoSettings.bind(
-    organizationDomainsController
-  )
+  organizationDomainsController.updateSsoSettings.bind(organizationDomainsController)
 );
 
 // ------ Areas Routes ------
@@ -168,34 +161,26 @@ router.post(
   structuralLimiter,
   validate(createOrganizationSchema, "body"),
   // Keep POST /organizations aligned with step-1 onboarding contract.
-  organizationCreationStepsController.saveStepOne.bind(
-    organizationCreationStepsController
-  )
+  organizationCreationStepsController.saveStepOne.bind(organizationCreationStepsController)
 );
 
 router.get(
   "/creation-steps/step-1",
   highTrafficLimiter,
-  organizationCreationStepsController.getStepOne.bind(
-    organizationCreationStepsController
-  )
+  organizationCreationStepsController.getStepOne.bind(organizationCreationStepsController)
 );
 
 router.post(
   "/creation-steps/step-1",
   structuralLimiter,
   validate(saveStepOneSchema, "body"),
-  organizationCreationStepsController.saveStepOne.bind(
-    organizationCreationStepsController
-  )
+  organizationCreationStepsController.saveStepOne.bind(organizationCreationStepsController)
 );
 
 router.post(
   "/creation-steps/step-1/complete",
   structuralLimiter,
-  organizationCreationStepsController.completeStepOne.bind(
-    organizationCreationStepsController
-  )
+  organizationCreationStepsController.completeStepOne.bind(organizationCreationStepsController)
 );
 
 router.put(
@@ -207,20 +192,12 @@ router.put(
 
 router.patch(
   "/properties",
-  organizationsController.updateOrganizationProperties.bind(
-    organizationsController
-  )
+  organizationsController.updateOrganizationProperties.bind(organizationsController)
 );
 
-router.delete(
-  "/",
-  organizationsController.deleteOrganization.bind(organizationsController)
-);
+router.delete("/", organizationsController.deleteOrganization.bind(organizationsController));
 
-router.post(
-  "/restore",
-  organizationsController.restoreOrganization.bind(organizationsController)
-);
+router.post("/restore", organizationsController.restoreOrganization.bind(organizationsController));
 
 router.get(
   "/members",
@@ -230,9 +207,7 @@ router.get(
 router.patch(
   "/members/:memberId",
   validate(updateMemberRoleSchema, "body"),
-  organizationMembersController.updateMemberRole.bind(
-    organizationMembersController
-  )
+  organizationMembersController.updateMemberRole.bind(organizationMembersController)
 );
 
 router.delete(
@@ -249,9 +224,7 @@ router.post(
 router.post(
   "/invites/bulk",
   validate(inviteMembersBulkSchema, "body"),
-  organizationMembersController.inviteMembersBulk.bind(
-    organizationMembersController
-  )
+  organizationMembersController.inviteMembersBulk.bind(organizationMembersController)
 );
 
 router.post(
@@ -261,9 +234,7 @@ router.post(
 
 router.get(
   "/invites",
-  organizationMembersController.getPendingInvites.bind(
-    organizationMembersController
-  )
+  organizationMembersController.getPendingInvites.bind(organizationMembersController)
 );
 
 router.delete(

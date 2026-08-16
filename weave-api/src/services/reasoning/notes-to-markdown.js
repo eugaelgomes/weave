@@ -16,12 +16,7 @@ const yaml = require("js-yaml");
  * @param {object[]} unstagedNotes
  * @returns {string}
  */
-function notesGroupedByStage(
-  stages,
-  notesByStageId,
-  blocksByNoteId,
-  unstagedNotes
-) {
+function notesGroupedByStage(stages, notesByStageId, blocksByNoteId, unstagedNotes) {
   const sections = [];
 
   sections.push("## 📝 Notes & Tasks");

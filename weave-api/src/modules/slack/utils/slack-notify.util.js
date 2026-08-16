@@ -1,7 +1,5 @@
 const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
-const {
-  chatPostMessage,
-} = require("./slack-client.util");
+const { chatPostMessage } = require("./slack-client.util");
 
 /**
  * Sends a plain-text notification to the organization's default Slack channel when configured.
@@ -17,17 +15,8 @@ async function notifyOrganizationDefaultChannel({ organizationId, text }) {
     return;
   }
   try {
-    const row =
-      await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
-        organizationId
-      );
-    if (
-      !row ||
-      !row.is_active ||
-      row.deleted ||
-      !row.default_channel_id ||
-      !row.bot_access_token
-    ) {
+    const row = await ReadSlackIntegrationsRepository.findActiveByOrganizationId(organizationId);
+    if (!row || !row.is_active || row.deleted || !row.default_channel_id || !row.bot_access_token) {
       return;
     }
 
@@ -37,10 +26,7 @@ async function notifyOrganizationDefaultChannel({ organizationId, text }) {
       token: row.bot_access_token,
     });
     if (!result?.ok) {
-      console.error(
-        "[SlackNotify] chat.postMessage failed:",
-        result?.error || "unknown"
-      );
+      console.error("[SlackNotify] chat.postMessage failed:", result?.error || "unknown");
     }
   } catch (err) {
     console.error("[SlackNotify] notifyOrganizationDefaultChannel:", err);

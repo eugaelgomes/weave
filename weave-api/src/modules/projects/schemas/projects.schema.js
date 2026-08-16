@@ -11,9 +11,7 @@ const getProjectsSchema = z.object({
   methodology: z.string().max(120).optional(),
   organization_id: z.string().uuid().optional(),
   owner_user_id: z.string().uuid().optional(),
-  ownership: z
-    .enum(["owned", "collaborating", "all", "OWNED", "COLLABORATING", "ALL"])
-    .optional(),
+  ownership: z.enum(["owned", "collaborating", "all", "OWNED", "COLLABORATING", "ALL"]).optional(),
   page: z.union([z.string(), z.number()]).optional(),
   parent_only: z.enum(["true", "false"]).optional(),
   priority: z.string().max(80).optional(),

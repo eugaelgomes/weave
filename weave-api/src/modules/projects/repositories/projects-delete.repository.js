@@ -1,11 +1,9 @@
 const { executeQuery } = require("@/database/connection");
-const {
-  PROJECT_WRITE_CAPABLE_ROLES,
-} = require("@/modules/projects/project-role-policy");
+const { PROJECT_WRITE_CAPABLE_ROLES } = require("@/modules/projects/project-role-policy");
 
-const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map(
-  (role) => `'${role}'`
-).join(", ");
+const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map((role) => `'${role}'`).join(
+  ", "
+);
 
 class ProjectsDeleteRepository {
   async deleteProject(projectId, userId) {
@@ -67,11 +65,7 @@ class ProjectsDeleteRepository {
 
     return executeQuery(query, [projectId, ownerId, collaboratorUserId]);
   }
-  async removeCollaboratorWithOrgManagement(
-    projectId,
-    organizationId,
-    collaboratorUserId
-  ) {
+  async removeCollaboratorWithOrgManagement(projectId, organizationId, collaboratorUserId) {
     const query = `
       WITH deleted_member AS (
         UPDATE project_members
@@ -158,12 +152,7 @@ class ProjectsDeleteRepository {
 
     return executeQuery(query, [projectId, noteId, userId]);
   }
-  async removeNoteFromProjectWithOrgScope(
-    projectId,
-    noteId,
-    userId,
-    organizationId
-  ) {
+  async removeNoteFromProjectWithOrgScope(projectId, noteId, userId, organizationId) {
     const query = `
       WITH updated_note AS (
         UPDATE notes
@@ -384,11 +373,7 @@ class ProjectsDeleteRepository {
       SELECT row_to_json(d.*) AS stage FROM del d;
     `;
 
-    const rows = await executeQuery(query, [
-      projectId,
-      organizationId,
-      stageId,
-    ]);
+    const rows = await executeQuery(query, [projectId, organizationId, stageId]);
     if (!rows?.length || !rows[0].stage) {
       return [];
     }

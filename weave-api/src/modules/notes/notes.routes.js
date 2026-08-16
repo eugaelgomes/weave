@@ -3,14 +3,9 @@ const express = require("express");
 // Import utils and middlewares
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
-const {
-  resolveNotePublicIdParam,
-} = require("@/middlewares/public-id-resolver");
+const { resolveNotePublicIdParam } = require("@/middlewares/public-id-resolver");
 const { validate } = require("@/middlewares/validation/validate");
-const {
-  commentFilesUpload,
-  noteUpdateUpload,
-} = require("./utils/note-upload.util");
+const { commentFilesUpload, noteUpdateUpload } = require("./utils/note-upload.util");
 const {
   highTrafficLimiter,
   standardTrafficLimiter,
@@ -50,12 +45,8 @@ router.param("noteId", resolveNotePublicIdParam);
 
 // Feature toggle for block autosave v2
 const blockAutosaveV2Enabled =
-  String(
-    process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true"
-  ).toLowerCase() !== "false";
-const blockWriteLimiter = blockAutosaveV2Enabled
-  ? notesBlockWriteLimiter
-  : standardTrafficLimiter;
+  String(process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !== "false";
+const blockWriteLimiter = blockAutosaveV2Enabled ? notesBlockWriteLimiter : standardTrafficLimiter;
 
 router.use(verifyToken);
 const { requireModule } = require("@/middlewares/auth/require-module");
@@ -70,14 +61,9 @@ router.use((req, res, next) => {
   return requireScope("notes:write")(req, res, next);
 });
 
-router.get(
-  "/",
-  highTrafficLimiter,
-  validate(listNotesQuerySchema, "query"),
-  (req, res, next) => {
-    NotesReadController.getAllNotes(req, res, next);
-  }
-);
+router.get("/", highTrafficLimiter, validate(listNotesQuerySchema, "query"), (req, res, next) => {
+  NotesReadController.getAllNotes(req, res, next);
+});
 
 router.get("/stats", highTrafficLimiter, (req, res, next) => {
   NotesReadController.getNotesStats(req, res, next);
@@ -92,13 +78,9 @@ router.post(
   }
 );
 
-router.get(
-  "/:noteId/export/pdf",
-  validate(noteIdParamSchema, "params"),
-  (req, res, next) => {
-    NotesExportController.exportNoteAsPDF(req, res, next);
-  }
-);
+router.get("/:noteId/export/pdf", validate(noteIdParamSchema, "params"), (req, res, next) => {
+  NotesExportController.exportNoteAsPDF(req, res, next);
+});
 
 router.get(
   "/:noteId/blocks",
@@ -197,21 +179,13 @@ router.delete("/", (req, res, next) => {
   NotesWriteController.deleteNote(req, res, next);
 });
 
-router.delete(
-  "/:id",
-  validate(noteIdParamSchema, "params"),
-  (req, res, next) => {
-    NotesWriteController.deleteNote(req, res, next);
-  }
-);
+router.delete("/:id", validate(noteIdParamSchema, "params"), (req, res, next) => {
+  NotesWriteController.deleteNote(req, res, next);
+});
 
-router.get(
-  "/:noteId/comments",
-  validate(noteIdParamSchema, "params"),
-  (req, res, next) => {
-    NotesCommentsController.listComments(req, res, next);
-  }
-);
+router.get("/:noteId/comments", validate(noteIdParamSchema, "params"), (req, res, next) => {
+  NotesCommentsController.listComments(req, res, next);
+});
 
 router.post(
   "/:noteId/comments",
@@ -251,13 +225,9 @@ router.delete(
   }
 );
 
-router.get(
-  "/:noteId/collaborators",
-  validate(noteIdParamSchema, "params"),
-  (req, res, next) => {
-    NotesCollaboratorsController.getCollaborators(req, res, next);
-  }
-);
+router.get("/:noteId/collaborators", validate(noteIdParamSchema, "params"), (req, res, next) => {
+  NotesCollaboratorsController.getCollaborators(req, res, next);
+});
 
 router.post(
   "/:noteId/collaborators",

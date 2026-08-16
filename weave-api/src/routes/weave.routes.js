@@ -27,9 +27,7 @@ const registerApiRoutes = (app, { version = DEFAULT_VERSION } = {}) => {
 
   const { createInternalRouter } = require(`./${version}/internal.routes`);
   const { createPublicRouter } = require(`./${version}/public.routes`);
-  const { createMCPRouter, createServiceMCPRouter } = require(
-    `./${version}/mcp.routes`
-  );
+  const { createMCPRouter, createServiceMCPRouter } = require(`./${version}/mcp.routes`);
 
   const internalRouter = createInternalRouter({ version: context.version });
   const publicRouter = createPublicRouter({ version: context.version });

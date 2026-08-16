@@ -8,27 +8,19 @@ const {
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 // Removed PLAN_PATHS
-const {
-  inviteProjectMember,
-} = require("@/services/email/templates/project-add-person");
+const { inviteProjectMember } = require("@/services/email/templates/project-add-person");
 const spacesService = require("@/services/storage");
 const notesRepository = require("@/modules/notes/notes.repository");
 const taskPrioritiesRepository = require("@/modules/projects/repositories/task-priorities.repository");
-const {
-  ASSIGNABLE_PROJECT_ROLES,
-} = require("@/modules/projects/project-role-policy");
+const { ASSIGNABLE_PROJECT_ROLES } = require("@/modules/projects/project-role-policy");
 
-const {
-  sendPlanLimitExceeded,
-} = require("@/modules/plans/utils/plan-limit-http.util");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
 const {
   respondIfWorkspaceShareDenied,
 } = require("@/modules/organizations/utils/workspace-share-guard.util");
 const { resolveNoteTitle } = require("@/modules/notes/utils/derive-note-title");
 // Removed redis and queue keys
-const {
-  resolveNoteIdToUuid,
-} = require("@/modules/notes/utils/note-id-lookup.util");
+const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 
 class ProjectsUpdateController extends ProjectsCoreController {
   /**
@@ -49,9 +41,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       await this._validateProjectAccess(id, userId);
       const canWrite = await this._ensureProjectWriteAccess(id, userId);
       if (!canWrite) {
-        throw new Error(
-          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
-        );
+        throw new Error("Acesso negado. Sua role no projeto não permite alterar conteúdos.");
       }
 
       const currentProject = await this._validateProjectAccess(id, userId);
@@ -156,11 +146,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       const ctx = await this._getProjectOwnershipContext(id, userId);
       const result = ctx.orgWide
-        ? await this.projectsRepository.updateProjectInOrganization(
-            id,
-            ctx.membership.id,
-            updates
-          )
+        ? await this.projectsRepository.updateProjectInOrganization(id, ctx.membership.id, updates)
         : await this.projectsRepository.updateProject(id, userId, updates);
 
       if (!result || result.length === 0) {
@@ -190,11 +176,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
   async manageCollaborators(req, res, next) {
     try {
       const { projectId } = req.params;
-      const {
-        action = null,
-        userId: collaboratorId,
-        role = "contributor",
-      } = req.body;
+      const { action = null, userId: collaboratorId, role = "contributor" } = req.body;
 
       // Validação de autenticação
       const userId = this._requireAuthenticatedUser(req, res);
@@ -216,9 +198,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       if (action === "add") {
         const usageRecord = await PlansService.managePlanUsage(userId);
         const getUserPlan = await PlansRepository.getUserAndPlan(userId);
-        const planDetails = await PlansRepository.getPlanById(
-          getUserPlan.plan_id
-        );
+        const planDetails = await PlansRepository.getPlanById(getUserPlan.plan_id);
 
         if (!usageRecord || !planDetails) {
           return res.status(404).json({
@@ -228,19 +208,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
         // Validar limite de colaboradores por projeto
         const collaborators = ctx.orgWide
-          ? await this.projectsRepository.getCollaboratorsWithOrgScope(
-              projectId,
-              ctx.membership.id
-            )
+          ? await this.projectsRepository.getCollaboratorsWithOrgScope(projectId, ctx.membership.id)
           : await this.projectsRepository.getCollaborators(projectId, userId);
         const currentCollaborators = collaborators[0]?.collaborators || [];
-        const maxCollaborators =
-          planDetails.details?.limits?.max_collaborators_per_project;
+        const maxCollaborators = planDetails.details?.limits?.max_collaborators_per_project;
 
-        if (
-          maxCollaborators &&
-          currentCollaborators.length >= maxCollaborators
-        ) {
+        if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
           return sendPlanLimitExceeded(res, {
             error: "Limite de colaboradores atingido",
             limit_key: "limits.max_collaborators_per_project",
@@ -264,22 +237,15 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
           // Verificar se o usuário não está tentando adicionar a si mesmo
           if (collaboratorId === userId) {
-            throw new Error(
-              "Você não pode adicionar a si mesmo como colaborador"
-            );
+            throw new Error("Você não pode adicionar a si mesmo como colaborador");
           }
 
-          if (
-            await respondIfWorkspaceShareDenied(res, userId, collaboratorId)
-          ) {
+          if (await respondIfWorkspaceShareDenied(res, userId, collaboratorId)) {
             return;
           }
 
           // Verificar se o colaborador já está ativo
-          const isAlready = await this.projectsRepository.isCollaborator(
-            projectId,
-            collaboratorId
-          );
+          const isAlready = await this.projectsRepository.isCollaborator(projectId, collaboratorId);
 
           if (isAlready) {
             throw new Error("Usuário já é colaborador deste projeto");
@@ -309,16 +275,12 @@ class ProjectsUpdateController extends ProjectsCoreController {
                   projectId,
                   ctx.membership.id
                 )
-              : await this.projectsRepository.getProjectByIdWithAccess(
-                  projectId,
-                  userId
-                );
+              : await this.projectsRepository.getProjectByIdWithAccess(projectId, userId);
 
             // Encontrar o colaborador recém-adicionado no array de collaborators do projeto
-            const addedCollaborator =
-              projectWithOwner?.[0]?.collaborators?.find(
-                (c) => c.user_id === collaboratorId
-              );
+            const addedCollaborator = projectWithOwner?.[0]?.collaborators?.find(
+              (c) => c.user_id === collaboratorId
+            );
 
             if (addedCollaborator && projectWithOwner && projectWithOwner[0]) {
               inviteProjectMember(
@@ -365,10 +327,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
           }
 
           // Verificar se o colaborador existe
-          const isCollab = await this.projectsRepository.isCollaborator(
-            projectId,
-            collaboratorId
-          );
+          const isCollab = await this.projectsRepository.isCollaborator(projectId, collaboratorId);
 
           if (!isCollab) {
             throw new Error("Usuário não é colaborador deste projeto");
@@ -407,10 +366,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
         case "remove": {
           // Verificar se o colaborador existe
-          const exists = await this.projectsRepository.isCollaborator(
-            projectId,
-            collaboratorId
-          );
+          const exists = await this.projectsRepository.isCollaborator(projectId, collaboratorId);
 
           if (!exists) {
             throw new Error("Usuário não é colaborador deste projeto");
@@ -422,11 +378,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
                 ctx.membership.id,
                 collaboratorId
               )
-            : await this.projectsRepository.removeCollaborator(
-                projectId,
-                userId,
-                collaboratorId
-              );
+            : await this.projectsRepository.removeCollaborator(projectId, userId, collaboratorId);
           message = "Colaborador removido com sucesso";
           break;
         }
@@ -437,8 +389,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       }
 
       res.status(200).json({
-        collaborators:
-          action === "remove" ? undefined : result[0].collaborators,
+        collaborators: action === "remove" ? undefined : result[0].collaborators,
         message,
       });
     } catch (error) {
@@ -531,18 +482,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
         return res.status(404).json({ error: "Nota não encontrada" });
       }
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
       const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
       if (!canWrite) {
-        throw new Error(
-          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
-        );
+        throw new Error("Acesso negado. Sua role no projeto não permite alterar conteúdos.");
       }
 
       let result;
@@ -558,11 +504,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
                   userId,
                   membership.id
                 )
-              : await this.projectsRepository.addNoteToProject(
-                  projectId,
-                  internalNoteId,
-                  userId
-                );
+              : await this.projectsRepository.addNoteToProject(projectId, internalNoteId, userId);
           message = "Nota adicionada ao projeto com sucesso";
           break;
 
@@ -603,8 +545,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       if (!result || result.length === 0) {
         if (action === "add") {
-          const firstStageId =
-            await this.projectsRepository.getFirstProjectStageId(projectId);
+          const firstStageId = await this.projectsRepository.getFirstProjectStageId(projectId);
           if (!firstStageId) {
             return res.status(400).json({
               error:
@@ -647,18 +588,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
         return res.status(404).json({ error: "Nota não encontrada" });
       }
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
       const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
       if (!canWrite) {
-        throw new Error(
-          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
-        );
+        throw new Error("Acesso negado. Sua role no projeto não permite alterar conteúdos.");
       }
 
       const result =
@@ -669,15 +605,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
               userId,
               membership.id
             )
-          : await this.projectsRepository.addNoteToProject(
-              projectId,
-              internalNoteId,
-              userId
-            );
+          : await this.projectsRepository.addNoteToProject(projectId, internalNoteId, userId);
 
       if (!result || result.length === 0) {
-        const firstStageId =
-          await this.projectsRepository.getFirstProjectStageId(projectId);
+        const firstStageId = await this.projectsRepository.getFirstProjectStageId(projectId);
         if (!firstStageId) {
           return res.status(400).json({
             error:
@@ -709,18 +640,13 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
       const orgWide = this._canAccessAllOrganizationProjects(membership);
 
       await this._validateProjectAccess(projectId, userId);
       const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
       if (!canWrite) {
-        throw new Error(
-          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
-        );
+        throw new Error("Acesso negado. Sua role no projeto não permite alterar conteúdos.");
       }
 
       const result =
@@ -731,11 +657,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
               userId,
               membership.id
             )
-          : await this.projectsRepository.updateNoteInProject(
-              projectId,
-              noteId,
-              userId
-            );
+          : await this.projectsRepository.updateNoteInProject(projectId, noteId, userId);
 
       if (!result || result.length === 0) {
         throw new Error("Failed to update note. Check your permissions.");
@@ -752,8 +674,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
   _parseStringArrayField(value) {
     if (value === undefined || value === null || value === "") return [];
-    if (Array.isArray(value))
-      return value.map((item) => String(item)).filter(Boolean);
+    if (Array.isArray(value)) return value.map((item) => String(item)).filter(Boolean);
     if (typeof value === "string") {
       try {
         const parsed = JSON.parse(value);
@@ -800,11 +721,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
     const parsed = this._parseNullableField(parentIdRaw);
     if (parsed === null || parsed === undefined) return null;
     const parent = await notesRepository.getNoteById(parsed);
-    if (
-      !parent ||
-      parent.deleted ||
-      String(parent.project_id) !== String(projectId)
-    ) {
+    if (!parent || parent.deleted || String(parent.project_id) !== String(projectId)) {
       throw new Error("Tarefa pai inválida ou não pertence a este projeto");
     }
     return String(parsed);
@@ -825,11 +742,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       throw new Error("Tarefa não pode ser pai de si mesma");
     }
     const parent = await notesRepository.getNoteById(parsed);
-    if (
-      !parent ||
-      parent.deleted ||
-      String(parent.project_id) !== String(projectId)
-    ) {
+    if (!parent || parent.deleted || String(parent.project_id) !== String(projectId)) {
       throw new Error("Tarefa pai inválida ou não pertence a este projeto");
     }
     let walker = parent;
@@ -882,10 +795,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (!userId) return;
 
-      const descStr =
-        description !== null && description !== undefined
-          ? String(description)
-          : "";
+      const descStr = description !== null && description !== undefined ? String(description) : "";
       const effectiveTitle =
         resolveNoteTitle({
           description: descStr,
@@ -895,23 +805,15 @@ class ProjectsUpdateController extends ProjectsCoreController {
       await this._validateProjectAccess(projectId, userId);
       const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
       if (!canWrite) {
-        throw new Error(
-          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
-        );
+        throw new Error("Acesso negado. Sua role no projeto não permite alterar conteúdos.");
       }
 
-      const stageRows =
-        await this.projectsRepository.getProjectStages(projectId);
+      const stageRows = await this.projectsRepository.getProjectStages(projectId);
       if (!stageRows.some((stage) => String(stage.id) === String(stageId))) {
-        return res
-          .status(404)
-          .json({ error: "Estágio não encontrado para este projeto" });
+        return res.status(404).json({ error: "Estágio não encontrado para este projeto" });
       }
 
-      const project = await this.projectsRepository.getProjectByIdWithAccess(
-        projectId,
-        userId
-      );
+      const project = await this.projectsRepository.getProjectByIdWithAccess(projectId, userId);
       const projectOrgId = project?.[0]?.organization_id || null;
       await this._validateTaskPriorityScope(
         this._parseNullableField(priority_id),
@@ -925,13 +827,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
         try {
           parsedProperties = JSON.parse(properties || "{}");
         } catch {
-          return res
-            .status(400)
-            .json({ error: "properties deve ser um JSON válido" });
+          return res.status(400).json({ error: "properties deve ser um JSON válido" });
         }
       }
-      const parsedDueDate =
-        due_date && due_date !== "" ? new Date(due_date).toISOString() : null;
+      const parsedDueDate = due_date && due_date !== "" ? new Date(due_date).toISOString() : null;
       const parsedPriorityId = this._parseNullableField(priority_id);
 
       const validatedParentId = await this._validateParentForNewTask(
@@ -958,15 +857,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       const mergedProperties = {
         ...(createdNote.properties || {}),
-        ...(parsedProperties && typeof parsedProperties === "object"
-          ? parsedProperties
-          : {}),
+        ...(parsedProperties && typeof parsedProperties === "object" ? parsedProperties : {}),
       };
       if (uploadedFiles.length > 0) {
         mergedProperties.files = [
-          ...(Array.isArray(mergedProperties.files)
-            ? mergedProperties.files
-            : []),
+          ...(Array.isArray(mergedProperties.files) ? mergedProperties.files : []),
           ...uploadedFiles,
         ];
       }
@@ -982,20 +877,11 @@ class ProjectsUpdateController extends ProjectsCoreController {
       await Promise.all(
         collaboratorIds
           .filter((collaboratorId) => collaboratorId !== userId)
-          .map((collaboratorId) =>
-            notesRepository.addCollaborator(createdNote.id, collaboratorId)
-          )
+          .map((collaboratorId) => notesRepository.addCollaborator(createdNote.id, collaboratorId))
       );
 
-      await this.projectsRepository.updateNoteInProject(
-        projectId,
-        createdNote.id,
-        userId
-      );
-      const notes = await this.projectsRepository.getAssociatedNotes(
-        projectId,
-        userId
-      );
+      await this.projectsRepository.updateNoteInProject(projectId, createdNote.id, userId);
+      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
 
       res.status(201).json({
         message: "Tarefa criada com sucesso",
@@ -1033,60 +919,39 @@ class ProjectsUpdateController extends ProjectsCoreController {
       await this._validateProjectAccess(projectId, userId);
       const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
       if (!canWrite) {
-        throw new Error(
-          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
-        );
+        throw new Error("Acesso negado. Sua role no projeto não permite alterar conteúdos.");
       }
 
       const currentNote = await notesRepository.getNoteById(noteId);
-      if (
-        !currentNote ||
-        String(currentNote.project_id) !== String(projectId)
-      ) {
-        return res
-          .status(404)
-          .json({ error: "Tarefa não encontrada neste projeto" });
+      if (!currentNote || String(currentNote.project_id) !== String(projectId)) {
+        return res.status(404).json({ error: "Tarefa não encontrada neste projeto" });
       }
 
-      const project = await this.projectsRepository.getProjectByIdWithAccess(
-        projectId,
-        userId
-      );
+      const project = await this.projectsRepository.getProjectByIdWithAccess(projectId, userId);
       const projectOrgId = project?.[0]?.organization_id || null;
       const parsedPriorityId = this._parseNullableField(priority_id);
       if (parsedPriorityId !== undefined) {
-        await this._validateTaskPriorityScope(
-          parsedPriorityId,
-          projectId,
-          projectOrgId
-        );
+        await this._validateTaskPriorityScope(parsedPriorityId, projectId, projectOrgId);
       }
 
       const updateData = {};
       if (title !== undefined) updateData.title = String(title).trim();
       if (description !== undefined) updateData.description = description;
-      if (parsedPriorityId !== undefined)
-        updateData.priority_id = parsedPriorityId;
+      if (parsedPriorityId !== undefined) updateData.priority_id = parsedPriorityId;
       if (due_date !== undefined) {
         updateData.due_date =
-          due_date === null || due_date === ""
-            ? null
-            : new Date(due_date).toISOString();
+          due_date === null || due_date === "" ? null : new Date(due_date).toISOString();
       }
 
       if (stage_id !== undefined) {
         const parsedStageId = this._parseNullableField(stage_id);
         if (!parsedStageId) {
           return res.status(400).json({
-            error:
-              "Estágio é obrigatório. Não é permitido remover o estágio da tarefa.",
+            error: "Estágio é obrigatório. Não é permitido remover o estágio da tarefa.",
           });
         }
-        const stages =
-          await this.projectsRepository.getProjectStages(projectId);
-        if (
-          !stages.some((stage) => String(stage.id) === String(parsedStageId))
-        ) {
+        const stages = await this.projectsRepository.getProjectStages(projectId);
+        if (!stages.some((stage) => String(stage.id) === String(parsedStageId))) {
           return res.status(404).json({
             error: "Estágio não encontrado para este projeto.",
           });
@@ -1103,9 +968,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
         updateData.parent_id = resolvedParentId;
       }
 
-      const currentTags = Array.isArray(currentNote.tags)
-        ? currentNote.tags.map(String)
-        : [];
+      const currentTags = Array.isArray(currentNote.tags) ? currentNote.tags.map(String) : [];
       let nextTags = currentTags;
       const setTags = this._parseStringArrayField(set_tags);
       if (set_tags !== undefined) {
@@ -1124,46 +987,30 @@ class ProjectsUpdateController extends ProjectsCoreController {
         try {
           incomingProperties = JSON.parse(properties || "{}");
         } catch {
-          return res
-            .status(400)
-            .json({ error: "properties deve ser um JSON válido" });
+          return res.status(400).json({ error: "properties deve ser um JSON válido" });
         }
       }
       const mergedProperties = {
         ...(currentNote.properties || {}),
-        ...(incomingProperties && typeof incomingProperties === "object"
-          ? incomingProperties
-          : {}),
+        ...(incomingProperties && typeof incomingProperties === "object" ? incomingProperties : {}),
       };
 
-      const uploadedFiles = await this._uploadTaskFiles(
-        noteId,
-        userId,
-        req.files?.files || []
-      );
+      const uploadedFiles = await this._uploadTaskFiles(noteId, userId, req.files?.files || []);
 
       if (uploadedFiles.length > 0) {
         mergedProperties.files = [
-          ...(Array.isArray(mergedProperties.files)
-            ? mergedProperties.files
-            : []),
+          ...(Array.isArray(mergedProperties.files) ? mergedProperties.files : []),
           ...uploadedFiles,
         ];
       }
 
-      const removeFileIds = new Set(
-        this._parseStringArrayField(remove_file_ids)
-      );
+      const removeFileIds = new Set(this._parseStringArrayField(remove_file_ids));
       if (removeFileIds.size > 0 && Array.isArray(mergedProperties.files)) {
-        const filesToDelete = mergedProperties.files.filter((file) =>
-          removeFileIds.has(file.id)
-        );
+        const filesToDelete = mergedProperties.files.filter((file) => removeFileIds.has(file.id));
         await Promise.all(
           filesToDelete
             .filter((file) => file.path)
-            .map((file) =>
-              spacesService.deleteImage(file.path).catch(() => null)
-            )
+            .map((file) => spacesService.deleteImage(file.path).catch(() => null))
         );
         mergedProperties.files = mergedProperties.files.filter(
           (file) => !removeFileIds.has(file.id)
@@ -1175,40 +1022,29 @@ class ProjectsUpdateController extends ProjectsCoreController {
 
       const setCollaborators = this._parseStringArrayField(set_collaborators);
       const addCollaborators = this._parseStringArrayField(add_collaborators);
-      const removeCollaborators =
-        this._parseStringArrayField(remove_collaborators);
+      const removeCollaborators = this._parseStringArrayField(remove_collaborators);
 
       if (set_collaborators !== undefined) {
-        const currentCollaborators =
-          await notesRepository.getCollaboratorsByNoteId(noteId);
+        const currentCollaborators = await notesRepository.getCollaboratorsByNoteId(noteId);
         const targetIds = new Set(setCollaborators);
         await Promise.all(
           currentCollaborators
             .filter((collaborator) => !collaborator.removed)
-            .filter(
-              (collaborator) => !targetIds.has(String(collaborator.user_id))
-            )
+            .filter((collaborator) => !targetIds.has(String(collaborator.user_id)))
             .map((collaborator) =>
-              notesRepository.removeCollaborator(
-                noteId,
-                String(collaborator.user_id)
-              )
+              notesRepository.removeCollaborator(noteId, String(collaborator.user_id))
             )
         );
         await Promise.all(
           [...targetIds]
             .filter((collaboratorId) => collaboratorId !== userId)
-            .map((collaboratorId) =>
-              notesRepository.addCollaborator(noteId, collaboratorId)
-            )
+            .map((collaboratorId) => notesRepository.addCollaborator(noteId, collaboratorId))
         );
       } else {
         await Promise.all(
           addCollaborators
             .filter((collaboratorId) => collaboratorId !== userId)
-            .map((collaboratorId) =>
-              notesRepository.addCollaborator(noteId, collaboratorId)
-            )
+            .map((collaboratorId) => notesRepository.addCollaborator(noteId, collaboratorId))
         );
         await Promise.all(
           removeCollaborators.map((collaboratorId) =>
@@ -1217,15 +1053,8 @@ class ProjectsUpdateController extends ProjectsCoreController {
         );
       }
 
-      await this.projectsRepository.updateNoteInProject(
-        projectId,
-        noteId,
-        userId
-      );
-      const notes = await this.projectsRepository.getAssociatedNotes(
-        projectId,
-        userId
-      );
+      await this.projectsRepository.updateNoteInProject(projectId, noteId, userId);
+      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
 
       res.status(200).json({
         message: "Tarefa atualizada com sucesso",
@@ -1247,13 +1076,10 @@ class ProjectsUpdateController extends ProjectsCoreController {
       if (!userId) return;
 
       const parsedStageId =
-        stageId === undefined || stageId === null || stageId === ""
-          ? null
-          : String(stageId);
+        stageId === undefined || stageId === null || stageId === "" ? null : String(stageId);
       if (!parsedStageId) {
         return res.status(400).json({
-          error:
-            "Estágio é obrigatório. Selecione um estágio válido para esta tarefa.",
+          error: "Estágio é obrigatório. Selecione um estágio válido para esta tarefa.",
         });
       }
       const stages = await this.projectsRepository.getProjectStages(projectId);
@@ -1268,9 +1094,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
       await this._validateProjectAccess(projectId, userId);
       const canWrite = await this._ensureProjectWriteAccess(projectId, userId);
       if (!canWrite) {
-        throw new Error(
-          "Acesso negado. Sua role no projeto não permite alterar conteúdos."
-        );
+        throw new Error("Acesso negado. Sua role no projeto não permite alterar conteúdos.");
       }
 
       // Atualizar
@@ -1286,10 +1110,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
         });
       }
 
-      const notes = await this.projectsRepository.getAssociatedNotes(
-        projectId,
-        userId
-      );
+      const notes = await this.projectsRepository.getAssociatedNotes(projectId, userId);
 
       res.status(200).json({
         message: "Note stage successfully updated",
@@ -1370,12 +1191,7 @@ class ProjectsUpdateController extends ProjectsCoreController {
             stageId,
             updates
           )
-        : await this.projectsRepository.updateProjectStage(
-            id,
-            userId,
-            stageId,
-            updates
-          );
+        : await this.projectsRepository.updateProjectStage(id, userId, stageId, updates);
 
       if (!result || result.length === 0) {
         return res.status(404).json({

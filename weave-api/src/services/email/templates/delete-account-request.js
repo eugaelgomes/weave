@@ -1,13 +1,6 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
-const {
-  formatDateForLocale,
-  getUserEmailLocale,
-  t,
-} = require("@/services/email/i18n");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
+const { formatDateForLocale, getUserEmailLocale, t } = require("@/services/email/i18n");
 
 /**
  * @param {string} nome
@@ -21,11 +14,11 @@ async function delete_account_request(nome, email, username, token) {
   try {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const confirmationLink = `${frontendUrl}/auth/confirm-delete-account?token=${token}`;
-    const expiration = formatDateForLocale(
-      locale,
-      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      { dateStyle: "medium", timeStyle: undefined, timeZone: undefined }
-    );
+    const expiration = formatDateForLocale(locale, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), {
+      dateStyle: "medium",
+      timeStyle: undefined,
+      timeZone: undefined,
+    });
 
     const displayName = nome || t(locale, "common.greetingFallback");
 
@@ -41,10 +34,7 @@ async function delete_account_request(nome, email, username, token) {
       footerNote: t(locale, "deleteRequest.footer"),
       greeting: `${displayName},`,
       infoText: t(locale, "deleteRequest.info", { expiration }),
-      introLines: [
-        t(locale, "deleteRequest.intro1"),
-        t(locale, "deleteRequest.intro2"),
-      ],
+      introLines: [t(locale, "deleteRequest.intro1"), t(locale, "deleteRequest.intro2")],
       locale,
       outroLines: [t(locale, "deleteRequest.outro")],
       preheader: t(locale, "deleteRequest.preheader"),
@@ -64,9 +54,7 @@ async function delete_account_request(nome, email, username, token) {
   } catch (error) {
     console.error("Delete account request email failed:", error);
     return {
-      error:
-        error.message ||
-        "Failed to send delete account confirmation request email.",
+      error: error.message || "Failed to send delete account confirmation request email.",
       success: false,
     };
   }

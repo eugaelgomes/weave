@@ -111,11 +111,7 @@ function markdownToBlocks(markdown) {
     }
 
     // ── Divider ─────────────────────────────────────────────────────
-    if (
-      /^-{3,}\s*$/.test(line) ||
-      /^\*{3,}\s*$/.test(line) ||
-      /^_{3,}\s*$/.test(line)
-    ) {
+    if (/^-{3,}\s*$/.test(line) || /^\*{3,}\s*$/.test(line) || /^_{3,}\s*$/.test(line)) {
       blocks.push({
         id: newBlockId(),
         properties: {},

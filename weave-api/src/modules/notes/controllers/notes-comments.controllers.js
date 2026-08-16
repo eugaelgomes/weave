@@ -21,11 +21,7 @@ class NotesCommentsController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const created = await NotesCommentsService.createComment(
-        userId,
-        noteId,
-        req.body
-      );
+      const created = await NotesCommentsService.createComment(userId, noteId, req.body);
       res.status(201).json(created);
     } catch (error) {
       if (error.statusCode) {
@@ -41,12 +37,7 @@ class NotesCommentsController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const updated = await NotesCommentsService.updateComment(
-        userId,
-        noteId,
-        commentId,
-        req.body
-      );
+      const updated = await NotesCommentsService.updateComment(userId, noteId, commentId, req.body);
       res.status(200).json(updated);
     } catch (error) {
       if (error.statusCode) {
@@ -62,11 +53,7 @@ class NotesCommentsController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const files = await NotesCommentsService.uploadCommentFiles(
-        userId,
-        noteId,
-        req.files
-      );
+      const files = await NotesCommentsService.uploadCommentFiles(userId, noteId, req.files);
       res.status(201).json({ files });
     } catch (error) {
       if (error.statusCode) {

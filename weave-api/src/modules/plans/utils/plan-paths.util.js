@@ -79,30 +79,18 @@ const PLAN_STRUCTURE = {
 
       default_model: "",
 
+      // Número máximo de arquivos que podem ser anexados por mensagem
+      max_file_inputs: 0,
 
+      // Janela de contexto em mensagens
+      // Nível máximo de raciocínio permitido (ex: 'none', 'low', 'medium', 'high')
+      max_reasoning_level: "none",
 
-
-// Número máximo de arquivos que podem ser anexados por mensagem
-max_file_inputs: 0,
-
-
-
-
-
-
-// Janela de contexto em mensagens
-// Nível máximo de raciocínio permitido (ex: 'none', 'low', 'medium', 'high')
-max_reasoning_level: "none",
-
-
-
-
-// Limite de mensagens de IA por mês
-max_tokens_per_message: 0,
-
+      // Limite de mensagens de IA por mês
+      max_tokens_per_message: 0,
 
       // Modelos disponíveis para o plano
-monthly_messages: 0,
+      monthly_messages: 0,
     },
     enabled: false,
     features: [], // Features de IA (summarization, creation, edit, chat, code_review)

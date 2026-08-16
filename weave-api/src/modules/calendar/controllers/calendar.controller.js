@@ -19,14 +19,10 @@ class CalendarController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const event = await calendarService.createEvent(
-        req.body,
-        creatorId
-      );
+      const event = await calendarService.createEvent(req.body, creatorId);
       return res.status(201).json({ event });
     } catch (error) {
-      if (error.status)
-        return res.status(error.status).json({ error: error.message });
+      if (error.status) return res.status(error.status).json({ error: error.message });
       next(fromUnknown(error));
     }
   }
@@ -36,8 +32,7 @@ class CalendarController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const organizationId =
-        req.query.organization_id || req.query.organizationId;
+      const organizationId = req.query.organization_id || req.query.organizationId;
       const includeDeleted = extractBoolean(req.query.include_deleted, false);
       const from = parseDate(req.query.from);
       const to = parseDate(req.query.to);
@@ -63,14 +58,10 @@ class CalendarController {
 
       const { eventId } = req.params;
 
-      const event = await calendarService.getEventById(
-        eventId,
-        creatorId
-      );
+      const event = await calendarService.getEventById(eventId, creatorId);
       return res.status(200).json({ event });
     } catch (error) {
-      if (error.status)
-        return res.status(error.status).json({ error: error.message });
+      if (error.status) return res.status(error.status).json({ error: error.message });
       next(fromUnknown(error));
     }
   }
@@ -82,15 +73,10 @@ class CalendarController {
 
       const { eventId } = req.params;
 
-      const event = await calendarService.updateEvent(
-        eventId,
-        req.body,
-        creatorId
-      );
+      const event = await calendarService.updateEvent(eventId, req.body, creatorId);
       return res.status(200).json({ event });
     } catch (error) {
-      if (error.status)
-        return res.status(error.status).json({ error: error.message });
+      if (error.status) return res.status(error.status).json({ error: error.message });
       next(fromUnknown(error));
     }
   }
@@ -105,8 +91,7 @@ class CalendarController {
       await calendarService.deleteEvent(eventId, creatorId);
       return res.status(200).json({ success: true });
     } catch (error) {
-      if (error.status)
-        return res.status(error.status).json({ error: error.message });
+      if (error.status) return res.status(error.status).json({ error: error.message });
       next(fromUnknown(error));
     }
   }
@@ -116,12 +101,10 @@ class CalendarController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const settings =
-        await calendarService.getGoogleCalendarSettings(creatorId);
+      const settings = await calendarService.getGoogleCalendarSettings(creatorId);
       return res.status(200).json({ settings });
     } catch (error) {
-      if (error.status)
-        return res.status(error.status).json({ error: error.message });
+      if (error.status) return res.status(error.status).json({ error: error.message });
       next(fromUnknown(error));
     }
   }
@@ -131,12 +114,10 @@ class CalendarController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const calendars =
-        await calendarService.listGoogleCalendars(creatorId);
+      const calendars = await calendarService.listGoogleCalendars(creatorId);
       return res.status(200).json({ calendars });
     } catch (error) {
-      if (error.status)
-        return res.status(error.status).json({ error: error.message });
+      if (error.status) return res.status(error.status).json({ error: error.message });
       next(fromUnknown(error));
     }
   }
@@ -146,14 +127,10 @@ class CalendarController {
       const creatorId = this._requireAuthentication(req, res);
       if (!creatorId) return;
 
-      const freebusy = await calendarService.checkFreeBusy(
-        creatorId,
-        req.body
-      );
+      const freebusy = await calendarService.checkFreeBusy(creatorId, req.body);
       return res.status(200).json({ freebusy });
     } catch (error) {
-      if (error.status)
-        return res.status(error.status).json({ error: error.message });
+      if (error.status) return res.status(error.status).json({ error: error.message });
       next(fromUnknown(error));
     }
   }

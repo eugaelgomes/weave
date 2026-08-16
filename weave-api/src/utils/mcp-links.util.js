@@ -9,10 +9,7 @@ class McpLinksUtil {
    */
   static getBaseUrl() {
     // Remove trailing slashes se existirem
-    return (process.env.FRONTEND_URL || "https://app.theweave.dev").replace(
-      /\/+$/,
-      ""
-    );
+    return (process.env.FRONTEND_URL || "https://app.theweave.dev").replace(/\/+$/, "");
   }
 
   /**

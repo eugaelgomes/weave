@@ -1,8 +1,5 @@
 const { MailService } = require("@/services/email/config");
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("@/services/email/mail-template");
+const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
 const {
   formatDateForLocale,
   getUserEmailLocale,
@@ -113,10 +110,7 @@ function buildBackupEmailPayload({ locale, userName, downloadUrl, expiresAt }) {
       expiresLabel,
       hours: hoursUntilExpiration,
     }),
-    introLines: [
-      t(resolvedLocale, "backup.intro1"),
-      t(resolvedLocale, "backup.intro2"),
-    ],
+    introLines: [t(resolvedLocale, "backup.intro1"), t(resolvedLocale, "backup.intro2")],
     locale: resolvedLocale,
     outroLines: [t(resolvedLocale, "backup.outro")],
     preheader: t(resolvedLocale, "backup.preheader"),

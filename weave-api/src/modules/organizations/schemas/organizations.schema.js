@@ -9,9 +9,7 @@ const createOrganizationSchema = z.object({
     .url("Invalid banner URL")
     .optional()
     .nullable()
-    .describe(
-      "The URL of the organization's banner image. Must be a valid URL."
-    ),
+    .describe("The URL of the organization's banner image. Must be a valid URL."),
   description: z
     .string()
     .trim()
@@ -31,18 +29,12 @@ const createOrganizationSchema = z.object({
     .describe("The display name of the organization."),
   settings: z
     .object({
-      country: z
-        .string()
-        .optional()
-        .describe("The 2-letter ISO country code of the organization."),
+      country: z.string().optional().describe("The 2-letter ISO country code of the organization."),
       default_locale: z
         .string()
         .optional()
         .describe("The default locale of the organization. Format ll-CC."),
-      default_timezone: z
-        .string()
-        .optional()
-        .describe("The default timezone of the organization."),
+      default_timezone: z.string().optional().describe("The default timezone of the organization."),
     })
     .passthrough()
     .optional()
@@ -65,9 +57,7 @@ const updateOrganizationSchema = z.object({
     .url("Invalid banner URL")
     .optional()
     .nullable()
-    .describe(
-      "The URL of the organization's banner image. Must be a valid URL."
-    ),
+    .describe("The URL of the organization's banner image. Must be a valid URL."),
   description: z
     .string()
     .trim()

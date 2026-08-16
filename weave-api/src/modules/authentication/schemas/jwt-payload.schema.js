@@ -23,15 +23,11 @@ const jwtPayloadSchema = z.object({
   org_default_area_role: z
     .string()
     .nullable()
-    .describe(
-      "O papel ou nível de permissão (role) do usuário dentro da área de trabalho padrão."
-    ),
+    .describe("O papel ou nível de permissão (role) do usuário dentro da área de trabalho padrão."),
   org_default_area_slug: z
     .string()
     .nullable()
-    .describe(
-      "O identificador legível (slug) da área de trabalho padrão do usuário."
-    ),
+    .describe("O identificador legível (slug) da área de trabalho padrão do usuário."),
   org_id: z
     .string()
     .uuid()
@@ -48,9 +44,7 @@ const jwtPayloadSchema = z.object({
   org_unique_name: z
     .string()
     .nullable()
-    .describe(
-      "O nome exclusivo (slug/username) da organização associada à sessão."
-    ),
+    .describe("O nome exclusivo (slug/username) da organização associada à sessão."),
   plan_id: z
     .string()
     .uuid()
@@ -61,13 +55,8 @@ const jwtPayloadSchema = z.object({
   userId: z
     .string()
     .uuid("Invalid userId in JWT payload.")
-    .describe(
-      "O identificador único (UUID) do usuário autenticado no sistema."
-    ),
-  username: z
-    .string()
-    .min(1)
-    .describe("O nome de usuário único do usuário autenticado."),
+    .describe("O identificador único (UUID) do usuário autenticado no sistema."),
+  username: z.string().min(1).describe("O nome de usuário único do usuário autenticado."),
 });
 
 /**

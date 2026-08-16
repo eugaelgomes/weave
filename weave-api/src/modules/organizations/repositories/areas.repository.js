@@ -91,14 +91,7 @@ class OrganizationAreasRepository {
   }
 
   async updateArea(areaId, organizationId, fields = {}) {
-    const allowed = [
-      "area_name",
-      "slug",
-      "description",
-      "properties",
-      "active",
-      "parent_area_id",
-    ];
+    const allowed = ["area_name", "slug", "description", "properties", "active", "parent_area_id"];
 
     const setClauses = [];
     const values = [];
@@ -238,13 +231,7 @@ class OrganizationAreasRepository {
 			UNION ALL
 			SELECT * FROM inserted;
 		`;
-    const results = await executeQuery(query, [
-      organizationId,
-      areaId,
-      userId,
-      role,
-      addedBy,
-    ]);
+    const results = await executeQuery(query, [organizationId, areaId, userId, role, addedBy]);
     return results[0];
   }
 
@@ -259,12 +246,7 @@ class OrganizationAreasRepository {
 				AND deleted = false
 			RETURNING *;
 		`;
-    const results = await executeQuery(query, [
-      organizationId,
-      areaId,
-      userId,
-      role,
-    ]);
+    const results = await executeQuery(query, [organizationId, areaId, userId, role]);
     return results[0];
   }
 
@@ -281,12 +263,7 @@ class OrganizationAreasRepository {
 				AND deleted = false
 			RETURNING *;
 		`;
-    const results = await executeQuery(query, [
-      organizationId,
-      areaId,
-      userId,
-      removedBy,
-    ]);
+    const results = await executeQuery(query, [organizationId, areaId, userId, removedBy]);
     return results[0];
   }
 }

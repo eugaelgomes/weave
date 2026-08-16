@@ -1,12 +1,8 @@
 const { fromUnknown } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
-const {
-  ORG_ROLES,
-} = require("@/modules/organizations/organization-role-policy");
-const {
-  normalizeOrganizationName,
-} = require("@/modules/organizations/normalizer");
+const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
+const { normalizeOrganizationName } = require("@/modules/organizations/normalizer");
 const {
   OrganizationCreationStepsService,
 } = require("@/modules/organizations/utils/organization-creation-steps.util");
@@ -37,10 +33,7 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
    */
   async _generateUniqueAreaSlug(organizationId, slugBase) {
     if (!slugBase) return null;
-    const existingSlugs = await this.areasRepository.getMatchingSlugs(
-      organizationId,
-      slugBase
-    );
+    const existingSlugs = await this.areasRepository.getMatchingSlugs(organizationId, slugBase);
     if (!existingSlugs.includes(slugBase)) return slugBase;
     let counter = 1;
     let candidate = `${slugBase}-${counter}`;
@@ -59,12 +52,8 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
    */
   async _createDefaultOrganizationArea(organization, createdBy) {
     const defaultName = "Central Area";
-    const slugBase =
-      organization.unique_name || normalizeOrganizationName(defaultName);
-    const uniqueSlug = await this._generateUniqueAreaSlug(
-      organization.id,
-      slugBase
-    );
+    const slugBase = organization.unique_name || normalizeOrganizationName(defaultName);
+    const uniqueSlug = await this._generateUniqueAreaSlug(organization.id, slugBase);
     const newArea = await this.areasRepository.createArea({
       areaName: defaultName,
       createdBy,
@@ -154,26 +143,21 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
           validated,
           false
         );
-        organization =
-          await this.organizationsRepository.updateCreationIdentityStep(
-            organization.id,
-            userId,
-            {
-              banner_url: organization.banner_url,
-              country: validated.country,
-              default_locale: validated.default_locale,
-              default_timezone:
-                organization.default_timezone || "America/Sao_Paulo",
-              description: validated.description,
-              logo_url:
-                validated.logo_url !== null
-                  ? validated.logo_url
-                  : organization.logo_url,
-              org_name: validated.org_name,
-              settings: settingsWithStep,
-              unique_name: validated.unique_name,
-            }
-          );
+        organization = await this.organizationsRepository.updateCreationIdentityStep(
+          organization.id,
+          userId,
+          {
+            banner_url: organization.banner_url,
+            country: validated.country,
+            default_locale: validated.default_locale,
+            default_timezone: organization.default_timezone || "America/Sao_Paulo",
+            description: validated.description,
+            logo_url: validated.logo_url !== null ? validated.logo_url : organization.logo_url,
+            org_name: validated.org_name,
+            settings: settingsWithStep,
+            unique_name: validated.unique_name,
+          }
+        );
       }
 
       return res.status(200).json({
@@ -233,22 +217,21 @@ class OrganizationCreationStepsController extends OrganizationsBaseController {
         true
       );
 
-      const updated =
-        await this.organizationsRepository.updateCreationIdentityStep(
-          organization.id,
-          userId,
-          {
-            banner_url: organization.banner_url,
-            country: organization.country,
-            default_locale: organization.default_locale,
-            default_timezone: organization.default_timezone,
-            description: organization.description,
-            logo_url: organization.logo_url,
-            org_name: organization.org_name,
-            settings: settingsWithStep,
-            unique_name: organization.unique_name,
-          }
-        );
+      const updated = await this.organizationsRepository.updateCreationIdentityStep(
+        organization.id,
+        userId,
+        {
+          banner_url: organization.banner_url,
+          country: organization.country,
+          default_locale: organization.default_locale,
+          default_timezone: organization.default_timezone,
+          description: organization.description,
+          logo_url: organization.logo_url,
+          org_name: organization.org_name,
+          settings: settingsWithStep,
+          unique_name: organization.unique_name,
+        }
+      );
 
       return res.status(200).json({
         data: {

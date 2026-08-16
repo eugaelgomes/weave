@@ -16,8 +16,7 @@ class DownloadBackupController extends BackupBaseController {
     try {
       const { token } = req.params;
 
-      const tokenRecord =
-        await BackupDownloadTokensRepository.getTokenWithJob(token);
+      const tokenRecord = await BackupDownloadTokensRepository.getTokenWithJob(token);
 
       if (!tokenRecord) {
         return res.status(404).json({
@@ -30,8 +29,7 @@ class DownloadBackupController extends BackupBaseController {
       if (new Date() > new Date(tokenRecord.expires_at)) {
         return res.status(410).json({
           error: "Expired token",
-          message:
-            "The download link has expired. Please request a new backup.",
+          message: "The download link has expired. Please request a new backup.",
           status: "Gone",
         });
       }
@@ -68,10 +66,7 @@ class DownloadBackupController extends BackupBaseController {
       await BackupDownloadTokensRepository.markTokenAsUsed(token);
 
       res.setHeader("Content-Type", "text/csv");
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${fileName}"`
-      );
+      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
       res.setHeader("Content-Length", fileContent.length);
       res.send(fileContent);
     } catch (error) {

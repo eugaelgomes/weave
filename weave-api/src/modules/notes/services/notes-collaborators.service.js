@@ -3,9 +3,7 @@ const NotificationsRepository = require("@/modules/notifications/repositories/no
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const {
-  collabMail,
-} = require("@/services/email/templates/note-collab-notification");
+const { collabMail } = require("@/services/email/templates/note-collab-notification");
 const { NotesService, PlanLimitError } = require("./notes.service");
 
 class NotesCollaboratorsService {
@@ -24,10 +22,8 @@ class NotesCollaboratorsService {
       throw err;
     }
 
-    const currentCollaborators =
-      await this.notesRepository.getCollaboratorsByNoteId(noteId);
-    const maxCollaborators =
-      planDetails.details?.limits?.max_collaborators_per_note;
+    const currentCollaborators = await this.notesRepository.getCollaboratorsByNoteId(noteId);
+    const maxCollaborators = planDetails.details?.limits?.max_collaborators_per_note;
 
     if (maxCollaborators && currentCollaborators.length >= maxCollaborators) {
       throw new PlanLimitError(
@@ -62,34 +58,24 @@ class NotesCollaboratorsService {
     // Yes, it was likely causing a ReferenceError if executed. I will skip it for now and fix if needed,
     // or just assume we don't have it. Actually I will comment it out or remove it.
 
-    const isAlreadyCollaborator = await this.notesRepository.isCollaborator(
-      noteId,
-      collaboratorId
-    );
+    const isAlreadyCollaborator = await this.notesRepository.isCollaborator(noteId, collaboratorId);
     if (isAlreadyCollaborator) {
       const err = new Error("User is already a collaborator in this note");
       err.statusCode = 400;
       throw err;
     }
 
-    const result = await this.notesRepository.addCollaborator(
-      noteId,
-      collaboratorId
-    );
+    const result = await this.notesRepository.addCollaborator(noteId, collaboratorId);
     if (!result) {
       const err = new Error("User is already a collaborator in this note");
       err.statusCode = 400;
       throw err;
     }
 
-    const collaborators =
-      await this.notesRepository.getCollaboratorsByNoteId(noteId);
-    const newCollaborator = collaborators.find(
-      (c) => c.user_id === collaboratorId
-    );
+    const collaborators = await this.notesRepository.getCollaboratorsByNoteId(noteId);
+    const newCollaborator = collaborators.find((c) => c.user_id === collaboratorId);
 
-    const collaboratorData =
-      await SearchUsersRepository.findById(collaboratorId);
+    const collaboratorData = await SearchUsersRepository.findById(collaboratorId);
     const ownerData = await SearchUsersRepository.findById(userId);
     const noteData = await this.notesRepository.getNoteById(noteId);
 
@@ -138,21 +124,14 @@ class NotesCollaboratorsService {
   async removeCollaborator(userId, noteId, collaboratorId) {
     await NotesService._validateNoteOwnership(noteId, userId);
 
-    const isCollaborator = await this.notesRepository.isCollaborator(
-      noteId,
-      collaboratorId
-    );
+    const isCollaborator = await this.notesRepository.isCollaborator(noteId, collaboratorId);
     if (!isCollaborator) {
       const err = new Error("User is not a collaborator in this note");
       err.statusCode = 400;
       throw err;
     }
 
-    const result = await this.notesRepository.removeCollaborator(
-      noteId,
-      collaboratorId,
-      userId
-    );
+    const result = await this.notesRepository.removeCollaborator(noteId, collaboratorId, userId);
     if (result.rowCount === 0) {
       const err = new Error("Failed to remove collaborator");
       err.statusCode = 400;
@@ -162,14 +141,9 @@ class NotesCollaboratorsService {
   }
 
   async recuseCollaboration(userId, noteId) {
-    const result = await this.notesRepository.recuseCollaboration(
-      noteId,
-      userId
-    );
+    const result = await this.notesRepository.recuseCollaboration(noteId, userId);
     if (result.rowCount === 0) {
-      const err = new Error(
-        "You have already refused or were not a collaborator in this note"
-      );
+      const err = new Error("You have already refused or were not a collaborator in this note");
       err.statusCode = 400;
       throw err;
     }
@@ -178,8 +152,7 @@ class NotesCollaboratorsService {
 
   async listCollaborators(userId, noteId) {
     await NotesService._validateNoteAccess(noteId, userId);
-    const collaborators =
-      await this.notesRepository.getCollaboratorsByNoteId(noteId);
+    const collaborators = await this.notesRepository.getCollaboratorsByNoteId(noteId);
     return collaborators;
   }
 }

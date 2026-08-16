@@ -1,8 +1,5 @@
 const NotesBaseController = require("./base.controller");
-const {
-  NoteBlocksService,
-  BlockConflictError,
-} = require("../services/note-blocks.service");
+const { NoteBlocksService, BlockConflictError } = require("../services/note-blocks.service");
 
 class NoteBlocksController extends NotesBaseController {
   async list(req, res, next) {
@@ -24,11 +21,7 @@ class NoteBlocksController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const block = await NoteBlocksService.createBlock(
-        userId,
-        noteId,
-        req.body
-      );
+      const block = await NoteBlocksService.createBlock(userId, noteId, req.body);
       return res.status(201).json(block);
     } catch (error) {
       this._handleError(error, res, next);
@@ -42,18 +35,9 @@ class NoteBlocksController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const updated = await NoteBlocksService.updateBlock(
-        userId,
-        noteId,
-        blockId,
-        req.body
-      );
+      const updated = await NoteBlocksService.updateBlock(userId, noteId, blockId, req.body);
 
-      if (
-        String(
-          process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true"
-        ).toLowerCase() !== "false"
-      ) {
+      if (String(process.env.ENABLE_NOTES_BLOCKS_AUTOSAVE_V2 || "true").toLowerCase() !== "false") {
         console.info("[notes.blocks.patch]", {
           blockId,
           latency_ms: Date.now() - startedAt,
@@ -116,11 +100,7 @@ class NoteBlocksController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const updated = await NoteBlocksService.reorderBlocks(
-        userId,
-        noteId,
-        req.body
-      );
+      const updated = await NoteBlocksService.reorderBlocks(userId, noteId, req.body);
       return res.status(200).json({ updated });
     } catch (error) {
       if (error.statusCode) {
@@ -136,11 +116,7 @@ class NoteBlocksController extends NotesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const { blocks, revision } = await NoteBlocksService.syncBlocks(
-        userId,
-        noteId,
-        req.body
-      );
+      const { blocks, revision } = await NoteBlocksService.syncBlocks(userId, noteId, req.body);
       return res.status(200).json({ blocks, revision });
     } catch (error) {
       if (error.name === "NoteConflictError") {

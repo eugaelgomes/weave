@@ -36,29 +36,21 @@ const listNotificationsQuerySchema = z
     page: z
       .string()
       .optional()
-      .describe(
-        "The page index to fetch for pagination. Must be a valid integer."
-      ),
+      .describe("The page index to fetch for pagination. Must be a valid integer."),
     search: z
       .string()
       .optional()
-      .describe(
-        "Search term used to filter notifications by matching title or text content."
-      ),
+      .describe("Search term used to filter notifications by matching title or text content."),
     status: z
       .string()
       .optional()
-      .describe(
-        "Filters notifications by status, which can be READ, UNREAD, or TRASH."
-      ),
+      .describe("Filters notifications by status, which can be READ, UNREAD, or TRASH."),
     type: z
       .string()
       .optional()
       .describe("Filters notifications by notification type classification."),
   })
-  .describe(
-    "Query schema for filtering, paginating, and searching the notifications list."
-  );
+  .describe("Query schema for filtering, paginating, and searching the notifications list.");
 
 const createNotificationSchema = z
   .object({
@@ -72,9 +64,7 @@ const createNotificationSchema = z
     entity_id: z
       .string()
       .min(1, "entity_id is required")
-      .describe(
-        "The unique identifier of the entity associated with this notification."
-      ),
+      .describe("The unique identifier of the entity associated with this notification."),
     entity_type: z
       .string()
       .min(1, "entity_type is required")

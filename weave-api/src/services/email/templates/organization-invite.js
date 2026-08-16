@@ -8,9 +8,7 @@ async function welcome_message(email, organization_name) {
     const { html, text } = buildMailTemplate({
       ctaText: "Acessar plataforma",
       ctaUrl: frontendUrl,
-      introLines: [
-        `A organizacao ${organization_name} convidou voce para usar o Weave Notes.`,
-      ],
+      introLines: [`A organizacao ${organization_name} convidou voce para usar o Weave Notes.`],
       preheader: "Voce foi convidado(a) para o Weave Notes.",
       subtitle: "Organizacao",
       title: "Convite para o Weave Notes",

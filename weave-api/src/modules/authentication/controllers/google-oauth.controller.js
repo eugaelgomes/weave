@@ -7,9 +7,7 @@ const FindUserRepository = require("@/modules/authentication/repositories/find-u
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const oauthState = require("@/modules/authentication/oauth-state");
-const {
-  buildJwtPayload,
-} = require("@/modules/authentication/schemas/jwt-payload.schema");
+const { buildJwtPayload } = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
@@ -78,15 +76,11 @@ class GoogleOauthController extends AuthBaseController {
       params.append("grant_type", "authorization_code");
       params.append("redirect_uri", GOOGLE_OAUTH_REDIRECT_URI);
 
-      const tokenResponse = await axios.post(
-        "https://oauth2.googleapis.com/token",
-        params,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      const tokenResponse = await axios.post("https://oauth2.googleapis.com/token", params, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
 
       const { access_token } = tokenResponse.data;
 
@@ -99,18 +93,14 @@ class GoogleOauthController extends AuthBaseController {
       );
       const googleUserResult = googleUserSchema.safeParse(userResponse.data);
       if (!googleUserResult.success) {
-        throw new Error(
-          "Incomplete or invalid user data received from Google."
-        );
+        throw new Error("Incomplete or invalid user data received from Google.");
       }
       const googleUser = googleUserResult.data;
 
       let user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
 
       if (!user) {
-        const existingUser = await FindUserRepository.findUserByEmail(
-          googleUser.email
-        );
+        const existingUser = await FindUserRepository.findUserByEmail(googleUser.email);
 
         if (existingUser) {
           await GoogleOauthRepository.updateUserWithGoogle(
@@ -122,22 +112,16 @@ class GoogleOauthController extends AuthBaseController {
         } else {
           const emailDomain = googleUser.email.split("@")[1];
           if (emailDomain) {
-            const domainInfo =
-              await OrganizationDomainsRepository.findActiveByDomain(
-                emailDomain
-              );
+            const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
 
             if (domainInfo && domainInfo.status === "VERIFIED") {
-              const existingInvite =
-                await OrganizationsRepository.checkExistingInvite(
-                  domainInfo.organization_id,
-                  googleUser.email
-                );
+              const existingInvite = await OrganizationsRepository.checkExistingInvite(
+                domainInfo.organization_id,
+                googleUser.email
+              );
 
               if (!existingInvite) {
-                throw new Error(
-                  "This email belongs to a restricted corporate domain."
-                );
+                throw new Error("This email belongs to a restricted corporate domain.");
               }
             }
           }

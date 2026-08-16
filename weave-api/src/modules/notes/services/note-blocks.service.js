@@ -1,13 +1,8 @@
 const notesRepository = require("@/modules/notes/notes.repository");
-const {
-  normalizeBlocksTree,
-  flattenBlocksForInsert,
-} = require("../block-normalizer");
+const { normalizeBlocksTree, flattenBlocksForInsert } = require("../block-normalizer");
 const { getConnection } = require("@/database/connection");
 const spacesService = require("@/services/storage");
-const {
-  enqueueNoteEmbeddingJob,
-} = require("@/services/queue/queue-controller");
+const { enqueueNoteEmbeddingJob } = require("@/services/queue/queue-controller");
 const {
   resolveNoteIdToUuid,
   buildNoteIdWhereClause,
@@ -31,28 +26,19 @@ class NoteBlocksService {
   }
 
   _parsePositiveInt(rawValue) {
-    if (rawValue === undefined || rawValue === null || rawValue === "")
-      return null;
+    if (rawValue === undefined || rawValue === null || rawValue === "") return null;
     const parsed = Number(rawValue);
-    if (!Number.isInteger(parsed) || parsed < 1)
-      throw new Error("Invalid integer");
+    if (!Number.isInteger(parsed) || parsed < 1) throw new Error("Invalid integer");
     return parsed;
   }
 
   async _processExternalMedia(tree, noteId, userId) {
     for (const block of tree) {
-      if (
-        (block.type === "image" || block.type === "video") &&
-        block.properties?.attrs?.src
-      ) {
+      if ((block.type === "image" || block.type === "video") && block.properties?.attrs?.src) {
         const src = block.properties.attrs.src;
         const isExternalHttp =
-          /^https?:\/\//i.test(src) &&
-          !src.includes("/notes/") &&
-          !src.includes("upload://");
-        const isDataUri = /^data:(image|video)\/[a-zA-Z0-9+.-]+;base64,/i.test(
-          src
-        );
+          /^https?:\/\//i.test(src) && !src.includes("/notes/") && !src.includes("upload://");
+        const isDataUri = /^data:(image|video)\/[a-zA-Z0-9+.-]+;base64,/i.test(src);
 
         if (isExternalHttp || isDataUri) {
           try {
@@ -61,8 +47,7 @@ class NoteBlocksService {
               const contentType = resp.headers.get("content-type");
               if (
                 contentType &&
-                (contentType.startsWith("image/") ||
-                  contentType.startsWith("video/"))
+                (contentType.startsWith("image/") || contentType.startsWith("video/"))
               ) {
                 const buffer = Buffer.from(await resp.arrayBuffer());
                 const newUrl = await spacesService.uploadNoteDocumentImage(
@@ -76,10 +61,7 @@ class NoteBlocksService {
               }
             }
           } catch (e) {
-            console.error(
-              `Failed to process media (${isDataUri ? "data-uri" : src}):`,
-              e.message
-            );
+            console.error(`Failed to process media (${isDataUri ? "data-uri" : src}):`, e.message);
           }
         }
       }
@@ -91,8 +73,7 @@ class NoteBlocksService {
 
   async listBlocks(userId, noteId) {
     await NotesService._validateNoteAccess(noteId, userId);
-    const blocks =
-      await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
+    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
     return blocks;
   }
 
@@ -124,10 +105,7 @@ class NoteBlocksService {
       payload.expectedVersion ?? payload.expected_version
     );
 
-    if (
-      expectedVersion !== null &&
-      Number(existing.version) !== expectedVersion
-    ) {
+    if (expectedVersion !== null && Number(existing.version) !== expectedVersion) {
       throw new BlockConflictError(
         "Edit conflict on block",
         Number(existing.version),
@@ -191,9 +169,7 @@ class NoteBlocksService {
 
     const parentRaw = payload.parent_id ?? payload.parentId;
     const parentId =
-      parentRaw === null || parentRaw === undefined || parentRaw === ""
-        ? null
-        : String(parentRaw);
+      parentRaw === null || parentRaw === undefined || parentRaw === "" ? null : String(parentRaw);
     const orderedIds = payload.ordered_ids ?? payload.orderedIds;
 
     if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
@@ -214,9 +190,7 @@ class NoteBlocksService {
     const noteId = (await resolveNoteIdToUuid(noteIdParam)) || noteIdParam;
     await NotesService._validateNoteAccess(noteId, userId);
 
-    const baseRevision = this._parsePositiveInt(
-      payload.baseRevision ?? payload.base_revision
-    );
+    const baseRevision = this._parsePositiveInt(payload.baseRevision ?? payload.base_revision);
     if (baseRevision === null) {
       const err = new Error("baseRevision is required");
       err.statusCode = 400;
@@ -262,9 +236,7 @@ class NoteBlocksService {
       }
       nextRevision = Number(noteResult.rows[0]?.revision || baseRevision);
 
-      await client.query(`DELETE FROM note_blocks WHERE note_id = $1::uuid`, [
-        noteId,
-      ]);
+      await client.query(`DELETE FROM note_blocks WHERE note_id = $1::uuid`, [noteId]);
       if (tree.length > 0) {
         const flat = flattenBlocksForInsert(tree, noteId, userId, null, 0);
         for (const row of flat) {
@@ -305,8 +277,7 @@ class NoteBlocksService {
       client.release();
     }
 
-    const blocks =
-      await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
+    const blocks = await this.notesRepository.findNoteBlocksTreeByNoteId(noteId);
     await enqueueNoteEmbeddingJob(noteId).catch(() => {});
 
     return { blocks, revision: nextRevision };

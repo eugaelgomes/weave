@@ -1,7 +1,5 @@
 const { executeQuery } = require("@/database/connection");
-const {
-  mapNotificationRow,
-} = require("@/modules/notifications/repositories/notification-mapping");
+const { mapNotificationRow } = require("@/modules/notifications/repositories/notification-mapping");
 
 class NotificationsReadRepository {
   async listUserNotifications({
@@ -36,9 +34,7 @@ class NotificationsReadRepository {
 
     if (entityType) {
       paramIndex += 1;
-      filters.push(
-        `n.entity_type = $${paramIndex}::notification_entity_type_enum`
-      );
+      filters.push(`n.entity_type = $${paramIndex}::notification_entity_type_enum`);
       params.push(entityType);
     }
 

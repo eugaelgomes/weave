@@ -14,8 +14,8 @@ const DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY = "queue:note-embeddings";
 const DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY = "weave:ai-reports:delivery";
 const DEFAULT_REASONING_TRIGGER_QUEUE_KEY = "queue:reasoning:triggers";
 const DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY = "queue:engine-proactive-tasks";
-const DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY =
-  "queue:engine-proactive-responses";
+const DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY = "queue:engine-proactive-responses";
+const DEFAULT_TRACING_EVENTS_QUEUE_KEY = "weave:tracing:events:queue";
 
 /**
  * List key for email jobs consumed by the worker email processor.
@@ -30,9 +30,7 @@ function getEmailQueueRedisKey() {
  * @returns {string}
  */
 function getBackupExportQueueRedisKey() {
-  return (
-    process.env.REDIS_BACKUP_EXPORT_QUEUE_KEY || DEFAULT_BACKUP_EXPORT_QUEUE_KEY
-  );
+  return process.env.REDIS_BACKUP_EXPORT_QUEUE_KEY || DEFAULT_BACKUP_EXPORT_QUEUE_KEY;
 }
 
 /**
@@ -40,9 +38,7 @@ function getBackupExportQueueRedisKey() {
  * @returns {string}
  */
 function getDomainVerifyQueueRedisKey() {
-  return (
-    process.env.REDIS_DOMAIN_VERIFY_QUEUE_KEY || DEFAULT_DOMAIN_VERIFY_QUEUE_KEY
-  );
+  return process.env.REDIS_DOMAIN_VERIFY_QUEUE_KEY || DEFAULT_DOMAIN_VERIFY_QUEUE_KEY;
 }
 
 /**
@@ -58,10 +54,7 @@ function getPlanUsageQueueRedisKey() {
  * @returns {string}
  */
 function getEngineLlmRequestQueueRedisKey() {
-  return (
-    process.env.REDIS_ENGINE_LLM_REQUEST_QUEUE_KEY ||
-    DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY
-  );
+  return process.env.REDIS_ENGINE_LLM_REQUEST_QUEUE_KEY || DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY;
 }
 
 /**
@@ -71,10 +64,7 @@ function getEngineLlmRequestQueueRedisKey() {
  * @returns {string}
  */
 function getEngineLlmResponsePrefixRedisKey() {
-  return (
-    process.env.REDIS_ENGINE_LLM_RESPONSE_PREFIX ||
-    DEFAULT_ENGINE_LLM_RESPONSE_PREFIX
-  );
+  return process.env.REDIS_ENGINE_LLM_RESPONSE_PREFIX || DEFAULT_ENGINE_LLM_RESPONSE_PREFIX;
 }
 
 /**
@@ -82,10 +72,7 @@ function getEngineLlmResponsePrefixRedisKey() {
  * @returns {string}
  */
 function getNoteEmbeddingsQueueRedisKey() {
-  return (
-    process.env.REDIS_NOTE_EMBEDDINGS_QUEUE_KEY ||
-    DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY
-  );
+  return process.env.REDIS_NOTE_EMBEDDINGS_QUEUE_KEY || DEFAULT_NOTE_EMBEDDINGS_QUEUE_KEY;
 }
 
 /**
@@ -93,10 +80,7 @@ function getNoteEmbeddingsQueueRedisKey() {
  * @returns {string}
  */
 function getAiReportDeliveryQueueRedisKey() {
-  return (
-    process.env.REDIS_AI_REPORT_DELIVERY_QUEUE_KEY ||
-    DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY
-  );
+  return process.env.REDIS_AI_REPORT_DELIVERY_QUEUE_KEY || DEFAULT_AI_REPORT_DELIVERY_QUEUE_KEY;
 }
 
 /**
@@ -104,10 +88,7 @@ function getAiReportDeliveryQueueRedisKey() {
  * @returns {string}
  */
 function getReasoningTriggerQueueRedisKey() {
-  return (
-    process.env.REDIS_REASONING_TRIGGER_QUEUE_KEY ||
-    DEFAULT_REASONING_TRIGGER_QUEUE_KEY
-  );
+  return process.env.REDIS_REASONING_TRIGGER_QUEUE_KEY || DEFAULT_REASONING_TRIGGER_QUEUE_KEY;
 }
 
 /**
@@ -116,8 +97,7 @@ function getReasoningTriggerQueueRedisKey() {
  */
 function getEngineProactiveTaskQueueRedisKey() {
   return (
-    process.env.REDIS_ENGINE_PROACTIVE_TASK_QUEUE_KEY ||
-    DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY
+    process.env.REDIS_ENGINE_PROACTIVE_TASK_QUEUE_KEY || DEFAULT_ENGINE_PROACTIVE_TASK_QUEUE_KEY
   );
 }
 
@@ -130,6 +110,14 @@ function getEngineProactiveResponseQueueRedisKey() {
     process.env.REDIS_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY ||
     DEFAULT_ENGINE_PROACTIVE_RESPONSE_QUEUE_KEY
   );
+}
+
+/**
+ * List key for tracing events sent by engine to API.
+ * @returns {string}
+ */
+function getTracingEventsQueueRedisKey() {
+  return process.env.REDIS_TRACING_EVENTS_QUEUE_KEY || DEFAULT_TRACING_EVENTS_QUEUE_KEY;
 }
 
 /**
@@ -170,6 +158,9 @@ const REDIS_QUEUE_KEYS = Object.freeze({
   get REASONING_TRIGGER() {
     return getReasoningTriggerQueueRedisKey();
   },
+  get TRACING_EVENTS() {
+    return getTracingEventsQueueRedisKey();
+  },
 });
 
 module.exports = {
@@ -195,5 +186,6 @@ module.exports = {
   getNoteEmbeddingsQueueRedisKey,
   getPlanUsageQueueRedisKey,
   getReasoningTriggerQueueRedisKey,
+  getTracingEventsQueueRedisKey,
   REDIS_QUEUE_KEYS,
 };

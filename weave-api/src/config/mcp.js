@@ -10,37 +10,19 @@ const {
 
 // Import all active module tool factories
 const { createPlansTools } = require("@/modules/plans/tools/plans.tools");
-const {
-  createTaskPriorityTools,
-} = require("@/modules/projects/tools/task-priorities.tools");
-const {
-  createWebhooksTools,
-} = require("@/modules/webhooks/tools/webhooks.tools");
-const {
-  createPasswordTools,
-} = require("@/modules/authentication/tools/password.tools");
-const {
-  createApiTokensTools,
-} = require("@/modules/api-tokens/tools/api-tokens.tools");
-const {
-  createProjectsTools,
-} = require("@/modules/projects/tools/projects.tools");
-const {
-  createNotificationsTools,
-} = require("@/modules/notifications/tools/notifications.tools");
-const {
-  createArtifactsTools,
-} = require("@/modules/agent-house/tools/artifacts.tools");
+const { createTaskPriorityTools } = require("@/modules/projects/tools/task-priorities.tools");
+const { createWebhooksTools } = require("@/modules/webhooks/tools/webhooks.tools");
+const { createPasswordTools } = require("@/modules/authentication/tools/password.tools");
+const { createApiTokensTools } = require("@/modules/api-tokens/tools/api-tokens.tools");
+const { createProjectsTools } = require("@/modules/projects/tools/projects.tools");
+const { createNotificationsTools } = require("@/modules/notifications/tools/notifications.tools");
+const { createArtifactsTools } = require("@/modules/agent-house/tools/artifacts.tools");
 const { createBackupTools } = require("@/modules/backup/tools/backup.tools");
-const {
-  createCalendarTools,
-} = require("@/modules/calendar/tools/calendar.tools");
+const { createCalendarTools } = require("@/modules/calendar/tools/calendar.tools");
 const { createTagsTools } = require("@/modules/projects/tools/tags.tools");
 const { createNotesTools } = require("@/modules/notes/tools/notes.tools");
 const { createNoteBlocksTools } = require("@/modules/notes/tools/blocks.tools");
-const {
-  createNoteCollaboratorsTools,
-} = require("@/modules/notes/tools/collaborators.tools");
+const { createNoteCollaboratorsTools } = require("@/modules/notes/tools/collaborators.tools");
 const { createCommentsTools } = require("@/modules/notes/tools/comments.tools");
 const {
   createAuthenticationTools,
@@ -48,12 +30,8 @@ const {
 const { createUsersTools } = require("@/modules/users/tools/users.tools");
 const { createSlackTools } = require("@/modules/slack/tools/slack.tools");
 
-const {
-  createAgentHouseTools,
-} = require("@/modules/agent-house/tools/agent-house.tools");
-const {
-  createOrganizationsTools,
-} = require("@/modules/organizations/tools/organizations.tools");
+const { createAgentHouseTools } = require("@/modules/agent-house/tools/agent-house.tools");
+const { createOrganizationsTools } = require("@/modules/organizations/tools/organizations.tools");
 
 /**
  * Builds the MCP registry for the given user.
@@ -128,9 +106,7 @@ function registerHandlers(server, registry) {
       const toolName = tool.name || toolKey;
 
       let rawJsonSchema =
-        typeof tool.schema?.toJSONSchema === "function"
-          ? tool.schema.toJSONSchema()
-          : {};
+        typeof tool.schema?.toJSONSchema === "function" ? tool.schema.toJSONSchema() : {};
       delete rawJsonSchema.$schema;
 
       // Normalize root-level unions to a flat object schema.
@@ -229,13 +205,11 @@ function registerHandlers(server, registry) {
 
   // Prompts capability: list available prompt templates
   server.setRequestHandler(ListPromptsRequestSchema, async () => ({
-    prompts: Object.values(registry.prompts).map(
-      ({ name, description, arguments: args }) => ({
-        arguments: args,
-        description,
-        name,
-      })
-    ),
+    prompts: Object.values(registry.prompts).map(({ name, description, arguments: args }) => ({
+      arguments: args,
+      description,
+      name,
+    })),
   }));
 
   // Prompts capability: execute a prompt template by name

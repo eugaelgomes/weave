@@ -157,9 +157,7 @@ async function deleteChatSession(req, res) {
     }
 
     const sessions = await chatRepository.getUserSessions(userId, 200);
-    const hasSessionAccess = sessions.some(
-      (session) => String(session.id) === String(sessionId)
-    );
+    const hasSessionAccess = sessions.some((session) => String(session.id) === String(sessionId));
 
     if (!hasSessionAccess) {
       return res.status(404).json({
@@ -202,13 +200,9 @@ async function forkSharedChat(req, res) {
   } catch (error) {
     console.error("[agent-house/chat] fork session failed", error);
     if (error.message.includes("not found")) {
-      return res
-        .status(404)
-        .json({ error: "Shared session not found", success: false });
+      return res.status(404).json({ error: "Shared session not found", success: false });
     }
-    return res
-      .status(500)
-      .json({ error: "Internal server error", success: false });
+    return res.status(500).json({ error: "Internal server error", success: false });
   }
 }
 
@@ -275,18 +269,11 @@ async function getChatHistory(req, res) {
     const { sessionId, limit, offset } = req.query;
 
     if (sessionId) {
-      const messages = await chatRepository.getSessionMessages(
-        sessionId,
-        userId
-      );
+      const messages = await chatRepository.getSessionMessages(sessionId, userId);
       return res.json({ messages, success: true });
     }
 
-    const sessions = await chatRepository.getUserSessions(
-      userId,
-      limit,
-      offset
-    );
+    const sessions = await chatRepository.getUserSessions(userId, limit, offset);
     return res.json({ sessions, success: true });
   } catch (error) {
     const normalizedError = chatFormatterUtil.normalizeApiError(error, {
@@ -322,9 +309,7 @@ async function getSharedChatPreview(req, res) {
     return res.json({ session, success: true });
   } catch (error) {
     console.error("[agent-house/chat] get shared session failed", error);
-    return res
-      .status(500)
-      .json({ error: "Internal server error", success: false });
+    return res.status(500).json({ error: "Internal server error", success: false });
   }
 }
 
@@ -334,27 +319,18 @@ async function shareChatSession(req, res) {
     const sessionId = req.params.sessionId;
 
     if (!sessionId) {
-      return res
-        .status(400)
-        .json({ error: "Session ID required", success: false });
+      return res.status(400).json({ error: "Session ID required", success: false });
     }
 
-    const shareToken = await chatRepository.generateShareToken(
-      sessionId,
-      userId
-    );
+    const shareToken = await chatRepository.generateShareToken(sessionId, userId);
     if (!shareToken) {
-      return res
-        .status(404)
-        .json({ error: "Session not found", success: false });
+      return res.status(404).json({ error: "Session not found", success: false });
     }
 
     return res.json({ shareToken, success: true });
   } catch (error) {
     console.error("[agent-house/chat] share session failed", error);
-    return res
-      .status(500)
-      .json({ error: "Internal server error", success: false });
+    return res.status(500).json({ error: "Internal server error", success: false });
   }
 }
 

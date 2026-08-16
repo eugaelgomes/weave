@@ -26,10 +26,7 @@ router.post(
   SigninController.userSignin.bind(SigninController)
 );
 
-router.get(
-  "/signin/sso/google",
-  GoogleOauthController.googleAuth.bind(GoogleOauthController)
-);
+router.get("/signin/sso/google", GoogleOauthController.googleAuth.bind(GoogleOauthController));
 
 router.get(
   "/signin/sso/google/callback",
@@ -38,10 +35,7 @@ router.get(
   GoogleOauthController.googleCallback.bind(GoogleOauthController)
 );
 
-router.get(
-  "/signin/sso/github",
-  GithubOauthController.githubAuth.bind(GithubOauthController)
-);
+router.get("/signin/sso/github", GithubOauthController.githubAuth.bind(GithubOauthController));
 
 router.get(
   "/signin/sso/github/callback",

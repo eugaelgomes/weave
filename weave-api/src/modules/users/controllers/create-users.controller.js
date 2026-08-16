@@ -2,9 +2,7 @@ const spacesService = require("@/services/storage");
 const BaseController = require("./base.controller");
 const CreateUsersService = require("@/modules/users/utils/create-users.util");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
-const {
-  buildUniqueConflictPayload,
-} = require("@/modules/users/utils/unique-conflicts");
+const { buildUniqueConflictPayload } = require("@/modules/users/utils/unique-conflicts");
 
 /**
  * @typedef {import('express').Request & {
@@ -39,15 +37,10 @@ class CreateUsersController extends BaseController {
       }
 
       // Delegate creation and business validations to service
-      const result = await CreateUsersService.createUser(
-        req.body,
-        req.body?.locale || "en"
-      );
+      const result = await CreateUsersService.createUser(req.body, req.body?.locale || "en");
 
       if (result.conflict) {
-        return res
-          .status(409)
-          .json(buildUniqueConflictPayload(result.conflict));
+        return res.status(409).json(buildUniqueConflictPayload(result.conflict));
       }
 
       const { user } = result;
@@ -74,10 +67,7 @@ class CreateUsersController extends BaseController {
             profileImageUrl = saveResult.key;
             // Delegate profile image update
             const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
-            await UserDataRepository.updateProfileImage(
-              user.userId,
-              profileImageUrl
-            );
+            await UserDataRepository.updateProfileImage(user.userId, profileImageUrl);
           } else {
             console.error("Image upload failed:", saveResult.error);
           }
@@ -124,22 +114,19 @@ class CreateUsersController extends BaseController {
 
     if (!token && (!code || !email)) {
       return res.status(400).json({
-        message:
-          "Activation token or both verification code and email are required",
+        message: "Activation token or both verification code and email are required",
       });
     }
 
     try {
       let tokenRecord;
       if (token) {
-        tokenRecord =
-          await UserTokensRepository.findEmailActivationToken(token);
+        tokenRecord = await UserTokensRepository.findEmailActivationToken(token);
       } else {
-        tokenRecord =
-          await UserTokensRepository.findEmailActivationTokenByCodeAndEmail(
-            code,
-            email
-          );
+        tokenRecord = await UserTokensRepository.findEmailActivationTokenByCodeAndEmail(
+          code,
+          email
+        );
       }
 
       if (!tokenRecord) {
@@ -149,9 +136,7 @@ class CreateUsersController extends BaseController {
       }
 
       // Verify the email
-      const verifiedUser = await UserTokensRepository.verifyUserEmail(
-        tokenRecord.user_id
-      );
+      const verifiedUser = await UserTokensRepository.verifyUserEmail(tokenRecord.user_id);
 
       if (!verifiedUser) {
         return res.status(404).json({ message: "User not found" });

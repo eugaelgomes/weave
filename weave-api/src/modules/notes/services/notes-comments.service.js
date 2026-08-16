@@ -34,9 +34,7 @@ class NotesCommentsService {
     }
 
     if (normalizedPayload.parentId) {
-      const parent = await this.commentsRepository.getById(
-        normalizedPayload.parentId
-      );
+      const parent = await this.commentsRepository.getById(normalizedPayload.parentId);
       if (!parent || parent.note_id !== noteId) {
         const err = new Error("Parent comment not found");
         err.statusCode = 404;
@@ -61,8 +59,7 @@ class NotesCommentsService {
 
     try {
       const commenterData = await SearchUsersRepository.findById(userId);
-      const collaborators =
-        await notesRepository.getCollaboratorsByNoteId(noteId);
+      const collaborators = await notesRepository.getCollaboratorsByNoteId(noteId);
       const notifyUserIds = new Set();
 
       if (note.user_id && note.user_id !== userId) {
@@ -116,11 +113,7 @@ class NotesCommentsService {
       assertCommentFilesStorageScope(patch.files, userId, noteId);
     }
 
-    const updated = await this.commentsRepository.update(
-      commentId,
-      userId,
-      patch
-    );
+    const updated = await this.commentsRepository.update(commentId, userId, patch);
     if (!updated) {
       const err = new Error("Comment not found");
       err.statusCode = 404;

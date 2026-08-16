@@ -53,10 +53,7 @@ async function enqueueEmailJob(resendPayload) {
  * @param {string} [params.requestedByUserId]
  * @returns {Promise<{ success: true, queued: true }>}
  */
-async function enqueueDomainVerificationJob({
-  domainId,
-  requestedByUserId = undefined,
-}) {
+async function enqueueDomainVerificationJob({ domainId, requestedByUserId = undefined }) {
   await enqueueRedisListJob(getDomainVerifyQueueRedisKey(), {
     domainId,
     queuedAt: new Date().toISOString(),
@@ -76,12 +73,7 @@ async function enqueueDomainVerificationJob({
  * @param {object} [params.payload]
  * @returns {Promise<{ success: true, queued: true }>}
  */
-async function enqueuePlanUsageJob({
-  operation,
-  payload = {},
-  usageId,
-  eventId = randomUUID(),
-}) {
+async function enqueuePlanUsageJob({ operation, payload = {}, usageId, eventId = randomUUID() }) {
   await enqueueRedisListJob(getPlanUsageQueueRedisKey(), {
     eventId,
     operation,
@@ -120,10 +112,7 @@ async function enqueueBackupExportJob({ jobId, userId }) {
 async function enqueueNoteEmbeddingJob(noteId) {
   const internalId = await resolveNoteIdToUuid(noteId);
   if (!internalId) {
-    console.warn(
-      "[QueueController] Skipping embedding job for unresolved noteId:",
-      noteId
-    );
+    console.warn("[QueueController] Skipping embedding job for unresolved noteId:", noteId);
     return { queued: false, success: false };
   }
 

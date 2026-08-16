@@ -2,12 +2,7 @@ const { z } = require("zod");
 const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
 const { validRoles } = require("@/modules/organizations/normalizer");
 
-const PROJECT_MEMBER_ROLES = [
-  "PROJECT_MANAGER",
-  "CONTRIBUTOR",
-  "COMMENTER",
-  "VIEWER",
-];
+const PROJECT_MEMBER_ROLES = ["PROJECT_MANAGER", "CONTRIBUTOR", "COMMENTER", "VIEWER"];
 
 const targetAreaSchema = z.object({
   area_id: z
@@ -44,8 +39,7 @@ const inviteMemberSchema = z.object({
   role: z
     .enum(validRoles, {
       errorMap: () => ({
-        message:
-          "Invalid role. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST",
+        message: "Invalid role. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST",
       }),
     })
     .optional()
@@ -57,14 +51,8 @@ const inviteMemberSchema = z.object({
     .array(targetAreaSchema)
     .optional()
     .default([])
-    .describe(
-      "An array of target areas and roles to assign to the invited user."
-    ),
-  username: z
-    .string()
-    .trim()
-    .optional()
-    .describe("The chosen username for the invited user."),
+    .describe("An array of target areas and roles to assign to the invited user."),
+  username: z.string().trim().optional().describe("The chosen username for the invited user."),
 });
 
 /**
@@ -81,11 +69,7 @@ const inviteMembersBulkSchema = z.object({
  * Validates the request body for accepting an invite.
  */
 const acceptInviteSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .optional()
-    .describe("The full name of the user accepting the invite."),
+  name: z.string().trim().optional().describe("The full name of the user accepting the invite."),
   password: z
     .string()
     .min(6, "Password must be at least 6 characters")

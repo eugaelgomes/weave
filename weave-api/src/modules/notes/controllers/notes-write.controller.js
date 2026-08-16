@@ -1,12 +1,6 @@
 const NotesBaseController = require("./base.controller");
-const {
-  NotesService,
-  PlanLimitError,
-  NoteConflictError,
-} = require("../services/notes.service");
-const {
-  sendPlanLimitExceeded,
-} = require("@/modules/plans/utils/plan-limit-http.util");
+const { NotesService, PlanLimitError, NoteConflictError } = require("../services/notes.service");
+const { sendPlanLimitExceeded } = require("@/modules/plans/utils/plan-limit-http.util");
 
 class NotesWriteController extends NotesBaseController {
   async createNote(req, res, next) {
@@ -39,10 +33,7 @@ class NotesWriteController extends NotesBaseController {
       // I'll call it for now and fix NotesService later if needed, but actually I need to implement it.
       // Since it's big, I'll temporarily keep the logic here or add it to NotesService.
       // Wait, let's look at what's missing. I missed createCompleteNote, uploadDocumentImages.
-      const formattedNote = await NotesService.createCompleteNote(
-        userId,
-        req.body
-      );
+      const formattedNote = await NotesService.createCompleteNote(userId, req.body);
       res.status(201).json(formattedNote);
     } catch (error) {
       if (error instanceof PlanLimitError) {
@@ -82,9 +73,7 @@ class NotesWriteController extends NotesBaseController {
         });
       }
       if (error.statusCode === 413) {
-        return res
-          .status(413)
-          .json({ error: error.message, message: error.details });
+        return res.status(413).json({ error: error.message, message: error.details });
       }
       if (error instanceof PlanLimitError) {
         return sendPlanLimitExceeded(res, {
@@ -109,17 +98,11 @@ class NotesWriteController extends NotesBaseController {
         return res.status(400).json({ error: "Nenhum arquivo enviado" });
       }
 
-      const files = await NotesService.uploadDocumentImages(
-        userId,
-        id,
-        uploads
-      );
+      const files = await NotesService.uploadDocumentImages(userId, id, uploads);
       return res.status(201).json({ files });
     } catch (error) {
       if (error.statusCode === 413) {
-        return res
-          .status(413)
-          .json({ error: error.message, message: error.details });
+        return res.status(413).json({ error: error.message, message: error.details });
       }
       if (error instanceof PlanLimitError) {
         return sendPlanLimitExceeded(res, {

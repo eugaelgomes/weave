@@ -7,9 +7,7 @@ const changePlanSchema = z
       "The unique identifier of the target subscription plan to switch the user to."
     ),
   })
-  .describe(
-    "Schema for modifying the active subscription plan of the authenticated user."
-  );
+  .describe("Schema for modifying the active subscription plan of the authenticated user.");
 
 const getCurrentPlanSchema = z
   .object({})

@@ -3,10 +3,7 @@ const agentsRepository = require("../repositories/agents.repository");
 const manageAgentHouseSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create_agent"),
-    description: z
-      .string()
-      .optional()
-      .describe("Description of the custom agent"),
+    description: z.string().optional().describe("Description of the custom agent"),
     instructions: z.string().optional().describe("Agent instructions"),
     language: z.string().optional().describe("Agent language"),
     name: z.string().describe("Name of the custom agent"),
@@ -29,19 +26,8 @@ const createAgentHouseTools = (user) => ({
     description: "Manage Weave AI (chat, create_agent, list_agents).",
     handler: async (args) => {
       try {
-        const {
-          action,
-          project_id,
-          name,
-          description,
-          instructions,
-          language,
-          role,
-          tone,
-          rules,
-        } = args;
-
-
+        const { action, project_id, name, description, instructions, language, role, tone, rules } =
+          args;
 
         if (action === "create_agent") {
           const personality = {
@@ -59,9 +45,7 @@ const createAgentHouseTools = (user) => ({
             projectId: project_id,
           });
           return {
-            content: [
-              { text: JSON.stringify(newAgent, null, 2), type: "text" },
-            ],
+            content: [{ text: JSON.stringify(newAgent, null, 2), type: "text" }],
           };
         }
 
@@ -77,9 +61,7 @@ const createAgentHouseTools = (user) => ({
         throw new Error(`Invalid action: ${action}`);
       } catch (error) {
         return {
-          content: [
-            { text: `Error managing Weave AI: ${error.message}`, type: "text" },
-          ],
+          content: [{ text: `Error managing Weave AI: ${error.message}`, type: "text" }],
           isError: true,
         };
       }

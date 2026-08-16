@@ -22,20 +22,13 @@ class PDFService {
     if (!block || typeof block !== "object") return;
 
     const type = block.type;
-    const props =
-      block.properties && typeof block.properties === "object"
-        ? block.properties
-        : {};
-    const text =
-      typeof block.text === "string"
-        ? block.text
-        : plainTextFromProperties(props);
+    const props = block.properties && typeof block.properties === "object" ? block.properties : {};
+    const text = typeof block.text === "string" ? block.text : plainTextFromProperties(props);
 
     if (doc.y > 700) doc.addPage();
 
     if (type === "heading") {
-      const level =
-        Number(props.attrs?.level) || Number(block.properties?.level) || 1;
+      const level = Number(props.attrs?.level) || Number(block.properties?.level) || 1;
       doc
         .font("Helvetica-Bold")
         .fontSize(Math.max(13, 20 - level * 2))
@@ -65,9 +58,7 @@ class PDFService {
       const textHeight = doc.heightOfString(body, {
         width: availableWidth - padding * 2,
       });
-      doc
-        .rect(indent, doc.y, availableWidth, textHeight + padding * 2)
-        .fill("#f4f4f4");
+      doc.rect(indent, doc.y, availableWidth, textHeight + padding * 2).fill("#f4f4f4");
       doc
         .fillColor("#d63384")
         .font("Courier")
@@ -143,13 +134,9 @@ class PDFService {
     if (type === "table") {
       const lines = (text || "").split("\n").filter(Boolean);
       lines.forEach((line) => {
-        doc
-          .font("Helvetica")
-          .fontSize(10)
-          .fillColor("#000000")
-          .text(line, indent, doc.y, {
-            width: availableWidth,
-          });
+        doc.font("Helvetica").fontSize(10).fillColor("#000000").text(line, indent, doc.y, {
+          width: availableWidth,
+        });
         doc.moveDown(0.3);
       });
       doc.moveDown(0.6);
@@ -177,13 +164,8 @@ class PDFService {
         const projectName = note.associated_project?.name;
 
         if (orgName || projectName) {
-          const headerText = [orgName, projectName]
-            .filter(Boolean)
-            .join("  |  ");
-          doc
-            .fontSize(10)
-            .fillColor("#666666")
-            .text(headerText, { align: "left" });
+          const headerText = [orgName, projectName].filter(Boolean).join("  |  ");
+          doc.fontSize(10).fillColor("#666666").text(headerText, { align: "left" });
           doc.moveDown(0.5);
         }
         doc.moveDown(0.5);
@@ -195,11 +177,7 @@ class PDFService {
           .text(note.title, { align: "left" });
 
         doc.moveDown(0.5);
-        doc
-          .moveTo(50, doc.y)
-          .lineTo(545, doc.y)
-          .strokeColor("#cccccc")
-          .stroke();
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor("#cccccc").stroke();
 
         doc.moveDown(0.5);
         doc
@@ -215,16 +193,10 @@ class PDFService {
         doc.fontSize(10).font("Helvetica").fillColor("#444444");
         const dateStr = new Date(note.created_at).toLocaleDateString("pt-BR");
         doc.text(`Autor: ${note.user_name} (${note.user_email})`);
-        doc.text(
-          `Criado em: ${dateStr}  |  Status: ${note.status?.toUpperCase() || "N/A"}`
-        );
+        doc.text(`Criado em: ${dateStr}  |  Status: ${note.status?.toUpperCase() || "N/A"}`);
 
         doc.moveDown(1);
-        doc
-          .moveTo(50, doc.y)
-          .lineTo(545, doc.y)
-          .strokeColor("#cccccc")
-          .stroke();
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor("#cccccc").stroke();
 
         const blocks = Array.isArray(note.blocks) ? note.blocks : [];
         if (blocks.length > 0) {

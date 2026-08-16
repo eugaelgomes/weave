@@ -20,9 +20,7 @@ const createApiTokenSchema = z.object({
     .datetime("Invalid expiration date")
     .optional()
     .nullable()
-    .describe(
-      "A data e hora de expiração do token de API, no formato ISO 8601."
-    ),
+    .describe("A data e hora de expiração do token de API, no formato ISO 8601."),
   name: z
     .string()
     .trim()
@@ -41,9 +39,7 @@ const createApiTokenSchema = z.object({
     .array(z.string())
     .optional()
     .nullable()
-    .describe(
-      "Uma lista de permissões ou escopos de acesso concedidos a este token."
-    ),
+    .describe("Uma lista de permissões ou escopos de acesso concedidos a este token."),
 });
 
 module.exports = {

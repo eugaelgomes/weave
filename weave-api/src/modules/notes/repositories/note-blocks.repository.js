@@ -98,8 +98,7 @@ class NoteBlocksRepository extends BaseRepository {
     const walk = (parentKey, depth) => {
       const siblings = byParent.get(parentKey) || [];
       return siblings.map((r) => {
-        const props =
-          r.properties && typeof r.properties === "object" ? r.properties : {};
+        const props = r.properties && typeof r.properties === "object" ? r.properties : {};
         const text = typeof props.text === "string" ? props.text : "";
         const node = {
           id: String(r.id),
@@ -204,9 +203,7 @@ class NoteBlocksRepository extends BaseRepository {
     );
 
     const parentId =
-      data.parent_id === undefined ||
-      data.parent_id === null ||
-      data.parent_id === ""
+      data.parent_id === undefined || data.parent_id === null || data.parent_id === ""
         ? null
         : String(data.parent_id);
 
@@ -299,8 +296,7 @@ class NoteBlocksRepository extends BaseRepository {
     const existing = await this.findById(blockId);
     if (!existing) return null;
 
-    const blockType =
-      patch.type !== undefined ? String(patch.type) : String(existing.type);
+    const blockType = patch.type !== undefined ? String(patch.type) : String(existing.type);
     let properties = existing.properties;
     if (typeof properties === "string") {
       try {
@@ -403,8 +399,7 @@ class NoteBlocksRepository extends BaseRepository {
     try {
       await client.query("BEGIN");
       let updated = 0;
-      const rootParent =
-        parentId === null || parentId === undefined || parentId === "";
+      const rootParent = parentId === null || parentId === undefined || parentId === "";
 
       for (let idx = 0; idx < orderedIds.length; idx++) {
         const blockId = orderedIds[idx];
@@ -419,9 +414,7 @@ class NoteBlocksRepository extends BaseRepository {
           SET position = $1, version = version + 1, updated_at = NOW()
           WHERE id = $2::uuid AND note_id = $3::uuid AND deleted = false AND parent_id = $4::uuid
         `;
-        const params = rootParent
-          ? [idx, blockId, noteId]
-          : [idx, blockId, noteId, parentId];
+        const params = rootParent ? [idx, blockId, noteId] : [idx, blockId, noteId, parentId];
         const res = await client.query(sql, params);
         updated += res.rowCount || 0;
       }
@@ -440,10 +433,7 @@ class NoteBlocksRepository extends BaseRepository {
    * @returns {Record<string, unknown>}
    */
   _rowToApiBlock(row) {
-    const props =
-      row.properties && typeof row.properties === "object"
-        ? row.properties
-        : {};
+    const props = row.properties && typeof row.properties === "object" ? row.properties : {};
     const text = typeof props.text === "string" ? props.text : "";
     const out = {
       children: row.type === "list" ? [] : [],

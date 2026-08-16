@@ -7,9 +7,7 @@ const PlansSubscriptionController = require("@/modules/plans/controllers/plans-s
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { validate } = require("@/middlewares/validation/validate");
 const { changePlanSchema } = require("./schemas/plans.schema");
-const {
-  highTrafficLimiter,
-} = require("@/middlewares/security/request-limiters");
+const { highTrafficLimiter } = require("@/middlewares/security/request-limiters");
 
 const router = express.Router();
 
@@ -43,9 +41,7 @@ router.put(
 router.post(
   "/subscription/cancel",
   verifyToken,
-  PlansSubscriptionController.cancelSubscription.bind(
-    PlansSubscriptionController
-  )
+  PlansSubscriptionController.cancelSubscription.bind(PlansSubscriptionController)
 );
 
 router.get("/", PlansPublicController.getAllPlans.bind(PlansPublicController));

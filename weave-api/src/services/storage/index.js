@@ -52,7 +52,9 @@ class SpacesService {
   async init() {
     try {
       const db = require("../../database/connection");
-      const result = await db.executeQuery("SELECT storage_config FROM system_settings WHERE id = 1");
+      const result = await db.executeQuery(
+        "SELECT storage_config FROM system_settings WHERE id = 1"
+      );
       const config = result[0]?.storage_config || {};
 
       this.spacesEndpoint = config.spacesEndpoint;
@@ -69,7 +71,9 @@ class SpacesService {
         !this.region
       ) {
         this.isConfigured = false;
-        console.warn("⚠️  Storage is not configured in system_settings. Uploads will fail until configured.");
+        console.warn(
+          "⚠️  Storage is not configured in system_settings. Uploads will fail until configured."
+        );
         return;
       }
 
@@ -93,7 +97,9 @@ class SpacesService {
   async ensureConfigured() {
     await this.initPromise;
     if (!this.isConfigured) {
-      throw new Error("O armazenamento de arquivos não está configurado. Configure no painel de administração.");
+      throw new Error(
+        "O armazenamento de arquivos não está configurado. Configure no painel de administração."
+      );
     }
   }
 
@@ -126,9 +132,7 @@ class SpacesService {
       const uniqueFileName = fileName || `backup_${userId}_${timestamp}.csv`;
       const key = this.buildKey(BACKUPS, String(userId), uniqueFileName);
 
-      const buffer = Buffer.isBuffer(fileContent)
-        ? fileContent
-        : Buffer.from(fileContent, "utf-8");
+      const buffer = Buffer.isBuffer(fileContent) ? fileContent : Buffer.from(fileContent, "utf-8");
 
       const uploadParams = {
         Body: buffer,
@@ -164,24 +168,14 @@ class SpacesService {
    * @param {string} folderPath - Path completo da pasta no bucket (opcional)
    * @returns {Promise<Object>} - Objeto com URL e key do arquivo
    */
-  async uploadImage(
-    imageBuffer,
-    mimeType,
-    userId,
-    fileName = null,
-    folderPath = null
-  ) {
+  async uploadImage(imageBuffer, mimeType, userId, fileName = null, folderPath = null) {
     await this.ensureConfigured();
     try {
       const fileExtension = this.getFileExtensionFromMimeType(mimeType);
       const uniqueFileName = fileName || `image_${uuidv4()}${fileExtension}`;
       const key = folderPath
         ? this.buildKey(folderPath, uniqueFileName)
-        : this.buildKey(
-            SpacesService.FOLDER_PATHS.IMAGES,
-            String(userId),
-            uniqueFileName
-          );
+        : this.buildKey(SpacesService.FOLDER_PATHS.IMAGES, String(userId), uniqueFileName);
 
       const uploadParams = {
         Body: imageBuffer,
@@ -287,12 +281,9 @@ class SpacesService {
       "application/pdf": ".pdf",
       "application/vnd.ms-excel": ".xls",
       "application/vnd.ms-powerpoint": ".ppt",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        ".pptx",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        ".xlsx",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
       "application/x-rar-compressed": ".rar",
       "application/xml": ".xml",
       "application/zip": ".zip",
@@ -325,12 +316,7 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(
-      NOTES.ROOT,
-      userFolder,
-      noteFolder,
-      NOTES.ICONS
-    );
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.ICONS);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -340,22 +326,11 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(
-      NOTES.ROOT,
-      userFolder,
-      noteFolder,
-      NOTES.BANNERS
-    );
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.BANNERS);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  async uploadNoteFile(
-    fileBuffer,
-    mimeType,
-    noteId,
-    userId,
-    originalName = null
-  ) {
+  async uploadNoteFile(fileBuffer, mimeType, noteId, userId, originalName = null) {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -365,22 +340,11 @@ class SpacesService {
     const fileName = `${uuidv4()}_${safeOriginalName}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(
-      NOTES.ROOT,
-      userFolder,
-      noteFolder,
-      NOTES.FILES
-    );
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.FILES);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  async uploadNoteDocumentImage(
-    fileBuffer,
-    mimeType,
-    noteId,
-    userId,
-    originalName = null
-  ) {
+  async uploadNoteDocumentImage(fileBuffer, mimeType, noteId, userId, originalName = null) {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -390,12 +354,7 @@ class SpacesService {
     const fileName = `${uuidv4()}_${safeOriginalName}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(
-      NOTES.ROOT,
-      userFolder,
-      noteFolder,
-      NOTES.DOCUMENT_IMAGES
-    );
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.DOCUMENT_IMAGES);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -403,13 +362,7 @@ class SpacesService {
    * Anexos de comentários em notas.
    * Estrutura: notes-comments-files/{userId}/{noteId}/files/{arquivo}
    */
-  async uploadNoteCommentFile(
-    fileBuffer,
-    mimeType,
-    noteId,
-    userId,
-    originalName = null
-  ) {
+  async uploadNoteCommentFile(fileBuffer, mimeType, noteId, userId, originalName = null) {
     const { NOTES_COMMENTS_FILES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -439,22 +392,11 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const projectFolder = `projectId_${projectId}`;
-    const folderPath = this.buildKey(
-      PROJECTS.ROOT,
-      userFolder,
-      projectFolder,
-      PROJECTS.ICONS
-    );
+    const folderPath = this.buildKey(PROJECTS.ROOT, userFolder, projectFolder, PROJECTS.ICONS);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  async uploadProjectFile(
-    fileBuffer,
-    mimeType,
-    projectId,
-    userId,
-    originalName = null
-  ) {
+  async uploadProjectFile(fileBuffer, mimeType, projectId, userId, originalName = null) {
     const { PROJECTS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -464,12 +406,7 @@ class SpacesService {
     const fileName = `${uuidv4()}_${safeOriginalName}`;
     const userFolder = `userId_${userId}`;
     const projectFolder = `projectId_${projectId}`;
-    const folderPath = this.buildKey(
-      PROJECTS.ROOT,
-      userFolder,
-      projectFolder,
-      PROJECTS.FILES
-    );
+    const folderPath = this.buildKey(PROJECTS.ROOT, userFolder, projectFolder, PROJECTS.FILES);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -602,13 +539,7 @@ class SpacesService {
   // ========================================
 
   isValidImageType(mimeType) {
-    const validTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-    ];
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
     return validTypes.includes(mimeType);
   }
 
@@ -623,11 +554,7 @@ class SpacesService {
    * @returns {string}
    */
   generateUniqueFileName(extension = "") {
-    const sanitizedExt = extension
-      ? extension.startsWith(".")
-        ? extension
-        : `.${extension}`
-      : "";
+    const sanitizedExt = extension ? (extension.startsWith(".") ? extension : `.${extension}`) : "";
     return `file_${Date.now()}_${uuidv4()}${sanitizedExt}`;
   }
 

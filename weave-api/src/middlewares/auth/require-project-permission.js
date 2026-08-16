@@ -46,23 +46,15 @@ function requireProjectPermission(permission) {
       let project = null;
       let resolvedViaOrgWide = false;
 
-      const memberRows = await projectsRepository.getProjectByIdWithAccess(
-        projectId,
-        userId
-      );
+      const memberRows = await projectsRepository.getProjectByIdWithAccess(projectId, userId);
       if (memberRows?.length) {
         project = memberRows[0];
       } else {
         const membership =
-          await organizationsRepository.getActiveOrganizationWithMembership(
-            userId
-          );
+          await organizationsRepository.getActiveOrganizationWithMembership(userId);
         if (
           membership?.id &&
-          orgRoleHasPermission(
-            membership.member_role,
-            ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
-          )
+          orgRoleHasPermission(membership.member_role, ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS)
         ) {
           const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
             projectId,
@@ -91,16 +83,10 @@ function requireProjectPermission(permission) {
         return next();
       }
 
-      const membership =
-        await organizationsRepository.getActiveOrganizationWithMembership(
-          userId
-        );
+      const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
       if (
         membership?.id &&
-        orgRoleHasPermission(
-          membership.member_role,
-          ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
-        )
+        orgRoleHasPermission(membership.member_role, ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS)
       ) {
         const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
           projectId,
@@ -111,10 +97,7 @@ function requireProjectPermission(permission) {
         }
       }
 
-      const projectRole = await projectsRepository.getProjectMemberRole(
-        projectId,
-        userId
-      );
+      const projectRole = await projectsRepository.getProjectMemberRole(projectId, userId);
       const allowed = projectRoleHasPermission(projectRole, permission);
       if (!allowed) {
         return res.status(403).json({

@@ -10,9 +10,7 @@ const getArtifactSchema = z.object({
 const createArtifactSchema = z.object({
   content: z
     .union([z.record(z.any()), z.array(z.any())])
-    .describe(
-      "O conteúdo real do artefato, que pode ser um objeto JSON ou uma lista/array."
-    ),
+    .describe("O conteúdo real do artefato, que pode ser um objeto JSON ou uma lista/array."),
   organizationId: z
     .string()
     .uuid("Invalid organization ID")
@@ -26,9 +24,7 @@ const createArtifactSchema = z.object({
     .uuid("Invalid session ID")
     .optional()
     .nullable()
-    .describe(
-      "Opcional: o identificador único da sessão (UUID) relacionada a este artefato."
-    ),
+    .describe("Opcional: o identificador único da sessão (UUID) relacionada a este artefato."),
   title: z
     .string()
     .trim()
@@ -38,18 +34,14 @@ const createArtifactSchema = z.object({
   type: z
     .string()
     .min(1)
-    .describe(
-      "O tipo ou categoria do artefato (por exemplo, document, code, text)."
-    ),
+    .describe("O tipo ou categoria do artefato (por exemplo, document, code, text)."),
 });
 
 const updateArtifactSchema = z.object({
   content: z
     .union([z.record(z.any()), z.array(z.any())])
     .optional()
-    .describe(
-      "O novo conteúdo do artefato. Deixe em branco para manter o conteúdo atual."
-    ),
+    .describe("O novo conteúdo do artefato. Deixe em branco para manter o conteúdo atual."),
   id: z
     .string()
     .uuid("Invalid artifact ID")
@@ -59,9 +51,7 @@ const updateArtifactSchema = z.object({
     .trim()
     .max(255)
     .optional()
-    .describe(
-      "O novo título do artefato. Deixe em branco caso não deseje alterar."
-    ),
+    .describe("O novo título do artefato. Deixe em branco caso não deseje alterar."),
 });
 
 const listArtifactsSchema = z.object({

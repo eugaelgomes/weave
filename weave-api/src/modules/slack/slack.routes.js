@@ -5,10 +5,7 @@ const {
   structuralLimiter,
   standardTrafficLimiter,
 } = require("@/middlewares/security/request-limiters");
-const {
-  setDefaultChannelSchema,
-  slackOauthCallbackSchema,
-} = require("./schemas/slack.schema");
+const { setDefaultChannelSchema, slackOauthCallbackSchema } = require("./schemas/slack.schema");
 
 const SlackIntegrationsController = require("@/modules/slack/controllers/slack-integrations.controller");
 const SlackOauthController = require("@/modules/slack/controllers/slack-oauth.controller");
@@ -24,9 +21,7 @@ router.get(
   "/integrations",
   verifyToken,
   standardTrafficLimiter,
-  SlackIntegrationsController.getSlackIntegration.bind(
-    SlackIntegrationsController
-  )
+  SlackIntegrationsController.getSlackIntegration.bind(SlackIntegrationsController)
 );
 
 router.put(
@@ -34,9 +29,7 @@ router.put(
   verifyToken,
   structuralLimiter,
   validate(setDefaultChannelSchema, "body"),
-  SlackIntegrationsController.setDefaultChannel.bind(
-    SlackIntegrationsController
-  )
+  SlackIntegrationsController.setDefaultChannel.bind(SlackIntegrationsController)
 );
 
 router.delete(
@@ -67,10 +60,7 @@ router.get(
 // Events API & Interactivity (Public Webhooks)
 // -----------------------------------------------------------------------------
 
-router.post(
-  "/events",
-  SlackEventsController.handleEvents.bind(SlackEventsController)
-);
+router.post("/events", SlackEventsController.handleEvents.bind(SlackEventsController));
 
 router.post(
   "/interactivity",

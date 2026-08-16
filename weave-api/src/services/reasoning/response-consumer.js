@@ -39,19 +39,14 @@ class ReasoningResponseConsumer {
     const { success, reasoning, content, safety } = payload;
 
     if (!success || !reasoning) {
-      console.warn(
-        "[Reasoning Consumer] Received unsuccessful response or missing reasoning",
-        {
-          projectId: reasoning?.projectId,
-          success,
-        }
-      );
+      console.warn("[Reasoning Consumer] Received unsuccessful response or missing reasoning", {
+        projectId: reasoning?.projectId,
+        success,
+      });
       return;
     }
 
-    console.info(
-      `[Reasoning Consumer] Persisting reasoning for project: ${reasoning.projectId}`
-    );
+    console.info(`[Reasoning Consumer] Persisting reasoning for project: ${reasoning.projectId}`);
 
     try {
       const created = await reasoningsRepository.create({
@@ -84,9 +79,7 @@ class ReasoningResponseConsumer {
         triggeredBy: reasoning.triggeredBy,
       });
 
-      console.info(
-        `[Reasoning Consumer] Reasoning persisted with ID: ${created.id}`
-      );
+      console.info(`[Reasoning Consumer] Reasoning persisted with ID: ${created.id}`);
 
       const channels = reasoning.channels || [];
       if (channels.includes("email") && created) {

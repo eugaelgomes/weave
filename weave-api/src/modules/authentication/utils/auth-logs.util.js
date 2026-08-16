@@ -34,9 +34,7 @@ class AuthLogs {
     try {
       await executeQuery(query, [userId, logType, JSON.stringify(logMetadata)]);
     } catch (error) {
-      console.error(
-        `[CRITICAL_LOG_FAIL] ${type} for user ${userId}: ${error.message}`
-      );
+      console.error(`[CRITICAL_LOG_FAIL] ${type} for user ${userId}: ${error.message}`);
     }
   }
 }

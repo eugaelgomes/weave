@@ -1,9 +1,6 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlansService = require("../services/plans.service");
-const {
-  PLAN_PATHS,
-  USAGE_PATHS,
-} = require("@/modules/plans/utils/plan-paths.util");
+const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 
 /**
  * @param {unknown} value
@@ -53,8 +50,7 @@ function buildUsageMetrics(usageDetails = {}, planDetails = {}) {
   const metric = (usagePath, limitPath) => {
     const used = toNumber(PlansService.getNestedValue(usageDetails, usagePath));
     const rawLimit = PlansService.getNestedValue(planDetails, limitPath);
-    const limit =
-      rawLimit === null || rawLimit === undefined ? null : toNumber(rawLimit);
+    const limit = rawLimit === null || rawLimit === undefined ? null : toNumber(rawLimit);
 
     return {
       limit,
@@ -73,14 +69,8 @@ function buildUsageMetrics(usageDetails = {}, planDetails = {}) {
       USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT,
       PLAN_PATHS.LIMITS.EXPORTS.NOTES_MONTHLY
     ),
-    notes_total: metric(
-      USAGE_PATHS.SUMMARY.NOTES_TOTAL,
-      PLAN_PATHS.LIMITS.MAX_NOTES
-    ),
-    projects_total: metric(
-      USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
-      PLAN_PATHS.LIMITS.MAX_PROJECTS
-    ),
+    notes_total: metric(USAGE_PATHS.SUMMARY.NOTES_TOTAL, PLAN_PATHS.LIMITS.MAX_NOTES),
+    projects_total: metric(USAGE_PATHS.SUMMARY.PROJECTS_TOTAL, PLAN_PATHS.LIMITS.MAX_PROJECTS),
     storage_uploaded_mb_monthly: metric(
       USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB,
       PLAN_PATHS.LIMITS.STORAGE.TOTAL_MONTHLY_UPLOAD
@@ -167,8 +157,7 @@ class PlansUsageHistoryController {
       if (req.user?.isApiCall) {
         res.status(403).json({
           error: "Not available for API token session",
-          message:
-            "Usage history is only available for web sessions at this time.",
+          message: "Usage history is only available for web sessions at this time.",
         });
         return;
       }
@@ -184,23 +173,18 @@ class PlansUsageHistoryController {
       const from = parseDateFilter(req.query.from);
       const to = parseDateFilter(req.query.to);
 
-      const currentUsage =
-        await PlansRepository.getIndividualUserPlanUsage(userId);
+      const currentUsage = await PlansRepository.getIndividualUserPlanUsage(userId);
       const currentUsageDetails = currentUsage?.usage_details || {};
       const currentPlanDetails = currentUsage?.applied_plan_snapshot || {};
-      const currentMetrics = buildUsageMetrics(
-        currentUsageDetails,
-        currentPlanDetails
-      );
+      const currentMetrics = buildUsageMetrics(currentUsageDetails, currentPlanDetails);
 
-      const rawHistory =
-        await PlansRepository.getIndividualUsageHistoryDetailed({
-          from,
-          limit: limit + 1,
-          offset,
-          to,
-          userId,
-        });
+      const rawHistory = await PlansRepository.getIndividualUsageHistoryDetailed({
+        from,
+        limit: limit + 1,
+        offset,
+        to,
+        userId,
+      });
 
       const hasMore = rawHistory.length > limit;
       const historyRows = hasMore ? rawHistory.slice(0, limit) : rawHistory;
@@ -244,15 +228,11 @@ class PlansUsageHistoryController {
           metrics: currentMetrics,
           percentage_total: computeTotalPercentage(currentMetrics),
           period_end:
-            PlansService.getNestedValue(
-              currentUsageDetails,
-              USAGE_PATHS.MONTHLY.PERIOD_END
-            ) || null,
+            PlansService.getNestedValue(currentUsageDetails, USAGE_PATHS.MONTHLY.PERIOD_END) ||
+            null,
           period_start:
-            PlansService.getNestedValue(
-              currentUsageDetails,
-              USAGE_PATHS.MONTHLY.PERIOD_START
-            ) || null,
+            PlansService.getNestedValue(currentUsageDetails, USAGE_PATHS.MONTHLY.PERIOD_START) ||
+            null,
           plan: {
             client_type: currentUsage?.client_type || null,
             id: currentUsage?.plan_id ? String(currentUsage.plan_id) : null,

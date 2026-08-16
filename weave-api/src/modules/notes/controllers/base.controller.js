@@ -27,10 +27,7 @@ class NotesBaseController {
 
   _canAccessAllOrganizationProjects(membership) {
     if (!membership?.id) return false;
-    return orgRoleHasPermission(
-      membership.member_role,
-      ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS
-    );
+    return orgRoleHasPermission(membership.member_role, ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS);
   }
 
   /**
@@ -40,8 +37,7 @@ class NotesBaseController {
    */
   async _hasOrgWideAccessToProjectNote(note, userId) {
     if (!note?.project_id) return false;
-    const membership =
-      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
     if (!this._canAccessAllOrganizationProjects(membership) || !membership.id) {
       return false;
     }
@@ -54,8 +50,7 @@ class NotesBaseController {
 
   /** Active org when the user can see all notes of the projects of this org (via `project_id`). */
   async _getOrgWideNotesScopeOrganizationId(userId) {
-    const membership =
-      await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
     if (this._canAccessAllOrganizationProjects(membership) && membership.id) {
       return membership.id;
     }
@@ -82,10 +77,7 @@ class NotesBaseController {
 
     const isOwner = note.user_id === userId;
 
-    const isCollaborator = await this.notesRepository.isCollaborator(
-      noteId,
-      userId
-    );
+    const isCollaborator = await this.notesRepository.isCollaborator(noteId, userId);
 
     if (isOwner || isCollaborator) {
       return {
@@ -96,10 +88,7 @@ class NotesBaseController {
       };
     }
 
-    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(
-      note,
-      userId
-    );
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(note, userId);
     if (hasOrgProjectAccess) {
       return {
         hasOrgProjectAccess: true,
@@ -139,10 +128,7 @@ class NotesBaseController {
       };
     }
 
-    const isCollaborator = await this.notesRepository.isCollaborator(
-      noteId,
-      userId
-    );
+    const isCollaborator = await this.notesRepository.isCollaborator(noteId, userId);
     if (isCollaborator) {
       return {
         hasOrgProjectAccess: false,
@@ -152,10 +138,7 @@ class NotesBaseController {
       };
     }
 
-    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(
-      note,
-      userId
-    );
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(note, userId);
     if (hasOrgProjectAccess) {
       return {
         hasOrgProjectAccess: true,
@@ -190,10 +173,7 @@ class NotesBaseController {
       return note;
     }
 
-    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(
-      note,
-      userId
-    );
+    const hasOrgProjectAccess = await this._hasOrgWideAccessToProjectNote(note, userId);
     if (hasOrgProjectAccess) {
       return note;
     }
@@ -215,9 +195,7 @@ class NotesBaseController {
         ? {
             id: projectId,
             name: note.project_name || "",
-            stage_id: note.project_stage_id
-              ? String(note.project_stage_id)
-              : null,
+            stage_id: note.project_stage_id ? String(note.project_stage_id) : null,
             stage_name: note.project_stage_name || null,
           }
         : null,
@@ -232,9 +210,7 @@ class NotesBaseController {
       properties: note.properties || {},
       public_id: note.public_note_id || null,
       revision:
-        note.revision === undefined || note.revision === null
-          ? null
-          : Number(note.revision),
+        note.revision === undefined || note.revision === null ? null : Number(note.revision),
       status: note.status,
       tags: note.tags || [],
       title: note.title,

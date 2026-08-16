@@ -22,10 +22,7 @@ async function resolveProjectPublicIdParam(req, res, next, id) {
     }
     next();
   } catch (error) {
-    console.error(
-      "[resolveProjectPublicIdParam] Error resolving public ID:",
-      error
-    );
+    console.error("[resolveProjectPublicIdParam] Error resolving public ID:", error);
     next();
   }
 }
@@ -52,10 +49,7 @@ async function resolveNotePublicIdParam(req, res, next, id) {
     }
     next();
   } catch (error) {
-    console.error(
-      "[resolveNotePublicIdParam] Error resolving public ID:",
-      error
-    );
+    console.error("[resolveNotePublicIdParam] Error resolving public ID:", error);
     next();
   }
 }
@@ -80,10 +74,7 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
     }
     next();
   } catch (error) {
-    console.error(
-      "[resolveOrganizationPublicIdParam] Error resolving public ID:",
-      error
-    );
+    console.error("[resolveOrganizationPublicIdParam] Error resolving public ID:", error);
     next();
   }
 }

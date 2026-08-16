@@ -26,26 +26,20 @@ router.get(
   "/",
   highTrafficLimiter,
   validate(listNotificationsQuerySchema, "query"),
-  NotificationsListController.listNotifications.bind(
-    NotificationsListController
-  )
+  NotificationsListController.listNotifications.bind(NotificationsListController)
 );
 
 router.post(
   "/",
   standardTrafficLimiter,
   validate(createNotificationSchema, "body"),
-  NotificationsCreateController.createNotification.bind(
-    NotificationsCreateController
-  )
+  NotificationsCreateController.createNotification.bind(NotificationsCreateController)
 );
 
 router.patch(
   "/mark-all-read",
   standardTrafficLimiter,
-  NotificationsUpdateController.markAllAsRead.bind(
-    NotificationsUpdateController
-  )
+  NotificationsUpdateController.markAllAsRead.bind(NotificationsUpdateController)
 );
 
 router.patch(
@@ -53,9 +47,7 @@ router.patch(
   standardTrafficLimiter,
   validate(notificationIdParamSchema, "params"),
   validate(markNotificationReadSchema, "body"),
-  NotificationsUpdateController.markNotificationRead.bind(
-    NotificationsUpdateController
-  )
+  NotificationsUpdateController.markNotificationRead.bind(NotificationsUpdateController)
 );
 
 router.patch(
@@ -63,18 +55,14 @@ router.patch(
   standardTrafficLimiter,
   validate(notificationIdParamSchema, "params"),
   validate(toggleTrashStatusSchema, "body"),
-  NotificationsUpdateController.toggleTrashStatus.bind(
-    NotificationsUpdateController
-  )
+  NotificationsUpdateController.toggleTrashStatus.bind(NotificationsUpdateController)
 );
 
 router.delete(
   "/:notificationId",
   standardTrafficLimiter,
   validate(notificationIdParamSchema, "params"),
-  NotificationsDeleteController.deleteNotification.bind(
-    NotificationsDeleteController
-  )
+  NotificationsDeleteController.deleteNotification.bind(NotificationsDeleteController)
 );
 
 module.exports = router;

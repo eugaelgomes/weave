@@ -26,8 +26,7 @@ const WEAVE_AI_ERRORS = {
 
     assignProjectFailed: "Error linking agent to project",
 
-    collabIdRequired:
-      "update_note_collaborator_add requires collaboratorUserId",
+    collabIdRequired: "update_note_collaborator_add requires collaboratorUserId",
 
     createAgentFailed: "Error creating agent",
 
@@ -57,8 +56,7 @@ const WEAVE_AI_ERRORS = {
 
     functionNotSupported: (name) => `Function execution not supported: ${name}`,
 
-    invalidArrayField: (field) =>
-      `Field "${field}" must be an array of strings or null`,
+    invalidArrayField: (field) => `Field "${field}" must be an array of strings or null`,
 
     invalidJsonField: (field) => `Field "${field}" must be a valid JSON object`,
 
@@ -112,8 +110,7 @@ const WEAVE_AI_ERRORS = {
     updateNoteContentEmpty:
       "update_note_content requires non-empty content (string) or blocks (array)",
     updateNoteContentIdRequired: "update_note_content requires noteId",
-    updateNoteContentNoText:
-      "update_note_content requires non-empty textual content",
+    updateNoteContentNoText: "update_note_content requires non-empty textual content",
   },
   es: {
     // Agents errors
@@ -125,8 +122,7 @@ const WEAVE_AI_ERRORS = {
 
     assignProjectFailed: "Error al vincular el agente al proyecto",
 
-    collabIdRequired:
-      "update_note_collaborator_add requiere collaboratorUserId",
+    collabIdRequired: "update_note_collaborator_add requiere collaboratorUserId",
 
     createAgentFailed: "Error al crear el agente",
 
@@ -142,8 +138,7 @@ const WEAVE_AI_ERRORS = {
 
     engineTaskFailed: "Error al procesar en Weave Engine",
 
-    engineTimeout:
-      "Tiempo de espera agotado al esperar la respuesta de Weave Engine",
+    engineTimeout: "Tiempo de espera agotado al esperar la respuesta de Weave Engine",
 
     fetchAgentFailed: "Error al buscar el agente",
 
@@ -155,22 +150,17 @@ const WEAVE_AI_ERRORS = {
 
     fetchProvidersFailed: "Error al obtener los proveedores y modelos",
 
-    functionNotSupported: (name) =>
-      `Función no admitida para ejecución: ${name}`,
+    functionNotSupported: (name) => `Función no admitida para ejecución: ${name}`,
 
-    invalidArrayField: (field) =>
-      `El campo "${field}" debe ser un array de cadenas o null`,
+    invalidArrayField: (field) => `El campo "${field}" debe ser un array de cadenas o null`,
 
-    invalidJsonField: (field) =>
-      `El campo "${field}" debe ser un objeto JSON válido`,
+    invalidJsonField: (field) => `El campo "${field}" debe ser un objeto JSON válido`,
 
     invalidModel: 'Campo "model" no válido',
 
-    invalidModelValues:
-      'El campo "model" debe contener "name" y "version" válidos',
+    invalidModelValues: 'El campo "model" debe contener "name" y "version" válidos',
 
-    invalidObjectField: (field) =>
-      `El campo "${field}" debe ser un objeto o null`,
+    invalidObjectField: (field) => `El campo "${field}" debe ser un objeto o null`,
 
     invalidRequestId: 'El campo "requestId" debe ser un UUID válido',
 
@@ -208,8 +198,7 @@ const WEAVE_AI_ERRORS = {
     shareAgentFailed: "Error al compartir el agente",
     sharedWithMustBeArray: "sharedWith debe ser un array",
     stageNotFound: "Etapa no encontrada para este proyecto.",
-    stageRequired:
-      "La etapa es obligatoria. Proporcione un stageId válido para esta tarea.",
+    stageRequired: "La etapa es obligatoria. Proporcione un stageId válido para esta tarea.",
     toggleActiveFailed: "Error al alternar el estado del agente",
     unassignProjectFailed: "Error al desvincular el agente del proyecto",
     unauthenticated: "Usuario no autenticado",
@@ -217,8 +206,7 @@ const WEAVE_AI_ERRORS = {
     updateNoteContentEmpty:
       "update_note_content requiere content (cadena) o blocks (array) no vacío",
     updateNoteContentIdRequired: "update_note_content requiere noteId",
-    updateNoteContentNoText:
-      "update_note_content requiere contenido de texto no vacío",
+    updateNoteContentNoText: "update_note_content requiere contenido de texto no vacío",
   },
   pt: {
     // Agents errors
@@ -258,14 +246,11 @@ const WEAVE_AI_ERRORS = {
 
     fetchProvidersFailed: "Erro ao obter provedores e modelos",
 
-    functionNotSupported: (name) =>
-      `Função não suportada para execução: ${name}`,
+    functionNotSupported: (name) => `Função não suportada para execução: ${name}`,
 
-    invalidArrayField: (field) =>
-      `Campo "${field}" deve ser array de strings ou null`,
+    invalidArrayField: (field) => `Campo "${field}" deve ser array de strings ou null`,
 
-    invalidJsonField: (field) =>
-      `Campo "${field}" deve ser um objeto JSON válido`,
+    invalidJsonField: (field) => `Campo "${field}" deve ser um objeto JSON válido`,
 
     invalidModel: 'Campo "model" inválido',
 
@@ -309,8 +294,7 @@ const WEAVE_AI_ERRORS = {
     shareAgentFailed: "Erro ao compartilhar agente",
     sharedWithMustBeArray: "sharedWith deve ser um array",
     stageNotFound: "Estágio não encontrado para este projeto.",
-    stageRequired:
-      "Estágio é obrigatório. Informe um stageId válido para esta tarefa.",
+    stageRequired: "Estágio é obrigatório. Informe um stageId válido para esta tarefa.",
     toggleActiveFailed: "Erro ao alternar estado do agente",
     unassignProjectFailed: "Erro ao desvincular agente do projeto",
     unauthenticated: "Usuário não autenticado",
@@ -318,8 +302,7 @@ const WEAVE_AI_ERRORS = {
     updateNoteContentEmpty:
       "update_note_content requer content (string) ou blocks (array) não vazio",
     updateNoteContentIdRequired: "update_note_content requer noteId",
-    updateNoteContentNoText:
-      "update_note_content requer conteúdo textual não vazio",
+    updateNoteContentNoText: "update_note_content requer conteúdo textual não vazio",
   },
 };
 

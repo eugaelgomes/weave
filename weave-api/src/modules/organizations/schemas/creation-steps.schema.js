@@ -14,10 +14,7 @@ const saveStepOneSchema = z.object({
     .nullable(),
   default_locale: z
     .string()
-    .regex(
-      /^[a-z]{2}-[A-Z]{2}$/,
-      "default_locale must use format ll-CC (example: en-US)"
-    )
+    .regex(/^[a-z]{2}-[A-Z]{2}$/, "default_locale must use format ll-CC (example: en-US)")
     .optional()
     .nullable(),
   description: z.string().trim().optional().nullable(),

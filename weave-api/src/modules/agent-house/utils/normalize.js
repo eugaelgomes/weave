@@ -177,8 +177,7 @@ function formatAgentResponse(rawAgent) {
 
   return {
     created_at: rawAgent.created_at,
-    description:
-      rawAgent.description || personality?.metadata?.description || null,
+    description: rawAgent.description || personality?.metadata?.description || null,
     id: rawAgent.id,
     is_active: rawAgent.is_active !== false,
     knowledge_files: knowledgeFiles,

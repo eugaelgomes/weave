@@ -7,9 +7,7 @@ const downloadBackupSchema = z.object({
   token: z
     .string()
     .min(1, "Token is required")
-    .describe(
-      "O token de segurança necessário para autenticar o download do backup."
-    ),
+    .describe("O token de segurança necessário para autenticar o download do backup."),
 });
 
 /**

@@ -100,13 +100,7 @@ class UserTokensRepository extends BaseRepository {
    * @param {import('pg').PoolClient} [client=null]
    * @returns {Promise<import('pg').QueryResultRow[]>}
    */
-  async createEmailActivationToken(
-    userId,
-    token,
-    code,
-    createdAt,
-    client = null
-  ) {
+  async createEmailActivationToken(userId, token, code, createdAt, client = null) {
     const query = `
       INSERT INTO tokens 
         (user_id, token, code, type, expires_at, created_at, active) 

@@ -16,9 +16,7 @@ class EventInvitesController {
       });
 
       if (!event) {
-        return res
-          .status(404)
-          .json({ error: "Event not found or access restricted" });
+        return res.status(404).json({ error: "Event not found or access restricted" });
       }
 
       const newInvite = await eventInvitesRepository.createInvite({
@@ -34,9 +32,7 @@ class EventInvitesController {
     } catch (error) {
       if (error.code === "23505") {
         // unique violation
-        return res
-          .status(409)
-          .json({ error: "This email has already been invited to the event." });
+        return res.status(409).json({ error: "This email has already been invited to the event." });
       }
       next(fromUnknown(error));
     }

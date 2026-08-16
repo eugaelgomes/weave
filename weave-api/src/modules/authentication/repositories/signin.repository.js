@@ -151,13 +151,7 @@ class SigninRepository extends BaseRepository {
       INSERT INTO user_login_logs (user_id, ip_address, created_at, success, user_agent)
       VALUES ($1, $2, $3, $4, $5);
     `;
-    return await this.executeQuery(query, [
-      userId,
-      ip,
-      timestamp,
-      success,
-      userAgent,
-    ]);
+    return await this.executeQuery(query, [userId, ip, timestamp, success, userAgent]);
   }
 
   /**
@@ -173,13 +167,7 @@ class SigninRepository extends BaseRepository {
       INSERT INTO user_location_logs (user_id, ip_address, created_at, location, user_agent) 
       VALUES ($1, $2, $3, $4, $5);
     `;
-    return await this.executeQuery(query, [
-      userId,
-      ip,
-      timestamp,
-      location,
-      userAgent,
-    ]);
+    return await this.executeQuery(query, [userId, ip, timestamp, location, userAgent]);
   }
 }
 
