@@ -6,6 +6,7 @@ const organizationMembersController = require("@/modules/organizations/controlle
 const organizationAreasController = require("@/modules/organizations/controllers/areas.controller");
 const organizationDomainsController = require("@/modules/organizations/controllers/domains.controller");
 const organizationCreationStepsController = require("@/modules/organizations/controllers/creation-steps.controller");
+const organizationsSwitcherController = require("@/modules/organizations/controllers/organizations-switcher.controller");
 
 // Middlewares
 const { verifyToken } = require("@/middlewares/auth/verify-token");
@@ -42,6 +43,18 @@ const { saveStepOneSchema } = require("./schemas/creation-steps.schema");
 const router = express.Router();
 
 router.use(verifyToken);
+
+router.get(
+  "/my-organizations",
+  highTrafficLimiter,
+  organizationsSwitcherController.listMyOrganizations.bind(organizationsSwitcherController)
+);
+
+router.post(
+  "/switch",
+  standardTrafficLimiter,
+  organizationsSwitcherController.switchOrganization.bind(organizationsSwitcherController)
+);
 
 router.get(
   "/",

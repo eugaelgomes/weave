@@ -152,6 +152,24 @@ export const UserSchema = z.object({
   logo_url: z.string().nullable().optional(),
   org_member_since: z.string().nullable().optional(),
 
+  user_organization: z
+    .object({
+      id: z.string().nullable().optional(),
+      unique_name: z.string().nullable().optional(),
+      name: z.string().nullable().optional(),
+      logo_url: z.string().nullable().optional(),
+      member_role: z
+        .union([z.string(), z.array(z.string())])
+        .nullable()
+        .optional(),
+      member_since: z.string().nullable().optional(),
+      public_id: z.string().nullable().optional(),
+      active_modules: z.record(z.string(), z.boolean()).nullable().optional(),
+      default_area: BackendOrgDefaultAreaSchema,
+    })
+    .nullable()
+    .optional(),
+
   theme_mode: z.enum(["LIGHT", "DARK", "light", "dark"]).optional().nullable(),
   private_profile: z.boolean().optional(),
   auth_with_google: z.boolean().optional(),

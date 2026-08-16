@@ -156,6 +156,8 @@ export const API_ENDPOINTS = {
 
   // Organizations
   ORGANIZATIONS: "/organizations",
+  ORGANIZATIONS_MY_ORGANIZATIONS: "/organizations/my-organizations",
+  ORGANIZATIONS_SWITCH: "/organizations/switch",
   ORGANIZATIONS_CREATION_STEP_ONE: "/organizations/creation-steps/step-1",
   ORGANIZATIONS_CREATION_STEP_ONE_COMPLETE: "/organizations/creation-steps/step-1/complete",
   ORGANIZATIONS_PROPERTIES: "/organizations/properties",

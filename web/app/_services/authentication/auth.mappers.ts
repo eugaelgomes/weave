@@ -114,6 +114,19 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     org_member_since: organization?.member_since ?? undefined,
     org_default_area: mapOrgDefaultAreaToUser(organization?.default_area ?? undefined),
 
+    user_organization: organization
+      ? {
+          id: organization.id,
+          unique_name: organization.unique_name,
+          name: organization.name,
+          logo_url: normalizeStorageUrl(organization.logo_url),
+          member_role: organization.role,
+          member_since: organization.member_since ?? undefined,
+          public_id: organization.public_id,
+          default_area: mapOrgDefaultAreaToUser(organization.default_area ?? undefined),
+        }
+      : undefined,
+
     // Plan
     plan_id: user.user_subscription.plan_id,
     plan_name: user.user_subscription.plan_name,
@@ -157,6 +170,20 @@ export const mapMeResponseToUser = (data: BackendMeResponse): User => {
     org_member_role: organization?.member_role,
     org_member_since: organization?.member_since ?? undefined,
     org_default_area: mapOrgDefaultAreaToUser(organization?.default_area ?? undefined),
+
+    user_organization: organization
+      ? {
+          id: organization.id,
+          unique_name: organization.unique_name,
+          name: organization.name,
+          logo_url: normalizeStorageUrl(organization.logo_url),
+          member_role: organization.member_role,
+          member_since: organization.member_since ?? undefined,
+          public_id: organization.public_id,
+          active_modules: (organization as any).active_modules ?? undefined,
+          default_area: mapOrgDefaultAreaToUser(organization.default_area ?? undefined),
+        }
+      : undefined,
 
     // Plan
     plan_id: currentPlan?.id ?? undefined,

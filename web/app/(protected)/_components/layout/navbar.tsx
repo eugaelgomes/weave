@@ -9,6 +9,7 @@ import { useAuth, type User } from "@/app/_contexts/auth-context";
 import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useNotification } from "@/app/_contexts/notification-context";
+import { WorkspaceSwitcher } from "./workspace-switcher";
 
 import { cn } from "@/lib/utils";
 
@@ -167,25 +168,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                 |
               </span>
 
-              {(user?.user_organization?.unique_name || user?.org_name) && (
-                <div className="ml-1.5 flex min-w-0 items-center gap-1.5 text-xs font-medium text-gray-400 sm:ml-2">
-                  {(user?.user_organization?.logo_url || user?.org_logo_url) && (
-                    <Image
-                      src={user?.user_organization?.logo_url || user?.org_logo_url!}
-                      alt={t.navbar.logoOf.replace(
-                        "{name}",
-                        user?.user_organization?.unique_name || user?.org_name || ""
-                      )}
-                      width={16}
-                      height={16}
-                      className="h-4 w-4 shrink-0 rounded-sm object-contain"
-                    />
-                  )}
-                  <span className="max-w-[80px] truncate text-gray-600 sm:max-w-[140px] dark:text-gray-300">
-                    {user?.user_organization?.unique_name || user?.org_name}
-                  </span>
-                </div>
-              )}
+              <WorkspaceSwitcher />
             </section>
 
             {/* Right: Docs, Theme, Notifications, Avatar */}

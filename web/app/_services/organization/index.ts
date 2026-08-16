@@ -1052,3 +1052,32 @@ export const deleteDomain = async (domainId: string, userId?: string): Promise<v
     throw new Error(orgApiErrorMessage(data, "Erro ao deletar domínio"));
   }
 };
+
+export interface UserWorkspaceSummary {
+  id: string;
+  org_name: string;
+  unique_name: string;
+  logo_url: string | null;
+  member_role: string;
+  joined_at?: string;
+}
+
+export const fetchMyOrganizations = async (): Promise<UserWorkspaceSummary[]> => {
+  try {
+    const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_MY_ORGANIZATIONS);
+    const data = await handleResponse<{ data?: UserWorkspaceSummary[]; success?: boolean }>(response);
+    if (data.data && Array.isArray(data.data)) {
+      return data.data;
+    }
+    return [];
+  } catch (error) {
+    console.error("Erro ao buscar organizações do usuário:", error);
+    return [];
+  }
+};
+
+export const switchOrganizationApi = async (organizationId: string): Promise<boolean> => {
+  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_SWITCH, { organizationId });
+  const data = await handleResponse<{ success?: boolean }>(response);
+  return data.success === true;
+};

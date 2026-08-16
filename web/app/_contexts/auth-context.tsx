@@ -27,6 +27,7 @@ import { ApiError } from "../_services/api-error";
 import { mergeUsageDetails } from "../_services/plans-service/plan-usage-service";
 import { logClientError } from "../_utils/client-logger";
 import { useTheme } from "./theme-context";
+import { switchOrganizationApi } from "../_services/organization";
 
 /** Consumer-facing user model — import from this module in UI; do not import auth-service types directly. */
 export type { User };
@@ -82,6 +83,7 @@ type AuthContextType = {
   recoverPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
   resetSenha: (token: string, password: string) => Promise<{ success: boolean; message?: string }>;
   deleteUserPermanently: () => Promise<{ success: boolean; message?: string }>;
+  switchOrganization: (organizationId: string) => Promise<{ success: boolean; message?: string }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -374,6 +376,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const switchOrganization = async (organizationId: string) => {
+    try {
+      const ok = await switchOrganizationApi(organizationId);
+      if (ok) {
+        const freshUser = await refreshUser();
+        if (freshUser?.user_organization?.public_id) {
+          window.location.href = `/${freshUser.user_organization.public_id}/new`;
+        } else if (freshUser?.user_organization?.unique_name) {
+          window.location.href = `/${freshUser.user_organization.unique_name}/new`;
+        } else {
+          window.location.href = "/";
+        }
+        return { success: true };
+      }
+      return { success: false, message: "Failed to switch organization" };
+    } catch (error) {
+      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -394,6 +416,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         recoverPassword,
         resetSenha,
         deleteUserPermanently,
+        switchOrganization,
       }}
     >
       {children}

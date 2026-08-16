@@ -140,6 +140,29 @@ class OrganizationsRepository {
     return results;
   }
 
+  async getUserOrganizationsWithMembership(user_id) {
+    const query = `
+      SELECT
+        o.id,
+        o.user_id,
+        o.org_name,
+        o.unique_name,
+        o.logo_url,
+        o.banner_url,
+        o.description,
+        om.role AS member_role,
+        om.status AS member_status,
+        om.created_at AS joined_at
+      FROM organization_members om
+      INNER JOIN organizations o ON o.id = om.organization_id AND o.deleted = false
+      WHERE om.user_id = $1
+        AND om.deleted = false
+        AND om.status = 'ACTIVE'
+      ORDER BY om.created_at ASC;
+    `;
+    return await executeQuery(query, [user_id]);
+  }
+
   async getAvailableOrgNames(baseName) {
     const query = `
       SELECT unique_name FROM organizations
