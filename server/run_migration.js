@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { Pool } = require('pg');
+const { Pool } = require('./node_modules/@types/pg');
 
 async function run() {
   const pool = new Pool({

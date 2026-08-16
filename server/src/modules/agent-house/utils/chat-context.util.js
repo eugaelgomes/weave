@@ -8,9 +8,9 @@ const {
 } = require("@/modules/agent-house/utils/authorized-functions.util");
 const { resolveNoteIdsToUuids } = require("@/modules/notes/utils/note-id-lookup.util");
 const { resolveProjectIdsToUuids } = require("@/modules/projects/utils/project-id-lookup.util");
-const chatFormatterUtil = require("../utils/chat-formatter.util");
+const chatFormatterUtil = require("./chat-formatter.util");
 const chatEngineService = require("./chat-engine.util");
-const { getI18n } = require("../utils/agent-house-i18n.util");
+const { getI18n } = require("./agent-house-i18n.util");
 
 const CHAT_CONTEXT_MAX_MESSAGES = Number.parseInt(
   process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGES || "20",
