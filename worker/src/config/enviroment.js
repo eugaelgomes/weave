@@ -9,11 +9,11 @@ const requiredEnvVars = [
   "NODE_ENV",
   "RESEND_API_KEY",
   "EMAIL_FROM",
-  "DO_SPACES_ENDPOINT",
-  "DO_SPACES_ACCESS_KEY",
-  "DO_SPACES_SECRET_KEY",
-  "DO_SPACES_BUCKET_NAME",
-  "DO_SPACES_REGION",
+  "S3_ENDPOINT",
+  "S3_ACCESS_KEY",
+  "S3_SECRET_KEY",
+  "S3_BUCKET_NAME",
+  "S3_REGION",
   "CONTACT_EMAIL",
   "API_URL",
   "FRONTEND_URL",
@@ -50,11 +50,11 @@ const env = {
   NODE_ENV: process.env.NODE_ENV,
 
   storage: {
-    accessKey: process.env.DO_SPACES_ACCESS_KEY,
-    bucketName: process.env.DO_SPACES_BUCKET_NAME,
-    endpoint: process.env.DO_SPACES_ENDPOINT,
-    region: process.env.DO_SPACES_REGION,
-    secretKey: process.env.DO_SPACES_SECRET_KEY,
+    accessKey: process.env.S3_ACCESS_KEY,
+    bucketName: process.env.S3_BUCKET_NAME,
+    endpoint: process.env.S3_ENDPOINT,
+    region: process.env.S3_REGION,
+    secretKey: process.env.S3_SECRET_KEY,
   },
 };
 

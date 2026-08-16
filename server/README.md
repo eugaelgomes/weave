@@ -86,9 +86,9 @@ docker compose up server --build
 | `GOOGLE_REDIRECT_URI`                            | Google OAuth callback                                 |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`      | GitHub OAuth                                          |
 | `RESEND_API_KEY`                                 | Resend transactional email                            |
-| `DO_SPACES_ENDPOINT`                             | S3 endpoint (e.g. DigitalOcean Spaces)                |
-| `DO_SPACES_ACCESS_KEY` / `DO_SPACES_SECRET_KEY`  | Object storage keys                                   |
-| `DO_SPACES_BUCKET_NAME` / `DO_SPACES_REGION`     | Bucket and region                                     |
+| `S3_ENDPOINT`                             | S3 endpoint (e.g. AWS S3, MinIO, DO Spaces)           |
+| `S3_ACCESS_KEY` / `S3_SECRET_KEY`         | Object storage keys                                   |
+| `S3_BUCKET_NAME` / `S3_REGION`            | Bucket and region                                     |
 | `GEMINI_API_KEY`                                 | Google Generative AI (where used from API)            |
 | `FRONTEND_URL`                                   | Front-end URL (OAuth redirects, emails)               |
 | `TOKEN_IP`                                       | Optional ipinfo.io token                              |
