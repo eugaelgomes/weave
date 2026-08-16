@@ -28,8 +28,6 @@ export const routes = {
     details: (orgId: string, noteId: string) => `/${orgId}/notes/${noteId}/`,
   },
 
-
-
   weaveFlow: {
     base: (orgId: string) => `/${orgId}/weave-flow/`,
   },

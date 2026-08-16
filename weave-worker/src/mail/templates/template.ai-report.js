@@ -25,9 +25,7 @@ function buildAiReportEmail({
   const locale = resolveEmailLocale(rawLocale);
   const typeLabel = getReportTypeLabel(locale, reportType);
 
-  const sprintSuffix = sprintNumber
-    ? t(locale, "aiReport.sprintSuffix", { sprintNumber })
-    : "";
+  const sprintSuffix = sprintNumber ? t(locale, "aiReport.sprintSuffix", { sprintNumber }) : "";
 
   const subject = `${typeLabel} — ${projectTitle}${sprintSuffix}`;
 
@@ -39,9 +37,7 @@ function buildAiReportEmail({
 
   const contentHtml = markdownToHtml(outputMarkdown || "");
 
-  const greeting = recipientName
-    ? `${recipientName},`
-    : undefined;
+  const greeting = recipientName ? `${recipientName},` : undefined;
 
   const { html, text } = buildMailTemplate({
     contentHtml,

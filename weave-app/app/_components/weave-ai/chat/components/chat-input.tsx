@@ -130,8 +130,9 @@ export function ChatInput(props: ChatInputProps) {
       >
         {props.messagesLength === 0 && !props.loading && (
           <div className="animate-in fade-in flex flex-col items-center gap-6 pb-4 text-center duration-500">
-            <h1 className="font-serif text-3xl md:text-4xl font-medium tracking-tight text-gray-800 dark:text-gray-100">
-              {props.user?.user_name?.split(" ")[0] || props.user?.username || "Usuário"}, o que posso fazer por você hoje?
+            <h1 className="font-serif text-3xl font-medium tracking-tight text-gray-800 md:text-4xl dark:text-gray-100">
+              {props.user?.user_name?.split(" ")[0] || props.user?.username || "Usuário"}, o que
+              posso fazer por você hoje?
             </h1>
           </div>
         )}
@@ -181,13 +182,12 @@ export function ChatInput(props: ChatInputProps) {
         </div>
 
         <div
-          className={`relative flex flex-col gap-1 rounded-[24px] bg-white p-2.5 transition-all duration-700 border focus-within:border-gray-300 dark:bg-[#252525] dark:border-white/5 dark:focus-within:border-white/20 ${
+          className={`relative flex flex-col gap-1 rounded-[24px] border bg-white p-2.5 transition-all duration-700 focus-within:border-gray-300 dark:border-white/5 dark:bg-[#252525] dark:focus-within:border-white/20 ${
             props.messagesLength === 0 && !props.loading
-              ? "shadow-sm border-gray-200/80"
-              : "shadow-lg shadow-black/5 dark:shadow-black/20 border-gray-200/80"
+              ? "border-gray-200/80 shadow-sm"
+              : "border-gray-200/80 shadow-lg shadow-black/5 dark:shadow-black/20"
           }`}
         >
-
           {props.isTyping && (
             <div className="flex items-center px-2 pt-1 pb-2 select-none">
               <style>{`
@@ -531,7 +531,7 @@ export function ChatInput(props: ChatInputProps) {
         </div>
 
         {!props.canSendAiMessage && (
-          <p className="text-brand-red text-[11px] text-center mt-2">
+          <p className="text-brand-red mt-2 text-center text-[11px]">
             {t.weaveAi.limitReached ?? "Monthly AI message limit reached."}{" "}
             <button
               onClick={() => props.router.push(`/${props.orgId}/settings/plans`)}
@@ -541,8 +541,12 @@ export function ChatInput(props: ChatInputProps) {
             </button>
           </p>
         )}
-        {props.fileError ? <p className="text-brand-red text-[11px] text-center mt-2">{props.fileError}</p> : null}
-        {props.error ? <p className="text-brand-red text-[11px] text-center mt-2">{props.error}</p> : null}
+        {props.fileError ? (
+          <p className="text-brand-red mt-2 text-center text-[11px]">{props.fileError}</p>
+        ) : null}
+        {props.error ? (
+          <p className="text-brand-red mt-2 text-center text-[11px]">{props.error}</p>
+        ) : null}
       </div>
     </div>
   );

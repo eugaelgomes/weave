@@ -2,10 +2,7 @@
  * keep in sync with weave-api/src/services/email/templates/backup-notification.js
  */
 
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("../base-template");
+const { buildMailTemplate, escapeHtml } = require("../base-template");
 const {
   formatDateForLocale,
   localeFromUserPreference,
@@ -17,13 +14,7 @@ const {
  * @param {object} params
  * @returns {{ html: string, text: string, subject: string }}
  */
-function buildBackupEmailPayload({
-  locale,
-  userName,
-  downloadUrl,
-  expiresAt,
-  userPreference,
-}) {
+function buildBackupEmailPayload({ locale, userName, downloadUrl, expiresAt, userPreference }) {
   const resolvedLocale = locale
     ? resolveEmailLocale(locale)
     : localeFromUserPreference(userPreference);
@@ -53,10 +44,7 @@ function buildBackupEmailPayload({
       expiresLabel,
       hours: hoursUntilExpiration,
     }),
-    introLines: [
-      t(resolvedLocale, "backup.intro1"),
-      t(resolvedLocale, "backup.intro2"),
-    ],
+    introLines: [t(resolvedLocale, "backup.intro1"), t(resolvedLocale, "backup.intro2")],
     locale: resolvedLocale,
     outroLines: [t(resolvedLocale, "backup.outro")],
     preheader: t(resolvedLocale, "backup.preheader"),

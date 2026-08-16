@@ -462,12 +462,10 @@ export const fetchProjectStages = async (projectId: string): Promise<ProjectStag
   const raw = await handleResponse<unknown>(response);
   const data = ProjectStagesListSchema.parse(raw);
 
-  return data.stages.map(
-    (stage): ProjectStage => ({
-      ...stage,
-      properties: parseProjectStagePropertiesFromApi(stage.properties, stage.id),
-    })
-  );
+  return data.stages.map((stage): ProjectStage => ({
+    ...stage,
+    properties: parseProjectStagePropertiesFromApi(stage.properties, stage.id),
+  }));
 };
 
 // --- COLABORADORES ---

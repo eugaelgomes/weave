@@ -23,9 +23,7 @@ export const REDIS_QUEUES = {
   } as RedisQueueConfig,
   ENGINE_DEAD_LETTER: {
     description: "Dead letter queue for permanently failed engine jobs",
-    key:
-      process.env.REDIS_ENGINE_LLM_DEAD_LETTER_QUEUE_KEY ||
-      "weave:engine:llm:dead-letter",
+    key: process.env.REDIS_ENGINE_LLM_DEAD_LETTER_QUEUE_KEY || "weave:engine:llm:dead-letter",
     name: "engine-dead-letter",
   } as RedisQueueConfig,
   ENGINE_LLM_REQUESTS: {

@@ -204,9 +204,7 @@ export default function ProjectsCarousel({
                   href={routes.projects.board(orgId, project.public_id || project.id)}
                   className="block w-[75vw] max-w-[220px] flex-shrink-0 snap-center sm:w-[220px] sm:snap-start"
                 >
-                  <div
-                    className="group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:shadow-surface-dark-sm dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-2.5 font-normal shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:bg-[#1d1d1b]"
-                  >
+                  <div className="group dark:border-surface-dark-border dark:hover:border-surface-dark-border-strong dark:shadow-surface-dark-sm dark:hover:shadow-surface-dark-md flex min-h-[148px] flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-2.5 font-normal shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:bg-[#1d1d1b]">
                     <div className="flex flex-1 flex-col">
                       <div className="mb-1.5 flex flex-shrink-0 items-start justify-between gap-1.5">
                         <div className="flex min-w-0 flex-1 items-center gap-1.5">

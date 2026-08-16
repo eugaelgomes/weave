@@ -117,39 +117,24 @@ class PlansCycleProcessor {
       }
 
       const oldDetails = current.usage_details;
-      const periodStart = this.getNestedValue(
-        oldDetails,
-        USAGE_PATHS.MONTHLY.PERIOD_START
-      );
-      const periodEnd = this.getNestedValue(
-        oldDetails,
-        USAGE_PATHS.MONTHLY.PERIOD_END
-      );
+      const periodStart = this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.PERIOD_START);
+      const periodEnd = this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.PERIOD_END);
 
       if (!periodEnd || new Date(periodEnd) > new Date()) {
         await client.query("ROLLBACK");
         return;
       }
 
-      const notesTotal =
-        this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.NOTES_TOTAL) || 0;
+      const notesTotal = this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.NOTES_TOTAL) || 0;
       const projectsTotal =
         this.getNestedValue(oldDetails, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL) || 0;
       const aiMessages =
-        this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT) ||
-        0;
+        this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT) || 0;
       const storageMb =
-        this.getNestedValue(
-          oldDetails,
-          USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB
-        ) || 0;
+        this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.STORAGE.TOTAL_UPLOADED_MB) || 0;
       const totalExports =
-        (this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT) ||
-          0) +
-        (this.getNestedValue(
-          oldDetails,
-          USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT
-        ) || 0);
+        (this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.EXPORTS.NOTES_COUNT) || 0) +
+        (this.getNestedValue(oldDetails, USAGE_PATHS.MONTHLY.EXPORTS.BACKUPS_COUNT) || 0);
 
       await client.query(
         `
@@ -204,62 +189,66 @@ class PlansCycleProcessor {
 
       // Sync date drift & wait for external gateway
       if (sub && sub.provider !== "internal" && new Date(sub.current_period_end) <= now) {
-         if (sub.status === "past_due") {
-            const gracePeriodEnd = new Date(sub.current_period_end);
-            gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 3);
-            if (now > gracePeriodEnd) {
-               sub.cancel_at_period_end = true; // Trigger downgrade
-            } else {
-               await client.query("ROLLBACK");
-               return; // Still in grace period, wait for gateway to fix it
-            }
-         } else {
+        if (sub.status === "past_due") {
+          const gracePeriodEnd = new Date(sub.current_period_end);
+          gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 3);
+          if (now > gracePeriodEnd) {
+            sub.cancel_at_period_end = true; // Trigger downgrade
+          } else {
             await client.query("ROLLBACK");
-            return; // Wait for gateway webhook
-         }
+            return; // Still in grace period, wait for gateway to fix it
+          }
+        } else {
+          await client.query("ROLLBACK");
+          return; // Wait for gateway webhook
+        }
       }
 
       // Internal grace period
       if (sub && sub.provider === "internal" && sub.status === "past_due") {
-         const gracePeriodEnd = new Date(sub.current_period_end);
-         gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 3);
-         if (now > gracePeriodEnd) {
-            sub.cancel_at_period_end = true;
-         }
+        const gracePeriodEnd = new Date(sub.current_period_end);
+        gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 3);
+        if (now > gracePeriodEnd) {
+          sub.cancel_at_period_end = true;
+        }
       }
 
-      const effectivePlan = await this.resolveEffectivePlanForSubscriber(client, {
-        currentPlanId: current.plan_id,
-        subscriberId: current.subscriber_id,
-        subscriberType: current.subscriber_type,
-      }, sub);
+      const effectivePlan = await this.resolveEffectivePlanForSubscriber(
+        client,
+        {
+          currentPlanId: current.plan_id,
+          subscriberId: current.subscriber_id,
+          subscriberType: current.subscriber_type,
+        },
+        sub
+      );
 
       // Now determine next cycle dates
       let nextPeriodStart = now;
       let nextPeriodEnd = new Date(now);
 
       if (sub && !sub.cancel_at_period_end) {
-         if (sub.provider === "internal") {
-            nextPeriodStart = new Date(sub.current_period_end || now);
-            nextPeriodEnd = new Date(sub.current_period_end || now);
+        if (sub.provider === "internal") {
+          nextPeriodStart = new Date(sub.current_period_end || now);
+          nextPeriodEnd = new Date(sub.current_period_end || now);
 
-            const interval = effectivePlan.snapshot?.metadata?.interval || "month";
-            if (interval === "year") {
-               nextPeriodEnd.setFullYear(nextPeriodEnd.getFullYear() + 1);
-            } else {
-               nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
-            }
+          const interval = effectivePlan.snapshot?.metadata?.interval || "month";
+          if (interval === "year") {
+            nextPeriodEnd.setFullYear(nextPeriodEnd.getFullYear() + 1);
+          } else {
+            nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+          }
 
-            await client.query(
-               `UPDATE subscriptions SET current_period_end = $1, current_period_start = $2, updated_at = NOW() WHERE id = $3`,
-               [nextPeriodEnd, nextPeriodStart, sub.id]
-            );
-         } else {
-            nextPeriodStart = new Date(sub.current_period_start);
-            nextPeriodEnd = new Date(sub.current_period_end);
-         }
+          await client.query(
+            `UPDATE subscriptions SET current_period_end = $1, current_period_start = $2, updated_at = NOW() WHERE id = $3`,
+            [nextPeriodEnd, nextPeriodStart, sub.id]
+          );
+        } else {
+          nextPeriodStart = new Date(sub.current_period_start);
+          nextPeriodEnd = new Date(sub.current_period_end);
+        }
       } else {
-         nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+        nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
       }
 
       const updatedDetails = {
@@ -323,7 +312,9 @@ class PlansCycleProcessor {
 
       // Dispatch cycle summary email
       try {
-        const userResult = await client.query(`SELECT email, name FROM users WHERE user_id = $1`, [current.user_id]);
+        const userResult = await client.query(`SELECT email, name FROM users WHERE user_id = $1`, [
+          current.user_id,
+        ]);
         if (userResult.rows.length > 0) {
           const user = userResult.rows[0];
           const { html, subject, text } = buildCycleSummaryTemplate({
@@ -343,14 +334,13 @@ class PlansCycleProcessor {
               subject,
               text,
               to: [user.email],
-            }
+            },
           };
           await redis.lpush(getEmailQueueRedisKey(), JSON.stringify(payload));
         }
       } catch (emailErr) {
         logger.error("Failed to enqueue cycle summary email", { error: emailErr.message });
       }
-
     } catch (error) {
       await client.query("ROLLBACK");
       logger.error("Failed to rollover plan usage cycle", {
@@ -414,10 +404,10 @@ class PlansCycleProcessor {
       );
 
       if (subscriberType === "user") {
-        await client.query(
-          `UPDATE users SET plan_id = $1, updated_at = NOW() WHERE user_id = $2`,
-          [freePlan.plan_id, subscriberId]
-        );
+        await client.query(`UPDATE users SET plan_id = $1, updated_at = NOW() WHERE user_id = $2`, [
+          freePlan.plan_id,
+          subscriberId,
+        ]);
       } else {
         await client.query(
           `UPDATE organizations SET plan_id = $1, updated_at = NOW() WHERE id = $2`,

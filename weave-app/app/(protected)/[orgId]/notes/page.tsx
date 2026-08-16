@@ -28,12 +28,7 @@ type SortBy = "updated_at" | "title" | "created_at";
 type SortOrder = "asc" | "desc";
 
 type DueDatePreset =
-  | "none"
-  | "this_week"
-  | "this_month"
-  | "this_quarter"
-  | "this_semester"
-  | "this_year";
+  "none" | "this_week" | "this_month" | "this_quarter" | "this_semester" | "this_year";
 
 interface StageFilterOption {
   id: string;

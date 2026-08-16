@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #
-# Pair with `weave-worker/.dockerignore` for a smaller build context.
+# Pair with `.dockerignore` at root for a smaller build context.
 
 FROM node:24-alpine
 
@@ -12,16 +12,24 @@ RUN apk add --no-cache ca-certificates curl gnupg \
   && rm -rf /var/cache/apk/*
 
 ENV DOPPLER_CONFIG_DIR=/tmp/.doppler
-ENV DOPPLER_CONFIG=prd
 
+# Copy root configs
 COPY package*.json ./
+
+# Copy packages and worker definition
+COPY packages ./packages
+COPY weave-worker/package.json ./weave-worker/
+
+# Install dependencies (with workspaces)
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev --no-audit --no-fund
 
-COPY . .
+# Copy worker source
+COPY weave-worker ./weave-worker
 
-RUN chmod +x /app/docker-entrypoint.sh
+RUN chmod +x /app/weave-worker/docker-entrypoint.sh
 
+WORKDIR /app/weave-worker
 EXPOSE 8081
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["doppler", "run", "--project", "weave-worker", "--config", "prd", "--", "npm", "start"]
+ENTRYPOINT ["/app/weave-worker/docker-entrypoint.sh"]
+CMD ["doppler", "run", "--project", "theweave", "--config", "prd", "--", "npm", "start"]

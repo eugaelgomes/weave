@@ -266,9 +266,7 @@ function noteToMarkdown(note, blocks = []) {
   }
 
   if (blocks.length > MAX_BLOCKS_PER_NOTE) {
-    parts.push(
-      `\n> _...${blocks.length - MAX_BLOCKS_PER_NOTE} more blocks truncated_`
-    );
+    parts.push(`\n> _...${blocks.length - MAX_BLOCKS_PER_NOTE} more blocks truncated_`);
   }
 
   return parts.join("\n");
@@ -287,12 +285,7 @@ function noteToMarkdown(note, blocks = []) {
  * @param {object[]} [unstagedNotes] - Notes without a stage
  * @returns {string}
  */
-function notesGroupedByStage(
-  stages,
-  notesByStageId,
-  blocksByNoteId,
-  unstagedNotes = []
-) {
+function notesGroupedByStage(stages, notesByStageId, blocksByNoteId, unstagedNotes = []) {
   const sections = [];
 
   for (const stage of stages) {
@@ -300,9 +293,7 @@ function notesGroupedByStage(
     const isDone = stage.properties?.is_done === true;
     const count = stageNotes.length;
 
-    sections.push(
-      `## 📊 Stage: ${stage.name} (${count} notes)${isDone ? " ✅" : ""}`
-    );
+    sections.push(`## 📊 Stage: ${stage.name} (${count} notes)${isDone ? " ✅" : ""}`);
 
     if (count === 0) {
       sections.push("_No notes in this stage._\n");

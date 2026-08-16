@@ -13,8 +13,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon",
-    "dev:doppler": "doppler run --project weave-worker --config dev -- npm run dev",
-    "start:doppler": "doppler run --project weave-worker --config dev -- npm start",
+    "dev:doppler": "doppler run --project theweave --config dev -- npm run dev",
+    "start:doppler": "doppler run --project theweave --config dev -- npm start",
     "lint": "eslint \"src/**/*.js\"",
     "lint:fix": "eslint \"src/**/*.js\" --fix",
     "format": "prettier --write \"src/**/*.js\"",
@@ -37,6 +37,7 @@
     "@aws-sdk/client-s3": "^3.892.0",
     "@sentry/node": "^10.53.1",
     "@sentry/profiling-node": "^10.53.1",
+    "@theweave/shared": "*",
     "dotenv": "^16.6.1",
     "googleapis": "^173.0.0",
     "ioredis": "^5.10.1",

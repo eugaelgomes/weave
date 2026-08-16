@@ -4,9 +4,7 @@ const { executeQuery } = require("../../database/connection");
 const { logger } = require("../../config/logger");
 const storageService = require("../storage");
 const { createMailService } = require("../../mail/sender");
-const {
-  buildBackupEmailPayload,
-} = require("../../mail/templates/template.backup-notification");
+const { buildBackupEmailPayload } = require("../../mail/templates/template.backup-notification");
 const { getBackupExportQueueRedisKey } = require("../../queues/queue-queue-keys");
 
 class BackupExportProcessor {
@@ -57,10 +55,7 @@ class BackupExportProcessor {
       await this.updateJob(jobId, { progress: 60 });
 
       const totalNotes = rawData.length;
-      const totalBlocks = rawData.reduce(
-        (sum, note) => sum + (note.blocks?.length || 0),
-        0
-      );
+      const totalBlocks = rawData.reduce((sum, note) => sum + (note.blocks?.length || 0), 0);
 
       if (totalNotes > 1000 || totalBlocks > 5000) {
         throw new Error(
@@ -312,13 +307,7 @@ class BackupExportProcessor {
     );
   }
 
-  async sendBackupEmail({
-    downloadUrl,
-    expiresAt,
-    toEmail,
-    userName,
-    userPreference,
-  }) {
+  async sendBackupEmail({ downloadUrl, expiresAt, toEmail, userName, userPreference }) {
     if (!this.mailService) {
       logger.warn("Email service not available for backup email");
       return false;
@@ -410,7 +399,7 @@ class BackupExportProcessor {
     if (value === null || value === undefined) return "";
     const str = String(value);
     if (/[,"\n\r]/.test(str)) {
-      return `"${str.replace(/"/g, "\"\"")}"`;
+      return `"${str.replace(/"/g, '""')}"`;
     }
     return str;
   }

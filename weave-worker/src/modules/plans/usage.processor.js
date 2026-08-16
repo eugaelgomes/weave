@@ -97,11 +97,7 @@ class PlansUsageProcessor {
 
       if (operation === "consume_project_creation") {
         const amount = Number(payload.amount || 1);
-        await this.incrementUsage(
-          usageId,
-          USAGE_PATHS.SUMMARY.PROJECTS_TOTAL,
-          amount
-        );
+        await this.incrementUsage(usageId, USAGE_PATHS.SUMMARY.PROJECTS_TOTAL, amount);
         return;
       }
 
@@ -110,21 +106,14 @@ class PlansUsageProcessor {
         const reasoningLevel = payload.reasoningLevel || "none";
         const filesCount = Number(payload.filesCount || 0);
 
-        await this.incrementUsage(
-          usageId,
-          USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT,
-          1
-        );
+        await this.incrementUsage(usageId, USAGE_PATHS.MONTHLY.WEAVE_AI.MESSAGES_SENT, 1);
         if (tokens > 0) {
-          await this.incrementUsage(
-            usageId,
-            USAGE_PATHS.MONTHLY.WEAVE_AI.TOKENS_ESTIMATED,
-            tokens
-          );
+          await this.incrementUsage(usageId, USAGE_PATHS.MONTHLY.WEAVE_AI.TOKENS_ESTIMATED, tokens);
         }
 
         if (reasoningLevel && reasoningLevel !== "none") {
-          const reasoningPath = USAGE_PATHS.MONTHLY.WEAVE_AI[`REASONING_${reasoningLevel.toUpperCase()}_SENT`];
+          const reasoningPath =
+            USAGE_PATHS.MONTHLY.WEAVE_AI[`REASONING_${reasoningLevel.toUpperCase()}_SENT`];
           if (reasoningPath) {
             await this.incrementUsage(usageId, reasoningPath, 1);
           }

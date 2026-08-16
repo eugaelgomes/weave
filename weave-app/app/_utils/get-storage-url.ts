@@ -4,7 +4,7 @@
  */
 const getStorageUrl = (path: string): string => {
   if (!path) return "";
-  
+
   // Garantir que não existam barras triplas ou mal formatadas, se aplicável
   try {
     if (/^https?:\/\/|^blob:/i.test(path)) {

@@ -121,8 +121,7 @@ export interface NoteCommentsEmbeddableFile {
 type AtMenuState = { field: "draft" | "edit"; start: number; query: string } | null;
 
 type AtPickItem =
-  | { type: "file"; file: NoteCommentsEmbeddableFile }
-  | { type: "user"; user: MentionUser };
+  { type: "file"; file: NoteCommentsEmbeddableFile } | { type: "user"; user: MentionUser };
 
 function CommentRichText({
   text,

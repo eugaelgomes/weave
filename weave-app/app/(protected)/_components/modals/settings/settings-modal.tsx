@@ -32,7 +32,11 @@ export interface SettingsModalProps {
   initialTab?: SettingsTab;
 }
 
-const SettingsModalContent: React.FC<SettingsModalProps> = ({ isOpen, onClose, initialTab = "account" }) => {
+const SettingsModalContent: React.FC<SettingsModalProps> = ({
+  isOpen,
+  onClose,
+  initialTab = "account",
+}) => {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const { t } = useLanguage();
@@ -44,27 +48,31 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash.startsWith('#settings/')) {
-        const fullPath = hash.replace('#settings/', '');
-        const tab = fullPath.split('/')[0];
-        if (tab === 'me') setActiveTab('account');
-        else if (tab === 'plan') setActiveTab('plans');
-        else if (['account', 'plans', 'security', 'integrations'].includes(tab)) {
+      if (hash.startsWith("#settings/")) {
+        const fullPath = hash.replace("#settings/", "");
+        const tab = fullPath.split("/")[0];
+        if (tab === "me") setActiveTab("account");
+        else if (tab === "plan") setActiveTab("plans");
+        else if (["account", "plans", "security", "integrations"].includes(tab)) {
           setActiveTab(tab as SettingsTab);
         }
-      } else if (initialTab && hash === '#settings') {
+      } else if (initialTab && hash === "#settings") {
         // If just #settings, replace with the initialTab (or account)
-        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#settings/${initialTab}`);
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${window.location.search}#settings/${initialTab}`
+        );
         setActiveTab(initialTab);
       }
     };
 
     handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, [isOpen, initialTab]);
 
   useEffect(() => {
@@ -127,11 +135,12 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
       />
 
       {/* Modal Container */}
-      <div className="relative z-10 flex h-full max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all dark:bg-[#1d1d1b] dark:ring-white/10 sm:flex-row">
-        
+      <div className="relative z-10 flex h-full max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all sm:flex-row dark:bg-[#1d1d1b] dark:ring-white/10">
         {/* Mobile Header (visible only on small screens) */}
-        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-800 sm:hidden">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t.nav.settingsLabel || "Configurações"}</h2>
+        <div className="flex items-center justify-between border-b border-gray-200 p-4 sm:hidden dark:border-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {t.nav.settingsLabel || "Configurações"}
+          </h2>
           <button
             onClick={onClose}
             className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
@@ -141,13 +150,15 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
         </div>
 
         {/* Sidebar */}
-        <div className="flex w-full flex-col border-b border-gray-200 bg-gray-50/50 dark:border-gray-800 dark:bg-[#1d1d1b]/50 sm:w-64 sm:border-b-0 sm:border-r">
+        <div className="flex w-full flex-col border-b border-gray-200 bg-gray-50/50 sm:w-64 sm:border-r sm:border-b-0 dark:border-gray-800 dark:bg-[#1d1d1b]/50">
           <div className="hidden p-4 sm:flex sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t.nav.settingsLabel || "Configurações"}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              {t.nav.settingsLabel || "Configurações"}
+            </h2>
           </div>
-          
+
           <div className="flex flex-1 flex-row overflow-x-auto p-2 sm:flex-col sm:overflow-visible">
-            <ul className="flex space-x-1 sm:flex-col sm:space-x-0 sm:space-y-0.5 w-full flex-1">
+            <ul className="flex w-full flex-1 space-x-1 sm:flex-col sm:space-y-0.5 sm:space-x-0">
               {SETTINGS_NAV.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -178,14 +189,14 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 );
               })}
             </ul>
-            
-            <div className="hidden sm:block mt-auto pt-4 border-t border-gray-200 dark:border-gray-800">
+
+            <div className="mt-auto hidden border-t border-gray-200 pt-4 sm:block dark:border-gray-800">
               <button
                 onClick={() => {
                   onClose();
                   logout();
                 }}
-                className="group flex w-full items-center rounded-md px-3 py-2 text-sm transition-all text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                className="group flex w-full items-center rounded-md px-3 py-2 text-sm text-red-600 transition-all hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
               >
                 <div className="flex items-center gap-2">
                   <LogOut className="h-4 w-4 flex-shrink-0 text-red-500/70 group-hover:text-red-600 dark:group-hover:text-red-400" />
@@ -198,18 +209,16 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
 
         {/* Content Area */}
         <div className="relative flex flex-1 flex-col overflow-hidden bg-white dark:bg-[#1d1d1b]">
-          <div className="hidden sm:absolute sm:right-4 sm:top-4 sm:z-10 sm:block">
+          <div className="hidden sm:absolute sm:top-4 sm:right-4 sm:z-10 sm:block">
             <button
               onClick={onClose}
-              className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300 transition-colors"
+              className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
-          
-          <div className="flex-1 overflow-y-auto no-scrollbar">
-            {renderTabContent()}
-          </div>
+
+          <div className="no-scrollbar flex-1 overflow-y-auto">{renderTabContent()}</div>
         </div>
       </div>
     </div>,

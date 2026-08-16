@@ -63,7 +63,6 @@ const SidebarToggleIcon = ({ className }: { className?: string }) => {
   );
 };
 
-
 const useKeyboardShortcut = (key: string, callback: () => void) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -192,12 +191,19 @@ function NavItem({
         >
           {isRoot ? (
             /* Raiz: usa o icon-rail fixo para manter alinhamento no collapse */
-            <span className={cn(NAV_ICON_RAIL_CLASS, "transition-transform duration-200 group-hover:scale-110")}>
+            <span
+              className={cn(
+                NAV_ICON_RAIL_CLASS,
+                "transition-transform duration-200 group-hover:scale-110"
+              )}
+            >
               <Icon
                 className={cn(
                   iconSize,
                   "shrink-0 transition-colors",
-                  active ? "text-slate-950 dark:text-white" : "text-slate-950 dark:text-white group-hover:text-slate-950"
+                  active
+                    ? "text-slate-950 dark:text-white"
+                    : "text-slate-950 group-hover:text-slate-950 dark:text-white"
                 )}
               />
               {isCollapsed && item.badge !== undefined && item.badge > 0 ? (
@@ -212,7 +218,7 @@ function NavItem({
                 "shrink-0 transition-all duration-200 group-hover:scale-110",
                 showActiveHighlight
                   ? "text-slate-950 dark:text-white"
-                  : "text-gray-800 dark:text-white group-hover:text-slate-950"
+                  : "text-gray-800 group-hover:text-slate-950 dark:text-white"
               )}
             />
           )}
@@ -332,9 +338,11 @@ function RecentItems({
       <ul className="space-y-0.5 px-1">
         {recentItems.slice(0, 5).map((item) => {
           const basePath = item.type === "project" ? "projects" : "notes";
-          const path = item.path || (pathname.startsWith("/")
-            ? `/${pathname.split("/")[1]}/${basePath}/${item.public_id || item.id}`
-            : `/${basePath}/${item.public_id || item.id}`);
+          const path =
+            item.path ||
+            (pathname.startsWith("/")
+              ? `/${pathname.split("/")[1]}/${basePath}/${item.public_id || item.id}`
+              : `/${basePath}/${item.public_id || item.id}`);
           const active = isPathActive(pathname, path);
           const ItemIcon = item.icon;
 
@@ -355,7 +363,12 @@ function RecentItems({
                   title={item.title}
                   className="group flex min-w-0 flex-1 items-center gap-2"
                 >
-                  <span className={cn(NAV_ICON_RAIL_CLASS, "transition-transform duration-200 group-hover:scale-110")}>
+                  <span
+                    className={cn(
+                      NAV_ICON_RAIL_CLASS,
+                      "transition-transform duration-200 group-hover:scale-110"
+                    )}
+                  >
                     {item.projectIcon !== undefined ? (
                       <ProjectIcon icon={item.projectIcon} color={item.projectColor} size="sm" />
                     ) : ItemIcon ? (
@@ -364,7 +377,7 @@ function RecentItems({
                           "size-4 shrink-0 transition-colors",
                           active
                             ? "text-slate-950 dark:text-white"
-                            : "text-gray-800 dark:text-white group-hover:text-slate-950"
+                            : "text-gray-800 group-hover:text-slate-950 dark:text-white"
                         )}
                       />
                     ) : null}
@@ -405,27 +418,29 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
 
   useEffect(() => {
     setMounted(true);
-    
+
     const handleHashChange = () => {
       const hash = window.location.hash;
-      setIsSettingsOpen(hash.startsWith('#settings'));
-      setIsSearchOpen(hash.startsWith('#search'));
+      setIsSettingsOpen(hash.startsWith("#settings"));
+      setIsSearchOpen(hash.startsWith("#search"));
     };
-    
+
     handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   useKeyboardShortcut("k", () => {
-    window.location.hash = '#search';
+    window.location.hash = "#search";
   });
 
   return (
-    <div className="shrink-0 px-1 pt-1 pb-1.5 flex flex-col gap-0.5">
+    <div className="flex shrink-0 flex-col gap-0.5 px-1 pt-1 pb-1.5">
       <button
         type="button"
-        onClick={() => { window.location.hash = '#search'; }}
+        onClick={() => {
+          window.location.hash = "#search";
+        }}
         title={t.navbar?.searchSystem || "Pesquisar"}
         aria-label={t.navbar?.searchSystem || "Pesquisar"}
         className={cn(
@@ -434,8 +449,13 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
           "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
         )}
       >
-        <span className={cn(NAV_ICON_RAIL_CLASS, "transition-transform duration-200 group-hover:scale-110")}>
-          <Search className="size-4 shrink-0 transition-colors text-gray-800 dark:text-white group-hover:text-slate-950" />
+        <span
+          className={cn(
+            NAV_ICON_RAIL_CLASS,
+            "transition-transform duration-200 group-hover:scale-110"
+          )}
+        >
+          <Search className="size-4 shrink-0 text-gray-800 transition-colors group-hover:text-slate-950 dark:text-white" />
         </span>
         <span
           className={cn(
@@ -445,7 +465,7 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
         >
           <span className="truncate">{t.navbar?.searchSystem || "Pesquisar"}</span>
           {!isCollapsed && (
-            <kbd className="ml-auto items-bottom flex gap-1 rounded px-1.5 font-sans text-[10px] font-medium text-gray-600 dark:text-gray-300">
+            <kbd className="items-bottom ml-auto flex gap-1 rounded px-1.5 font-sans text-[10px] font-medium text-gray-600 dark:text-gray-300">
               <span>⌘</span>K
             </kbd>
           )}
@@ -455,7 +475,9 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
       <div className="relative w-full">
         <button
           type="button"
-          onClick={() => { window.location.hash = '#settings/me'; }}
+          onClick={() => {
+            window.location.hash = "#settings/me";
+          }}
           title={t.navbar?.accountSettings || "Configurações"}
           aria-label={t.navbar?.accountSettings || "Configurações"}
           className={cn(
@@ -464,7 +486,12 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
             "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
           )}
         >
-          <span className={cn(NAV_ICON_RAIL_CLASS, "transition-transform duration-200 group-hover:scale-110")}>
+          <span
+            className={cn(
+              NAV_ICON_RAIL_CLASS,
+              "transition-transform duration-200 group-hover:scale-110"
+            )}
+          >
             <UserAvatar user={user} size="sm" />
           </span>
           <span
@@ -478,31 +505,32 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
         </button>
       </div>
 
-      <SearchModal 
-        isOpen={isSearchOpen} 
+      <SearchModal
+        isOpen={isSearchOpen}
         onClose={() => {
           window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
           setIsSearchOpen(false);
-        }} 
+        }}
       />
-      
+
       {mounted && (
-        <SettingsModal 
-          isOpen={isSettingsOpen} 
+        <SettingsModal
+          isOpen={isSettingsOpen}
           onClose={() => {
-            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.history.replaceState(
+              null,
+              "",
+              window.location.pathname + window.location.search
+            );
             window.dispatchEvent(new HashChangeEvent("hashchange"));
             setIsSettingsOpen(false);
-          }} 
+          }}
         />
       )}
-
     </div>
   );
 }
-
-
 
 // ---------------------------------------------------------------------------
 // Sidebar — componente principal
@@ -541,17 +569,22 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       ? `/${user.public_id}`
       : "";
 
-  const mappedProjects = isModuleActive("projects") ? projectsCtx.getRecentProjects().slice(0, 10).map((proj: any) => ({
-    type: "project" as const,
-    id: proj.id,
-    public_id: proj.public_id,
-    title: proj.title || t.common.untitled,
-    icon: AnimatedProjectsIcon,
-    projectIcon: proj.icon,
-    projectColor: proj.color,
-    updatedAt: new Date(proj.updated_at || proj.created_at).getTime(),
-    path: `${orgPrefix}/projects/${proj.public_id}`,
-  })) : [];
+  const mappedProjects = isModuleActive("projects")
+    ? projectsCtx
+        .getRecentProjects()
+        .slice(0, 10)
+        .map((proj: any) => ({
+          type: "project" as const,
+          id: proj.id,
+          public_id: proj.public_id,
+          title: proj.title || t.common.untitled,
+          icon: AnimatedProjectsIcon,
+          projectIcon: proj.icon,
+          projectColor: proj.color,
+          updatedAt: new Date(proj.updated_at || proj.created_at).getTime(),
+          path: `${orgPrefix}/projects/${proj.public_id}`,
+        }))
+    : [];
 
   const mappedChats = chatHistory.slice(0, 10).map((chat) => ({
     type: "chat" as const,
@@ -562,12 +595,15 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     path: `${orgPrefix}/new?c=${chat.id}`,
   }));
 
-  const recentItems = [...mappedProjects, ...mappedChats]
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+  const recentItems = [...mappedProjects, ...mappedChats].sort((a, b) => b.updatedAt - a.updatedAt);
 
   const navigationItems: NavigationItem[] = [
     { path: `${orgPrefix}/new`, icon: MessageSquare, label: t.nav.weaveAi || "Chat" },
-    isModuleActive("notes") && { path: `${orgPrefix}/notes`, icon: AnimatedNotesIcon, label: t.nav.notes },
+    isModuleActive("notes") && {
+      path: `${orgPrefix}/notes`,
+      icon: AnimatedNotesIcon,
+      label: t.nav.notes,
+    },
     isModuleActive("projects") && {
       path: `${orgPrefix}/projects`,
       icon: AnimatedProjectsIcon,
@@ -608,14 +644,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   ].filter(Boolean) as NavigationItem[];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col text-gray-700 transition-colors duration-300 dark:text-gray-300 bg-white dark:bg-[#1d1d1b]">
+    <div className="flex min-h-0 flex-1 flex-col bg-white text-gray-700 transition-colors duration-300 dark:bg-[#1d1d1b] dark:text-gray-300">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-1">
         {toggleCollapse && (
-          <div className="px-1 py-1 shrink-0">
+          <div className="shrink-0 px-1 py-1">
             <button
               type="button"
               onClick={toggleCollapse}
-              className="flex h-8 w-full items-center rounded-md text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/10 transition-colors"
+              className="flex h-8 w-full items-center rounded-md text-gray-700 transition-colors hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/10"
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
               aria-label={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >

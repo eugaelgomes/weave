@@ -304,10 +304,10 @@ export default function MembersPage() {
     const handleHashChange = () => {
       const hash = window.location.hash;
       setShowInviteModal(hash === "#organization/invite");
-      
+
       // Clear member edit/remove if hash changes from them (optional enhancement, but keeping simple for now)
       if (hash === "#organization/member/edit") {
-         // we need the member, so setting it purely from hash is hard without ID
+        // we need the member, so setting it purely from hash is hard without ID
       }
     };
     handleHashChange();
@@ -376,7 +376,7 @@ export default function MembersPage() {
         t.organizationMembers.inviteSuccess.replace("{email}", payload.email)
       );
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
       setShowInviteModal(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t.organizationMembers.inviteError;
@@ -496,7 +496,9 @@ export default function MembersPage() {
             {userCanManage ? (
               <button
                 type="button"
-                onClick={() => { window.location.hash = "#organization/invite" }}
+                onClick={() => {
+                  window.location.hash = "#organization/invite";
+                }}
                 className="bg-brand-primary-500 flex shrink-0 items-center justify-center gap-2 self-stretch rounded-md px-3 py-2 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-[0.98] sm:self-auto sm:py-1.5"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
@@ -695,7 +697,7 @@ export default function MembersPage() {
         isOpen={showInviteModal}
         onClose={() => {
           window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
           setShowInviteModal(false);
         }}
         onInvite={handleInvite}
@@ -707,7 +709,7 @@ export default function MembersPage() {
         isOpen={!!memberToEdit}
         onClose={() => {
           window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
           setMemberToEdit(null);
         }}
         currentMember={memberToEdit}
@@ -720,7 +722,7 @@ export default function MembersPage() {
         isOpen={!!memberToRemove}
         onClose={() => {
           window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
           setMemberToRemove(null);
         }}
         title={t.organizationMembers.removeMemberTitle}
@@ -729,8 +731,12 @@ export default function MembersPage() {
             <button
               type="button"
               onClick={() => {
-                window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+                window.history.replaceState(
+                  null,
+                  "",
+                  window.location.pathname + window.location.search
+                );
+                window.dispatchEvent(new HashChangeEvent("hashchange"));
                 setMemberToRemove(null);
               }}
               className="px-3 py-1.5 text-xs text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"

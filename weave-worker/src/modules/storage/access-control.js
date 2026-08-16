@@ -1,10 +1,7 @@
 const { rowCount } = require("@/database/connection");
 
 class StorageAccessError extends Error {
-  constructor(
-    message = "Você não tem permissão para acessar este arquivo.",
-    statusCode = 403
-  ) {
+  constructor(message = "Você não tem permissão para acessar este arquivo.", statusCode = 403) {
     super(message);
     this.name = "StorageAccessError";
     this.statusCode = statusCode;
@@ -21,15 +18,12 @@ const PATH_NAMESPACE_PREFIX = "weave-notes/";
 
 const normalizeKey = (key = "") => key.replace(/\/+/g, "/").replace(/^\/+/, "");
 const stripNamespacePrefix = (key) =>
-  key.startsWith(PATH_NAMESPACE_PREFIX)
-    ? key.slice(PATH_NAMESPACE_PREFIX.length)
-    : key;
+  key.startsWith(PATH_NAMESPACE_PREFIX) ? key.slice(PATH_NAMESPACE_PREFIX.length) : key;
 
 const extractPrefixedValue = (value = "", prefix) =>
   value.startsWith(prefix) ? value.slice(prefix.length) : null;
 
-const sanitizeId = (value) =>
-  typeof value === "string" && value.length > 0 ? value : null;
+const sanitizeId = (value) => (typeof value === "string" && value.length > 0 ? value : null);
 
 const parseResourceDescriptor = (key) => {
   if (!key) {
@@ -85,10 +79,7 @@ const parseResourceDescriptor = (key) => {
     }
     case "projects": {
       const ownerId = extractPrefixedValue(segments[1] || "", USER_ID_PREFIX);
-      const projectId = extractPrefixedValue(
-        segments[2] || "",
-        PROJECT_ID_PREFIX
-      );
+      const projectId = extractPrefixedValue(segments[2] || "", PROJECT_ID_PREFIX);
       if (!projectId) return null;
       return {
         key: normalized,
@@ -181,9 +172,7 @@ const hasOrganizationAccess = async (userId, organizationId) => {
 
 const assertFileAccess = async (userId, key) => {
   if (!userId) {
-    throw new StorageAccessError(
-      "Contexto do usuário é obrigatório para acessar arquivos."
-    );
+    throw new StorageAccessError("Contexto do usuário é obrigatório para acessar arquivos.");
   }
 
   const descriptor = parseResourceDescriptor(key);
@@ -206,16 +195,10 @@ const assertFileAccess = async (userId, key) => {
       hasAccess = await hasNoteAccess(normalizedUserId, descriptor.noteId);
       break;
     case "project":
-      hasAccess = await hasProjectAccess(
-        normalizedUserId,
-        descriptor.projectId
-      );
+      hasAccess = await hasProjectAccess(normalizedUserId, descriptor.projectId);
       break;
     case "organization":
-      hasAccess = await hasOrganizationAccess(
-        normalizedUserId,
-        descriptor.organizationId
-      );
+      hasAccess = await hasOrganizationAccess(normalizedUserId, descriptor.organizationId);
       break;
     default:
       hasAccess = false;

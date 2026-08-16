@@ -1,5 +1,8 @@
 const redis = require("../../queues/queue-client");
-const { getAiReportDeliveryQueueRedisKey, getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
+const {
+  getAiReportDeliveryQueueRedisKey,
+  getEmailQueueRedisKey,
+} = require("../../queues/queue-queue-keys");
 const { executeQuery } = require("../../database/connection");
 const { logger } = require("../../config/logger");
 const { buildAiReportEmail } = require("../../mail/templates/template.ai-report");
@@ -34,7 +37,15 @@ class AiReportDeliveryProcessor {
 
   async processJob(jobData) {
     const { payload } = jobData;
-    const { reasoningId, projectId, reasoningType, title, outputMarkdown, recipientScope, customRecipients } = payload;
+    const {
+      reasoningId,
+      projectId,
+      reasoningType,
+      title,
+      outputMarkdown,
+      recipientScope,
+      customRecipients,
+    } = payload;
 
     logger.info("Processing AI report delivery", { projectId, reasoningId });
 
@@ -80,7 +91,10 @@ class AiReportDeliveryProcessor {
         reasoningId,
       });
     } catch (error) {
-      logger.error("Failed to process AI report delivery job", { error: error.message, reasoningId });
+      logger.error("Failed to process AI report delivery job", {
+        error: error.message,
+        reasoningId,
+      });
       throw error;
     }
   }

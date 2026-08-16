@@ -19,6 +19,7 @@ import { logger } from "@/config/logger";
 import { callLLMProvider } from "@/providers/normalizer";
 import { executeTask } from "@/core/executor";
 import type { AgenticExecutionContext } from "@/core/executor";
+import { Tracer } from "@/core/tracing";
 
 const RESPONSE_TTL_SECONDS = 60;
 const CHAT_HISTORY_MAX_MESSAGES = Number.parseInt(
@@ -37,10 +38,7 @@ const ENGINE_CHAT_TASK_TIMEOUT_MS = Number.parseInt(
   process.env.WEAVE_ENGINE_CHAT_TASK_TIMEOUT_MS || "65000",
   10
 );
-const ENGINE_JOB_MAX_RETRIES = Number.parseInt(
-  process.env.WEAVE_ENGINE_JOB_MAX_RETRIES || "4",
-  10
-);
+const ENGINE_JOB_MAX_RETRIES = Number.parseInt(process.env.WEAVE_ENGINE_JOB_MAX_RETRIES || "4", 10);
 const ENGINE_DEAD_LETTER_QUEUE_KEY = REDIS_QUEUES.ENGINE_DEAD_LETTER.key;
 
 const jobEnvelopeSchema = z
@@ -99,9 +97,7 @@ class LlmQueueProcessor {
 
     const validation = jobEnvelopeSchema.safeParse(parsedJob);
     if (!validation.success) {
-      throw new Error(
-        `Invalid envelope schema: ${JSON.stringify(validation.error.issues)}`
-      );
+      throw new Error(`Invalid envelope schema: ${JSON.stringify(validation.error.issues)}`);
     }
 
     return validation.data;
@@ -129,9 +125,23 @@ class LlmQueueProcessor {
 
     let responsePayload: string;
     const startedAt = Date.now();
-    const queueLatencyMs = createdAt
-      ? Date.now() - new Date(createdAt).getTime()
-      : null;
+    const queueLatencyMs = createdAt ? Date.now() - new Date(createdAt).getTime() : null;
+
+    const organizationId =
+      (payload.organizationId as string) ||
+      ((payload.context as Record<string, unknown>)?.organizationId as string) ||
+      "";
+
+    const traceContext = {
+      traceId: requestId || "",
+      organizationId,
+      userId: (payload.userId as string) || null,
+      sessionId: (payload.sessionId as string) || null,
+    };
+
+    if (organizationId && requestId) {
+      await Tracer.startTrace(traceContext, taskType);
+    }
 
     try {
       const data = await this.executeTask(taskType, payload, requestId);
@@ -147,6 +157,14 @@ class LlmQueueProcessor {
         taskLatencyMs: Date.now() - startedAt,
         taskType,
       });
+
+      if (organizationId && requestId) {
+        await Tracer.endTrace(traceContext.traceId, traceContext, {
+          status: "success",
+          totalCost: (data as any)?.usage?.totalCost || 0,
+          totalTokens: (data as any)?.usage?.totalTokens || 0,
+        });
+      }
     } catch (error) {
       const normalizedError = this.normalizeTaskError(error, taskType);
       logger.error("Engine LLM task failed", {
@@ -156,6 +174,13 @@ class LlmQueueProcessor {
         requestId,
         taskType,
       });
+
+      if (organizationId && requestId) {
+        await Tracer.endTrace(traceContext.traceId, traceContext, {
+          status: "error",
+          error: normalizedError.message,
+        });
+      }
 
       if (attempts < ENGINE_JOB_MAX_RETRIES) {
         const retriedJob = {
@@ -196,14 +221,8 @@ class LlmQueueProcessor {
   normalizeTaskError(error: unknown, taskType: string) {
     const err = error as Record<string, unknown>;
     return {
-      code:
-        typeof err?.code === "string" && err.code
-          ? err.code
-          : "ENGINE_TASK_FAILED",
-      message:
-        typeof err?.message === "string" && err.message
-          ? err.message
-          : "Engine task failed",
+      code: typeof err?.code === "string" && err.code ? err.code : "ENGINE_TASK_FAILED",
+      message: typeof err?.message === "string" && err.message ? err.message : "Engine task failed",
       taskType,
     };
   }
@@ -233,22 +252,16 @@ class LlmQueueProcessor {
    * @param {string | null} requestId - The request ID used for streaming.
    * @returns {Promise<object>} The resulting data from the execution.
    */
-  async executeTask(
-    taskType: string,
-    payload: Record<string, unknown>,
-    requestId: string | null
-  ) {
+  async executeTask(taskType: string, payload: Record<string, unknown>, requestId: string | null) {
     switch (taskType) {
       case "chat_process": {
         const systemMessage = (payload.systemMessage as string) || "";
-        const conversationHistory = this.normalizeConversationHistory(
-          payload.conversationHistory
-        );
+        const conversationHistory = this.normalizeConversationHistory(payload.conversationHistory);
 
         const providerStr = (payload.provider as string) || "openai";
         let resolvedApiKey = (payload.apiKey as string) || "";
         let resolvedBaseURL = (payload.baseURL as string) || undefined;
-        
+
         if (!resolvedApiKey) {
           if (providerStr === "google" || providerStr === "gemini") {
             resolvedApiKey = process.env.GEMINI_API_KEY || "";
@@ -256,7 +269,10 @@ class LlmQueueProcessor {
             resolvedApiKey = process.env.ANTHROPIC_API_KEY || "";
           } else if (providerStr === "azure") {
             resolvedApiKey = process.env.FOUNDRY_API_KEY || process.env.AZURE_OPENAI_API_KEY || "";
-            resolvedBaseURL = resolvedBaseURL || process.env.FOUNDRY_PROJECT_URL || process.env.AZURE_OPENAI_ENDPOINT;
+            resolvedBaseURL =
+              resolvedBaseURL ||
+              process.env.FOUNDRY_PROJECT_URL ||
+              process.env.AZURE_OPENAI_ENDPOINT;
           } else {
             resolvedApiKey = process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY || "";
             resolvedBaseURL = resolvedBaseURL || process.env.FOUNDRY_PROJECT_URL;
@@ -273,9 +289,7 @@ class LlmQueueProcessor {
           maxDurationMs: ENGINE_CHAT_TASK_TIMEOUT_MS,
           onChunk: (chunk: string | Record<string, unknown>) => {
             if (requestId && redis) {
-              redis
-                .publish(`stream:${requestId}`, JSON.stringify({ chunk }))
-                .catch(() => {});
+              redis.publish(`stream:${requestId}`, JSON.stringify({ chunk })).catch(() => {});
             }
           },
           organizationId:
@@ -285,6 +299,7 @@ class LlmQueueProcessor {
           provider: (payload.provider as string) || "openai",
           thinking: (payload.thinking as AgenticExecutionContext["thinking"]) || undefined,
           userId: (payload.userId as string) || null,
+          traceId: traceContext.traceId,
         };
 
         const result = await Promise.race([
@@ -301,9 +316,9 @@ class LlmQueueProcessor {
           }),
           new Promise<never>((_, reject) => {
             setTimeout(() => {
-              const timeoutError = new Error(
-                "Engine chat task timeout"
-              ) as Error & { code?: string };
+              const timeoutError = new Error("Engine chat task timeout") as Error & {
+                code?: string;
+              };
               timeoutError.code = "ENGINE_CHAT_TASK_TIMEOUT";
               reject(timeoutError);
             }, ENGINE_CHAT_TASK_TIMEOUT_MS + 2000);
@@ -341,16 +356,17 @@ class LlmQueueProcessor {
             payload.apiKey = process.env.ANTHROPIC_API_KEY || "";
           } else if (providerStr === "azure") {
             payload.apiKey = process.env.FOUNDRY_API_KEY || process.env.AZURE_OPENAI_API_KEY || "";
-            payload.baseURL = payload.baseURL || process.env.FOUNDRY_PROJECT_URL || process.env.AZURE_OPENAI_ENDPOINT;
+            payload.baseURL =
+              payload.baseURL ||
+              process.env.FOUNDRY_PROJECT_URL ||
+              process.env.AZURE_OPENAI_ENDPOINT;
           } else {
             payload.apiKey = process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY || "";
             payload.baseURL = payload.baseURL || process.env.FOUNDRY_PROJECT_URL;
           }
         }
-        
-        const { data, provider: providerUsed } = await callLLMProvider(
-          payload as any
-        );
+
+        const { data, provider: providerUsed } = await callLLMProvider(payload as any);
         return {
           ...data,
           providerUsed,
@@ -400,13 +416,8 @@ class LlmQueueProcessor {
       .map((entryRaw: unknown) => {
         const entry = entryRaw as Record<string, unknown>;
         const role =
-          entry?.role === "tool"
-            ? "tool"
-            : entry?.role === "assistant"
-              ? "assistant"
-              : "user";
-        const rawContent =
-          typeof entry?.content === "string" ? entry.content.trim() : "";
+          entry?.role === "tool" ? "tool" : entry?.role === "assistant" ? "assistant" : "user";
+        const rawContent = typeof entry?.content === "string" ? entry.content.trim() : "";
 
         const hasTools =
           (entry?.tool_calls !== null && entry?.tool_calls !== undefined) ||
@@ -417,10 +428,7 @@ class LlmQueueProcessor {
           return null;
         }
 
-        const content = this.intelligentTruncate(
-          rawContent,
-          CHAT_HISTORY_MAX_MESSAGE_CHARS
-        );
+        const content = this.intelligentTruncate(rawContent, CHAT_HISTORY_MAX_MESSAGE_CHARS);
 
         return {
           content,
@@ -458,9 +466,7 @@ class LlmQueueProcessor {
       lines.push(line);
     }
 
-    return lines.length > 0
-      ? lines.join("\n")
-      : "No prior messages in this session.";
+    return lines.length > 0 ? lines.join("\n") : "No prior messages in this session.";
   }
 
   stop() {

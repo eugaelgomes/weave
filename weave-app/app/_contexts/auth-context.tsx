@@ -40,8 +40,7 @@ const toUiThemeMode = (themeMode?: string | null): "light" | "dark" | null => {
 };
 
 type LoginResult =
-  | { success: true; data: LoginResponse }
-  | { success: false; message: string; data?: unknown };
+  { success: true; data: LoginResponse } | { success: false; message: string; data?: unknown };
 
 type AuthContextType = {
   user: User | null;

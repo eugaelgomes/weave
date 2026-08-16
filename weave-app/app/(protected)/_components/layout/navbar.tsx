@@ -106,11 +106,6 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
     return () => clearInterval(interval);
   }, []);
 
-      
-    
-  
-    
-  
   const handleThemeToggle = useCallback(() => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
@@ -130,10 +125,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
           aria-label={t.navbar.mainNavigation}
         >
           <div
-            className={cn(
-              "flex min-h-9 h-9 items-center justify-between gap-x-2 px-2",
-              "lg:px-3"
-            )}
+            className={cn("flex h-9 min-h-9 items-center justify-between gap-x-2 px-2", "lg:px-3")}
           >
             {/* Bloco Esquerdo: Logo & Unique Name */}
             <section className="flex min-w-0 items-center justify-start">
@@ -141,7 +133,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                 <button
                   type="button"
                   onClick={onToggleSidebar}
-                  className="flex h-6 w-6 items-center justify-center rounded-md bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 text-gray-600 dark:text-gray-300 lg:hidden mr-1.5 shrink-0 transition-colors"
+                  className="mr-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black/5 text-gray-600 transition-colors hover:bg-black/10 lg:hidden dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/15"
                   aria-label={t.nav.openSidebar}
                   title={t.nav.openSidebar}
                 >
@@ -151,7 +143,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
 
               <div
                 className={cn(
-                  "flex items-center shrink-0 transition-[width] duration-300 ease-out",
+                  "flex shrink-0 items-center transition-[width] duration-300 ease-out",
                   "w-auto",
                   isCollapsed ? "lg:w-[52px]" : "lg:w-[158px]"
                 )}
@@ -162,7 +154,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                 >
                   <span
                     className={cn(
-                      "text-black dark:text-white text-sm font-bold tracking-tight leading-none",
+                      "text-sm leading-none font-bold tracking-tight text-black dark:text-white",
                       fredoka.className
                     )}
                   >
@@ -171,20 +163,25 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                 </Link>
               </div>
 
-              <span className="text-gray-300 dark:text-gray-600 shrink-0 font-light text-xs">|</span>
+              <span className="shrink-0 text-xs font-light text-gray-300 dark:text-gray-600">
+                |
+              </span>
 
               {(user?.user_organization?.unique_name || user?.org_name) && (
-                <div className="flex items-center gap-1.5 min-w-0 text-xs text-gray-400 font-medium ml-1.5 sm:ml-2">
+                <div className="ml-1.5 flex min-w-0 items-center gap-1.5 text-xs font-medium text-gray-400 sm:ml-2">
                   {(user?.user_organization?.logo_url || user?.org_logo_url) && (
                     <Image
                       src={user?.user_organization?.logo_url || user?.org_logo_url!}
-                      alt={t.navbar.logoOf.replace("{name}", user?.user_organization?.unique_name || user?.org_name || "")}
+                      alt={t.navbar.logoOf.replace(
+                        "{name}",
+                        user?.user_organization?.unique_name || user?.org_name || ""
+                      )}
                       width={16}
                       height={16}
-                      className="h-4 w-4 rounded-sm object-contain shrink-0"
+                      className="h-4 w-4 shrink-0 rounded-sm object-contain"
                     />
                   )}
-                  <span className="text-gray-600 dark:text-gray-300 truncate max-w-[80px] sm:max-w-[140px]">
+                  <span className="max-w-[80px] truncate text-gray-600 sm:max-w-[140px] dark:text-gray-300">
                     {user?.user_organization?.unique_name || user?.org_name}
                   </span>
                 </div>
@@ -195,42 +192,51 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
             <section className="flex shrink-0 items-center justify-end gap-2 md:gap-3">
               {authenticated && user && (
                 <>
-                  <div className="hidden md:flex items-center gap-3 mr-1">
+                  <div className="mr-1 hidden items-center gap-3 md:flex">
                     <a
                       href="#"
-                      className="text-xs font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-all duration-500 ease-in-out"
+                      className="text-xs font-medium text-gray-600 transition-all duration-500 ease-in-out hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                     >
                       {PROMPT_VARIANTS[variantIndex]}
                     </a>
-                    
-                    <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 hidden md:block" />
 
-                    <div className="relative group">
+                    <div className="hidden h-4 w-[1px] bg-gray-200 md:block dark:bg-white/10" />
+
+                    <div className="group relative">
                       <button
                         type="button"
                         title={t.common?.changeLanguage || "Mudar idioma"}
                         aria-label={t.common?.changeLanguage || "Mudar idioma"}
-                        className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors flex items-center pt-1 pb-1"
+                        className="flex items-center pt-1 pb-1 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                       >
                         <Globe className="h-4 w-4" />
                       </button>
-                      
-                      <div className="absolute right-0 top-full w-32 origin-top-right rounded-md bg-white p-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-neutral-800 dark:ring-white/10 invisible opacity-0 transition-all group-hover:visible group-hover:opacity-100 z-50">
+
+                      <div className="ring-opacity-5 invisible absolute top-full right-0 z-50 w-32 origin-top-right rounded-md bg-white p-1 opacity-0 shadow-lg ring-1 ring-black transition-all group-hover:visible group-hover:opacity-100 focus:outline-none dark:bg-neutral-800 dark:ring-white/10">
                         <button
                           onClick={() => setLocale("pt-BR")}
-                          className={cn("w-full text-left rounded-sm px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-700 transition-colors", locale === "pt-BR" && "bg-black/5 dark:bg-white/10 font-semibold")}
+                          className={cn(
+                            "w-full rounded-sm px-2 py-1.5 text-left text-xs text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-700",
+                            locale === "pt-BR" && "bg-black/5 font-semibold dark:bg-white/10"
+                          )}
                         >
                           Português
                         </button>
                         <button
                           onClick={() => setLocale("en-US")}
-                          className={cn("w-full text-left rounded-sm px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-700 transition-colors", locale === "en-US" && "bg-black/5 dark:bg-white/10 font-semibold")}
+                          className={cn(
+                            "w-full rounded-sm px-2 py-1.5 text-left text-xs text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-700",
+                            locale === "en-US" && "bg-black/5 font-semibold dark:bg-white/10"
+                          )}
                         >
                           English
                         </button>
                         <button
                           onClick={() => setLocale("es-ES")}
-                          className={cn("w-full text-left rounded-sm px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-700 transition-colors", locale === "es-ES" && "bg-black/5 dark:bg-white/10 font-semibold")}
+                          className={cn(
+                            "w-full rounded-sm px-2 py-1.5 text-left text-xs text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-700",
+                            locale === "es-ES" && "bg-black/5 font-semibold dark:bg-white/10"
+                          )}
                         >
                           Español
                         </button>
@@ -241,13 +247,13 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                   <NotificationsLink
                     ariaLabel={t.nav.notifications}
                     surface="desktop"
-                    className="h-6 w-6 !p-0 flex items-center justify-center !bg-transparent hover:!bg-transparent text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors"
+                    className="flex h-6 w-6 items-center justify-center !bg-transparent !p-0 text-gray-600 transition-colors hover:!bg-transparent hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                   />
 
                   <button
                     type="button"
                     onClick={handleThemeToggle}
-                    className="flex h-6 w-6 items-center justify-center text-gray-600 hover:text-gray-900 transition-colors dark:text-gray-300 dark:hover:text-white"
+                    className="flex h-6 w-6 items-center justify-center text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                     aria-label={t.navbar.theme}
                     title={t.navbar.theme}
                   >
@@ -255,17 +261,28 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                   </button>
 
                   <button
-                    onClick={() => { window.location.hash = '#settings/me'; }}
+                    onClick={() => {
+                      window.location.hash = "#settings/me";
+                    }}
                     className="flex items-center gap-2 transition-opacity hover:opacity-80"
                     aria-label={t.navbar.accountSettings}
                     title={t.navbar.accountSettings}
                   >
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200 hidden sm:block truncate max-w-[120px]">
+                    <span className="hidden max-w-[120px] truncate text-xs font-medium text-gray-700 sm:block dark:text-gray-200">
                       {user.username || user.user_name || t.common.user}
                     </span>
-                    <div className="h-6 w-6 rounded-md bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 flex items-center justify-center overflow-hidden transition-colors shrink-0">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md bg-black/5 transition-colors hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15">
                       {user.avatar_url ? (
-                        <Image src={user.avatar_url} alt={t.navbar.avatarOf.replace("{name}", user.user_name || user.username || t.common.user)} width={24} height={24} className="h-full w-full object-cover" />
+                        <Image
+                          src={user.avatar_url}
+                          alt={t.navbar.avatarOf.replace(
+                            "{name}",
+                            user.user_name || user.username || t.common.user
+                          )}
+                          width={24}
+                          height={24}
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
                         <CircleUserRound className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                       )}
@@ -277,8 +294,6 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
           </div>
         </nav>
       </header>
-
-      
     </>
   );
 };

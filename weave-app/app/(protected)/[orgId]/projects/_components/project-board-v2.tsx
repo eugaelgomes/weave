@@ -90,8 +90,7 @@ function footerActionButtonClass(
 const DRAG_OVERLAY_CARD_CLASS = "w-[208px]";
 
 type DropTargetData =
-  | { type: "stage"; stageId: string }
-  | { type: "task"; noteId: string; stageId: string };
+  { type: "stage"; stageId: string } | { type: "task"; noteId: string; stageId: string };
 
 function normalizeStageHex(color: string | undefined | null): string {
   if (!color || typeof color !== "string") return "#a3a3a3";
@@ -331,7 +330,7 @@ function NoteCard({
 
   const closeModal = () => {
     window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
     setSaving(false);
   };
 

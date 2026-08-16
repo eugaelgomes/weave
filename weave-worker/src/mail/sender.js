@@ -72,20 +72,9 @@ function createMailService() {
      * @returns {Promise<object>}
      */
     async sendMail(mailOptions = {}) {
-      const {
-        bcc,
-        cc,
-        from = env.email.from,
-        html,
-        replyTo,
-        subject,
-        text,
-        to,
-      } = mailOptions;
+      const { bcc, cc, from = env.email.from, html, replyTo, subject, text, to } = mailOptions;
 
-      const sender = normalizeSenderFrom(
-        from || (env.isDevelopment ? DEV_SENDER : null)
-      );
+      const sender = normalizeSenderFrom(from || (env.isDevelopment ? DEV_SENDER : null));
 
       if (!sender) {
         throw new Error("Configuração de email faltando: EMAIL_FROM");
@@ -127,9 +116,7 @@ function createMailService() {
       }
 
       if (error) {
-        const details = [error.message, error.name, error.statusCode]
-          .filter(Boolean)
-          .join(" | ");
+        const details = [error.message, error.name, error.statusCode].filter(Boolean).join(" | ");
         throw new Error(details || "Erro ao enviar email com Resend");
       }
 

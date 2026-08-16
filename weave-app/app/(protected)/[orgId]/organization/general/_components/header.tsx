@@ -172,8 +172,12 @@ const EditOrganizationInfoModal = ({
           <button
             type="button"
             onClick={() => {
-              window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+              window.history.replaceState(
+                null,
+                "",
+                window.location.pathname + window.location.search
+              );
+              window.dispatchEvent(new HashChangeEvent("hashchange"));
               onClose();
             }}
             aria-label="Fechar modal de edição de organização"
@@ -255,16 +259,22 @@ export function WorkspaceOverview({
       <OrganizationHeroCard
         workspace={workspace}
         userIsOwner={userIsOwner}
-        onEditLogo={() => { window.location.hash = "#organization/image/logo"; }}
-        onEditBanner={() => { window.location.hash = "#organization/image/banner"; }}
-        onOpenEditModal={() => { window.location.hash = "#organization/info/edit"; }}
+        onEditLogo={() => {
+          window.location.hash = "#organization/image/logo";
+        }}
+        onEditBanner={() => {
+          window.location.hash = "#organization/image/banner";
+        }}
+        onOpenEditModal={() => {
+          window.location.hash = "#organization/info/edit";
+        }}
       />
 
       <EditOrganizationInfoModal
         isOpen={isEditingInfo}
         onClose={() => {
           window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
           setIsEditingInfo(false);
         }}
         onSubmit={handleUpdateInfo}

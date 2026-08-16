@@ -154,7 +154,11 @@ const WorkspacePage = () => {
               : getStorageUrl(organization?.banner_url || "")
           }
           onClose={() => {
-            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            window.history.replaceState(
+              null,
+              "",
+              window.location.pathname + window.location.search
+            );
             window.dispatchEvent(new HashChangeEvent("hashchange"));
             setEditingImage(null);
           }}

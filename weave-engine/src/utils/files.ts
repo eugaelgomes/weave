@@ -3,7 +3,7 @@
  * @description File and attachment normalization for LLM requests.
  */
 
-import type { FileInput } from "../types/types";
+import type { FileInput } from "@theweave/shared";
 
 export interface NormalizedFile {
   base64Data: string;
@@ -11,10 +11,7 @@ export interface NormalizedFile {
   name: string;
 }
 
-const MAX_INLINE_FILES = Number.parseInt(
-  process.env.WEAVE_MAX_INLINE_FILES_PER_REQUEST || "3",
-  10
-);
+const MAX_INLINE_FILES = Number.parseInt(process.env.WEAVE_MAX_INLINE_FILES_PER_REQUEST || "3", 10);
 
 export function normalizeBase64(maybeBase64: unknown): string {
   if (typeof maybeBase64 !== "string") return "";

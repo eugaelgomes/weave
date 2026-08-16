@@ -101,9 +101,7 @@ function formatDateForLocale(locale, value, options = {}) {
  */
 function localeFromUserPreference(userPreference) {
   const interfaceLocale =
-    userPreference &&
-    typeof userPreference === "object" &&
-    userPreference.language
+    userPreference && typeof userPreference === "object" && userPreference.language
       ? userPreference.language.interface
       : undefined;
   return resolveEmailLocale(interfaceLocale);

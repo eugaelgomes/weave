@@ -87,7 +87,7 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
       onNoteUpdated: options.onNoteUpdated,
       onNoteDeleted: options.onNoteDeleted,
     });
-    
+
     // Set URL hash
     if (options.noteId) {
       window.location.hash = `#task/${options.noteId}`;
@@ -104,7 +104,7 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
       return initialState;
     });
     setCallbacks({});
-    
+
     // Clear hash if it is related to task
     if (window.location.hash.startsWith("#task")) {
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
@@ -118,18 +118,26 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
       if (hash.startsWith("#task/")) {
         const id = hash.replace("#task/", "");
         if (id && id !== "create") {
-          setState((prev) => prev.isOpen && prev.noteId === id ? prev : {
-            ...initialState,
-            isOpen: true,
-            mode: "view",
-            noteId: id,
-          });
+          setState((prev) =>
+            prev.isOpen && prev.noteId === id
+              ? prev
+              : {
+                  ...initialState,
+                  isOpen: true,
+                  mode: "view",
+                  noteId: id,
+                }
+          );
         } else if (id === "create") {
-          setState((prev) => prev.isOpen && prev.mode === "create" ? prev : {
-            ...initialState,
-            isOpen: true,
-            mode: "create",
-          });
+          setState((prev) =>
+            prev.isOpen && prev.mode === "create"
+              ? prev
+              : {
+                  ...initialState,
+                  isOpen: true,
+                  mode: "create",
+                }
+          );
         }
       } else {
         // If hash is cleared and modal is open (and it was opened via hash), we should close it

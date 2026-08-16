@@ -216,8 +216,7 @@ class SprintContextBuilder {
     const walk = (parentKey, depth) => {
       const siblings = byParent.get(parentKey) || [];
       return siblings.map((r) => {
-        const props =
-          r.properties && typeof r.properties === "object" ? r.properties : {};
+        const props = r.properties && typeof r.properties === "object" ? r.properties : {};
         const node = {
           children: [],
           id: String(r.id),
@@ -356,12 +355,7 @@ class SprintContextBuilder {
     }
 
     // Notes by stage
-    const notesSection = notesGroupedByStage(
-      stages,
-      notesByStageId,
-      blocksByNoteId,
-      unstagedNotes
-    );
+    const notesSection = notesGroupedByStage(stages, notesByStageId, blocksByNoteId, unstagedNotes);
     parts.push(notesSection);
 
     return parts.join("\n");
@@ -373,7 +367,8 @@ class SprintContextBuilder {
 
   _formatDate(date) {
     if (!date) return "?";
-    const d = typeof date === "string" ? date.split("T")[0] : new Date(date).toISOString().split("T")[0];
+    const d =
+      typeof date === "string" ? date.split("T")[0] : new Date(date).toISOString().split("T")[0];
     const [y, m, day] = d.split("-");
     return `${day}/${m}/${y}`;
   }

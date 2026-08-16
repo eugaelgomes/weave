@@ -36,7 +36,8 @@ export async function executeInternalTool(
   try {
     const client = await getMCPClient(executionContext);
     const rawResult = await client.executeTool(functionName, args);
-    const result = rawResult as { isError?: boolean; content?: Array<{ text?: string }> } | null | undefined;
+    const result = rawResult as
+      { isError?: boolean; content?: Array<{ text?: string }> } | null | undefined;
 
     // Process MCP result format
     if (!result) {
@@ -44,7 +45,9 @@ export async function executeInternalTool(
     }
 
     if (result.isError) {
-      return { error: (result.content || []).map((c: { text?: string }) => c.text || "").join("\n") };
+      return {
+        error: (result.content || []).map((c: { text?: string }) => c.text || "").join("\n"),
+      };
     }
 
     if (result.content && result.content.length > 0) {

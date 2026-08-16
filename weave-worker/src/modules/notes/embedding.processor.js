@@ -75,11 +75,7 @@ class EmbeddingProcessor {
       return true;
     }
     const lower = message.toLowerCase();
-    if (
-      lower.includes("timeout") ||
-      lower.includes("econnreset") ||
-      lower.includes("connection")
-    ) {
+    if (lower.includes("timeout") || lower.includes("econnreset") || lower.includes("connection")) {
       return true;
     }
     return false;

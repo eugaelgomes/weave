@@ -15,4 +15,3 @@ function getEmailLogoSrc() {
 }
 
 module.exports = { getEmailLogoSrc };
-

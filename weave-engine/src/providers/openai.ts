@@ -5,13 +5,11 @@
  */
 
 import axios from "axios";
-import type { LLMRequestParams, LLMResponse, ToolCallResult } from "../types/types";
+import type { LLMRequestParams, LLMResponse, ToolCallResult } from "@theweave/shared";
 import { normalizeFiles } from "../utils/files";
 import { parseAccumulatedToolCalls } from "../utils/streaming";
 
-export async function callOpenAICompatProvider(
-  params: LLMRequestParams
-): Promise<LLMResponse> {
+export async function callOpenAICompatProvider(params: LLMRequestParams): Promise<LLMResponse> {
   const { apiKey, model, provider, baseURL } = params;
 
   if (!apiKey) {
@@ -66,8 +64,7 @@ export async function callOpenAICompatProvider(
 
       if (msg.role === "tool") {
         clean.tool_call_id =
-          msg.tool_call_id ||
-          `call_${Math.random().toString(36).substring(2, 11)}`;
+          msg.tool_call_id || `call_${Math.random().toString(36).substring(2, 11)}`;
         clean.content =
           typeof msg.content === "string"
             ? msg.content
@@ -105,7 +102,9 @@ export async function callOpenAICompatProvider(
           type: "text",
           text: `\n\n--- FILE: ${file.name} ---\n${text}\n--- END ---`,
         });
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
   }
 
@@ -182,9 +181,7 @@ export async function callOpenAICompatProvider(
           if (delta?.tool_calls) {
             if (!finalToolCalls) finalToolCalls = [];
             for (const tc of delta.tool_calls) {
-              const idx =
-                tc.index ??
-                (finalToolCalls.length > 0 ? finalToolCalls.length - 1 : 0);
+              const idx = tc.index ?? (finalToolCalls.length > 0 ? finalToolCalls.length - 1 : 0);
               if (!finalToolCalls[idx]) {
                 finalToolCalls[idx] = {
                   id: tc.id,
@@ -192,20 +189,18 @@ export async function callOpenAICompatProvider(
                   function: { name: "", arguments: "" },
                 };
               }
-              if (tc.id && !finalToolCalls[idx].id)
-                finalToolCalls[idx].id = tc.id;
-              if (tc.extra_content)
-                finalToolCalls[idx].extra_content = tc.extra_content;
-              if (tc.function?.name)
-                finalToolCalls[idx].function.name += tc.function.name;
+              if (tc.id && !finalToolCalls[idx].id) finalToolCalls[idx].id = tc.id;
+              if (tc.extra_content) finalToolCalls[idx].extra_content = tc.extra_content;
+              if (tc.function?.name) finalToolCalls[idx].function.name += tc.function.name;
               if (tc.function?.arguments)
-                finalToolCalls[idx].function.arguments +=
-                  tc.function.arguments;
+                finalToolCalls[idx].function.arguments += tc.function.arguments;
             }
           }
 
           if (parsed.usage) finalUsage = parsed.usage;
-        } catch { /* ignore bad chunks */ }
+        } catch {
+          /* ignore bad chunks */
+        }
       }
     }
 
@@ -260,18 +255,16 @@ export async function callOpenAICompatProvider(
       }
     };
     const first = msg.tool_calls[0];
-    const toolCalls: ToolCallResult[] = msg.tool_calls.map(
-      (tc: Record<string, unknown>) => {
-        const fn = (tc.function || {}) as Record<string, unknown>;
-        const result: ToolCallResult = {
-          id: tc.id as string,
-          name: fn.name as string,
-          arguments: safeParse(fn.arguments as string),
-        };
-        if (tc.extra_content) result.extra_content = tc.extra_content as string;
-        return result;
-      }
-    );
+    const toolCalls: ToolCallResult[] = msg.tool_calls.map((tc: Record<string, unknown>) => {
+      const fn = (tc.function || {}) as Record<string, unknown>;
+      const result: ToolCallResult = {
+        id: tc.id as string,
+        name: fn.name as string,
+        arguments: safeParse(fn.arguments as string),
+      };
+      if (tc.extra_content) result.extra_content = tc.extra_content as string;
+      return result;
+    });
     return {
       type: "function_call",
       text: null,

@@ -36,7 +36,7 @@ function buildCycleSummaryTemplate({
     infoText: `Your next cycle ends on ${new Date(nextPeriodEnd).toLocaleDateString()}.`,
     introLines: [
       `Your current billing cycle has successfully concluded. You are currently on the ${escapeHtml(planName)} plan.`,
-      `Here is a quick summary of your usage during the last cycle:`
+      `Here is a quick summary of your usage during the last cycle:`,
     ],
     locale: resolvedLocale,
     preheader: `Billing cycle summary for your ${planName} plan`,

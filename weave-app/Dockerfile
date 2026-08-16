@@ -32,7 +32,6 @@ RUN apk add --no-cache ca-certificates curl gnupg \
   && rm -rf /var/cache/apk/*
 
 ENV DOPPLER_CONFIG_DIR=/tmp/.doppler
-ENV DOPPLER_CONFIG=prd
 
 COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
@@ -59,4 +58,4 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["doppler", "run", "--project", "weave-app", "--config", "prd", "--", "npm", "start"]
+CMD ["doppler", "run", "--project", "theweave", "--config", "prd", "--", "npm", "start"]

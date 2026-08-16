@@ -4,11 +4,11 @@
  * Routes requests to the appropriate provider implementation.
  */
 
-import type { LLMRequestParams, LLMResponse } from "../types/types";
+import type { LLMRequestParams, LLMResponse } from "@theweave/shared";
 import { callOpenAICompatProvider } from "./openai";
 import { callAnthropicProvider } from "./anthropic";
 
-export * from "../types/types";
+export * from "@theweave/shared";
 
 export interface CallLLMProviderResult {
   data: LLMResponse;
@@ -16,9 +16,7 @@ export interface CallLLMProviderResult {
   provider: string;
 }
 
-export async function callLLMProvider(
-  params: LLMRequestParams
-): Promise<CallLLMProviderResult> {
+export async function callLLMProvider(params: LLMRequestParams): Promise<CallLLMProviderResult> {
   if (!params.provider) {
     throw new Error("provider is required");
   }
@@ -52,10 +50,7 @@ export async function callLLMProvider(
           console.error("[LLM ERROR] Provider API stream error:", body);
         });
       } else {
-        console.error(
-          "[LLM ERROR] Provider API error:",
-          JSON.stringify(res.data, null, 2)
-        );
+        console.error("[LLM ERROR] Provider API error:", JSON.stringify(res.data, null, 2));
       }
     }
 
@@ -70,8 +65,6 @@ export async function callLLMProvider(
 export type { LLMRequestParams as CallAIProviderParams };
 
 /** @deprecated Use callLLMProvider. Kept for backward compat with chat.engine.ts */
-export async function callAIProvider(
-  params: LLMRequestParams
-): Promise<CallLLMProviderResult> {
+export async function callAIProvider(params: LLMRequestParams): Promise<CallLLMProviderResult> {
   return callLLMProvider(params);
 }

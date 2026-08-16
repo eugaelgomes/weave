@@ -108,7 +108,9 @@ export const SettingsDangerZone: React.FC<any> = ({
             </p>
           </div>
           <button
-            onClick={() => { window.location.hash = "#settings/security/backup"; }}
+            onClick={() => {
+              window.location.hash = "#settings/security/backup";
+            }}
             className={`${btnBase} dark:border-surface-dark-border border border-neutral-200 text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300`}
           >
             <Download size={13} /> Exportar Dados
@@ -126,7 +128,9 @@ export const SettingsDangerZone: React.FC<any> = ({
             </p>
           </div>
           <button
-            onClick={() => { window.location.hash = "#settings/security/delete"; }}
+            onClick={() => {
+              window.location.hash = "#settings/security/delete";
+            }}
             className={`${btnBase} bg-red-600 text-white hover:bg-red-700`}
           >
             <Trash2 size={13} /> Deletar Conta
@@ -137,7 +141,9 @@ export const SettingsDangerZone: React.FC<any> = ({
       {/* Modais Integrados */}
       <ConfirmationModal
         isOpen={modalBackup}
-        onClose={() => { window.location.hash = "#settings/security"; }}
+        onClose={() => {
+          window.location.hash = "#settings/security";
+        }}
         onConfirm={() => {
           handleCreateBackup();
           window.location.hash = "#settings/security";
@@ -150,7 +156,9 @@ export const SettingsDangerZone: React.FC<any> = ({
 
       <ConfirmationModal
         isOpen={modalDelete}
-        onClose={() => { window.location.hash = "#settings/security"; }}
+        onClose={() => {
+          window.location.hash = "#settings/security";
+        }}
         onConfirm={handleDeleteAccount}
         variant="danger"
         title="Excluir Conta?"

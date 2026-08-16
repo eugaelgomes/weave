@@ -214,17 +214,18 @@ export function CalendarPreview({
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      setIsCreateModalOpen(hash.startsWith("#calendar/create") || hash.startsWith("#calendar/edit"));
+      setIsCreateModalOpen(
+        hash.startsWith("#calendar/create") || hash.startsWith("#calendar/edit")
+      );
       if (!hash.startsWith("#calendar/edit") && eventToEdit) {
         setEventToEdit(null);
       }
     };
-    
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [eventToEdit]);
 
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [eventToEdit]);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -527,7 +528,7 @@ export function CalendarPreview({
     return (
       <div
         ref={scrollContainerRef}
-        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 dark:border-surface-dark-border flex flex-1 flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white [scrollbar-gutter:stable] dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
+        className="[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500 dark:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-brand-primary-500/60 dark:border-surface-dark-border flex flex-1 [scrollbar-gutter:stable] flex-col overflow-x-hidden overflow-y-auto border-t border-neutral-200 bg-white dark:bg-[#1d1d1b] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent"
       >
         <div className="dark:divide-surface-dark-border dark:border-surface-dark-border sticky top-0 z-20 grid [grid-template-columns:var(--label-w)_repeat(7,minmax(0,1fr))] divide-x divide-neutral-200 border-b border-neutral-200 [--label-w:40px] sm:[--label-w:56px]">
           <div className="bg-neutral-50 px-1 py-1 text-right text-[10px] font-medium text-neutral-500 dark:bg-[#1d1d1b]/50 dark:text-neutral-400">
@@ -689,7 +690,7 @@ export function CalendarPreview({
                         evt.stopPropagation();
                         setViewEventModal(event.data);
                       }}
-                      className={`absolute z-20 cursor-pointer overflow-hidden rounded-md px-1.5 py-1 transition-all hover:z-30 hover:shadow-lg ${colors.bg}  ${colors.hover}`}
+                      className={`absolute z-20 cursor-pointer overflow-hidden rounded-md px-1.5 py-1 transition-all hover:z-30 hover:shadow-lg ${colors.bg} ${colors.hover}`}
                       style={{
                         top: `${top}px`,
                         height: `${height}px`,
@@ -1230,7 +1231,9 @@ export function CalendarPreview({
               )}
 
               <button
-                onClick={() => { window.location.hash = "#calendar/create"; }}
+                onClick={() => {
+                  window.location.hash = "#calendar/create";
+                }}
                 className="flex items-center justify-center gap-0.5 rounded border border-amber-200 bg-amber-500 px-1.5 py-0.5 text-[8.5px] font-bold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-95 dark:border-amber-600 dark:hover:bg-amber-500"
                 type="button"
               >
@@ -1254,7 +1257,7 @@ export function CalendarPreview({
         isOpen={isCreateModalOpen}
         onClose={() => {
           window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
           setTimeout(() => setEventToEdit(null), 300);
         }}
         eventToEdit={eventToEdit}

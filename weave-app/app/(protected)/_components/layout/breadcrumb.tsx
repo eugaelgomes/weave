@@ -58,10 +58,7 @@ const Breadcrumb = () => {
 
   const breadcrumbs = generateBreadcrumbs();
 
-  if (
-    breadcrumbs.length === 0 ||
-    (breadcrumbs.length === 1 && breadcrumbs[0].path === "/home")
-  ) {
+  if (breadcrumbs.length === 0 || (breadcrumbs.length === 1 && breadcrumbs[0].path === "/home")) {
     return null;
   }
 

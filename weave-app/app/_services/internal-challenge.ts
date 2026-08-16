@@ -46,8 +46,7 @@ const SKEW_MS: number = 45_000;
 
 /** Type definition for the challenge cache. */
 type ChallengeCache =
-  | { kind: "token"; token: string; exp: number }
-  | { kind: "disabled"; exp: number };
+  { kind: "token"; token: string; exp: number } | { kind: "disabled"; exp: number };
 
 /** In-memory cache for the challenge. */
 let cache: ChallengeCache | null = null;

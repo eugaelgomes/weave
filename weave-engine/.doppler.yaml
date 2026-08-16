@@ -1,3 +1,0 @@
-setup:
-  - project: weave-engine
-    config: dev

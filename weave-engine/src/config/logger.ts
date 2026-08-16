@@ -12,8 +12,7 @@ const currentLevel = env.isProduction ? LOG_LEVELS.info : LOG_LEVELS.debug;
 
 function formatMessage(level: string, message: string, meta: Record<string, unknown> = {}): string {
   const timestamp = new Date().toISOString();
-  const metaStr =
-    Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
+  const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
   return `[${timestamp}] [${level.toUpperCase()}] ${message}${metaStr}`;
 }
 

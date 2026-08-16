@@ -580,9 +580,8 @@ export default function ChatInterface({
                 setFeedbackState={setFeedbackState}
                 handleFeedbackSubmit={async (messageId, rating, comment) => {
                   try {
-                    const { submitMessageFeedback } = await import(
-                      "@/app/_services/ai-agent-service/agent-service"
-                    );
+                    const { submitMessageFeedback } =
+                      await import("@/app/_services/ai-agent-service/agent-service");
                     await submitMessageFeedback(messageId, rating, comment);
                     setFeedbackState((prev) => ({
                       ...prev,

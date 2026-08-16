@@ -1,0 +1,13 @@
+{
+  "workspaces": {
+    ".": {
+      "ignoreBinaries": ["husky", "commit-and-tag-version"]
+    },
+    "weave-api": { "entry": "src/index.js!" },
+    "weave-engine": { "entry": "src/index.ts!" },
+    "weave-worker": { "entry": "src/index.js!" },
+    "weave-app": { 
+      "entry": ["next.config.ts", "postcss.config.mjs", "tailwind.config.ts", "app/**/page.tsx", "app/**/layout.tsx", "app/**/route.ts", "instrumentation.ts"] 
+    }
+  }
+}

@@ -3,7 +3,7 @@
  * @description Helpers for handling SSE streams and accumulating tool calls.
  */
 
-import type { ToolCallResult } from "../types/types";
+import type { ToolCallResult } from "@theweave/shared";
 
 export function parseAccumulatedToolCalls(
   finalToolCalls: Array<{
@@ -22,7 +22,9 @@ export function parseAccumulatedToolCalls(
         if (str.includes("}{")) {
           return JSON.parse(str.split("}{")[0] + "}");
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       return {};
     }
   };

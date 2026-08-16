@@ -149,9 +149,8 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const { toggleAgentActive: toggleActiveService } = await import(
-        "../_services/ai-agent-service/agent-service"
-      );
+      const { toggleAgentActive: toggleActiveService } =
+        await import("../_services/ai-agent-service/agent-service");
       const updatedAgent = await toggleActiveService(id, is_active);
       setAgents((prev) => prev.map((a) => (a.id === id ? updatedAgent : a)));
       return updatedAgent;
@@ -167,9 +166,8 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const { duplicateAgent: duplicateAgentService } = await import(
-        "../_services/ai-agent-service/agent-service"
-      );
+      const { duplicateAgent: duplicateAgentService } =
+        await import("../_services/ai-agent-service/agent-service");
       const newAgent = await duplicateAgentService(id);
       setAgents((prev) => [...prev, newAgent]);
       return newAgent;

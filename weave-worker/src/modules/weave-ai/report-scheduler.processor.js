@@ -140,10 +140,8 @@ class AiReportSchedulerProcessor {
     const workableDays = config.sprint_workable_days ||
       config.default_workable_days || [1, 2, 3, 4, 5];
 
-    if (todayStr === startStr && config.enable_sprint_kickoff)
-      return "sprint_kickoff";
-    if (todayStr === endStr && config.enable_sprint_review)
-      return "sprint_review";
+    if (todayStr === startStr && config.enable_sprint_kickoff) return "sprint_kickoff";
+    if (todayStr === endStr && config.enable_sprint_review) return "sprint_review";
     if (
       todayStr > startStr &&
       todayStr < endStr &&
@@ -192,22 +190,12 @@ class AiReportSchedulerProcessor {
       let hasReport = false;
       if (isStartDay && config.enable_sprint_kickoff) hasReport = true;
       else if (isEndDay && config.enable_sprint_review) hasReport = true;
-      else if (
-        !isStartDay &&
-        !isEndDay &&
-        isWorkableDay &&
-        config.enable_daily_standup
-      )
+      else if (!isStartDay && !isEndDay && isWorkableDay && config.enable_daily_standup)
         hasReport = true;
 
       if (hasReport) {
         const reportTime = new Date(candidate);
-        reportTime.setUTCHours(
-          parseInt(hours, 10),
-          parseInt(minutes, 10),
-          0,
-          0
-        );
+        reportTime.setUTCHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
         return reportTime.toISOString();
       }
       candidate.setUTCDate(candidate.getUTCDate() + 1);
@@ -224,9 +212,7 @@ class AiReportSchedulerProcessor {
     const nextStart = new Date(prevEnd);
     nextStart.setDate(nextStart.getDate() + 1);
     const nextEnd = new Date(nextStart);
-    nextEnd.setDate(
-      nextEnd.getDate() + (config.default_sprint_duration_days || 14) - 1
-    );
+    nextEnd.setDate(nextEnd.getDate() + (config.default_sprint_duration_days || 14) - 1);
     const nextNumber = config.sprint_number + 1;
 
     const newSprints = await executeQuery(

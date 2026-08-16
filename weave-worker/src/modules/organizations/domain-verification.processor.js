@@ -162,12 +162,7 @@ class DomainVerificationProcessor {
     await executeQuery(query, [domainId]);
   }
 
-
-
-  async promoteRequesterToSuperAdminIfAllowed({
-    organizationId,
-    requestedByUserId,
-  }) {
+  async promoteRequesterToSuperAdminIfAllowed({ organizationId, requestedByUserId }) {
     if (!requestedByUserId) return;
 
     const roleQuery = `
@@ -180,10 +175,7 @@ class DomainVerificationProcessor {
       LIMIT 1;
     `;
 
-    const roleResult = await executeQuery(roleQuery, [
-      organizationId,
-      requestedByUserId,
-    ]);
+    const roleResult = await executeQuery(roleQuery, [organizationId, requestedByUserId]);
 
     const currentRole = roleResult[0]?.role;
     if (!currentRole || currentRole === "SUPER_ADMIN") return;
@@ -197,9 +189,7 @@ class DomainVerificationProcessor {
         AND deleted = false
         AND suspended = false;
     `;
-    const countResult = await executeQuery(superAdminCountQuery, [
-      organizationId,
-    ]);
+    const countResult = await executeQuery(superAdminCountQuery, [organizationId]);
     const currentSuperAdmins = countResult[0]?.total || 0;
     if (currentSuperAdmins >= 3) return;
 

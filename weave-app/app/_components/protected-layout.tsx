@@ -58,10 +58,9 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
 
   return (
     <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-white dark:bg-[#1d1d1b]">
-      
       <Navbar onToggleSidebar={toggleSidebar} isCollapsed={isCollapsed} />
 
-      <div className="flex flex-1 flex-row overflow-hidden relative">
+      <div className="relative flex flex-1 flex-row overflow-hidden">
         {/* Desktop Sidebar */}
         <div
           className={`hidden min-h-0 shrink-0 flex-col ${
@@ -77,51 +76,46 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
 
         {/* Main Content Area */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-[100] lg:hidden">
-            <button
-              type="button"
-              aria-label="Fechar menu lateral"
-              className="fixed inset-0 bg-gray-950/40 backdrop-blur-xs transition-opacity"
-              onClick={closeSidebar}
-            />
-            <div className="fixed inset-y-0 left-0 z-[101] flex w-[260px] max-w-[85vw] flex-col overflow-hidden bg-white shadow-2xl border-r border-gray-200/80 dark:border-white/10 dark:bg-[#1d1d1b] animate-in slide-in-from-left duration-300">
-              <Sidebar
-                onLinkClick={closeSidebar}
-                isCollapsed={false}
-                toggleCollapse={toggleCollapse}
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-[100] lg:hidden">
+              <button
+                type="button"
+                aria-label="Fechar menu lateral"
+                className="fixed inset-0 bg-gray-950/40 backdrop-blur-xs transition-opacity"
+                onClick={closeSidebar}
               />
+              <div className="animate-in slide-in-from-left fixed inset-y-0 left-0 z-[101] flex w-[260px] max-w-[85vw] flex-col overflow-hidden border-r border-gray-200/80 bg-white shadow-2xl duration-300 dark:border-white/10 dark:bg-[#1d1d1b]">
+                <Sidebar
+                  onLinkClick={closeSidebar}
+                  isCollapsed={false}
+                  toggleCollapse={toggleCollapse}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Mobile Sidebar modal stays outside the regular flow but inside relative/fixed positioning */}
+          {/* Mobile Sidebar modal stays outside the regular flow but inside relative/fixed positioning */}
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <div
-            className={cn(
-              "flex w-full min-w-0 flex-1 flex-col overflow-hidden"
-            )}
-          >
-
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-0">
-              <div
-                className={cn(
-                  "flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#1d1d1b]",
-                  isLg ? "flex-1" : "max-lg:flex-none"
-                )}
-              >
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <div className={cn("flex w-full min-w-0 flex-1 flex-col overflow-hidden")}>
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-0">
                 <div
                   className={cn(
-                    "animate-in fade-in slide-in-from-bottom-2 flex min-h-0 w-full min-w-0 flex-col gap-2 duration-500",
-                    isLg ? "flex-1" : "max-lg:min-h-[calc(100dvh-9rem)] max-lg:flex-none"
+                    "flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200/80 bg-white dark:border-white/10 dark:bg-[#1d1d1b]",
+                    isLg ? "flex-1" : "max-lg:flex-none"
                   )}
                 >
-                  {children}
+                  <div
+                    className={cn(
+                      "animate-in fade-in slide-in-from-bottom-2 flex min-h-0 w-full min-w-0 flex-col gap-2 duration-500",
+                      isLg ? "flex-1" : "max-lg:min-h-[calc(100dvh-9rem)] max-lg:flex-none"
+                    )}
+                  >
+                    {children}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
       </div>

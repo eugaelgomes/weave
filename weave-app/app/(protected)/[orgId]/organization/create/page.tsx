@@ -117,11 +117,11 @@ export default function OrganizationCreatePage() {
     () =>
       Boolean(
         form.org_name.trim() &&
-          form.unique_name.trim() &&
-          form.organization_role &&
-          form.default_locale.trim() &&
-          form.country.trim() &&
-          form.language.trim()
+        form.unique_name.trim() &&
+        form.organization_role &&
+        form.default_locale.trim() &&
+        form.country.trim() &&
+        form.language.trim()
       ),
     [form]
   );

@@ -26,17 +26,12 @@ class QueueRouter {
   constructor() {
     this.isRunning = false;
     this.isShuttingDown = false;
-    this.queueKeys = [
-      REDIS_QUEUES.ENGINE_LLM_REQUESTS.key,
-    ];
+    this.queueKeys = [REDIS_QUEUES.ENGINE_LLM_REQUESTS.key];
     this.registry = {
       [REDIS_QUEUES.ENGINE_LLM_REQUESTS.key]: chatWorker,
     };
     this.activeJobs = new Set();
-    this.maxConcurrentJobs = parseInt(
-      process.env.ENGINE_MAX_CONCURRENT_JOBS || "5",
-      10
-    );
+    this.maxConcurrentJobs = parseInt(process.env.ENGINE_MAX_CONCURRENT_JOBS || "5", 10);
   }
 
   async start(): Promise<void> {
@@ -86,12 +81,7 @@ class QueueRouter {
           continue;
         }
 
-        const jobPromise = this.processJobSafe(
-          processor,
-          parsedJob,
-          queueName,
-          rawPayload
-        );
+        const jobPromise = this.processJobSafe(processor, parsedJob, queueName, rawPayload);
         this.activeJobs.add(jobPromise);
         jobPromise.finally(() => {
           this.activeJobs.delete(jobPromise);

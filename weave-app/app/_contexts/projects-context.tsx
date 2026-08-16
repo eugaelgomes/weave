@@ -715,7 +715,6 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     [user?.id]
   );
 
-
   const createTaskPriority = useCallback(
     async (projectId: string, data: CreateTaskPriorityData): Promise<TaskPriority | null> => {
       if (!user?.id) return null;

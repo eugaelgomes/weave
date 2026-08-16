@@ -244,9 +244,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
               }
               return prev;
             });
-            
-            setChatHistory((prev) => 
-              prev.map((s) => s.id === chunk.sessionId ? { ...s, title: chunk.title } : s)
+
+            setChatHistory((prev) =>
+              prev.map((s) => (s.id === chunk.sessionId ? { ...s, title: chunk.title } : s))
             );
             return;
           }

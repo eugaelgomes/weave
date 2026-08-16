@@ -41,10 +41,7 @@ function processInline(line) {
   result = result.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
   // Strikethrough: ~~text~~
-  result = result.replace(
-    /~~(.+?)~~/g,
-    "<span style=\"text-decoration: line-through;\">$1</span>"
-  );
+  result = result.replace(/~~(.+?)~~/g, '<span style="text-decoration: line-through;">$1</span>');
 
   // Inline code: `text`
   result = result.replace(
@@ -61,7 +58,7 @@ function processInline(line) {
   // Highlight: ==text==
   result = result.replace(
     /==(.+?)==/g,
-    "<mark style=\"background: #FEF3C7; padding: 1px 3px; border-radius: 2px;\">$1</mark>"
+    '<mark style="background: #FEF3C7; padding: 1px 3px; border-radius: 2px;">$1</mark>'
   );
 
   // Underline: <u>text</u> (already HTML, just unescape)
@@ -92,13 +89,9 @@ function markdownToHtml(markdown) {
   const flushList = () => {
     if (!inList || listItems.length === 0) return;
     const tag = listOrdered ? "ol" : "ul";
-    htmlParts.push(
-      `<${tag} style="margin: 8px 0 8px 20px; padding: 0; color: ${COLOR_TEXT};">`
-    );
+    htmlParts.push(`<${tag} style="margin: 8px 0 8px 20px; padding: 0; color: ${COLOR_TEXT};">`);
     for (const item of listItems) {
-      htmlParts.push(
-        `<li style="margin: 4px 0; font-size: 14px; line-height: 1.6;">${item}</li>`
-      );
+      htmlParts.push(`<li style="margin: 4px 0; font-size: 14px; line-height: 1.6;">${item}</li>`);
     }
     htmlParts.push(`</${tag}>`);
     listItems = [];
@@ -201,9 +194,7 @@ function markdownToHtml(markdown) {
       const decoration = checked
         ? "text-decoration: line-through; color: " + COLOR_MUTED
         : "color: " + COLOR_TEXT;
-      listItems.push(
-        `${emoji} <span style="${decoration}; font-size: 14px;">${text}</span>`
-      );
+      listItems.push(`${emoji} <span style="${decoration}; font-size: 14px;">${text}</span>`);
       continue;
     }
 

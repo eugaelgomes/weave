@@ -13,8 +13,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon",
-    "dev:doppler": "doppler run --project weave-engine --config dev -- npm run dev",
-    "start:doppler": "doppler run --project weave-engine --config dev -- npm start",
+    "dev:doppler": "doppler run --project theweave --config dev -- npm run dev",
+    "start:doppler": "doppler run --project theweave --config dev -- npm start",
     "lint": "eslint \"src/**/*.{js,ts}\"",
     "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
     "format": "prettier --write \"src/**/*.{js,ts,json}\"",
@@ -47,18 +47,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.9.0",
     "@types/node": "^26.1.1",
-    "eslint": "^9.9.0",
     "eslint-plugin-n": "^18.1.0",
     "eslint-plugin-sort-keys-fix": "^1.1.2",
-    "globals": "^15.9.0",
     "jest": "^30.3.0",
     "nodemon": "^3.1.4",
-    "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.64.0"
+    "tsconfig-paths": "^4.2.0"
   }
+}
 }

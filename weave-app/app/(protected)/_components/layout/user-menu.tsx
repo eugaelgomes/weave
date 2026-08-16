@@ -6,7 +6,13 @@ import { CircleUserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { User } from "@/app/_contexts/auth-context";
 
-export const UserAvatar = ({ user, size = "sm" }: { user: User; size?: "xs" | "sm" | "md" | "lg" }) => {
+export const UserAvatar = ({
+  user,
+  size = "sm",
+}: {
+  user: User;
+  size?: "xs" | "sm" | "md" | "lg";
+}) => {
   const sizeClasses = {
     xs: "h-[26px] w-[26px]",
     sm: "h-8 w-8",

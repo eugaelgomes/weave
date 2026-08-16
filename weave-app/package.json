@@ -18,11 +18,11 @@
   },
   "scripts": {
     "dev": "next dev",
-    "dev:doppler": "doppler run --project weave-app --config dev -- npm run dev",
+    "dev:doppler": "doppler run --project theweave --config dev -- npm run dev",
     "build": "next build",
-    "build:doppler": "doppler run --project weave-app --config dev -- npm run build",
+    "build:doppler": "doppler run --project theweave --config dev -- npm run build",
     "start": "next start",
-    "start:doppler": "doppler run --project weave-app --config dev -- npm start",
+    "start:doppler": "doppler run --project theweave --config dev -- npm start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
@@ -73,18 +73,10 @@
     "zod": "^4.4.2"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.23",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.5",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.6.2",
-    "prettier-plugin-tailwindcss": "^0.7.4",
-    "tailwindcss": "^4",
-    "typescript": "5.9.3"
+    "tailwindcss": "^4"
   }
 }

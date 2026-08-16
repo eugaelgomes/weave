@@ -1,6 +1,15 @@
 const { logger } = require("./config/logger");
 
-const { backup, notifications, notes, organizations, plans, "weave-ai": weaveAi } = require("./modules");
+const {
+  backup,
+  notifications,
+  notes,
+  organizations,
+  plans,
+  storage,
+  tracing,
+  "weave-ai": weaveAi,
+} = require("./modules");
 
 const jobProcessors = new Map();
 
@@ -42,6 +51,9 @@ function initializeJobs() {
   // weave-ai
   registerJob("ai_report_delivery", weaveAi.reportDelivery);
   registerJob("ai_report_scheduler", weaveAi.reportScheduler);
+
+  // tracing
+  registerJob("tracing_events", tracing.tracingEventsProcessor);
 
   logger.info("Jobs initialized", { registered: listRegisteredJobs() });
 }

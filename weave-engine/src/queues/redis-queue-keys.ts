@@ -8,10 +8,7 @@ export const DEFAULT_EMAIL_QUEUE_KEY = "weave:emails:queue";
  * @returns {string}
  */
 export function getEngineLlmRequestQueueRedisKey(): string {
-  return (
-    process.env.REDIS_ENGINE_LLM_REQUEST_QUEUE_KEY ||
-    DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY
-  );
+  return process.env.REDIS_ENGINE_LLM_REQUEST_QUEUE_KEY || DEFAULT_ENGINE_LLM_REQUEST_QUEUE_KEY;
 }
 
 /**
@@ -21,10 +18,7 @@ export function getEngineLlmRequestQueueRedisKey(): string {
  * @returns {string}
  */
 export function getEngineLlmResponsePrefixRedisKey(): string {
-  return (
-    process.env.REDIS_ENGINE_LLM_RESPONSE_PREFIX ||
-    DEFAULT_ENGINE_LLM_RESPONSE_PREFIX
-  );
+  return process.env.REDIS_ENGINE_LLM_RESPONSE_PREFIX || DEFAULT_ENGINE_LLM_RESPONSE_PREFIX;
 }
 
 /**

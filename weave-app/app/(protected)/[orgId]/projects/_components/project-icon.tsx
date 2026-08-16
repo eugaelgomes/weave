@@ -8,10 +8,7 @@ import type { ProjectProperties } from "@/app/_services/projects-service/project
 
 /** Note/project icon: emoji string or storage object (size optional on notes). */
 export type IconFieldValue =
-  | string
-  | { path: string; name?: string; type?: string; size?: string }
-  | null
-  | undefined;
+  string | { path: string; name?: string; type?: string; size?: string } | null | undefined;
 
 type ProjectIconValue = ProjectProperties["icon"] | IconFieldValue;
 

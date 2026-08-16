@@ -75,7 +75,7 @@ export default function InvitesPage() {
         t.organizationMembers.inviteSuccess.replace("{email}", payload.email)
       );
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
       setShowInviteModal(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t.organizationMembers.inviteError;
@@ -157,7 +157,9 @@ export default function InvitesPage() {
             {userCanManage ? (
               <button
                 type="button"
-                onClick={() => { window.location.hash = "#organization/invite"; }}
+                onClick={() => {
+                  window.location.hash = "#organization/invite";
+                }}
                 className="bg-brand-primary-500 flex shrink-0 items-center justify-center gap-2 self-stretch rounded-md px-3 py-2 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-[0.98] sm:self-auto sm:py-1.5"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
@@ -237,7 +239,7 @@ export default function InvitesPage() {
         isOpen={showInviteModal}
         onClose={() => {
           window.history.replaceState(null, "", window.location.pathname + window.location.search);
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+          window.dispatchEvent(new HashChangeEvent("hashchange"));
           setShowInviteModal(false);
         }}
         onInvite={handleInvite}

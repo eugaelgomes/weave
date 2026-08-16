@@ -50,12 +50,7 @@ class SpacesService {
     this.bucketName = env.storage.bucketName;
     this.region = env.storage.region;
 
-    if (
-      !this.spacesEndpoint ||
-      !this.accessKeyId ||
-      !this.secretAccessKey ||
-      !this.bucketName
-    ) {
+    if (!this.spacesEndpoint || !this.accessKeyId || !this.secretAccessKey || !this.bucketName) {
       logger.warn("Storage service not configured, some features will be disabled");
       this.isConfigured = false;
       return;
@@ -101,9 +96,7 @@ class SpacesService {
       const uniqueFileName = fileName || `backup_${userId}_${timestamp}.csv`;
       const key = this.buildKey(BACKUPS, String(userId), uniqueFileName);
 
-      const buffer = Buffer.isBuffer(fileContent)
-        ? fileContent
-        : Buffer.from(fileContent, "utf-8");
+      const buffer = Buffer.isBuffer(fileContent) ? fileContent : Buffer.from(fileContent, "utf-8");
 
       const uploadParams = {
         ACL: "private",
@@ -140,23 +133,13 @@ class SpacesService {
    * @param {string} folderPath - Path completo da pasta no bucket (opcional)
    * @returns {Promise<Object>} - Objeto com URL e key do arquivo
    */
-  async uploadImage(
-    imageBuffer,
-    mimeType,
-    userId,
-    fileName = null,
-    folderPath = null
-  ) {
+  async uploadImage(imageBuffer, mimeType, userId, fileName = null, folderPath = null) {
     try {
       const fileExtension = this.getFileExtensionFromMimeType(mimeType);
       const uniqueFileName = fileName || `image_${uuidv4()}${fileExtension}`;
       const key = folderPath
         ? this.buildKey(folderPath, uniqueFileName)
-        : this.buildKey(
-            SpacesService.FOLDER_PATHS.IMAGES,
-            String(userId),
-            uniqueFileName
-          );
+        : this.buildKey(SpacesService.FOLDER_PATHS.IMAGES, String(userId), uniqueFileName);
 
       const uploadParams = {
         ACL: "public-read",
@@ -241,12 +224,9 @@ class SpacesService {
       "application/pdf": ".pdf",
       "application/vnd.ms-excel": ".xls",
       "application/vnd.ms-powerpoint": ".ppt",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        ".pptx",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        ".xlsx",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        ".docx",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
       "application/x-rar-compressed": ".rar",
       "application/xml": ".xml",
       "application/zip": ".zip",
@@ -275,12 +255,7 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(
-      NOTES.ROOT,
-      userFolder,
-      noteFolder,
-      NOTES.ICONS
-    );
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.ICONS);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -290,22 +265,11 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(
-      NOTES.ROOT,
-      userFolder,
-      noteFolder,
-      NOTES.BANNERS
-    );
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.BANNERS);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  async uploadNoteFile(
-    fileBuffer,
-    mimeType,
-    noteId,
-    userId,
-    originalName = null
-  ) {
+  async uploadNoteFile(fileBuffer, mimeType, noteId, userId, originalName = null) {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -315,12 +279,7 @@ class SpacesService {
     const fileName = `${uuidv4()}_${safeOriginalName}`;
     const userFolder = `userId_${userId}`;
     const noteFolder = `noteId_${noteId}`;
-    const folderPath = this.buildKey(
-      NOTES.ROOT,
-      userFolder,
-      noteFolder,
-      NOTES.FILES
-    );
+    const folderPath = this.buildKey(NOTES.ROOT, userFolder, noteFolder, NOTES.FILES);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -328,13 +287,7 @@ class SpacesService {
    * Anexos de comentários em notas.
    * Estrutura: notes-comments-files/{userId}/{noteId}/files/{arquivo}
    */
-  async uploadNoteCommentFile(
-    fileBuffer,
-    mimeType,
-    noteId,
-    userId,
-    originalName = null
-  ) {
+  async uploadNoteCommentFile(fileBuffer, mimeType, noteId, userId, originalName = null) {
     const { NOTES_COMMENTS_FILES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -364,22 +317,11 @@ class SpacesService {
     const fileName = `${uuidv4()}${ext}`;
     const userFolder = `userId_${userId}`;
     const projectFolder = `projectId_${projectId}`;
-    const folderPath = this.buildKey(
-      PROJECTS.ROOT,
-      userFolder,
-      projectFolder,
-      PROJECTS.ICONS
-    );
+    const folderPath = this.buildKey(PROJECTS.ROOT, userFolder, projectFolder, PROJECTS.ICONS);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  async uploadProjectFile(
-    fileBuffer,
-    mimeType,
-    projectId,
-    userId,
-    originalName = null
-  ) {
+  async uploadProjectFile(fileBuffer, mimeType, projectId, userId, originalName = null) {
     const { PROJECTS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const safeOriginalName = originalName
@@ -389,12 +331,7 @@ class SpacesService {
     const fileName = `${uuidv4()}_${safeOriginalName}`;
     const userFolder = `userId_${userId}`;
     const projectFolder = `projectId_${projectId}`;
-    const folderPath = this.buildKey(
-      PROJECTS.ROOT,
-      userFolder,
-      projectFolder,
-      PROJECTS.FILES
-    );
+    const folderPath = this.buildKey(PROJECTS.ROOT, userFolder, projectFolder, PROJECTS.FILES);
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -479,13 +416,7 @@ class SpacesService {
   // ========================================
 
   isValidImageType(mimeType) {
-    const validTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-    ];
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
     return validTypes.includes(mimeType);
   }
 
@@ -500,11 +431,7 @@ class SpacesService {
    * @returns {string}
    */
   generateUniqueFileName(extension = "") {
-    const sanitizedExt = extension
-      ? extension.startsWith(".")
-        ? extension
-        : `.${extension}`
-      : "";
+    const sanitizedExt = extension ? (extension.startsWith(".") ? extension : `.${extension}`) : "";
     return `file_${Date.now()}_${uuidv4()}${sanitizedExt}`;
   }
 

@@ -1,16 +1,14 @@
 /**
  * @module weave-engine/providers/anthropic
  * @description Anthropic API client.
- * Translates the internal OpenAI wire format (messages, tool calls, thinking) 
+ * Translates the internal OpenAI wire format (messages, tool calls, thinking)
  * to Anthropic's native format, and normalizes the response back to the standard LLMResponse.
  */
 
 import axios from "axios";
-import type { LLMRequestParams, LLMResponse, ToolCallResult } from "../types/types";
+import type { LLMRequestParams, LLMResponse, ToolCallResult } from "@theweave/shared";
 
-export async function callAnthropicProvider(
-  params: LLMRequestParams
-): Promise<LLMResponse> {
+export async function callAnthropicProvider(params: LLMRequestParams): Promise<LLMResponse> {
   const { apiKey, model, baseURL } = params;
 
   if (!apiKey) {
@@ -104,9 +102,7 @@ export async function callAnthropicProvider(
     }));
     if (params.toolChoice) {
       body.tool_choice =
-        typeof params.toolChoice === "string"
-          ? { type: params.toolChoice }
-          : params.toolChoice;
+        typeof params.toolChoice === "string" ? { type: params.toolChoice } : params.toolChoice;
     }
   }
 
@@ -177,14 +173,20 @@ export async function callAnthropicProvider(
             inputTokens = evt.message.usage.input_tokens || 0;
             thinkingTokens = evt.message.usage.cache_read_input_tokens || 0;
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
     }
 
     const toolIndices = Object.keys(toolMeta);
     if (toolIndices.length > 0) {
       const safeParse = (str: string): Record<string, unknown> => {
-        try { return JSON.parse(str); } catch { return {}; }
+        try {
+          return JSON.parse(str);
+        } catch {
+          return {};
+        }
       };
       const toolCalls: ToolCallResult[] = toolIndices.map((idx) => ({
         id: toolMeta[idx].id,
@@ -239,13 +241,11 @@ export async function callAnthropicProvider(
   );
 
   if (toolUseBlocks.length > 0) {
-    const toolCalls: ToolCallResult[] = toolUseBlocks.map(
-      (b: Record<string, unknown>) => ({
-        id: b.id as string,
-        name: b.name as string,
-        arguments: (b.input as Record<string, unknown>) || {},
-      })
-    );
+    const toolCalls: ToolCallResult[] = toolUseBlocks.map((b: Record<string, unknown>) => ({
+      id: b.id as string,
+      name: b.name as string,
+      arguments: (b.input as Record<string, unknown>) || {},
+    }));
     return {
       type: "function_call",
       text: null,
@@ -256,9 +256,7 @@ export async function callAnthropicProvider(
     };
   }
 
-  const textBlock = (msg.content || []).find(
-    (b: Record<string, unknown>) => b.type === "text"
-  );
+  const textBlock = (msg.content || []).find((b: Record<string, unknown>) => b.type === "text");
 
   return {
     type: "text",

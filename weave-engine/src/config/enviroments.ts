@@ -30,9 +30,7 @@ export function validateEnv(): boolean {
   const result = envSchema.safeParse(process.env);
   if (!result.success) {
     throw new Error(
-      `Environment validation failed: ${result.error.issues
-        .map((e) => e.message)
-        .join(", ")}`
+      `Environment validation failed: ${result.error.issues.map((e) => e.message).join(", ")}`
     );
   }
   return true;
@@ -43,4 +41,3 @@ export const env = {
   isProduction: process.env.NODE_ENV === "production",
   NODE_ENV: process.env.NODE_ENV || "development",
 };
-

@@ -101,7 +101,10 @@ const ProjectsPage = () => {
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-400">
                         <span>
-                          Atualizado em: {format(new Date(project.updated_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
+                          Atualizado em:{" "}
+                          {format(new Date(project.updated_at), "dd 'de' MMM, yyyy", {
+                            locale: ptBR,
+                          })}
                         </span>
                       </div>
                     </div>

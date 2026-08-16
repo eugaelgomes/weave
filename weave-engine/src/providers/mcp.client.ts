@@ -34,18 +34,12 @@ export class MCPClient {
         "x-weave-user-id": String(this.executionContext.userId || ""),
       };
 
-      const transport = new SSEClientTransport(
-        new URL(sseUrl),
-        {
-          eventSourceInit: { headers } as Record<string, unknown>,
-          requestInit: { headers },
-        }
-      );
+      const transport = new SSEClientTransport(new URL(sseUrl), {
+        eventSourceInit: { headers } as Record<string, unknown>,
+        requestInit: { headers },
+      });
 
-      const client = new Client(
-        { name: "weave-engine", version: "1.0.0" },
-        { capabilities: {} }
-      );
+      const client = new Client({ name: "weave-engine", version: "1.0.0" }, { capabilities: {} });
 
       try {
         await client.connect(transport);
@@ -72,13 +66,13 @@ export class MCPClient {
     const result = await this.client.listTools();
 
     // Transform MCP tools format to OpenAI function schemas
-    return result.tools.map(tool => ({
+    return result.tools.map((tool) => ({
       function: {
         description: tool.description,
         name: tool.name,
         parameters: tool.inputSchema,
       },
-      type: "function"
+      type: "function",
     }));
   }
 

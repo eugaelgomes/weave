@@ -32,9 +32,21 @@ export function AnimatedNotesIcon({ className, ...props }: React.SVGProps<SVGSVG
       </style>
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
       <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M8 9h2" className="doc-line doc-line-1" style={{ strokeDasharray: 2, strokeDashoffset: 2 }} />
-      <path d="M8 13h8" className="doc-line doc-line-2" style={{ strokeDasharray: 8, strokeDashoffset: 8 }} />
-      <path d="M8 17h8" className="doc-line doc-line-3" style={{ strokeDasharray: 8, strokeDashoffset: 8 }} />
+      <path
+        d="M8 9h2"
+        className="doc-line doc-line-1"
+        style={{ strokeDasharray: 2, strokeDashoffset: 2 }}
+      />
+      <path
+        d="M8 13h8"
+        className="doc-line doc-line-2"
+        style={{ strokeDasharray: 8, strokeDashoffset: 8 }}
+      />
+      <path
+        d="M8 17h8"
+        className="doc-line doc-line-3"
+        style={{ strokeDasharray: 8, strokeDashoffset: 8 }}
+      />
     </svg>
   );
 }

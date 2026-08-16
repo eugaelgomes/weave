@@ -1,149 +1,34 @@
 services:
-  # Gateway de Segurança e SSL Automático
-  caddy:
-    image: caddy:2
+  # Banco de Dados de Desenvolvimento
+  postgres:
+    image: ankane/pgvector:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: weave_notes
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # Cluster de Filas e Cache
+  redis:
+    image: redis:alpine
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - "6379:6379"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+      - redis_data:/data
     networks:
       - app-network
-
-  # Sua API Node.js
-  server:
-    build:
-      context: ./weave-api
-      dockerfile: Dockerfile
-    restart: always
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./weave-api/.env
-        required: false
-    environment:
-      - NODE_ENV=production
-      - DOPPLER_CONFIG=prd
-    networks:
-      - app-network
-
-  worker:
-    build:
-      context: ./weave-worker
-      dockerfile: Dockerfile
-    restart: always
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./weave-worker/.env
-        required: false
-    environment:
-      - NODE_ENV=production
-      - DOPPLER_CONFIG=prd
-    networks:
-      - app-network
-
-  engine:
-    build:
-      context: ./weave-engine
-      dockerfile: Dockerfile
-    restart: always
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./weave-engine/.env
-        required: false
-    environment:
-      - NODE_ENV=production
-      - DOPPLER_CONFIG=prd
-    networks:
-      - app-network
-
-  # # Frontend
-  # web:
-  #   build:
-  #     context: ./web
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./web:/app
-  #     - /app/node_modules
-  #     - /app/.next
-  #   environment:
-  #     - NEXT_PUBLIC_API_URL=http://server:8080
-  #   depends_on:
-  #     - server
-  #   networks:
-  #     - app-network
-  #   command: npm start
-  #   develop:
-  #     watch:
-  #       - action: sync
-  #         path: ./web/app
-  #         target: /app/app
-  #       - action: rebuild
-  #         path: ./web/package.json
-
-  # # Discover / Landing (subdomínio)
-  # discover:
-  #   build:
-  #     context: ./discover
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3001:3001"
-  #   volumes:
-  #     - ./discover:/app
-  #     - /app/node_modules
-  #     - /app/.next
-  #   environment:
-  #     - NEXT_PUBLIC_APP_URL=http://localhost:3000
-  #     - NEXT_PUBLIC_BLOG_URL=http://localhost:3001
-  #   networks:
-  #     - app-network
-  #   command: npm run dev
-  #   develop:
-  #     watch:
-  #       - action: sync
-  #         path: ./discover/app
-  #         target: /app/app
-  #       - action: rebuild
-  #         path: ./discover/package.json
-
-  # # Console Admin
-  # admin-console:
-  #   build:
-  #     context: ./admin-console
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3003:3003"
-  #   volumes:
-  #     - ./admin-console:/app
-  #     - /app/node_modules
-  #     - /app/.next
-  #   environment:
-  #     - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
-  #     - NEXT_PUBLIC_APP_URL=http://localhost:3003
-  #   depends_on:
-  #     - server
-  #   networks:
-  #     - app-network
-  #   command: npm run dev
-  #   develop:
-  #     watch:
-  #       - action: sync
-  #         path: ./admin-console/app
-  #         target: /app/app
-  #       - action: rebuild
-  #         path: ./admin-console/package.json
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  caddy_data:
-  caddy_config:
+  postgres_data:
+  redis_data:

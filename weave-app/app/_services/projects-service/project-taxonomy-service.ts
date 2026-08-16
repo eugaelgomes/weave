@@ -74,7 +74,6 @@ export const fetchTaskPriorities = async (projectId: string): Promise<TaskPriori
   return prioritiesOrArray(raw);
 };
 
-
 export const createTaskPriority = async (
   projectId: string,
   priorityData: CreateTaskPriorityData

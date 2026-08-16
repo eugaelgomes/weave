@@ -8,12 +8,19 @@
  * via executionContext — nothing is hardcoded in the engine.
  */
 
-import { callAIProvider, LLMRequestParams, Message, ToolCallResult, ToolSchema } from "@/providers/normalizer";
+import {
+  callAIProvider,
+  LLMRequestParams,
+  Message,
+  ToolCallResult,
+  ToolSchema,
+} from "@/providers/normalizer";
 import {
   isInternalTool,
   executeInternalTool,
   getInternalToolDefinitions,
 } from "@/tools/mcp-dispatcher";
+import { Tracer } from "@/core/tracing";
 
 const MAX_REACT_ITERATIONS = Number.parseInt(
   process.env.WEAVE_ENGINE_MAX_REACT_ITERATIONS || "4",
@@ -75,6 +82,8 @@ export interface AgenticExecutionContext {
   userId?: string | null;
   /** Organization ID for MCP context. */
   organizationId?: string | null;
+  /** Active trace ID for tracing integration. */
+  traceId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -139,20 +148,61 @@ export async function executeTask({
 
     iterations++;
 
-    const { data, provider } = await callAIProvider({
-      apiKey: executionContext.apiKey,
-      baseURL: executionContext.baseURL,
-      files: files as LLMRequestParams["files"],
-      messages,
-      model,
-      onChunk: executionContext.onChunk,
-      provider: executionContext.provider,
-      stream: Boolean(executionContext.onChunk),
-      systemMessage,
-      thinking: executionContext.thinking,
-      toolChoice: availableTools.length > 0 ? "auto" : undefined,
-      tools: availableTools.length > 0 ? availableTools : undefined,
-    });
+    let llmSpanId: string | undefined;
+    if (executionContext.traceId && executionContext.organizationId) {
+      llmSpanId = await Tracer.startSpan(
+        { traceId: executionContext.traceId, organizationId: executionContext.organizationId },
+        `llm_call:${model}`,
+        "llm",
+        { systemMessage, messages, model }
+      );
+    }
+
+    let providerRes: { data: any; provider: string };
+    try {
+      providerRes = await callAIProvider({
+        apiKey: executionContext.apiKey,
+        baseURL: executionContext.baseURL,
+        files: files as LLMRequestParams["files"],
+        messages,
+        model,
+        onChunk: executionContext.onChunk,
+        provider: executionContext.provider,
+        stream: Boolean(executionContext.onChunk),
+        systemMessage,
+        thinking: executionContext.thinking,
+        toolChoice: availableTools.length > 0 ? "auto" : undefined,
+        tools: availableTools.length > 0 ? availableTools : undefined,
+      });
+
+      if (llmSpanId && executionContext.traceId && executionContext.organizationId) {
+        await Tracer.endSpan(
+          llmSpanId,
+          { traceId: executionContext.traceId, organizationId: executionContext.organizationId },
+          {
+            status: "success",
+            output: providerRes.data,
+            prompt_tokens: providerRes.data?.usage?.inputTokens || 0,
+            completion_tokens: providerRes.data?.usage?.outputTokens || 0,
+            model: providerRes.provider || model,
+          }
+        );
+      }
+    } catch (err: unknown) {
+      if (llmSpanId && executionContext.traceId && executionContext.organizationId) {
+        await Tracer.endSpan(
+          llmSpanId,
+          { traceId: executionContext.traceId, organizationId: executionContext.organizationId },
+          {
+            status: "error",
+            error_message: (err as Error).message || "LLM Provider call failed",
+          }
+        );
+      }
+      throw err;
+    }
+
+    const { data, provider } = providerRes;
 
     providerUsed = provider;
 
@@ -195,16 +245,65 @@ export async function executeTask({
               executionContext.onChunk({ name: fnName, status: "running", type: "action_state" });
             }
 
+            let spanId: string | undefined;
+            if (executionContext.traceId && executionContext.organizationId) {
+              spanId = await Tracer.startSpan(
+                {
+                  traceId: executionContext.traceId,
+                  organizationId: executionContext.organizationId,
+                },
+                fnName,
+                "tool",
+                fnArgs
+              );
+            }
+
             try {
               const result = await executeInternalTool(fnName, fnArgs, executionContext as any);
               if (executionContext.onChunk) {
-                executionContext.onChunk({ name: fnName, status: "completed", success: true, type: "action_state" });
+                executionContext.onChunk({
+                  name: fnName,
+                  status: "completed",
+                  success: true,
+                  type: "action_state",
+                });
+              }
+              if (spanId && executionContext.traceId && executionContext.organizationId) {
+                await Tracer.endSpan(
+                  spanId,
+                  {
+                    traceId: executionContext.traceId,
+                    organizationId: executionContext.organizationId,
+                  },
+                  {
+                    status: "success",
+                    output: result,
+                  }
+                );
               }
               return { error: null, result, tc };
             } catch (err: unknown) {
               const errorMessage = (err as Error).message;
               if (executionContext.onChunk) {
-                executionContext.onChunk({ name: fnName, status: "completed", success: false, type: "action_state" });
+                executionContext.onChunk({
+                  name: fnName,
+                  status: "completed",
+                  success: false,
+                  type: "action_state",
+                });
+              }
+              if (spanId && executionContext.traceId && executionContext.organizationId) {
+                await Tracer.endSpan(
+                  spanId,
+                  {
+                    traceId: executionContext.traceId,
+                    organizationId: executionContext.organizationId,
+                  },
+                  {
+                    status: "error",
+                    error_message: errorMessage,
+                  }
+                );
               }
               return { error: errorMessage || "Tool execution failed", result: null, tc };
             }
@@ -262,7 +361,13 @@ export async function executeTask({
       messages.push({
         content: null,
         role: "assistant",
-        tool_calls: [{ function: { arguments: JSON.stringify(fnArgs), name: fnName }, id: toolCallId, type: "function" }],
+        tool_calls: [
+          {
+            function: { arguments: JSON.stringify(fnArgs), name: fnName },
+            id: toolCallId,
+            type: "function",
+          },
+        ],
       });
 
       if (isInternalTool(fnName)) {
@@ -275,12 +380,22 @@ export async function executeTask({
         try {
           result = await executeInternalTool(fnName, fnArgs, executionContext as any);
           if (executionContext.onChunk) {
-            executionContext.onChunk({ name: fnName, status: "completed", success: true, type: "action_state" });
+            executionContext.onChunk({
+              name: fnName,
+              status: "completed",
+              success: true,
+              type: "action_state",
+            });
           }
         } catch (err: unknown) {
           error = (err as Error).message || "Tool execution failed";
           if (executionContext.onChunk) {
-            executionContext.onChunk({ name: fnName, status: "completed", success: false, type: "action_state" });
+            executionContext.onChunk({
+              name: fnName,
+              status: "completed",
+              success: false,
+              type: "action_state",
+            });
           }
         }
 
@@ -292,16 +407,30 @@ export async function executeTask({
               "Estou tendo problemas técnicos contínuos com a ferramenta " +
               fnName +
               " e não consegui concluir a tarefa. Por favor, tente de novo mais tarde.";
-            return { data: { content: msg, text: msg, type: "text" }, executedActions, providerUsed };
+            return {
+              data: { content: msg, text: msg, type: "text" },
+              executedActions,
+              providerUsed,
+            };
           }
         }
 
         const output = error ? { error } : result;
         executedActions.push({ args: fnArgs, name: fnName, result: output });
-        messages.push({ content: truncateToolOutput(output, 12000), name: fnName, role: "tool", tool_call_id: toolCallId });
+        messages.push({
+          content: truncateToolOutput(output, 12000),
+          name: fnName,
+          role: "tool",
+          tool_call_id: toolCallId,
+        });
         continue;
       } else {
-        return { data, executedActions, functions: [{ arguments: fnArgs, id: toolCallId, name: fnName }], providerUsed };
+        return {
+          data,
+          executedActions,
+          functions: [{ arguments: fnArgs, id: toolCallId, name: fnName }],
+          providerUsed,
+        };
       }
     }
 

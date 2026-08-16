@@ -1,9 +1,7 @@
 const { executeQuery } = require("../../database/connection");
 const { logger } = require("../../config/logger");
 const { createMailService } = require("../../mail/sender");
-const {
-  buildDueReminderTemplate,
-} = require("../../mail/templates/template.due-reminder");
+const { buildDueReminderTemplate } = require("../../mail/templates/template.due-reminder");
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -98,17 +96,19 @@ class DueDateReminderProcessor {
   }
 
   async processNoteReminder(note) {
-    const projectProps = typeof note.project_properties === "string"
-      ? JSON.parse(note.project_properties)
-      : (note.project_properties || {});
+    const projectProps =
+      typeof note.project_properties === "string"
+        ? JSON.parse(note.project_properties)
+        : note.project_properties || {};
 
     if (projectProps.due_date_reminder_enabled === false) {
       return;
     }
 
-    const reminderTime = typeof projectProps.due_date_reminder_time === "string"
-      ? projectProps.due_date_reminder_time
-      : "1970-01-01T07:00:00.000Z";
+    const reminderTime =
+      typeof projectProps.due_date_reminder_time === "string"
+        ? projectProps.due_date_reminder_time
+        : "1970-01-01T07:00:00.000Z";
 
     let targetHour = 7;
     try {
@@ -117,9 +117,10 @@ class DueDateReminderProcessor {
       targetHour = 7;
     }
 
-    const orgSettings = typeof note.org_settings === "string"
-      ? JSON.parse(note.org_settings)
-      : (note.org_settings || {});
+    const orgSettings =
+      typeof note.org_settings === "string"
+        ? JSON.parse(note.org_settings)
+        : note.org_settings || {};
     const orgTimezone = orgSettings.default_timezone || "UTC";
 
     const recipients = [];
@@ -128,7 +129,10 @@ class DueDateReminderProcessor {
         email: String(note.owner_email).trim(),
         id: note.user_id,
         name: note.owner_name,
-        user_preference: typeof note.owner_preference === "string" ? JSON.parse(note.owner_preference) : (note.owner_preference || {}),
+        user_preference:
+          typeof note.owner_preference === "string"
+            ? JSON.parse(note.owner_preference)
+            : note.owner_preference || {},
       });
     }
 
@@ -150,18 +154,22 @@ class DueDateReminderProcessor {
         email: String(collaborator.email).trim(),
         id: collaborator.user_id,
         name: collaborator.name,
-        user_preference: typeof collaborator.user_preference === "string" ? JSON.parse(collaborator.user_preference) : (collaborator.user_preference || {}),
+        user_preference:
+          typeof collaborator.user_preference === "string"
+            ? JSON.parse(collaborator.user_preference)
+            : collaborator.user_preference || {},
       });
     }
 
     const epoch = String(Math.floor(new Date(note.due_date).getTime() / 1000));
-    const noteProps = typeof note.properties === "string" ? JSON.parse(note.properties) : (note.properties || {});
+    const noteProps =
+      typeof note.properties === "string" ? JSON.parse(note.properties) : note.properties || {};
     let dueReminder = noteProps.due_reminder || {};
 
     if (dueReminder.eve_sent_for_due_epoch !== epoch) {
       dueReminder = {
         eve_sent_for_due_epoch: epoch,
-        sent_to_users: []
+        sent_to_users: [],
       };
     }
     const sentToUsers = new Set(dueReminder.sent_to_users || []);
@@ -197,10 +205,7 @@ class DueDateReminderProcessor {
               updated_at = NOW()
           WHERE id = $1
         `,
-        [
-          note.id,
-          JSON.stringify({ due_reminder: dueReminder }),
-        ]
+        [note.id, JSON.stringify({ due_reminder: dueReminder })]
       );
     }
   }
@@ -208,9 +213,7 @@ class DueDateReminderProcessor {
   async sendNoteReminders(note, recipients) {
     const title = note.title || null;
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const notePath = note.public_note_id
-      ? `/app/notes/${note.public_note_id}`
-      : "/app/notes";
+    const notePath = note.public_note_id ? `/app/notes/${note.public_note_id}` : "/app/notes";
     const noteUrl = `${frontendUrl}/auth/?redirect=${encodeURIComponent(notePath)}`;
 
     const dedup = new Set();

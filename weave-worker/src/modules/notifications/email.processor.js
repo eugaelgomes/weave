@@ -15,7 +15,9 @@ class EmailProcessor {
     this.isRunning = true;
 
     if (!process.env.RESEND_API_KEY) {
-      logger.warn("[Email Processor] RESEND_API_KEY is not defined. Email queue processor will exit.");
+      logger.warn(
+        "[Email Processor] RESEND_API_KEY is not defined. Email queue processor will exit."
+      );
       return;
     }
 
@@ -31,11 +33,10 @@ class EmailProcessor {
           const [, jobDataStr] = result;
           await this.processJob(JSON.parse(jobDataStr));
         }
-
       } catch (error) {
         logger.error("[Email Processor] Error waiting for jobs or processing", { error });
         // small timeout to avoid tight loop on errors
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     }
   }
@@ -68,18 +69,22 @@ class EmailProcessor {
       }
 
       if (error) {
-        const details = [error.message, error.name, error.statusCode]
-          .filter(Boolean)
-          .join(" | ");
-        logger.error(`[Email Processor] Resend API Error on job to ${payload.to.join(", ")}: ${details}`, { error });
+        const details = [error.message, error.name, error.statusCode].filter(Boolean).join(" | ");
+        logger.error(
+          `[Email Processor] Resend API Error on job to ${payload.to.join(", ")}: ${details}`,
+          { error }
+        );
         return false;
       }
 
-      logger.info(`[Email Processor] Email successfully sent to ${payload.to.join(", ")}. Status ID: ${data?.id}`);
+      logger.info(
+        `[Email Processor] Email successfully sent to ${payload.to.join(", ")}. Status ID: ${data?.id}`
+      );
       return true;
-
     } catch (error) {
-      logger.error(`[Email Processor] Error processing email job for ${payload.to?.join(", ")}`, { error });
+      logger.error(`[Email Processor] Error processing email job for ${payload.to?.join(", ")}`, {
+        error,
+      });
       return false;
     }
   }

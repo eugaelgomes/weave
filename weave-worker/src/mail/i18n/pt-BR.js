@@ -1,10 +1,8 @@
 /** @type {Record<string, string>} */
 module.exports = {
   "aiReport.cta": "Ver report completo",
-  "aiReport.footer":
-    "Este report foi gerado automaticamente pela IA do Weave Notes.",
-  "aiReport.intro":
-    "O Weave Engine gerou um novo report para o projeto {projectTitle}.",
+  "aiReport.footer": "Este report foi gerado automaticamente pela IA do Weave Notes.",
+  "aiReport.intro": "O Weave Engine gerou um novo report para o projeto {projectTitle}.",
   "aiReport.preheader": "Novo {reportType} para {projectTitle}",
   "aiReport.sprintSuffix": " (Sprint {sprintNumber})",
   "backup.cta": "Baixar backup",
@@ -12,8 +10,7 @@ module.exports = {
     "Este link expira em {hours} hora(s) ({expiresLabel}) e pode ser usado uma unica vez.",
   "backup.intro1": "Seu backup de dados foi processado com sucesso.",
   "backup.intro2": "Use o botao abaixo para baixar o arquivo.",
-  "backup.outro":
-    "Mantenha este arquivo em seguranca e faca o download em um local confiavel.",
+  "backup.outro": "Mantenha este arquivo em seguranca e faca o download em um local confiavel.",
   "backup.preheader": "Seu backup esta pronto para download.",
   "backup.subject": "Seu backup esta pronto para download",
   "backup.subtitle": "Exportacao de dados",
@@ -21,22 +18,18 @@ module.exports = {
   "collab.cta": "Acessar nota",
   "collab.intro": "{ownerName} adicionou voce como colaborador(a).",
 
-  "collab.outro":
-    "Se voce nao esperava este convite de {ownerName}, pode ignorar este email.",
-  "collab.permission":
-    "Permissao de colaboracao ativa para visualizar e editar.",
+  "collab.outro": "Se voce nao esperava este convite de {ownerName}, pode ignorar este email.",
+  "collab.permission": "Permissao de colaboracao ativa para visualizar e editar.",
   "collab.preheader": "Voce foi adicionado(a) como colaborador de uma nota.",
   "collab.subject": "Nova colaboracao: {noteName}",
   "collab.subtitle": "Compartilhamento de nota",
   "collab.title": "Nova colaboracao em nota",
-  "common.autoFooter":
-    "Este email foi enviado automaticamente. Por favor, nao responda.",
+  "common.autoFooter": "Este email foi enviado automaticamente. Por favor, nao responda.",
   "common.brandName": "Weave Notes",
   "common.content": "Conteudo",
   "common.contentNotesBlocks": "notas e blocos ativos",
 
-  "common.ctaHint":
-    "Use o botao no email para continuar (abra no navegador se necessario).",
+  "common.ctaHint": "Use o botao no email para continuar (abra no navegador se necessario).",
   "common.currentEmail": "Email atual",
   "common.dueDate": "Prazo",
   "common.format": "Formato",
@@ -49,11 +42,9 @@ module.exports = {
   "common.project": "Projeto",
   "common.role": "Cargo",
   "common.username": "Usuario",
-  "deleteMessage.bodyDetail":
-    "Todos os dados vinculados foram apagados de forma definitiva.",
+  "deleteMessage.bodyDetail": "Todos os dados vinculados foram apagados de forma definitiva.",
   "deleteMessage.bodyUser": "Usuario removido",
-  "deleteMessage.footer":
-    "Voce recebeu este email como confirmacao da exclusao da sua conta.",
+  "deleteMessage.footer": "Voce recebeu este email como confirmacao da exclusao da sua conta.",
   "deleteMessage.intro":
     "Sua conta no Weave Notes foi excluida permanentemente conforme solicitado.",
   "deleteMessage.outro":
@@ -69,8 +60,7 @@ module.exports = {
   "deleteRequest.footer":
     "Voce recebeu este email porque uma solicitacao de exclusao foi feita para esta conta.",
   "deleteRequest.info": "Este link expira em 7 dias ({expiration}).",
-  "deleteRequest.intro1":
-    "Recebemos uma solicitacao para excluir permanentemente sua conta.",
+  "deleteRequest.intro1": "Recebemos uma solicitacao para excluir permanentemente sua conta.",
   "deleteRequest.intro2": "Se deseja continuar, confirme no botao abaixo.",
   "deleteRequest.outro":
     "Se voce nao solicitou essa exclusao, ignore este email e considere alterar sua senha.",
@@ -81,7 +71,7 @@ module.exports = {
   "deleteRequest.title": "Confirmar exclusao de conta",
   "dueReminder.cta": "Abrir nota",
   "dueReminder.info": "Recomendamos revisar a nota hoje para evitar atrasos.",
-  "dueReminder.intro": "A nota \"{noteTitle}\" vence amanha ({dueDateLabel}).",
+  "dueReminder.intro": 'A nota "{noteTitle}" vence amanha ({dueDateLabel}).',
   "dueReminder.preheader": "Lembrete de prazo da sua nota.",
   "dueReminder.subject": "Lembrete: prazo amanha - {noteTitle}",
   "dueReminder.subtitle": "Vencimento da nota",
@@ -90,8 +80,7 @@ module.exports = {
   "dueReminder.untitled": "Nota",
   "invite.cta": "Aceitar convite",
   "invite.info": "Este convite expira em 7 dias.",
-  "invite.intro":
-    "{inviterName} convidou voce para entrar na organizacao {organizationName}.",
+  "invite.intro": "{inviterName} convidou voce para entrar na organizacao {organizationName}.",
   "invite.preheader": "Convite para participar de uma organizacao.",
   "invite.subject": "Convite para {organizationName} - Weave Notes",
 
@@ -99,14 +88,11 @@ module.exports = {
   "invite.title": "Voce foi convidado(a)",
   "inviteAccepted.cta": "Ir para Home",
   "inviteAccepted.feature1": "Criar notas e organizar ideias com blocos.",
-  "inviteAccepted.feature2":
-    "Trabalhar em projetos com etapas, prioridades e prazos.",
+  "inviteAccepted.feature2": "Trabalhar em projetos com etapas, prioridades e prazos.",
   "inviteAccepted.feature3": "Compartilhar conteudo e colaborar com seu time.",
-  "inviteAccepted.feature4":
-    "Centralizar arquivos, links e contexto em um so lugar.",
+  "inviteAccepted.feature4": "Centralizar arquivos, links e contexto em um so lugar.",
   "inviteAccepted.featuresIntro": "No Weave Notes voce pode:",
-  "inviteAccepted.intro1":
-    "Seu acesso foi confirmado e voce ja pode usar o Weave Notes.",
+  "inviteAccepted.intro1": "Seu acesso foi confirmado e voce ja pode usar o Weave Notes.",
   "inviteAccepted.intro2":
     "Aqui voce centraliza planejamento, execucao e colaboracao em um unico lugar.",
   "inviteAccepted.preheader": "Convite aceito com sucesso.",
@@ -115,15 +101,11 @@ module.exports = {
   "inviteAccepted.subtitle": "Sua conta esta pronta para uso",
   "inviteAccepted.title": "Bem-vindo(a) a {organizationName}",
   "project.cta": "Acessar projetos",
-  "project.footer":
-    "Voce recebeu este email porque foi adicionado a um projeto no Weave Notes.",
-  "project.intro":
-    "{addedByName} adicionou voce como colaborador(a) no projeto abaixo.",
-  "project.outro":
-    "Agora voce pode visualizar e colaborar no projeto normalmente.",
+  "project.footer": "Voce recebeu este email porque foi adicionado a um projeto no Weave Notes.",
+  "project.intro": "{addedByName} adicionou voce como colaborador(a) no projeto abaixo.",
+  "project.outro": "Agora voce pode visualizar e colaborar no projeto normalmente.",
   "project.preheader": "Voce foi adicionado(a) a um projeto.",
-  "project.subject":
-    "{firstName}, voce foi adicionado ao projeto \"{projectName}\"",
+  "project.subject": '{firstName}, voce foi adicionado ao projeto "{projectName}"',
   "project.subtitle": "Colaboracao em projetos",
 
   "project.title": "Novo projeto compartilhado com voce",
@@ -137,10 +119,8 @@ module.exports = {
 
   "rescue.cta": "Redefinir senha",
   "rescue.info": "Este link expira em 1 hora.",
-  "rescue.intro1":
-    "Recebemos uma solicitacao para redefinir a senha da sua conta.",
-  "rescue.intro2":
-    "Se voce fez essa solicitacao, use o botao abaixo para continuar.",
+  "rescue.intro1": "Recebemos uma solicitacao para redefinir a senha da sua conta.",
+  "rescue.intro2": "Se voce fez essa solicitacao, use o botao abaixo para continuar.",
   "rescue.outro":
     "Se voce nao solicitou esta alteracao, ignore este email. Nenhuma mudanca sera realizada.",
   "rescue.preheader": "Solicitacao de redefinicao de senha.",
@@ -150,8 +130,7 @@ module.exports = {
 
   "reset.cta": "Confirmar novo email",
   "reset.info": "Este link expira em 1 hora.",
-  "reset.intro1":
-    "Recebemos uma solicitacao para alterar o email da sua conta.",
+  "reset.intro1": "Recebemos uma solicitacao para alterar o email da sua conta.",
   "reset.intro2": "Use o botao abaixo para validar essa alteracao.",
   "reset.outro": "Se voce nao solicitou essa alteracao, ignore este email.",
   "reset.preheader": "Valide a mudanca de email da sua conta.",
@@ -167,13 +146,11 @@ module.exports = {
   "role.super_admin": "Super administrador",
   "role.viewer": "Visualizador",
   "welcome.cta": "Ativar conta",
-  "welcome.footer":
-    "Voce recebeu este email porque criou uma conta no Weave Notes.",
+  "welcome.footer": "Voce recebeu este email porque criou uma conta no Weave Notes.",
   "welcome.info": "Este link expira em 7 dias.",
   "welcome.intro1": "Sua conta foi criada com sucesso.",
 
-  "welcome.intro2":
-    "Para comecar a usar a plataforma, confirme seu email no botao abaixo.",
+  "welcome.intro2": "Para comecar a usar a plataforma, confirme seu email no botao abaixo.",
   "welcome.outro1": "Se voce nao se cadastrou, ignore este email.",
   "welcome.preheader": "Ative sua conta Weave Notes.",
   "welcome.subject": "Bem-vindo ao Weave Notes - Ative sua conta",

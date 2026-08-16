@@ -509,7 +509,9 @@ export function SettingsApiTokens() {
                         <div className="flex items-center justify-end gap-1">
                           {!token.revoked_at && (
                             <button
-                              onClick={() => { window.location.hash = `#settings/tokens/revoke/${token.id}`; }}
+                              onClick={() => {
+                                window.location.hash = `#settings/tokens/revoke/${token.id}`;
+                              }}
                               className="rounded p-1 text-neutral-400 transition-colors hover:bg-amber-100 hover:text-amber-600 dark:hover:bg-amber-900/30"
                               title={t.clientTokens.revokeAccess}
                             >
@@ -536,7 +538,9 @@ export function SettingsApiTokens() {
 
       <TokenActionModal
         isOpen={!!actionModal}
-        onClose={() => { window.location.hash = "#settings/tokens"; }}
+        onClose={() => {
+          window.location.hash = "#settings/tokens";
+        }}
         onConfirm={() => {
           if (actionModal?.type === "revoke") revokeToken(actionModal.id);
           window.location.hash = "#settings/tokens";
@@ -549,7 +553,9 @@ export function SettingsApiTokens() {
 
       <PasswordConfirmModal
         isOpen={showPasswordModal}
-        onClose={() => { window.location.hash = "#settings/tokens"; }}
+        onClose={() => {
+          window.location.hash = "#settings/tokens";
+        }}
         onConfirm={executeCreateToken}
       />
     </div>

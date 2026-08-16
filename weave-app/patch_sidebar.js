@@ -1,5 +1,5 @@
-const fs = require('fs');
-const content = fs.readFileSync('app/(protected)/_components/layout/sidebar.tsx', 'utf8');
+const fs = require("fs");
+const content = fs.readFileSync("app/(protected)/_components/layout/sidebar.tsx", "utf8");
 
 const imports = `import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -7,15 +7,9 @@ import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 import { UserAvatar, UserMenuContent } from "@/app/(protected)/_components/layout/user-menu";
 `;
 
-let newContent = content.replace(
-  'import React, { useState, useEffect } from "react";',
-  imports
-);
+let newContent = content.replace('import React, { useState, useEffect } from "react";', imports);
 
-newContent = newContent.replace(
-  'CircleHelp,',
-  'Search,'
-);
+newContent = newContent.replace("CircleHelp,", "Search,");
 
 const hooks = `
 const useKeyboardShortcut = (key: string, callback: () => void) => {
@@ -49,8 +43,8 @@ const useClickOutside = (refs: React.RefObject<HTMLElement | null>[], callback: 
 `;
 
 newContent = newContent.replace(
-  '// ---------------------------------------------------------------------------',
-  hooks + '\n// ---------------------------------------------------------------------------'
+  "// ---------------------------------------------------------------------------",
+  hooks + "\n// ---------------------------------------------------------------------------"
 );
 
 const newFooter = `// ---------------------------------------------------------------------------
@@ -188,24 +182,31 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
   );
 }`;
 
-const oldFooterStart = content.indexOf('// ---------------------------------------------------------------------------', content.indexOf('SidebarFooter'));
-const oldFooterEnd = content.indexOf('// ---------------------------------------------------------------------------', oldFooterStart + 1);
+const oldFooterStart = content.indexOf(
+  "// ---------------------------------------------------------------------------",
+  content.indexOf("SidebarFooter")
+);
+const oldFooterEnd = content.indexOf(
+  "// ---------------------------------------------------------------------------",
+  oldFooterStart + 1
+);
 
 // wait, the old footer is:
-const oldFooterRegex = /\/\/ ---------------------------------------------------------------------------\n\/\/ SidebarFooter — link de ajuda\n\/\/ ---------------------------------------------------------------------------\n\ninterface SidebarFooterProps[\s\S]*?}\n/m;
+const oldFooterRegex =
+  /\/\/ ---------------------------------------------------------------------------\n\/\/ SidebarFooter — link de ajuda\n\/\/ ---------------------------------------------------------------------------\n\ninterface SidebarFooterProps[\s\S]*?}\n/m;
 newContent = newContent.replace(oldFooterRegex, newFooter + "\n");
 
 // Then modify Sidebar to pass logout:
 // const { authenticated, user } = useAuth();
 // => const { authenticated, user, logout } = useAuth();
 newContent = newContent.replace(
-  'const { authenticated, user } = useAuth();',
-  'const { authenticated, user, logout } = useAuth();'
+  "const { authenticated, user } = useAuth();",
+  "const { authenticated, user, logout } = useAuth();"
 );
 
 newContent = newContent.replace(
-  '<SidebarFooter isCollapsed={isCollapsed} helpLabel={t.footer.help} />',
-  '<SidebarBottomActions isCollapsed={isCollapsed} user={user} t={t} logout={logout} />'
+  "<SidebarFooter isCollapsed={isCollapsed} helpLabel={t.footer.help} />",
+  "<SidebarBottomActions isCollapsed={isCollapsed} user={user} t={t} logout={logout} />"
 );
 
-fs.writeFileSync('app/(protected)/_components/layout/sidebar.tsx', newContent);
+fs.writeFileSync("app/(protected)/_components/layout/sidebar.tsx", newContent);

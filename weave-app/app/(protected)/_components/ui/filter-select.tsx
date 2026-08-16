@@ -7,14 +7,7 @@ import { cn } from "@/lib/utils";
 export type FilterSelectOption = { value: string; label: string };
 
 export type FilterAccent =
-  | "amber"
-  | "orange"
-  | "blue"
-  | "rose"
-  | "purple"
-  | "emerald"
-  | "sky"
-  | "neutral";
+  "amber" | "orange" | "blue" | "rose" | "purple" | "emerald" | "sky" | "neutral";
 
 const accentClasses: Record<
   FilterAccent,

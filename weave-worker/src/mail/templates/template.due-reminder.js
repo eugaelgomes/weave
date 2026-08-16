@@ -2,10 +2,7 @@
  * keep in sync with weave-api/src/services/email/templates/due-reminder.js
  */
 
-const {
-  buildMailTemplate,
-  escapeHtml,
-} = require("../base-template");
+const { buildMailTemplate, escapeHtml } = require("../base-template");
 const {
   formatDateForLocale,
   localeFromUserPreference,
@@ -29,8 +26,7 @@ function buildDueReminderTemplate({
     ? resolveEmailLocale(locale)
     : localeFromUserPreference(userPreference);
 
-  const displayName =
-    recipientName || t(resolvedLocale, "common.greetingFallback");
+  const displayName = recipientName || t(resolvedLocale, "common.greetingFallback");
   const safeTitle = noteTitle || t(resolvedLocale, "dueReminder.untitled");
   const dueDateLabel = formatDateForLocale(resolvedLocale, dueDate);
 
