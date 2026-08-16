@@ -5,9 +5,9 @@ echo "Current directory (root hook run): $(pwd)"
 echo "Argument \$1: $1"
 echo "Arguments list: $@"
 
-# Go to API directory and run commitlint using the commit message file from the root
+# Go to server directory and run commitlint using the commit message file from the root
 COMMIT_MSG_FILE=$(readlink -f "$1")
-cd weave-api
+cd server
 echo "Directory after cd: $(pwd)"
 echo "Target path: $COMMIT_MSG_FILE"
 ls -la "$COMMIT_MSG_FILE" 2>&1
