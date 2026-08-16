@@ -565,28 +565,6 @@ model organization_domains {
   @@index([organization_id], map: "idx_org_domains_org_id")
 }
 
-model organization_member_invites {
-  invite_id       String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  organization_id String                           @db.Uuid
-  name            String?                          @db.VarChar(255)
-  email           String                           @db.VarChar(255)
-  username        String?                          @db.VarChar(255)
-  role            organization_workspace_role_enum @default(MEMBER)
-  invite_verified Boolean                          @default(false)
-  deleted         Boolean                          @default(false)
-  deleted_at      DateTime?                        @db.Timestamptz(6)
-  invited_by      String                           @db.Uuid
-  expires_at      DateTime?                        @db.Timestamptz(6)
-  created_at      DateTime                         @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime?                        @db.Timestamptz(6)
-  target_areas    Json                             @default("[]")
-  users           users                            @relation(fields: [invited_by], references: [user_id], onUpdate: NoAction, map: "organization_invites_invited_by_fk")
-  organizations   organizations                    @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "organization_invites_org_fk")
-
-  @@index([expires_at], map: "idx_org_invites_expires_at")
-  @@index([organization_id], map: "idx_org_invites_organization_id")
-}
-
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model organization_members {
@@ -639,45 +617,45 @@ model organization_slack_integrations {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model organizations {
-  id                                         String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  public_id                                  String                           @unique @default(dbgenerated("generate_alphanumeric_id(25)")) @db.VarChar(25)
-  user_id                                    String                           @db.Uuid
-  org_name                                   String                           @default("New Organization") @db.VarChar(80)
-  unique_name                                String                           @unique @db.VarChar(40)
-  logo_url                                   String?
-  banner_url                                 String?
-  description                                String?                          @default("Type description here...")
-  settings                                   Json                             @default("{}")
-  plan_id                                    String?                          @db.Uuid
-  branding_properties                        Json?                            @default("{}")
-  integrations                               Json?                            @default("{}")
-  deleted                                    Boolean                          @default(false)
-  deleted_at                                 DateTime?                        @db.Timestamptz(6)
-  deleted_by                                 String?                          @db.Uuid
-  created_at                                 DateTime                         @default(now()) @db.Timestamptz(6)
-  updated_at                                 DateTime                         @default(now()) @db.Timestamptz(6)
-  status                                     organization_status              @default(ACTIVE)
-  stripe_customer_id                         String?                          @db.VarChar(255)
-  billing_email                              String?                          @db.VarChar(255)
-  require_sso                                Boolean                          @default(false)
-  default_timezone                           String                           @default("UTC") @db.VarChar(50)
-  default_locale                             String?                          @default("en-US") @db.VarChar(10)
-  country                                    String?                          @db.VarChar(2)
-  public_organization_id                     String
-  sso_settings                               Json?                            @default("{}")
-  ai_artifacts                               ai_artifacts[]
-  ai_chat_messages                           ai_chat_messages[]
-  ai_chat_sessions                           ai_chat_sessions[]
-  api_token_usage_logs                       api_token_usage_logs[]
-  api_tokens                                 api_tokens[]
-  calendar_events                            calendar_events[]
-  notes                                      notes[]
-  notes_comments                             notes_comments[]
-  notes_short_backups                        notes_short_backups[]
-  organization_area_members                  organization_area_members[]
-  organization_areas                         organization_areas[]
-  organization_domains                       organization_domains[]
-  organization_member_invites                organization_member_invites[]
+  id                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  public_id                 String                      @unique @default(dbgenerated("generate_alphanumeric_id(25)")) @db.VarChar(25)
+  user_id                   String                      @db.Uuid
+  org_name                  String                      @default("New Organization") @db.VarChar(80)
+  unique_name               String                      @unique @db.VarChar(40)
+  logo_url                  String?
+  banner_url                String?
+  description               String?                     @default("Type description here...")
+  settings                  Json                        @default("{}")
+  plan_id                   String?                     @db.Uuid
+  branding_properties       Json?                       @default("{}")
+  integrations              Json?                       @default("{}")
+  deleted                   Boolean                     @default(false)
+  deleted_at                DateTime?                   @db.Timestamptz(6)
+  deleted_by                String?                     @db.Uuid
+  created_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  status                    organization_status         @default(ACTIVE)
+  stripe_customer_id        String?                     @db.VarChar(255)
+  billing_email             String?                     @db.VarChar(255)
+  require_sso               Boolean                     @default(false)
+  default_timezone          String                      @default("UTC") @db.VarChar(50)
+  default_locale            String?                     @default("en-US") @db.VarChar(10)
+  country                   String?                     @db.VarChar(2)
+  public_organization_id    String
+  sso_settings              Json?                       @default("{}")
+  ai_artifacts              ai_artifacts[]
+  ai_chat_messages          ai_chat_messages[]
+  ai_chat_sessions          ai_chat_sessions[]
+  api_token_usage_logs      api_token_usage_logs[]
+  api_tokens                api_tokens[]
+  calendar_events           calendar_events[]
+  notes                     notes[]
+  notes_comments            notes_comments[]
+  notes_short_backups       notes_short_backups[]
+  organization_area_members organization_area_members[]
+  organization_areas        organization_areas[]
+  organization_domains      organization_domains[]
+
   organization_members                       organization_members[]
   organization_slack_integrations            organization_slack_integrations?
   organization_tracing_settings              organization_tracing_settings?
@@ -1111,58 +1089,59 @@ model user_project_prefs {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model users {
-  user_id                                                                                     String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                                                                                        String                                @db.VarChar(255)
-  email                                                                                       String                                @unique @db.VarChar(255)
-  username                                                                                    String                                @unique @db.VarChar(50)
-  password                                                                                    String                                @db.VarChar(255)
-  avatar_url                                                                                  String?
-  auth_with_google                                                                            Boolean                               @default(false)
-  google_id                                                                                   String?                               @unique @db.VarChar(255)
-  auth_with_github                                                                            Boolean                               @default(false)
-  github_id                                                                                   String?                               @unique @db.VarChar(255)
-  theme_mode                                                                                  theme_mode_pattern                    @default(DARK)
-  phone_number                                                                                String?                               @unique @db.VarChar(20)
-  birth_date                                                                                  DateTime?                             @db.Date
-  private_profile                                                                             Boolean                               @default(false)
-  timezone                                                                                    String?                               @db.VarChar(100)
-  email_verified                                                                              Boolean                               @default(false)
-  email_verified_at                                                                           DateTime?                             @db.Timestamptz(6)
-  last_login                                                                                  DateTime?                             @db.Timestamptz(6)
-  organization_id                                                                             String?                               @db.Uuid
-  plan_id                                                                                     String?                               @db.Uuid
-  user_preference                                                                             Json                                  @default("{}")
-  deleted                                                                                     Boolean                               @default(false)
-  deleted_at                                                                                  DateTime?                             @db.Timestamptz(6)
-  created_at                                                                                  DateTime                              @default(now()) @db.Timestamptz(6)
-  updated_at                                                                                  DateTime                              @default(now()) @db.Timestamptz(6)
-  auth_with_microsoft                                                                         Boolean?                              @default(false)
-  microsoft_id                                                                                String?
-  public_user_id                                                                              String                                @unique(map: "users_public_user_id_idx")
-  auth_with_saml                                                                              Boolean?                              @default(false)
-  ai_artifacts                                                                                ai_artifacts[]
-  ai_chat_messages                                                                            ai_chat_messages[]
-  ai_chat_sessions                                                                            ai_chat_sessions[]
-  ai_user_agent                                                                               ai_user_agent[]
-  api_token_usage_logs                                                                        api_token_usage_logs[]
-  api_tokens                                                                                  api_tokens[]
-  calendar_event_invites                                                                      calendar_event_invites[]
-  calendar_events                                                                             calendar_events[]
-  google_calendar_webhooks                                                                    google_calendar_webhooks[]
-  jobs                                                                                        jobs[]
-  note_blocks                                                                                 note_blocks[]
-  note_collaborators_note_collaborators_removed_byTousers                                     note_collaborators[]                  @relation("note_collaborators_removed_byTousers")
-  note_collaborators_note_collaborators_user_idTousers                                        note_collaborators[]                  @relation("note_collaborators_user_idTousers")
-  notes                                                                                       notes[]
-  notes_comments                                                                              notes_comments[]
-  notes_short_backups                                                                         notes_short_backups[]
-  notifications_notifications_actor_idTousers                                                 notifications[]                       @relation("notifications_actor_idTousers")
-  notifications_notifications_user_idTousers                                                  notifications[]                       @relation("notifications_user_idTousers")
-  organization_area_members                                                                   organization_area_members[]
-  organization_areas_organization_areas_created_byTousers                                     organization_areas[]                  @relation("organization_areas_created_byTousers")
-  organization_areas_organization_areas_deleted_byTousers                                     organization_areas[]                  @relation("organization_areas_deleted_byTousers")
-  organization_areas_organization_areas_updated_byTousers                                     organization_areas[]                  @relation("organization_areas_updated_byTousers")
-  organization_member_invites                                                                 organization_member_invites[]
+  user_id                                                 String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                                                    String                      @db.VarChar(255)
+  email                                                   String                      @unique @db.VarChar(255)
+  username                                                String                      @unique @db.VarChar(50)
+  password                                                String                      @db.VarChar(255)
+  avatar_url                                              String?
+  auth_with_google                                        Boolean                     @default(false)
+  google_id                                               String?                     @unique @db.VarChar(255)
+  auth_with_github                                        Boolean                     @default(false)
+  github_id                                               String?                     @unique @db.VarChar(255)
+  theme_mode                                              theme_mode_pattern          @default(DARK)
+  phone_number                                            String?                     @unique @db.VarChar(20)
+  birth_date                                              DateTime?                   @db.Date
+  private_profile                                         Boolean                     @default(false)
+  timezone                                                String?                     @db.VarChar(100)
+  email_verified                                          Boolean                     @default(false)
+  email_verified_at                                       DateTime?                   @db.Timestamptz(6)
+  last_login                                              DateTime?                   @db.Timestamptz(6)
+  organization_id                                         String?                     @db.Uuid
+  plan_id                                                 String?                     @db.Uuid
+  user_preference                                         Json                        @default("{}")
+  deleted                                                 Boolean                     @default(false)
+  deleted_at                                              DateTime?                   @db.Timestamptz(6)
+  created_at                                              DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                              DateTime                    @default(now()) @db.Timestamptz(6)
+  status                                                  user_status_enum            @default(ACTIVE)
+  auth_with_microsoft                                     Boolean?                    @default(false)
+  microsoft_id                                            String?
+  public_user_id                                          String                      @unique(map: "users_public_user_id_idx")
+  auth_with_saml                                          Boolean?                    @default(false)
+  ai_artifacts                                            ai_artifacts[]
+  ai_chat_messages                                        ai_chat_messages[]
+  ai_chat_sessions                                        ai_chat_sessions[]
+  ai_user_agent                                           ai_user_agent[]
+  api_token_usage_logs                                    api_token_usage_logs[]
+  api_tokens                                              api_tokens[]
+  calendar_event_invites                                  calendar_event_invites[]
+  calendar_events                                         calendar_events[]
+  google_calendar_webhooks                                google_calendar_webhooks[]
+  jobs                                                    jobs[]
+  note_blocks                                             note_blocks[]
+  note_collaborators_note_collaborators_removed_byTousers note_collaborators[]        @relation("note_collaborators_removed_byTousers")
+  note_collaborators_note_collaborators_user_idTousers    note_collaborators[]        @relation("note_collaborators_user_idTousers")
+  notes                                                   notes[]
+  notes_comments                                          notes_comments[]
+  notes_short_backups                                     notes_short_backups[]
+  notifications_notifications_actor_idTousers             notifications[]             @relation("notifications_actor_idTousers")
+  notifications_notifications_user_idTousers              notifications[]             @relation("notifications_user_idTousers")
+  organization_area_members                               organization_area_members[]
+  organization_areas_organization_areas_created_byTousers organization_areas[]        @relation("organization_areas_created_byTousers")
+  organization_areas_organization_areas_deleted_byTousers organization_areas[]        @relation("organization_areas_deleted_byTousers")
+  organization_areas_organization_areas_updated_byTousers organization_areas[]        @relation("organization_areas_updated_byTousers")
+
   organization_members_organization_members_user_idTousers                                    organization_members[]                @relation("organization_members_user_idTousers")
   organization_members_organization_members_invited_byTousers                                 organization_members[]                @relation("organization_members_invited_byTousers")
   organization_members_organization_members_removed_byTousers                                 organization_members[]                @relation("organization_members_removed_byTousers")
@@ -1372,6 +1351,12 @@ enum invite_status {
   ACCEPTED
   DECLINED
   TENTATIVE
+}
+
+enum user_status_enum {
+  ACTIVE
+  SUSPENDED
+  PENDING_INVITE
 }
 
 enum notes_status {

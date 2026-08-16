@@ -107,7 +107,7 @@ class GoogleOauthRepository extends BaseRepository {
   async updateUserWithGoogle(userId, googleId, avatarUrl = null) {
     const query = `
       UPDATE users
-      SET google_id = $1, auth_with_google = true, avatar_url = COALESCE($2, avatar_url)
+      SET google_id = $1, auth_with_google = true, avatar_url = COALESCE($2, avatar_url), status = 'ACTIVE'
       WHERE user_id = $3
       RETURNING user_id, username, name, email, avatar_url, auth_with_google, created_at;
     `;

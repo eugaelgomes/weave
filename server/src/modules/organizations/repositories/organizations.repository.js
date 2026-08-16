@@ -1,5 +1,6 @@
 const { executeQuery, getConnection } = require("@/database/connection");
 const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
+const { generatePublicId } = require("@/utils/generate-public-id");
 
 class OrganizationsRepository {
   /**
@@ -759,128 +760,60 @@ class OrganizationsRepository {
     username = null,
     target_areas = []
   ) {
-    const query = `
-      INSERT INTO organization_member_invites (
-        organization_id, email, name, username, role, invited_by, expires_at,
-        target_areas
-      )
-      VALUES (
-        $1,
-        $2,
-        $3,
-        $4,
-        UPPER($5)::public.organization_workspace_role_enum,
-        $6,
-        NOW() + INTERVAL '7 days',
-        $7::jsonb
-      )
-      RETURNING *;
-    `;
-    const results = await executeQuery(query, [
-      organization_id,
-      email,
-      name,
-      username,
-      role,
-      invited_by,
-      JSON.stringify(target_areas),
-    ]);
-    return results[0];
-  }
+    const client = await getConnection();
+    try {
+      await client.query("BEGIN");
 
-  async resendOrgInvite(invite_id) {
-    const query = `
-      UPDATE organization_member_invites
-      SET expires_at = NOW() + INTERVAL '7 days',
-          updated_at = NOW()
-      WHERE invite_id = $1
-        AND deleted = false
-      RETURNING *;
-    `;
-    const results = await executeQuery(query, [invite_id]);
-    return results[0];
-  }
+      // Check if user already exists
+      const findUserQuery = `SELECT user_id, status FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`;
+      const findUserRes = await client.query(findUserQuery, [email]);
+      
+      let userId;
+      let userStatus;
 
-  async findOrgInviteByToken(invite_id) {
-    const query = `
-      SELECT i.*, o.org_name, o.unique_name as org_unique_name, o.logo_url
-      FROM organization_member_invites i
-      JOIN organizations o ON o.id = i.organization_id
-      WHERE i.invite_id = $1 
-        AND i.deleted = false 
-        AND i.invite_verified = false
-        AND i.expires_at > NOW();
-    `;
-    const results = await executeQuery(query, [invite_id]);
-    return results[0];
-  }
+      if (findUserRes.rows.length > 0) {
+        userId = findUserRes.rows[0].user_id;
+        userStatus = findUserRes.rows[0].status;
+      } else {
+        const publicUserId = generatePublicId();
+        const insertUserQuery = `
+          INSERT INTO users (
+            email, name, username, status, public_user_id, password
+          )
+          VALUES (
+            $1, $2, $3, 'PENDING_INVITE', $4, ''
+          )
+          RETURNING user_id, status;
+        `;
+        const insertRes = await client.query(insertUserQuery, [
+          email, 
+          name, 
+          username || email.split('@')[0], 
+          publicUserId
+        ]);
+        userId = insertRes.rows[0].user_id;
+        userStatus = insertRes.rows[0].status;
+      }
 
-  /** Finds an invite regardless of verification/expiry status for diagnostic purposes */
-  async findOrgInviteByTokenDiagnostic(invite_id) {
-    const query = `
-      SELECT i.invite_verified, i.expires_at, i.deleted
-      FROM organization_member_invites i
-      WHERE i.invite_id = $1
-      LIMIT 1;
-    `;
-    const results = await executeQuery(query, [invite_id]);
-    return results[0];
-  }
+      // Add to organization members if not already
+      await this.addOrganizationMember(organization_id, userId, role, 'ACTIVE', invited_by, client);
 
-  async getAllOrgInvites(organization_id) {
-    const query = `
-      SELECT * FROM organization_member_invites
-      WHERE organization_id = $1 
-      ORDER BY created_at DESC;
-    `;
-    return await executeQuery(query, [organization_id]);
-  }
+      // (Optional) target_areas can be handled here if needed in the future
 
-  async getPendingOrgInvites(organization_id) {
-    const query = `
-      SELECT * FROM organization_member_invites
-      WHERE organization_id = $1 
-        AND deleted = false 
-        AND invite_verified = false
-        AND expires_at > NOW()
-      ORDER BY created_at DESC;
-    `;
-    return await executeQuery(query, [organization_id]);
-  }
-
-  async verifyOrgInvite(invite_id) {
-    const query = `
-      UPDATE organization_member_invites
-      SET invite_verified = true, updated_at = NOW()
-      WHERE invite_id = $1
-      RETURNING *;
-    `;
-    const results = await executeQuery(query, [invite_id]);
-    return results[0];
-  }
-
-  async deleteOrgInvite(invite_id) {
-    const query = `
-      UPDATE organization_member_invites
-      SET deleted = true, updated_at = NOW()
-      WHERE invite_id = $1
-      RETURNING *;
-    `;
-    const results = await executeQuery(query, [invite_id]);
-    return results[0];
-  }
-
-  async checkExistingInvite(organization_id, email) {
-    const query = `
-      SELECT * FROM organization_member_invites
-      WHERE organization_id = $1 
-        AND LOWER(email) = LOWER($2)
-        AND deleted = false 
-        AND invite_verified = false
-        AND expires_at > NOW();
-    `;
-    const results = await executeQuery(query, [organization_id, email]);
-    return results[0];
+      await client.query("COMMIT");
+      return { 
+        invite_id: userId, // Mock invite_id for compatibility with old code that might return invite.invite_id
+        user_id: userId,
+        email, 
+        role,
+        status: userStatus
+      };
+    } catch(err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   async updateOrgLogo(organization_id, logo_url, user_id) {

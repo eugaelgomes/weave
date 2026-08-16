@@ -70,7 +70,7 @@ class GithubOauthRepository extends BaseRepository {
   async updateUserWithGithub(userId, githubId, avatarUrl) {
     const query = `
       UPDATE users 
-      SET github_id = $1, auth_with_github = true, email_verified = true, email_verified_at = COALESCE(email_verified_at, NOW()), avatar_url = COALESCE($2, avatar_url), updated_at = NOW() 
+      SET github_id = $1, auth_with_github = true, email_verified = true, email_verified_at = COALESCE(email_verified_at, NOW()), avatar_url = COALESCE($2, avatar_url), status = 'ACTIVE', updated_at = NOW() 
       WHERE user_id = $3
       RETURNING *
     `;

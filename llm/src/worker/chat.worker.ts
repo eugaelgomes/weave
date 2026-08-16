@@ -299,7 +299,7 @@ class LlmQueueProcessor {
           provider: (payload.provider as string) || "openai",
           thinking: (payload.thinking as AgenticExecutionContext["thinking"]) || undefined,
           userId: (payload.userId as string) || null,
-          traceId: traceContext.traceId,
+          traceId: requestId || "",
         };
 
         const result = await Promise.race([

@@ -28,7 +28,6 @@ const {
 const {
   inviteMemberSchema,
   inviteMembersBulkSchema,
-  acceptInviteSchema,
   updateMemberRoleSchema,
 } = require("./schemas/members.schema");
 const {
@@ -41,21 +40,6 @@ const { createDomainSchema, updateSsoSettingsSchema } = require("./schemas/domai
 const { saveStepOneSchema } = require("./schemas/creation-steps.schema");
 
 const router = express.Router();
-
-router.get(
-  "/invites/preview",
-  standardTrafficLimiter,
-  organizationMembersController.previewInvite.bind(organizationMembersController)
-);
-
-router.post(
-  "/invites/accept",
-  standardTrafficLimiter,
-  upload.single("profileImage"),
-  validateImages,
-  validate(acceptInviteSchema, "body"),
-  organizationMembersController.acceptInvite.bind(organizationMembersController)
-);
 
 router.use(verifyToken);
 
@@ -225,21 +209,6 @@ router.post(
   "/invites/bulk",
   validate(inviteMembersBulkSchema, "body"),
   organizationMembersController.inviteMembersBulk.bind(organizationMembersController)
-);
-
-router.post(
-  "/invites/:invite_id/resend",
-  organizationMembersController.resendInvite.bind(organizationMembersController)
-);
-
-router.get(
-  "/invites",
-  organizationMembersController.getPendingInvites.bind(organizationMembersController)
-);
-
-router.delete(
-  "/invites/:invite_id",
-  organizationMembersController.cancelInvite.bind(organizationMembersController)
 );
 
 router.put(

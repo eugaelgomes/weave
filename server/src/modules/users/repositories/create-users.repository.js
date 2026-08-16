@@ -116,5 +116,46 @@ class CreateUsersRepository extends BaseRepository {
     `;
     return await executeQuery(query, [username, name, githubId, planId, publicUserId], client);
   }
+
+  /**
+   * Activates a PENDING_INVITE user.
+   */
+  async updateUserActivation(userId, userData, client = null) {
+    const {
+      name,
+      username,
+      password,
+      timezone,
+      private_profile,
+      birth_date,
+      phone_number,
+    } = userData;
+
+    const query = `
+      UPDATE users SET
+        name = $1, username = $2, password = $3, phone_number = $4,
+        timezone = $5, birth_date = $6, private_profile = $7,
+        status = 'ACTIVE', updated_at = NOW()
+      WHERE user_id = $8
+      RETURNING user_id, email, name, username, created_at;
+    `;
+
+    const values = [
+      name,
+      username,
+      password,
+      phone_number,
+      timezone,
+      birth_date || null,
+      private_profile || false,
+      userId,
+    ];
+
+    if (client) {
+      const res = await client.query(query, values);
+      return res.rows;
+    }
+    return await executeQuery(query, values);
+  }
 }
 module.exports = new CreateUsersRepository();

@@ -104,7 +104,7 @@ class MicrosoftOauthRepository extends BaseRepository {
   async updateUserWithMicrosoft(userId, microsoftId) {
     const query = `
       UPDATE users
-      SET microsoft_id = $1, auth_with_microsoft = true, email_verified = true, email_verified_at = COALESCE(email_verified_at, NOW()), updated_at = NOW()
+      SET microsoft_id = $1, auth_with_microsoft = true, email_verified = true, email_verified_at = COALESCE(email_verified_at, NOW()), status = 'ACTIVE', updated_at = NOW()
       WHERE user_id = $2
       RETURNING user_id, username, name, email, auth_with_microsoft, created_at;
     `;

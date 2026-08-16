@@ -14,16 +14,20 @@ class CreateUsersService {
   /**
    * Validate corporate domains for user registration.
    */
-  async _validateCorporateDomain(email) {
+  async _validateCorporateDomain(email, existingPendingUser) {
     const emailDomain = email.split("@")[1];
     if (emailDomain) {
       const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
       if (domainInfo && (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")) {
-        const existingInvite = await OrganizationsRepository.checkExistingInvite(
-          domainInfo.organization_id,
-          email
+        if (!existingPendingUser) {
+          throw new Error("CORPORATE_DOMAIN_INVITE_REQUIRED");
+        }
+        
+        const isMember = await OrganizationsRepository.getMembershipRole(
+          domainInfo.organization_id, 
+          existingPendingUser.user_id
         );
-        if (!existingInvite) {
+        if (!isMember) {
           throw new Error("CORPORATE_DOMAIN_INVITE_REQUIRED");
         }
       }
@@ -47,7 +51,19 @@ class CreateUsersService {
       user_name,
     } = userData;
 
-    await this._validateCorporateDomain(email);
+    const existingUsersByEmail = await SearchUsersRepository.findByUsernameOrEmail("", email);
+    const existingUser = existingUsersByEmail.find(u => u.email === email);
+    
+    let existingPendingUser = null;
+    if (existingUser) {
+       if (existingUser.status === 'PENDING_INVITE') {
+           existingPendingUser = existingUser;
+       } else {
+           return { conflict: "email" };
+       }
+    }
+
+    await this._validateCorporateDomain(email, existingPendingUser);
 
     const userName = user_name || name;
 
@@ -55,7 +71,8 @@ class CreateUsersService {
       email,
       phone_number,
       username,
-    });
+    }, existingPendingUser ? { excludeUserId: existingPendingUser.user_id } : {});
+    
     if (!availability.email.available) return { conflict: "email" };
     if (!availability.username.available) return { conflict: "username" };
     if (!availability.phone_number.available) return { conflict: "phone_number" };
@@ -68,22 +85,43 @@ class CreateUsersService {
 
     // Use transaction for database atomicity
     const result = await withTransaction(async (client) => {
-      const newUser = await CreateUsersRepository.createUser(
-        {
-          avatar_url: null,
-          birth_date,
-          email,
-          name: userName,
-          password: hashedPassword,
-          phone_number,
-          private_profile,
-          timezone,
-          username,
-        },
-        client
-      );
+      let userId;
+      let createdDate;
 
-      const userId = newUser[0].user_id;
+      if (existingPendingUser) {
+        const activatedUser = await CreateUsersRepository.updateUserActivation(
+          existingPendingUser.user_id,
+          {
+            name: userName,
+            username,
+            password: hashedPassword,
+            phone_number,
+            timezone,
+            birth_date,
+            private_profile
+          },
+          client
+        );
+        userId = activatedUser[0].user_id;
+        createdDate = activatedUser[0].created_at;
+      } else {
+        const newUser = await CreateUsersRepository.createUser(
+          {
+            avatar_url: null,
+            birth_date,
+            email,
+            name: userName,
+            password: hashedPassword,
+            phone_number,
+            private_profile,
+            timezone,
+            username,
+          },
+          client
+        );
+        userId = newUser[0].user_id;
+        createdDate = newUser[0].created_at;
+      }
 
       await UserTokensRepository.createEmailActivationToken(
         userId,
@@ -94,13 +132,31 @@ class CreateUsersService {
       );
 
       return {
-        createdAt: newUser[0].created_at,
+        createdAt: createdDate,
         email,
         userId,
         userName,
         username,
       };
     });
+
+    // Auto-provision organization if user had no pending invites (new organic sign-up)
+    if (!existingPendingUser) {
+      const orgName = `Workspace de ${result.userName}`;
+      const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
+      await OrganizationsRepository.createOrgs(
+        result.userId,
+        orgName,
+        uniqueName,
+        null,
+        null,
+        null,
+        timezone || "UTC",
+        locale || "en",
+        null,
+        {}
+      );
+    }
 
     // Dispatch async welcome email to Redis queue
     try {

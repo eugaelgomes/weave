@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { z } = require("zod");
+const crypto = require("crypto");
 
 const AuthBaseController = require("./base.controller");
 const GoogleOauthRepository = require("@/modules/authentication/repositories/google-oauth.repository");
@@ -101,6 +102,11 @@ class GoogleOauthController extends AuthBaseController {
 
       if (!user) {
         const existingUser = await FindUserRepository.findUserByEmail(googleUser.email);
+        let existingPendingUser = null;
+
+        if (existingUser && existingUser.status === 'PENDING_INVITE') {
+           existingPendingUser = existingUser;
+        }
 
         if (existingUser) {
           await GoogleOauthRepository.updateUserWithGoogle(
@@ -114,24 +120,36 @@ class GoogleOauthController extends AuthBaseController {
           if (emailDomain) {
             const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
 
-            if (domainInfo && domainInfo.status === "VERIFIED") {
-              const existingInvite = await OrganizationsRepository.checkExistingInvite(
-                domainInfo.organization_id,
-                googleUser.email
-              );
-
-              if (!existingInvite) {
-                throw new Error("This email belongs to a restricted corporate domain.");
-              }
+            if (domainInfo && (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")) {
+              throw new Error("This email belongs to a restricted corporate domain. You must be invited.");
             }
           }
 
-          await GoogleOauthRepository.createUserWithGoogle(
+          const newUser = await GoogleOauthRepository.createUserWithGoogle(
             googleUser.id,
             googleUser.name,
             googleUser.email,
             googleUser.picture
           );
+          
+          const hasInvite = existingPendingUser !== null;
+          if (!hasInvite) {
+            const orgName = `Workspace de ${googleUser.name || googleUser.email.split('@')[0]}`;
+            const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
+            await OrganizationsRepository.createOrgs(
+              newUser.user_id,
+              orgName,
+              uniqueName,
+              null,
+              null,
+              null,
+              "UTC",
+              "en",
+              null,
+              {}
+            );
+          }
+
           user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
         }
       }

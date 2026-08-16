@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { z } = require("zod");
+const crypto = require("crypto");
 
 const AuthBaseController = require("./base.controller");
 const GithubOauthRepository = require("@/modules/authentication/repositories/github-oauth.repository");
@@ -140,6 +141,11 @@ class GithubOauthController extends AuthBaseController {
 
       if (!user) {
         const existingUser = await FindUserRepository.findUserByEmail(userEmail);
+        let existingPendingUser = null;
+
+        if (existingUser && existingUser.status === 'PENDING_INVITE') {
+           existingPendingUser = existingUser;
+        }
 
         if (existingUser) {
           await GithubOauthRepository.updateUserWithGithub(
@@ -153,15 +159,8 @@ class GithubOauthController extends AuthBaseController {
           if (emailDomain) {
             const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
 
-            if (domainInfo && domainInfo.status === "VERIFIED") {
-              const existingInvite = await OrganizationsRepository.checkExistingInvite(
-                domainInfo.organization_id,
-                userEmail
-              );
-
-              if (!existingInvite) {
-                throw new Error("This email belongs to a restricted corporate domain.");
-              }
+            if (domainInfo && (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")) {
+              throw new Error("This email belongs to a restricted corporate domain. You must be invited.");
             }
           }
           const generatedRandomUsername = (username) => {
@@ -173,13 +172,32 @@ class GithubOauthController extends AuthBaseController {
             return `${cleanUsername}_${randomSuffix}`;
           };
 
-          await GithubOauthRepository.createUserWithGithub(
+          const newUser = await GithubOauthRepository.createUserWithGithub(
             githubId,
             githubUser.name || githubUser.login,
             generatedRandomUsername(githubUser.login),
             userEmail,
             githubUser.avatar_url
           );
+          
+          const hasInvite = existingPendingUser !== null;
+          if (!hasInvite) {
+            const orgName = `Workspace de ${githubUser.name || githubUser.login}`;
+            const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
+            await OrganizationsRepository.createOrgs(
+              newUser.user_id,
+              orgName,
+              uniqueName,
+              null,
+              null,
+              null,
+              "UTC",
+              "en",
+              null,
+              {}
+            );
+          }
+
           user = await GithubOauthRepository.findUserByGithubId(githubId);
         }
       }
