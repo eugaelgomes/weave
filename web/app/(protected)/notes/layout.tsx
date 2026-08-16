@@ -107,8 +107,6 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <ModuleLayout
       header={<NotesHeader />}
-      sidebarContent={sidebarContent}
-      hideSidebarOnDesktop={commentsPanelOpen}
     >
       {children}
     </ModuleLayout>

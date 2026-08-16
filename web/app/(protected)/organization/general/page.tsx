@@ -9,6 +9,7 @@ import { OrganizationImageEditModal } from "@/app/(protected)/organization/gener
 import { SettingsForm } from "@/app/(protected)/organization/general/_components/settings-form";
 import { WorkspaceOverview } from "@/app/(protected)/organization/general/_components/header";
 import { useOrganizationSettingsPage } from "@/app/(protected)/organization/general/_hooks/use-organization-settings-page";
+import { AreasSection } from "@/app/(protected)/organization/general/_components/areas-section";
 
 const WorkspacePage = () => {
   const { t } = useLanguage();
@@ -144,6 +145,8 @@ const WorkspacePage = () => {
             isDeleting={isDeleting}
           />
         </div>
+
+        <AreasSection />
 
         <OrganizationImageEditModal
           isOpen={!!editingImage}

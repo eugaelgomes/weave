@@ -119,7 +119,6 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <ModuleLayout
       header={<SettingsHeader type={activeItem.type} />}
-      sidebarContent={sidebarContent}
     >
       {children}
     </ModuleLayout>

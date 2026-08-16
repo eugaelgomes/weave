@@ -30,38 +30,29 @@ const fredoka = Fredoka({
 });
 import {
   X,
-  Frown,
-  MessageSquare,
-  ChevronRight,
+  MessageCircle,
+  NotebookPen,
+  Folder,
   Bot,
+  Workflow,
   Building2,
+  Users,
+  UserPlus,
+  Layers,
+  Puzzle,
+  CreditCard,
+  Sliders,
+  Cpu,
+  Wrench,
+  Calendar,
+  FileText,
+  PanelLeftClose,
+  PanelLeft,
+  ChevronRight,
   Search,
   type LucideIcon,
 } from "lucide-react";
 import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
-import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
-import { AnimatedHomeIcon } from "./icons/animated/AnimatedHomeIcon";
-import { AnimatedNotesIcon } from "./icons/animated/AnimatedNotesIcon";
-import { AnimatedProjectsIcon } from "./icons/animated/AnimatedProjectsIcon";
-import { AnimatedFlowsIcon } from "./icons/animated/AnimatedFlowsIcon";
-import { AnimatedSettingsIcon } from "./icons/animated/AnimatedSettingsIcon";
-
-const SidebarToggleIcon = ({ className }: { className?: string }) => {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={cn("size-3.5", className)}
-      aria-hidden="true"
-    >
-      <path
-        fillRule="evenodd"
-        d="M6 5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2V5H6Zm4 0v14h8a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-8ZM3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-};
 
 const useKeyboardShortcut = (key: string, callback: () => void) => {
   useEffect(() => {
@@ -109,76 +100,45 @@ interface SidebarProps {
 const NAV_ROW_CLASS =
   "flex w-full min-w-0 items-center gap-0 rounded-md px-2 py-1 text-[13px] font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand-yellow/50 focus-visible:outline-none";
 
-const NAV_ICON_RAIL_CLASS = "relative flex w-10 h-6 shrink-0 items-center justify-center";
+const NAV_ICON_RAIL_CLASS = "relative flex h-6 shrink-0 items-center justify-center";
 
 const COLLAPSED_LABEL_CLASS =
   "flex min-h-0 min-w-0 flex-1 items-center gap-2 overflow-hidden transition-[opacity,max-width] duration-200 ease-out";
 
 // ---------------------------------------------------------------------------
-// Depth-based style maps
+// Section Data Type
 // ---------------------------------------------------------------------------
-
-/** Tamanhos de ícone por profundidade de aninhamento. */
-const ICON_SIZE_BY_DEPTH = ["h-4 w-4", "size-3", "size-2.5"] as const;
-
-/** Font-size da label por profundidade. */
-const FONT_SIZE_BY_DEPTH = ["text-[13px]", "text-[12px]", "text-[11px]"] as const;
-
-/** Padding do row por profundidade. */
-const ROW_PADDING_BY_DEPTH = ["px-2 py-1", "px-2.5 py-1", "px-2.5 py-0.5"] as const;
-
-/** Padding-left do wrapper <ul> por profundidade. */
-const SUB_LIST_PL_BY_DEPTH = ["pl-7", "pl-4"] as const;
+type NavigationSectionData = {
+  title: string;
+  items: NavigationItem[];
+};
 
 // ---------------------------------------------------------------------------
-// NavItem — componente recursivo que substitui os 3 níveis manuais
+// NavItem — componente simplificado e achatado
 // ---------------------------------------------------------------------------
 
 interface NavItemProps {
   item: NavigationItem;
-  depth: number;
   pathname: string;
   isCollapsed: boolean;
-  expandedItems: Record<string, boolean>;
-  onToggle: (path: string) => void;
   onLinkClick: () => void;
   t: ReturnType<typeof import("@/app/_contexts/language-context").useLanguage>["t"];
 }
 
-function NavItem({
-  item,
-  depth,
-  pathname,
-  isCollapsed,
-  expandedItems,
-  onToggle,
-  onLinkClick,
-  t,
-}: NavItemProps) {
+function NavItem({ item, pathname, isCollapsed, onLinkClick, t }: NavItemProps) {
   const Icon = item.icon;
-  const hasSubItems = !!item.subItems?.length;
-  const subPaths = hasSubItems ? item.subItems!.map((s) => s.path) : undefined;
-  const active = isPathActive(pathname, item.path, subPaths);
-  const isExpanded = !isCollapsed && expandedItems[item.path];
-  const linkHref = hasSubItems ? getFirstNavigablePath(item) : item.path;
-
-  const isRoot = depth === 0;
-  const iconSize = ICON_SIZE_BY_DEPTH[Math.min(depth, ICON_SIZE_BY_DEPTH.length - 1)];
-  const fontSize = FONT_SIZE_BY_DEPTH[Math.min(depth, FONT_SIZE_BY_DEPTH.length - 1)];
-  const rowPadding = ROW_PADDING_BY_DEPTH[Math.min(depth, ROW_PADDING_BY_DEPTH.length - 1)];
-
-  // Só itens-folha (ou raiz) devem ter highlight de "ativo"
-  const showActiveHighlight = active && (!hasSubItems || isRoot);
+  const linkHref = item.path;
+  const active = isPathActive(pathname, item.path);
 
   return (
     <li>
       <div
         className={cn(
-          "focus-visible:ring-brand-yellow/50 flex w-full min-w-0 items-center gap-0 rounded-md font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none",
-          rowPadding,
-          fontSize,
-          showActiveHighlight
-            ? "bg-black/10 text-slate-950 dark:bg-white/10 dark:text-white"
+          "focus-visible:ring-brand-yellow/50 flex w-full min-w-0 items-center gap-0 rounded-md font-normal transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none",
+          "px-2 py-0.5 text-[11px]",
+          isCollapsed ? "justify-center px-0" : "",
+          active
+            ? "bg-black/5 font-medium text-slate-950 dark:bg-white/10 dark:text-white"
             : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
         )}
       >
@@ -187,50 +147,33 @@ function NavItem({
           onClick={onLinkClick}
           title={item.label}
           aria-label={item.label}
-          className={cn("group flex min-w-0 flex-1 items-center", isRoot ? "gap-2" : "gap-3")}
+          className={cn(
+            "group flex min-w-0 flex-1 items-center",
+            isCollapsed ? "justify-center w-full gap-0" : "gap-1.5"
+          )}
         >
-          {isRoot ? (
-            /* Raiz: usa o icon-rail fixo para manter alinhamento no collapse */
-            <span
-              className={cn(
-                NAV_ICON_RAIL_CLASS,
-                "transition-transform duration-200 group-hover:scale-110"
-              )}
-            >
-              <Icon
-                className={cn(
-                  iconSize,
-                  "shrink-0 transition-colors",
-                  active
-                    ? "text-slate-950 dark:text-white"
-                    : "text-slate-950 group-hover:text-slate-950 dark:text-white"
-                )}
-              />
-              {isCollapsed && item.badge !== undefined && item.badge > 0 ? (
-                <span className="bg-brand-yellow absolute -top-0.5 -right-0.5 size-1.5 rounded-full ring-2 ring-white dark:ring-[#242422]" />
-              ) : null}
-            </span>
-          ) : (
-            /* Sub-itens: ícone inline simples */
+          <span
+            className={cn(
+              NAV_ICON_RAIL_CLASS,
+              isCollapsed ? "w-full" : "w-4",
+              "transition-transform duration-200 group-hover:scale-110"
+            )}
+          >
             <Icon
               className={cn(
-                iconSize,
-                "shrink-0 transition-all duration-200 group-hover:scale-110",
-                showActiveHighlight
-                  ? "text-slate-950 dark:text-white"
-                  : "text-gray-800 group-hover:text-slate-950 dark:text-white"
+                "size-3.5 shrink-0 transition-colors",
+                active
+                  ? "text-slate-950 dark:text-white font-medium"
+                  : "text-gray-700 group-hover:text-slate-950 dark:text-gray-300 dark:group-hover:text-white"
               )}
             />
-          )}
+            {isCollapsed && item.badge !== undefined && item.badge > 0 ? (
+              <span className="bg-brand-yellow absolute -top-0.5 -right-0.5 size-1.5 rounded-full ring-2 ring-white dark:ring-[#1d1d1b]" />
+            ) : null}
+          </span>
 
-          {isRoot ? (
-            /* Raiz: label com animação collapse */
-            <div
-              className={cn(
-                COLLAPSED_LABEL_CLASS,
-                isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100"
-              )}
-            >
+          {!isCollapsed && (
+            <div className={COLLAPSED_LABEL_CLASS}>
               <span className="truncate">{item.label}</span>
               {item.badge !== undefined && item.badge > 0 ? (
                 <span className="bg-brand-yellow ml-auto flex h-3.5 min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white">
@@ -238,65 +181,9 @@ function NavItem({
                 </span>
               ) : null}
             </div>
-          ) : (
-            /* Sub-itens: label simples */
-            <span className="truncate">{item.label}</span>
           )}
         </Link>
-
-        {/* Chevron expand/collapse */}
-        {hasSubItems && !isCollapsed ? (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onToggle(item.path);
-            }}
-            aria-label={
-              isExpanded
-                ? t.nav.collapseItem.replace("{label}", item.label)
-                : t.nav.expandItem.replace("{label}", item.label)
-            }
-            className={cn(
-              "group focus-visible:ring-brand-yellow/50 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-black/5 hover:text-gray-700 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-400 dark:hover:bg-white/6",
-              isRoot ? "flex size-6" : "ml-1 flex size-5"
-            )}
-          >
-            <ChevronRight
-              className={cn(
-                "shrink-0 transition-transform duration-200 group-hover:scale-110",
-                isRoot ? "size-3.5" : "size-3",
-                isExpanded ? "text-brand-yellow rotate-90" : "text-gray-500 dark:text-gray-400"
-              )}
-            />
-          </button>
-        ) : null}
       </div>
-
-      {/* Sub-items recursivos */}
-      {!isCollapsed && hasSubItems && isExpanded && (
-        <ul
-          className={cn(
-            "mt-0.5 space-y-0",
-            SUB_LIST_PL_BY_DEPTH[Math.min(depth, SUB_LIST_PL_BY_DEPTH.length - 1)]
-          )}
-        >
-          {item.subItems!.map((subItem) => (
-            <NavItem
-              key={subItem.path}
-              item={subItem}
-              depth={depth + 1}
-              pathname={pathname}
-              isCollapsed={isCollapsed}
-              expandedItems={expandedItems}
-              onToggle={onToggle}
-              onLinkClick={onLinkClick}
-              t={t}
-            />
-          ))}
-        </ul>
-      )}
     </li>
   );
 }
@@ -351,7 +238,8 @@ function RecentItems({
               <div
                 className={cn(
                   "focus-visible:ring-brand-yellow/50 flex w-full min-w-0 items-center gap-0 rounded-md font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:outline-none",
-                  "px-2 py-1 text-[13px]",
+                  "py-1 text-[13px]",
+                  isCollapsed ? "justify-center px-0" : "px-2",
                   active
                     ? "bg-black/10 text-slate-950 dark:bg-white/10 dark:text-white"
                     : "text-gray-700 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/6"
@@ -361,11 +249,15 @@ function RecentItems({
                   href={path}
                   onClick={onLinkClick}
                   title={item.title}
-                  className="group flex min-w-0 flex-1 items-center gap-2"
+                  className={cn(
+                    "group flex min-w-0 flex-1 items-center",
+                    isCollapsed ? "justify-center w-full gap-0" : "gap-2"
+                  )}
                 >
                   <span
                     className={cn(
                       NAV_ICON_RAIL_CLASS,
+                      isCollapsed ? "w-full" : "w-10",
                       "transition-transform duration-200 group-hover:scale-110"
                     )}
                   >
@@ -374,22 +266,19 @@ function RecentItems({
                     ) : ItemIcon ? (
                       <ItemIcon
                         className={cn(
-                          "size-4 shrink-0 transition-colors",
+                          "size-[18px] shrink-0 transition-colors",
                           active
                             ? "text-slate-950 dark:text-white"
-                            : "text-gray-800 group-hover:text-slate-950 dark:text-white"
+                            : "text-gray-700 group-hover:text-slate-950 dark:text-gray-300 dark:group-hover:text-white"
                         )}
                       />
                     ) : null}
                   </span>
-                  <div
-                    className={cn(
-                      COLLAPSED_LABEL_CLASS,
-                      isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100"
-                    )}
-                  >
-                    <span className="truncate">{item.title}</span>
-                  </div>
+                  {!isCollapsed && (
+                    <div className={COLLAPSED_LABEL_CLASS}>
+                      <span className="truncate">{item.title}</span>
+                    </div>
+                  )}
                 </Link>
               </div>
             </li>
@@ -569,124 +458,91 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
       ? `/${user.public_id}`
       : "";
 
-  const mappedProjects = isModuleActive("projects")
-    ? projectsCtx
-        .getRecentProjects()
-        .slice(0, 10)
-        .map((proj: any) => ({
-          type: "project" as const,
-          id: proj.id,
-          public_id: proj.public_id,
-          title: proj.title || t.common.untitled,
-          icon: AnimatedProjectsIcon,
-          projectIcon: proj.icon,
-          projectColor: proj.color,
-          updatedAt: new Date(proj.updated_at || proj.created_at).getTime(),
-          path: `${orgPrefix}/projects/${proj.public_id}`,
-        }))
-    : [];
-
-  const mappedChats = chatHistory.slice(0, 10).map((chat) => ({
-    type: "chat" as const,
-    id: chat.id,
-    title: chat.title || t.common.untitled,
-    icon: MessageSquare,
-    updatedAt: new Date(chat.updatedAt || chat.createdAt).getTime(),
-    path: `${orgPrefix}/chat?c=${chat.id}`,
-  }));
-
-  const recentItems = [...mappedProjects, ...mappedChats].sort((a, b) => b.updatedAt - a.updatedAt);
-
-  const navigationItems: NavigationItem[] = [
-    { path: `${orgPrefix}/chat`, icon: MessageSquare, label: t.nav.weaveAi || "Chat" },
-    isModuleActive("notes") && {
-      path: `${orgPrefix}/notes`,
-      icon: AnimatedNotesIcon,
-      label: t.nav.notes,
+  const navigationSections: NavigationSectionData[] = [
+    {
+      title: "AI Gateway",
+      items: [
+        { path: "/chat", icon: MessageCircle, label: "Chat" },
+        isModuleActive("agent_house") && { path: "/weave-ai/agents", icon: Bot, label: "Agentes" },
+        isModuleActive("agent_house") && { path: "/weave-ai/llms", icon: Cpu, label: "Provedores" },
+        isModuleActive("agent_house") && { path: "/weave-ai/tools", icon: Wrench, label: "Ferramentas & MCP" },
+        isModuleActive("weave_flow") && { path: "/weave-flow", icon: Workflow, label: "Flow" },
+      ].filter(Boolean) as NavigationItem[],
     },
-    isModuleActive("projects") && {
-      path: `${orgPrefix}/projects`,
-      icon: AnimatedProjectsIcon,
-      label: t.nav.projects,
+    {
+      title: "Workspace",
+      items: [
+        isModuleActive("notes") && { path: "/notes", icon: NotebookPen, label: t.nav.notes || "Notas" },
+        isModuleActive("projects") && { path: "/projects", icon: Folder, label: t.nav.projects || "Projetos" },
+        { path: "/calendar", icon: Calendar, label: "Agenda & Calendário" },
+        hasOrg && { path: "/organization/general", icon: Building2, label: "Visão Geral" },
+        hasOrg && { path: "/organization/members/list", icon: Users, label: "Membros & Usuários" },
+        hasOrg && { path: "/organization/integrations", icon: Puzzle, label: "Integrações & Chaves API" },
+        hasOrg && { path: "/organization/plans", icon: CreditCard, label: "Planos & Faturamento" },
+        hasOrg && { path: "/organization/settings", icon: Sliders, label: "Configurações do Workspace" },
+      ].filter(Boolean) as NavigationItem[],
     },
-    isModuleActive("agent_house") && {
-      path: `${orgPrefix}/agent-house`,
-      icon: Bot,
-      label: "Agent House",
-    },
-    isModuleActive("weave_flow") && {
-      path: `${orgPrefix}/weave-flow`,
-      icon: AnimatedFlowsIcon,
-      label: t.nav.weaveFlow,
-    },
-    ...(hasOrg
-      ? [
-          {
-            path: `${orgPrefix}/organization/general`,
-            icon: user.org_logo_url
-              ? function OrgLogoIcon({ size, className, ...props }: any) {
-                  return (
-                    <Image
-                      src={user.org_logo_url!}
-                      alt={user.org_name || "Organization"}
-                      width={size || 16}
-                      height={size || 16}
-                      className={cn("rounded object-contain", className)}
-                      {...props}
-                    />
-                  );
-                }
-              : Building2,
-            label: t.nav.workspace,
-          },
-        ]
-      : []),
-  ].filter(Boolean) as NavigationItem[];
+  ].filter(Boolean) as NavigationSectionData[];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-white text-gray-700 transition-colors duration-300 dark:bg-[#1d1d1b] dark:text-gray-300">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-1">
         {toggleCollapse && (
-          <div className="shrink-0 px-1 py-1">
+          <div className="shrink-0 px-1 py-0.5">
             <button
               type="button"
               onClick={toggleCollapse}
-              className="flex h-8 w-full items-center rounded-md text-gray-700 transition-colors hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/10"
+              className={cn(
+                "flex h-7 w-full items-center rounded-md text-gray-700 transition-colors hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/10",
+                isCollapsed ? "justify-center" : "px-2"
+              )}
               title={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
               aria-label={isCollapsed ? t.nav.expandMenu : t.nav.collapseMenu}
             >
-              <span className="flex w-10 shrink-0 items-center justify-center">
-                <SidebarToggleIcon />
+              <span
+                className={cn(
+                  "flex shrink-0 items-center justify-center text-gray-700 transition-colors dark:text-gray-300",
+                  isCollapsed ? "w-full" : "w-4"
+                )}
+              >
+                {isCollapsed ? (
+                  <PanelLeft className="size-3.5" />
+                ) : (
+                  <PanelLeftClose className="size-3.5" />
+                )}
               </span>
             </button>
           </div>
         )}
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-          <ul className="space-y-0.5 px-1 pt-0.5 pb-1.5">
-            {navigationItems.map((item) => (
-              <NavItem
-                key={item.path}
-                item={item}
-                depth={0}
-                pathname={pathname}
-                isCollapsed={isCollapsed}
-                expandedItems={expandedItems}
-                onToggle={toggleExpandedItem}
-                onLinkClick={handleLinkClick}
-                t={t}
-              />
-            ))}
-          </ul>
-
-          <RecentItems
-            recentItems={recentItems}
-            pathname={pathname}
-            isCollapsed={isCollapsed}
-            onLinkClick={handleLinkClick}
-            emptyLabel={t.common.empty}
-            sectionLabel={t.nav.recentAccess}
-          />
+          <div className="flex flex-col gap-5 px-1 pt-3 pb-1.5">
+            {navigationSections.map(
+              (section, idx) =>
+                section &&
+                section.items.length > 0 && (
+                  <div key={idx} className="flex flex-col gap-1">
+                    {!isCollapsed && (
+                      <h3 className="px-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500">
+                        {section.title}
+                      </h3>
+                    )}
+                    <ul className="space-y-0.5">
+                      {section.items.map((item: NavigationItem) => (
+                        <NavItem
+                          key={item.path}
+                          item={item}
+                          pathname={pathname}
+                          isCollapsed={isCollapsed}
+                          onLinkClick={handleLinkClick}
+                          t={t}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                )
+            )}
+          </div>
         </div>
       </div>
     </div>

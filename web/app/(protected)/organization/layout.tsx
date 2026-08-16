@@ -241,7 +241,6 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
   return (
     <ModuleLayout
       header={<WorkspaceHeader type={activeLeaf.type} />}
-      sidebarContent={sidebarContent}
     >
       {children}
     </ModuleLayout>

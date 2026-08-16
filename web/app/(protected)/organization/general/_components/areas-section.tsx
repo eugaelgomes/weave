@@ -118,7 +118,7 @@ const createEmptyMemberForm = (): AddMemberFormState => ({
 
 // --- Page Component ---
 
-export default function AreasPage() {
+export function AreasSection() {
   const { t } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -419,7 +419,7 @@ export default function AreasPage() {
 
   if (!hasOrganization) {
     return (
-      <WorkspacePageShell description={t.organizationAreas.description}>
+      <div className="mt-4">
         <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col items-center justify-center gap-2 text-center">
           <div className="dark:border-surface-dark-border flex flex-col items-center gap-2 rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]">
             <Layers3 className="h-10 w-10 text-neutral-300 dark:text-neutral-700" />
@@ -431,12 +431,12 @@ export default function AreasPage() {
             </p>
           </div>
         </div>
-      </WorkspacePageShell>
+      </div>
     );
   }
 
   return (
-    <WorkspacePageShell description={t.organizationAreas.description}>
+    <div className="mt-6 flex h-[600px] flex-col rounded-md border border-neutral-200 bg-neutral-50/30 p-2 dark:border-neutral-800/50 dark:bg-neutral-900/20">
       <div className="mx-auto flex min-h-0 w-full flex-1 flex-col gap-2">
         {areasError && (
           <div className="flex-shrink-0 rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400">
@@ -572,7 +572,7 @@ export default function AreasPage() {
           onConfirm={handleDeleteArea}
         />
       </div>
-    </WorkspacePageShell>
+    </div>
   );
 }
 

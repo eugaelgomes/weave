@@ -42,7 +42,7 @@ export default function WeaveFlowLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <ModuleLayout header={<WeaveFlowHeader />} sidebarContent={sidebarContent}>
+    <ModuleLayout header={<WeaveFlowHeader />}>
       {children}
     </ModuleLayout>
   );

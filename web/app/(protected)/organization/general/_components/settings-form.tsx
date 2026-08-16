@@ -1,7 +1,8 @@
 import React from "react";
+import Link from "next/link";
 import { type Organization, type OrganizationProperties } from "@/app/_services/organization";
 import { type OrganizationStats } from "@/app/_contexts/organization-context";
-import { Settings, Bell, Layers, ShieldAlert, MapPin } from "lucide-react";
+import { Settings, Bell, Layers, ShieldAlert, MapPin, Network } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import {
   Toggle,

@@ -246,8 +246,6 @@ function WeaveAiLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <ModuleLayout
       header={<WeaveAIHeader />}
-      sidebarContent={<WeaveAiSidebar />}
-      hideSidebarOnDesktop={isSandboxOpen}
     >
       <div className="custom-scrollbar flex h-full flex-1 flex-col overflow-auto text-neutral-900 dark:text-neutral-100">
         {children}

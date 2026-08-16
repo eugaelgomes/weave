@@ -207,7 +207,7 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ModuleLayout header={<ProjectsHeader />} sidebarContent={sidebarContent}>
+    <ModuleLayout header={<ProjectsHeader />}>
       {children}
     </ModuleLayout>
   );
