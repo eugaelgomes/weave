@@ -11,64 +11,62 @@ export const routes = {
     activate: () => "/activate/",
   },
 
-  // Org Scoped Routes
-  home: (orgId: string) => `/${orgId}/new/`,
+  // App Scoped Routes
+  home: () => `/chat/`,
 
   projects: {
-    list: (orgId: string) => `/${orgId}/projects/`,
-    new: (orgId: string) => `/${orgId}/projects/new/`,
-    details: (orgId: string, projectId: string) => `/${orgId}/projects/${projectId}/details/`,
-    board: (orgId: string, projectId: string) => `/${orgId}/projects/${projectId}/`,
-    task: (orgId: string, projectId: string, taskId: string) =>
-      `/${orgId}/projects/${projectId}/tasks/${taskId}/`,
+    list: () => `/projects/`,
+    new: () => `/projects/new/`,
+    details: (projectId: string) => `/projects/${projectId}/details/`,
+    board: (projectId: string) => `/projects/${projectId}/`,
+    task: (projectId: string, taskId: string) =>
+      `/projects/${projectId}/tasks/${taskId}/`,
   },
 
   notes: {
-    list: (orgId: string) => `/${orgId}/notes/`,
-    details: (orgId: string, noteId: string) => `/${orgId}/notes/${noteId}/`,
+    list: () => `/notes/`,
+    details: (noteId: string) => `/notes/${noteId}/`,
   },
 
-
-
   weaveFlow: {
-    base: (orgId: string) => `/${orgId}/weave-flow/`,
+    base: () => `/weave-flow/`,
   },
 
   weaveAi: {
-    base: (orgId: string) => `/${orgId}/weave-ai/`,
-    chat: (orgId: string) => `/${orgId}/weave-ai/chat/`,
-    chatSession: (orgId: string, sessionId: string) => `/${orgId}/weave-ai/chat/${sessionId}/`,
-    newAgent: (orgId: string) => `/${orgId}/weave-ai/agents/new/`,
-    agentDetails: (orgId: string, agentId: string) => `/${orgId}/weave-ai/agents/${agentId}/`,
+    base: () => `/weave-ai/`,
+    chat: () => `/weave-ai/chat/`,
+    chatSession: (sessionId: string) => `/weave-ai/chat/${sessionId}/`,
+    newAgent: () => `/weave-ai/agents/new/`,
+    agentDetails: (agentId: string) => `/weave-ai/agents/${agentId}/`,
   },
 
   agentHouse: {
-    base: (orgId: string) => `/${orgId}/agent-house/`,
-    llms: (orgId: string) => `/${orgId}/agent-house/llms/`,
-    tools: (orgId: string) => `/${orgId}/agent-house/tools/`,
+    base: () => `/agent-house/`,
+    llms: () => `/agent-house/llms/`,
+    tools: () => `/agent-house/tools/`,
   },
 
   organization: {
-    general: (orgId: string) => `/${orgId}/organization/general/`,
-    create: (orgId: string) => `/${orgId}/organization/create/`,
-    plans: (orgId: string) => `/${orgId}/organization/plans/`,
-    integrations: (orgId: string) => `/${orgId}/organization/integrations/`,
-    membersList: (orgId: string) => `/${orgId}/organization/members/list/`,
-    membersInvites: (orgId: string) => `/${orgId}/organization/members/invites/`,
-    areas: (orgId: string) => `/${orgId}/organization/areas/`,
-    projects: (orgId: string) => `/${orgId}/organization/projects/`,
-    editor: (orgId: string) => `/${orgId}/organization/editor/`,
-    about: (orgId: string) => `/${orgId}/organization/about/`,
+    general: () => `/organization/general/`,
+    create: () => `/organization/create/`,
+    plans: () => `/organization/plans/`,
+    integrations: () => `/organization/integrations/`,
+    membersList: () => `/organization/members/list/`,
+    membersInvites: () => `/organization/members/invites/`,
+    areas: () => `/organization/areas/`,
+    projects: () => `/organization/projects/`,
+    editor: () => `/organization/editor/`,
+    about: () => `/organization/about/`,
   },
 
   settings: {
-    base: (orgId: string) => `/${orgId}/settings/`,
-    plans: (orgId: string) => `/${orgId}/settings/plans/`,
-    clientTokens: (orgId: string) => `/${orgId}/settings/client-tokens/`,
-    integrations: (orgId: string) => `/${orgId}/settings/integrations/`,
-    security: (orgId: string) => `/${orgId}/settings/security/`,
-    userData: (orgId: string) => `/${orgId}/settings/user-data/`,
-    preferences: (orgId: string) => `/${orgId}/settings/preferences/`,
-    dangerZone: (orgId: string) => `/${orgId}/settings/danger-zone/`,
+    base: () => `/settings/`,
+    plans: () => `/settings/plans/`,
+    clientTokens: () => `/settings/client-tokens/`,
+    integrations: () => `/settings/integrations/`,
+    security: () => `/settings/security/`,
+    userData: () => `/settings/user-data/`,
+    preferences: () => `/settings/preferences/`,
+    dangerZone: () => `/settings/danger-zone/`,
   },
 };

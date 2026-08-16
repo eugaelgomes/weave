@@ -87,7 +87,6 @@ export interface ChatInputProps {
   agents: Agent[];
 
   user: any;
-  orgId: string;
   router: any;
   fileError: string | null;
   error: string | null;
@@ -277,130 +276,6 @@ export function ChatInput(props: ChatInputProps) {
                 <Paperclip className="h-4 w-4" />
               </button>
 
-              {/* Options Menu */}
-              <div className="relative">
-                <button
-                  onClick={() => props.setShowOptionsMenu(!props.showOptionsMenu)}
-                  title="Opções"
-                  aria-label="Opções"
-                  className="hover:bg-brand-beige hover:text-brand-navy dark:hover:bg-brand-navy/30 dark:hover:text-brand-beige flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition-all duration-200 hover:scale-105 active:scale-95"
-                >
-                  <Settings2 className="h-4 w-4" />
-                </button>
-                {props.showOptionsMenu && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => props.setShowOptionsMenu(false)}
-                    />
-                    <div className="dark:border-surface-dark-border absolute bottom-full left-0 z-20 mb-2 w-60 overflow-hidden rounded border border-neutral-200 bg-white p-1 shadow-lg dark:bg-[#1d1d1b]">
-                      <button
-                        onClick={() => {
-                          props.setAllowWebSearch(!props.allowWebSearch);
-                        }}
-                        className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs transition-colors"
-                      >
-                        <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
-                          <Globe
-                            className={`h-3.5 w-3.5 ${props.allowWebSearch ? "text-brand-yellow" : ""}`}
-                          />
-                          <span>{t.weaveAi.webSearch}</span>
-                        </div>
-                        {props.allowWebSearch && (
-                          <div className="bg-brand-yellow h-1.5 w-1.5 rounded-full"></div>
-                        )}
-                      </button>
-
-                      <div className="my-1 border-t border-neutral-100 dark:border-neutral-800" />
-
-                      <div className="dark:border-surface-dark-border border-b border-neutral-100 p-1">
-                        <input
-                          value={props.contextSearch}
-                          onChange={(event) => props.setContextSearch(event.target.value)}
-                          placeholder={t.weaveAi.searchContext}
-                          className="focus:border-brand-yellow dark:border-surface-dark-border-strong w-full rounded border border-neutral-200 bg-white px-2 py-1 text-xs outline-none dark:bg-[#1d1d1b]"
-                        />
-                      </div>
-                      <div className="max-h-48 overflow-y-auto p-1">
-                        <div className="flex items-center gap-1.5 px-1.5 py-1 text-[9px] font-bold tracking-wider text-neutral-400 uppercase">
-                          <FileText className="h-3 w-3" />
-                          {t.weaveAi.tasks}
-                        </div>
-                        {props.filteredNotes.slice(0, props.noteContextLimit).map((note: any) => (
-                          <button
-                            key={note.id}
-                            onClick={() =>
-                              props.handleAddContext(
-                                "note",
-                                note.id,
-                                note.title,
-                                note.icon,
-                                note.color
-                              )
-                            }
-                            className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs"
-                          >
-                            <RenderContextIcon
-                              icon={note.icon}
-                              color={note.color}
-                              fallback={FileText}
-                            />
-                            <span className="truncate">{note.title}</span>
-                          </button>
-                        ))}
-                        {props.filteredNotes.length > props.noteContextLimit && (
-                          <button
-                            type="button"
-                            onClick={() => props.setNoteContextLimit((prev) => prev + 10)}
-                            className="text-brand-navy hover:bg-brand-beige dark:text-brand-yellow dark:hover:bg-brand-navy/30 w-full rounded px-2 py-1 text-left text-[10px] font-semibold"
-                          >
-                            {t.common.showMore}
-                          </button>
-                        )}
-
-                        <div className="dark:border-surface-dark-border mt-1 flex items-center gap-1.5 border-t border-neutral-100 px-1.5 py-1 text-[9px] font-bold tracking-wider text-neutral-400 uppercase">
-                          <FolderKanban className="h-3 w-3" />
-                          {t.weaveAi.projects}
-                        </div>
-                        {props.filteredProjects
-                          .slice(0, props.projectContextLimit)
-                          .map((project: any) => (
-                            <button
-                              key={project.id}
-                              onClick={() =>
-                                props.handleAddContext(
-                                  "project",
-                                  project.id,
-                                  project.title,
-                                  project.icon,
-                                  project.color
-                                )
-                              }
-                              className="hover:bg-brand-beige dark:hover:bg-brand-navy/30 flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs"
-                            >
-                              <RenderContextIcon
-                                icon={project.icon}
-                                color={project.color}
-                                fallback={FolderKanban}
-                              />
-                              <span className="truncate">{project.title}</span>
-                            </button>
-                          ))}
-                        {props.filteredProjects.length > props.projectContextLimit && (
-                          <button
-                            type="button"
-                            onClick={() => props.setProjectContextLimit((prev) => prev + 10)}
-                            className="text-brand-navy hover:bg-brand-beige dark:text-brand-yellow dark:hover:bg-brand-navy/30 w-full rounded px-2 py-1 text-left text-[10px] font-semibold"
-                          >
-                            {t.common.showMore}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
               <div className="relative ml-1">
                 <button
                   onClick={() => props.setIsModelMenuOpen((v) => !v)}
@@ -534,7 +409,7 @@ export function ChatInput(props: ChatInputProps) {
           <p className="text-brand-red text-[11px] text-center mt-2">
             {t.weaveAi.limitReached ?? "Monthly AI message limit reached."}{" "}
             <button
-              onClick={() => props.router.push(`/${props.orgId}/settings/plans`)}
+              onClick={() => props.router.push(`/settings/plans`)}
               className="hover:text-brand-orange underline"
             >
               {t.weaveAi.viewPlans ?? "View plans"}

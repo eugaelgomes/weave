@@ -16,7 +16,7 @@ interface StatsProps {
 export function Stats({ stats, projectsStats, tagCloudData }: StatsProps) {
   const { t } = useLanguage();
   const params = useParams();
-  const orgId = params?.orgId as string;
+  
   const [showMetrics, setShowMetrics] = useState(false);
   const [showTags, setShowTags] = useState(false);
 
@@ -123,7 +123,7 @@ export function Stats({ stats, projectsStats, tagCloudData }: StatsProps) {
                 {tagCloudData.map((tagInfo, i) => (
                   <Link
                     key={i}
-                    href={`/${orgId}/notes?tag=${tagInfo.tag}`}
+                    href={`/notes?tag=${tagInfo.tag}`}
                     title={`${tagInfo.count} ${t.common.notes}`}
                     className={` ${tagInfo.sizeClass} ${tagInfo.colorClass} ${tagInfo.weightClass} group cursor-pointer font-sans transition-all duration-300 hover:scale-110 hover:brightness-125 dark:brightness-125 dark:saturate-150`}
                   >

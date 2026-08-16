@@ -12,7 +12,7 @@ export default function NotFound() {
 
   const homeHref =
     authenticated && user
-      ? routes.home((user.org_public_id || user.public_id) as string)
+      ? routes.home()
       : routes.auth.signIn();
 
   return (
@@ -62,7 +62,7 @@ export default function NotFound() {
             <Link
               href={
                 authenticated && user
-                  ? routes.notes.list((user.org_public_id || user.public_id) as string)
+                  ? routes.notes.list()
                   : routes.auth.signIn()
               }
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
@@ -72,7 +72,7 @@ export default function NotFound() {
             <Link
               href={
                 authenticated && user
-                  ? routes.projects.list((user.org_public_id || user.public_id) as string)
+                  ? routes.projects.list()
                   : routes.auth.signIn()
               }
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"
@@ -82,7 +82,7 @@ export default function NotFound() {
             <Link
               href={
                 authenticated && user
-                  ? routes.settings.base((user.org_public_id || user.public_id) as string)
+                  ? routes.settings.base()
                   : routes.auth.signIn()
               }
               className="hover:text-brand-primary-600 dark:hover:text-brand-primary-400 text-neutral-500 transition-colors dark:text-neutral-400"

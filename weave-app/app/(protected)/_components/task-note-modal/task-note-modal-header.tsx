@@ -75,12 +75,12 @@ export function TaskNoteModalHeader({
 }: TaskNoteModalHeaderProps) {
   const router = useRouter();
   const params = useParams();
-  const orgId = params?.orgId as string;
+  
 
   const handleOpenFullPage = () => {
     if (note) {
       onClose();
-      router.push(getNotePath(orgId, note));
+      router.push(getNotePath(note));
     }
   };
 

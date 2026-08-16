@@ -127,11 +127,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
     }
 
     const nextPath = consumeInvitePostLoginPath();
-    const defaultPath = result.data?.user?.org_public_id
-      ? `/${result.data.user.org_public_id}/new`
-      : result.data?.user?.public_id
-        ? `/${result.data.user.public_id}/new`
-        : "/new";
+    const defaultPath = "/chat";
     router.push(nextPath || defaultPath);
     setIsLoading(false);
   };

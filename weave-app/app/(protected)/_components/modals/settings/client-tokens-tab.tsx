@@ -217,7 +217,7 @@ export function SettingsApiTokens() {
 
     const orgId = organization?.id || null;
 
-    const result = await generateApiToken(newTokenName, selectedScopes, expiresAtDate, orgId);
+    const result = await generateApiToken(newTokenName, selectedScopes, expiresAtDate);
     if (result.success && result.data?.token) {
       setGeneratedToken(result.data.token);
       setIsCreating(false);

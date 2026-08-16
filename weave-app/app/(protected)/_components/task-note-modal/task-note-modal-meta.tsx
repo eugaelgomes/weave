@@ -29,7 +29,7 @@ import {
   TaskCardTagsPicker,
   type ProjectCollaboratorOption,
   type ProjectTagOption,
-} from "@/app/(protected)/[orgId]/projects/_components/task-card-meta-pickers";
+} from "@/app/(protected)/projects/_components/task-card-meta-pickers";
 
 interface TaskNoteModalMetaProps {
   mode: TaskNoteModalMode;

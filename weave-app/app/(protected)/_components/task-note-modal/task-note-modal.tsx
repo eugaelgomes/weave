@@ -17,7 +17,7 @@ import {
   type TaskPriority,
 } from "@/app/_contexts/projects-context";
 import { NoteCommentsProvider, useNoteComments } from "@/app/_contexts/note-comments-context";
-import { NoteCommentsSidebar } from "@/app/(protected)/[orgId]/notes/_components/note-comments-sidebar";
+import { NoteCommentsSidebar } from "@/app/(protected)/notes/_components/note-comments-sidebar";
 import { NoteCommentsPanelProvider } from "@/app/_contexts/note-comments-panel-context";
 import {
   useTaskNoteModal,
@@ -34,10 +34,10 @@ import {
 import type {
   ProjectCollaboratorOption,
   ProjectTagOption,
-} from "@/app/(protected)/[orgId]/projects/_components/task-card-meta-pickers";
+} from "@/app/(protected)/projects/_components/task-card-meta-pickers";
 import { ApiError } from "@/app/_services/api-methods";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
-import type { NoteCommentsEmbeddableFile } from "@/app/(protected)/[orgId]/notes/_components/note-comments-sidebar";
+import type { NoteCommentsEmbeddableFile } from "@/app/(protected)/notes/_components/note-comments-sidebar";
 
 type NoteConflictState = {
   noteId: string;
@@ -240,7 +240,6 @@ function TaskNoteModalInner() {
 
         await loadTaskPriorities({
           projectId: fetchedNote.associated_project?.id,
-          orgId: fetchedNote.associated_organization?.id,
         });
       }
     } catch (err) {
@@ -288,7 +287,6 @@ function TaskNoteModalInner() {
 
     await loadTaskPriorities({
       projectId: projectId || undefined,
-      orgId: user?.org_id || undefined,
     });
   }, [
     projectId,
@@ -623,7 +621,6 @@ function TaskNoteModalInner() {
             <NoteCommentsPanelProvider>
               <SharedTaskDetail
                 taskId={noteId}
-                orgId={user?.org_id || ""}
                 isModal={true}
                 onClose={closeModal}
               />

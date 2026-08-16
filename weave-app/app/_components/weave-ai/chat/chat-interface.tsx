@@ -88,7 +88,7 @@ export default function ChatInterface({
 } = {}) {
   const router = useRouter();
   const params = useParams();
-  const orgId = params?.orgId as string;
+  
   const pathname = usePathname();
   const { t, locale } = useLanguage();
   const {
@@ -173,7 +173,7 @@ export default function ChatInterface({
 
   useEffect(() => {
     if (chatId && !isChatSessionId(chatId)) {
-      router.replace(`/${orgId}/weave-ai/chat`);
+      router.replace(`/weave-ai/chat`);
       return;
     }
     if (chatId) {
@@ -187,24 +187,19 @@ export default function ChatInterface({
     if (!currentSession?.id || !isChatSessionId(currentSession.id)) return;
     const normalizedPathname = pathname.replace(/\/$/, "");
     if (
-      normalizedPathname !== `/${orgId}/weave-ai/chat` &&
-      normalizedPathname !== `/${orgId}/weave-ai/chat/reasonings/new` &&
-      normalizedPathname !== `/${orgId}/new`
+      normalizedPathname !== `/weave-ai/chat` &&
+      normalizedPathname !== `/weave-ai/chat/reasonings/new` &&
+      normalizedPathname !== `/chat`
     )
       return;
     if (messages.length === 0) return;
 
-    if (normalizedPathname === `/${orgId}/new`) {
-      router.replace(`/${orgId}/new?c=${currentSession.id}`, { scroll: false });
-    } else {
-      router.replace(`/${orgId}/weave-ai/chat/${currentSession.id}/`, { scroll: false });
-    }
-  }, [chatId, currentSession?.id, messages.length, pathname, orgId, variant, router]);
+    router.replace(`/chat?c=${currentSession.id}`, { scroll: false });
+  }, [chatId, currentSession?.id, messages.length, pathname, variant, router]);
 
   const autoOpenedArtifactRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!messages || messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
     if (lastMsg.role === "assistant" && Array.isArray(lastMsg.functions)) {
       const artifactCall = lastMsg.functions.find(
@@ -237,8 +232,8 @@ export default function ChatInterface({
     await sendMessage({
       message: messageText,
       model: {
-        name: selectedModel?.id,
-        version: selectedModel?.version,
+        name: selectedModel?.id || "",
+        version: selectedModel?.version || "",
       },
       sessionId,
       allowEdit,
@@ -352,7 +347,7 @@ export default function ChatInterface({
     setIsSharing(true);
     try {
       const shareToken = await shareChatSession(chatId);
-      const url = `${window.location.origin}/${orgId}/weave-ai/share/${shareToken}`;
+      const url = `${window.location.origin}/weave-ai/share/${shareToken}`;
       await navigator.clipboard.writeText(url);
       toast.success(
         locale === "en-US"
@@ -490,7 +485,7 @@ export default function ChatInterface({
             {variant === "widget" && (
               <>
                 <Link
-                  href={`/${orgId}/weave-ai/chat`}
+                  href={`/weave-ai/chat`}
                   onClick={onClose}
                   className="text-[10px] font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:text-neutral-400 dark:hover:text-neutral-100"
                 >
@@ -564,7 +559,6 @@ export default function ChatInterface({
                 msg={msg}
                 isStreaming={isStreaming}
                 allMessages={messages}
-                orgId={orgId}
                 isUser={isUser}
                 isFailedUserMessage={isFailedUserMessage}
                 citations={citations}
@@ -656,7 +650,6 @@ export default function ChatInterface({
         setSelectedAgentId={setSelectedAgentId}
         agents={agents}
         user={user}
-        orgId={orgId}
         router={router}
         fileError={fileError}
         error={error}

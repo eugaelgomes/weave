@@ -61,12 +61,12 @@ import { NoteCommentsProvider } from "@/app/_contexts/note-comments-context";
 import {
   NoteCommentsSidebar,
   NoteCommentsSidebarTrigger,
-} from "@/app/(protected)/[orgId]/notes/_components/note-comments-sidebar";
-import { NoteDetailBody } from "@/app/(protected)/[orgId]/notes/[public_id]/_components/note-body";
-import { NoteDetailHeader } from "@/app/(protected)/[orgId]/notes/[public_id]/_components/note-header";
-import { NoteRelationsModal } from "@/app/(protected)/[orgId]/notes/[public_id]/_components/note-relations-modal";
-import { NoteShareModal } from "@/app/(protected)/[orgId]/notes/[public_id]/_components/note-share-modal";
-import { NoteTagsModal } from "@/app/(protected)/[orgId]/notes/[public_id]/_components/note-tags-modal";
+} from "@/app/(protected)/notes/_components/note-comments-sidebar";
+import { NoteDetailBody } from "@/app/(protected)/notes/[public_id]/_components/note-body";
+import { NoteDetailHeader } from "@/app/(protected)/notes/[public_id]/_components/note-header";
+import { NoteRelationsModal } from "@/app/(protected)/notes/[public_id]/_components/note-relations-modal";
+import { NoteShareModal } from "@/app/(protected)/notes/[public_id]/_components/note-share-modal";
+import { NoteTagsModal } from "@/app/(protected)/notes/[public_id]/_components/note-tags-modal";
 import {
   getCollaboratorDisplayName,
   getCollaboratorAvatarUrl,
@@ -74,14 +74,14 @@ import {
 } from "@/app/_utils/collaborators";
 import { getTagColor } from "@/app/_utils/tag-colors";
 import getStorageUrl from "@/app/_utils/get-storage-url";
-import { NoteBlockEditor } from "@/app/(protected)/[orgId]/notes/[public_id]/_components/note-block-editor";
-import { NoteTiptapEditor } from "@/app/(protected)/[orgId]/notes/[public_id]/_components/note-tiptap-editor";
+import { NoteBlockEditor } from "@/app/(protected)/notes/[public_id]/_components/note-block-editor";
+import { NoteTiptapEditor } from "@/app/(protected)/notes/[public_id]/_components/note-tiptap-editor";
 import { getNotePath, isSameNoteRoute } from "@/app/_utils/note-path";
 import type { CreateBlockData } from "@/app/_services/notes-service/notes.schema";
 import {
   resolveProjectIcon,
   ProjectIcon,
-} from "@/app/(protected)/[orgId]/projects/_components/project-icon";
+} from "@/app/(protected)/projects/_components/project-icon";
 import { ApiError } from "@/app/_services/api-methods";
 
 // =================== BLOCO SORTABLE (Markdown / tipos) ===================
@@ -221,12 +221,11 @@ const NoteDetailSkeleton = () => (
 
 export interface SharedTaskDetailProps {
   taskId: string;
-  orgId: string;
   isModal?: boolean;
   onClose?: () => void;
 }
 
-export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTaskDetailProps) => {
+export const SharedTaskDetail = ({ taskId, isModal, onClose }: SharedTaskDetailProps) => {
   const router = useRouter();
   const routeNoteId = taskId;
 
@@ -741,7 +740,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
             editingTitleRef.current = loadedNote.title;
             editingDescriptionRef.current = loadedNote.description || "";
             if (!isModal && loadedNote.public_id && routeNoteId !== loadedNote.public_id) {
-              router.replace(getNotePath(orgId, loadedNote));
+              router.replace(getNotePath(loadedNote));
             }
             // Carregar blocos da tarefa
             if (loadedNote.blocks) {
@@ -1414,7 +1413,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
           if (onClose) {
             onClose();
           } else {
-            router.push(`/${orgId}/notes`);
+            router.push(`/notes`);
           }
         }
       } catch (error) {
@@ -1428,7 +1427,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
     if (onClose) {
       onClose();
     } else {
-      router.push(`/${orgId}/notes`);
+      router.push(`/notes`);
     }
   };
 
@@ -1771,7 +1770,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
           isModal={isModal}
           onOpenFullPage={() => {
             if (isModal && onClose) onClose();
-            router.push(getNotePath(orgId, note));
+            router.push(getNotePath(note));
           }}
           editingTitle={editingTitle}
           onTitleChange={(val) => {
@@ -2272,7 +2271,7 @@ export const SharedTaskDetail = ({ taskId, orgId, isModal, onClose }: SharedTask
                                 <button
                                   onClick={() => {
                                     if (isModal && onClose) onClose();
-                                    router.push(getNotePath(orgId, relNote!));
+                                    router.push(getNotePath(relNote!));
                                   }}
                                   className="inline-flex items-center gap-1.5 truncate"
                                 >

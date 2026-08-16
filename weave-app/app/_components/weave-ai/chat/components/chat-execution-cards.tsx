@@ -15,12 +15,10 @@ import { routes } from "@/app/_utils/routes";
 export const ToolCallGroup = ({
   toolCalls,
   allMessages,
-  orgId,
   onOpenSandbox,
 }: {
   toolCalls: any[];
   allMessages: any[];
-  orgId: string;
   onOpenSandbox?: (artifactId?: string) => void;
 }) => {
   const { locale } = useLanguage();
@@ -177,7 +175,7 @@ export const ToolCallGroup = ({
 
             {!isRunning && success && name === "create_note" && noteId && (
               <Link
-                href={routes.notes.details(orgId, noteId)}
+                href={routes.notes.details(noteId)}
                 className="text-brand-yellow ml-1 text-[10px] font-bold tracking-wider uppercase hover:underline"
               >
                 [{locale === "en-US" ? "open" : "abrir"}]

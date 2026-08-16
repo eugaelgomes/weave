@@ -29,7 +29,6 @@ import { ToolCallGroup } from "./chat-execution-cards";
 
 export interface ChatMessageItemProps {
   msg: any;
-  orgId: string;
   isUser: boolean;
   isFailedUserMessage: boolean;
   citations: any[];
@@ -57,7 +56,6 @@ export interface ChatMessageItemProps {
 export function ChatMessageItem(props: ChatMessageItemProps) {
   const {
     msg,
-    orgId,
     isUser,
     isFailedUserMessage,
     citations,
@@ -146,7 +144,7 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                     const note = Array.isArray(notesOverview)
                       ? notesOverview.find((n: any) => n.id === noteId)
                       : null;
-                    const href = routes.notes.details(orgId, (note as any)?.public_id || noteId);
+                    const href = routes.notes.details((note as any)?.public_id || noteId);
                     const noteIcon = (note as any)?.icon || (note as any)?.properties?.icon;
                     return (
                       <Link
@@ -172,9 +170,7 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                     const project = Array.isArray(projectsOverview)
                       ? projectsOverview.find((p: any) => p.id === projectId)
                       : null;
-                    const href = routes.projects.board(
-                      orgId,
-                      (project as any)?.public_id || projectId
+                    const href = routes.projects.board((project as any)?.public_id || projectId
                     );
                     const projectIcon =
                       (project as any)?.icon || (project as any)?.properties?.icon;
@@ -211,7 +207,6 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                     <ToolCallGroup
                       toolCalls={toolCalls}
                       allMessages={allMessages}
-                      orgId={orgId}
                       onOpenSandbox={onOpenSandbox}
                     />
                   );
@@ -470,13 +465,9 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                                 )
                               : null;
                             let resolvedHref = href;
-                            if (href.startsWith("/") && !href.startsWith(`/${orgId}/`)) {
-                              resolvedHref = `/${orgId}${href}`;
-                            }
+                            // Link resolution is handled centrally
                             if (project) {
-                              resolvedHref = routes.projects.board(
-                                orgId,
-                                (project as any).public_id || entityId
+                              resolvedHref = routes.projects.board((project as any).public_id || entityId
                               );
                             }
                             const projectIcon = (project as any)?.icon;
@@ -502,13 +493,9 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                                 )
                               : null;
                             let resolvedHref = href;
-                            if (href.startsWith("/") && !href.startsWith(`/${orgId}/`)) {
-                              resolvedHref = `/${orgId}${href}`;
-                            }
+                            // Link resolution is handled centrally
                             if (note) {
-                              resolvedHref = routes.notes.details(
-                                orgId,
-                                (note as any).public_id || entityId
+                              resolvedHref = routes.notes.details((note as any).public_id || entityId
                               );
                             }
                             const noteIcon = (note as any)?.properties?.icon;

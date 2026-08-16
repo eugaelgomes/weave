@@ -38,7 +38,7 @@ import {
   Search,
   type LucideIcon,
 } from "lucide-react";
-import { ProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
+import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
 import { AiFredokaIcon } from "@/app/(protected)/_components/layout/icons/ai-fredoka-icon";
 import { AnimatedHomeIcon } from "./icons/animated/AnimatedHomeIcon";
 import { AnimatedNotesIcon } from "./icons/animated/AnimatedNotesIcon";
@@ -559,14 +559,14 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     title: chat.title || t.common.untitled,
     icon: MessageSquare,
     updatedAt: new Date(chat.updatedAt || chat.createdAt).getTime(),
-    path: `${orgPrefix}/new?c=${chat.id}`,
+    path: `${orgPrefix}/chat?c=${chat.id}`,
   }));
 
   const recentItems = [...mappedProjects, ...mappedChats]
     .sort((a, b) => b.updatedAt - a.updatedAt);
 
   const navigationItems: NavigationItem[] = [
-    { path: `${orgPrefix}/new`, icon: MessageSquare, label: t.nav.weaveAi || "Chat" },
+    { path: `${orgPrefix}/chat`, icon: MessageSquare, label: t.nav.weaveAi || "Chat" },
     isModuleActive("notes") && { path: `${orgPrefix}/notes`, icon: AnimatedNotesIcon, label: t.nav.notes },
     isModuleActive("projects") && {
       path: `${orgPrefix}/projects`,

@@ -1,5 +1,5 @@
 import React from "react";
-import { resolveProjectIcon } from "@/app/(protected)/[orgId]/projects/_components/project-icon";
+import { resolveProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
 
 export function RenderContextIcon({
   icon,

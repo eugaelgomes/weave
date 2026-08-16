@@ -70,7 +70,7 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
   const [state, setState] = useState<TaskNoteModalState>(initialState);
   const [callbacks, setCallbacks] = useState<TaskNoteModalCallbacks>({});
   const params = useParams();
-  const orgId = params?.orgId as string;
+  
 
   const openModal = useCallback<TaskNoteModalContextType["openModal"]>((mode, options = {}) => {
     setState({
@@ -99,7 +99,7 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
   const closeModal = useCallback(() => {
     setState((prev) => {
       if (prev.projectPublicId) {
-        syncProjectTaskUrl(orgId, prev.projectPublicId, null, true);
+        syncProjectTaskUrl(prev.projectPublicId, null, true);
       }
       return initialState;
     });
@@ -110,7 +110,7 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
       window.dispatchEvent(new HashChangeEvent("hashchange"));
     }
-  }, [orgId]);
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -136,7 +136,7 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
         setState((prev) => {
           if (prev.isOpen) {
             if (prev.projectPublicId) {
-              syncProjectTaskUrl(orgId, prev.projectPublicId, null, true);
+              syncProjectTaskUrl(prev.projectPublicId, null, true);
             }
             return initialState;
           }
@@ -148,7 +148,7 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [orgId]);
+  }, []);
 
   const viewNote = useCallback(
     (noteId: string) => {

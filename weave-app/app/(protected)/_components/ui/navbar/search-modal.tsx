@@ -64,14 +64,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   }, [onClose]);
 
   const places: SearchResult[] = [
-    { id: "1", title: searchT.placeHome, type: "page", icon: Home, href: routes.home(orgId) },
+    { id: "1", title: searchT.placeHome, type: "page", icon: Home, href: routes.home() },
 
     {
       id: "4",
       title: searchT.placePreferences,
       type: "page",
       icon: Settings,
-      href: routes.settings.base(orgId),
+      href: routes.settings.base(),
     },
   ];
 
@@ -94,7 +94,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         icon: FileText,
         subtitle:
           note.tags && note.tags.length > 0 ? `#${note.tags.join(", #")}` : searchT.noteFallback,
-        href: routes.notes.details(orgId, note.public_id || note.id),
+        href: routes.notes.details(note.public_id || note.id),
       }));
 
     const matchedProjects: SearchResult[] = projectsOverview
@@ -110,7 +110,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
         type: "project",
         icon: Folder,
         subtitle: project.status || searchT.projectFallback,
-        href: routes.projects.board(orgId, project.public_id || project.id),
+        href: routes.projects.board(project.public_id || project.id),
         color: project.color,
       }));
 
@@ -125,7 +125,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     type: "project",
     icon: Folder,
     subtitle: p.status,
-    href: routes.projects.board(orgId, p.public_id || p.id),
+    href: routes.projects.board(p.public_id || p.id),
     color: p.color,
   }));
 
@@ -135,7 +135,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     type: "note",
     icon: FileText,
     subtitle: n.tags?.[0] ? `#${n.tags[0]}` : searchT.noteFallback,
-    href: routes.notes.details(orgId, n.public_id || n.id),
+    href: routes.notes.details(n.public_id || n.id),
   }));
 
   const Section = ({
@@ -234,14 +234,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                 items={recentProjects}
                 emptyMessage={searchT.projectsEmpty}
                 viewAllLabel={searchT.allProjects}
-                viewAllHref={routes.projects.list(orgId)}
+                viewAllHref={routes.projects.list()}
               />
               <Section
                 title={searchT.recentNotes}
                 items={recentNotes}
                 emptyMessage={searchT.notesEmpty}
                 viewAllLabel={searchT.allNotes}
-                viewAllHref={routes.notes.list(orgId)}
+                viewAllHref={routes.notes.list()}
               />
             </>
           ) : (

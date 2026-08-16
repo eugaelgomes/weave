@@ -173,19 +173,19 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
 
               <span className="text-gray-300 dark:text-gray-600 shrink-0 font-light text-xs">|</span>
 
-              {(user?.user_organization?.unique_name || user?.org_name) && (
+              {((user as any)?.user_organization?.unique_name || user?.org_name) && (
                 <div className="flex items-center gap-1.5 min-w-0 text-xs text-gray-400 font-medium ml-1.5 sm:ml-2">
-                  {(user?.user_organization?.logo_url || user?.org_logo_url) && (
+                  {((user as any)?.user_organization?.logo_url || user?.org_logo_url) && (
                     <Image
-                      src={user?.user_organization?.logo_url || user?.org_logo_url!}
-                      alt={t.navbar.logoOf.replace("{name}", user?.user_organization?.unique_name || user?.org_name || "")}
+                      src={(user as any)?.user_organization?.logo_url || user?.org_logo_url!}
+                      alt={t.navbar.logoOf.replace("{name}", (user as any)?.user_organization?.unique_name || user?.org_name || "")}
                       width={16}
                       height={16}
                       className="h-4 w-4 rounded-sm object-contain shrink-0"
                     />
                   )}
                   <span className="text-gray-600 dark:text-gray-300 truncate max-w-[80px] sm:max-w-[140px]">
-                    {user?.user_organization?.unique_name || user?.org_name}
+                    {(user as any)?.user_organization?.unique_name || user?.org_name}
                   </span>
                 </div>
               )}
@@ -208,8 +208,8 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                     <div className="relative group">
                       <button
                         type="button"
-                        title={t.common?.changeLanguage || "Mudar idioma"}
-                        aria-label={t.common?.changeLanguage || "Mudar idioma"}
+                        title={(t.common as any)?.changeLanguage || "Mudar idioma"}
+                        aria-label={(t.common as any)?.changeLanguage || "Mudar idioma"}
                         className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors flex items-center pt-1 pb-1"
                       >
                         <Globe className="h-4 w-4" />

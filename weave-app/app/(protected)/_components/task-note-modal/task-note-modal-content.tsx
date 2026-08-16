@@ -11,7 +11,7 @@ import { RichTextEditor } from "@/app/(protected)/_components/rich-editor/rich-e
 
 const NoteTiptapEditor = dynamic(
   () =>
-    import("@/app/(protected)/[orgId]/notes/[public_id]/_components/note-tiptap-editor").then(
+    import("@/app/(protected)/notes/[public_id]/_components/note-tiptap-editor").then(
       (mod) => mod.NoteTiptapEditor
     ),
   {
