@@ -444,8 +444,8 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
                   ...member,
                   membership: {
                     ...member.membership,
-                    role: updatedMember.membership.role,
-                    updated_at: updatedMember.membership.updated_at,
+                    role: updatedMember?.membership?.role ?? role,
+                    updated_at: updatedMember?.membership?.updated_at,
                   },
                 }
               : member
@@ -699,7 +699,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const featuresEnabled = Object.values(features).filter(Boolean).length;
 
     const adminsCount = members.filter(
-      (m) => m.membership.role === "ADMIN" || m.membership.role === "SUPER_ADMIN"
+      (m) => m.membership?.role === "ADMIN" || m.membership?.role === "SUPER_ADMIN"
     ).length;
 
     return {
@@ -716,7 +716,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     (userId: string) => {
       if (!userId || members.length === 0) return null;
       const member = members.find((m) => m.id === userId);
-      return member ? member.membership.role : null;
+      return member?.membership?.role ?? null;
     },
     [members]
   );

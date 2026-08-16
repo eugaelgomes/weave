@@ -598,17 +598,12 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const recentItems = [...mappedProjects, ...mappedChats].sort((a, b) => b.updatedAt - a.updatedAt);
 
   const navigationItems: NavigationItem[] = [
-<<<<<<< HEAD:weave-app/app/(protected)/_components/layout/sidebar.tsx
     { path: `${orgPrefix}/chat`, icon: MessageSquare, label: t.nav.weaveAi || "Chat" },
-    isModuleActive("notes") && { path: `${orgPrefix}/notes`, icon: AnimatedNotesIcon, label: t.nav.notes },
-=======
-    { path: `${orgPrefix}/new`, icon: MessageSquare, label: t.nav.weaveAi || "Chat" },
     isModuleActive("notes") && {
       path: `${orgPrefix}/notes`,
       icon: AnimatedNotesIcon,
       label: t.nav.notes,
     },
->>>>>>> develop:web/app/(protected)/_components/layout/sidebar.tsx
     isModuleActive("projects") && {
       path: `${orgPrefix}/projects`,
       icon: AnimatedProjectsIcon,

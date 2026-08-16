@@ -168,26 +168,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                 |
               </span>
 
-<<<<<<< HEAD:weave-app/app/(protected)/_components/layout/navbar.tsx
-              {((user as any)?.user_organization?.unique_name || user?.org_name) && (
-                <div className="flex items-center gap-1.5 min-w-0 text-xs text-gray-400 font-medium ml-1.5 sm:ml-2">
-                  {((user as any)?.user_organization?.logo_url || user?.org_logo_url) && (
-                    <Image
-                      src={(user as any)?.user_organization?.logo_url || user?.org_logo_url!}
-                      alt={t.navbar.logoOf.replace("{name}", (user as any)?.user_organization?.unique_name || user?.org_name || "")}
-                      width={16}
-                      height={16}
-                      className="h-4 w-4 rounded-sm object-contain shrink-0"
-                    />
-                  )}
-                  <span className="text-gray-600 dark:text-gray-300 truncate max-w-[80px] sm:max-w-[140px]">
-                    {(user as any)?.user_organization?.unique_name || user?.org_name}
-                  </span>
-                </div>
-              )}
-=======
               <WorkspaceSwitcher />
->>>>>>> develop:web/app/(protected)/_components/layout/navbar.tsx
             </section>
 
             {/* Right: Docs, Theme, Notifications, Avatar */}
@@ -207,15 +188,9 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                     <div className="group relative">
                       <button
                         type="button"
-<<<<<<< HEAD:weave-app/app/(protected)/_components/layout/navbar.tsx
                         title={(t.common as any)?.changeLanguage || "Mudar idioma"}
                         aria-label={(t.common as any)?.changeLanguage || "Mudar idioma"}
-                        className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors flex items-center pt-1 pb-1"
-=======
-                        title={t.common?.changeLanguage || "Mudar idioma"}
-                        aria-label={t.common?.changeLanguage || "Mudar idioma"}
                         className="flex items-center pt-1 pb-1 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
->>>>>>> develop:web/app/(protected)/_components/layout/navbar.tsx
                       >
                         <Globe className="h-4 w-4" />
                       </button>

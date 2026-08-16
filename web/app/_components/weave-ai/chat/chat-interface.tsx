@@ -201,7 +201,7 @@ export default function ChatInterface({
 
   useEffect(() => {
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg.role === "assistant" && Array.isArray(lastMsg.functions)) {
+    if (lastMsg?.role === "assistant" && Array.isArray(lastMsg.functions)) {
       const artifactCall = lastMsg.functions.find(
         (f: any) => f.name === "create_artifact" || f.name === "update_artifact"
       );
