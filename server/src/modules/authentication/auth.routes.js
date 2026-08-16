@@ -8,6 +8,7 @@ const GithubOauthController = require("@/modules/authentication/controllers/gith
 const MicrosoftOauthController = require("@/modules/authentication/controllers/microsoft-oauth.controller");
 const LogoutController = require("@/modules/authentication/controllers/logout.controller");
 const PasswordController = require("@/modules/authentication/controllers/password.controller");
+const SamlSsoController = require("@/modules/authentication/controllers/saml-sso.controller");
 const {
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -55,6 +56,11 @@ router.get(
   validate(oauthCallbackSchema, "query"),
   MicrosoftOauthController.microsoftCallback.bind(MicrosoftOauthController)
 );
+
+// Custom SAML SSO
+router.post("/sso/discover", authLimiter, SamlSsoController.discoverSso.bind(SamlSsoController));
+router.get("/sso/saml/:domainId/login", SamlSsoController.samlLogin.bind(SamlSsoController));
+router.post("/sso/saml/acs", SamlSsoController.samlCallback.bind(SamlSsoController));
 
 router.post("/logout", LogoutController.logout.bind(LogoutController));
 

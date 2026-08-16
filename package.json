@@ -7,6 +7,13 @@
     "deploy:server": "./scripts/deploy.sh server",
     "deploy:worker": "./scripts/deploy.sh worker",
     "dev": "npm run dev --workspaces --if-present",
+    "db:migrate": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma migrate dev --schema=packages/shared/prisma/schema.prisma'",
+    "db:generate": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma generate --schema=packages/shared/prisma/schema.prisma'",
+    "db:push": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma db push --schema=packages/shared/prisma/schema.prisma'",
+    "db:triggers": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma db execute --file packages/shared/prisma/setup_triggers.sql --schema packages/shared/prisma/schema.prisma'",
+    "db:pull": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma db pull --schema=packages/shared/prisma/schema.prisma'",
+    "db:studio": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma studio --schema=packages/shared/prisma/schema.prisma'",
+    "db:migrate:local": "prisma migrate dev --schema=packages/shared/prisma/schema.prisma",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "npm run format --workspaces --if-present",
@@ -16,6 +23,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",
     "@eslint/js": "^9.9.0",
+    "@prisma/client": "5.22.0",
     "eslint": "^9.9.0",
     "eslint-config-next": "15.5.5",
     "eslint-config-prettier": "^10.1.8",
@@ -24,14 +32,15 @@
     "knip": "^5.0.0",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.7.4",
+    "prisma": "5.22.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.2.0"
   },
   "workspaces": [
     "packages/*",
-    "weave-api",
-    "weave-worker",
-    "weave-engine",
-    "weave-app"
+    "server",
+    "worker",
+    "llm",
+    "web"
   ]
 }

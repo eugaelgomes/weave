@@ -664,6 +664,7 @@ model organizations {
   default_locale                             String?                          @default("en-US") @db.VarChar(10)
   country                                    String?                          @db.VarChar(2)
   public_organization_id                     String
+  sso_settings                               Json?                            @default("{}")
   ai_artifacts                               ai_artifacts[]
   ai_chat_messages                           ai_chat_messages[]
   ai_chat_sessions                           ai_chat_sessions[]
@@ -988,10 +989,14 @@ model subscriptions {
 }
 
 model system_settings {
-  id             Int       @id @default(autoincrement())
-  storage_config Json?     @default("{}")
-  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
-  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  id                Int       @id @default(autoincrement())
+  storage_config    Json?     @default("{}")
+  smtp_config       Json?     @default("{}")
+  oauth_config      Json?     @default("{}")
+  ai_global_config  Json?     @default("{}")
+  instance_branding Json?     @default("{}")
+  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -1134,6 +1139,7 @@ model users {
   auth_with_microsoft                                                                         Boolean?                              @default(false)
   microsoft_id                                                                                String?
   public_user_id                                                                              String                                @unique(map: "users_public_user_id_idx")
+  auth_with_saml                                                                              Boolean?                              @default(false)
   ai_artifacts                                                                                ai_artifacts[]
   ai_chat_messages                                                                            ai_chat_messages[]
   ai_chat_sessions                                                                            ai_chat_sessions[]
