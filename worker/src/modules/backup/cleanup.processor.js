@@ -1,6 +1,6 @@
 const { executeQuery } = require("../../database/connection");
 const storageService = require("../storage");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 
 const JOB_TYPE = "cleanup_expired_backups";
 

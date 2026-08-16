@@ -1,6 +1,6 @@
 const redis = require("../../queues/queue-client");
 const { executeQuery } = require("../../database/connection");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 
 const THIRTY_MINUTES_MS = 30 * 60 * 1000;
 const REASONING_TRIGGER_QUEUE = "queue:reasoning:triggers";

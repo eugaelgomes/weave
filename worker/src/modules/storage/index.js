@@ -6,7 +6,7 @@ const {
 } = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require("uuid");
 const { env } = require("../../config/enviroment");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 
 class SpacesService {
   static FOLDER_PATHS = {

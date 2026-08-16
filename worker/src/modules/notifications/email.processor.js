@@ -2,7 +2,7 @@ const { Resend } = require("resend");
 const redis = require("../../queues/queue-client");
 const { getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
 const { DEV_SENDER, normalizeSenderFrom } = require("../../mail/sender-name");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 
 class EmailProcessor {
   constructor() {

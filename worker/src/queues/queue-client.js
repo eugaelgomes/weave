@@ -1,5 +1,5 @@
 const Redis = require("ioredis");
-const { logger } = require("../config/logger");
+const { logger } = require("@theweave/database");
 
 const redis = new Redis(process.env.REDIS_URL, {
   enableReadyCheck: false,

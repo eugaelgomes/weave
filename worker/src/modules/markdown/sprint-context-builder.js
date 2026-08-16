@@ -8,7 +8,7 @@
 
 const { executeQuery } = require("../../database/connection");
 const { notesGroupedByStage } = require("./notes-to-markdown");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 
 const MAX_BLOCKS_PER_NOTE = 8;
 

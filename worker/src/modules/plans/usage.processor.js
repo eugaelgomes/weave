@@ -1,6 +1,6 @@
 const redis = require("../../queues/queue-client");
 const { executeQuery } = require("../../database/connection");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 const { USAGE_PATHS } = require("./paths");
 const {
   PLAN_USAGE_RETRY_INTERVAL_MS,

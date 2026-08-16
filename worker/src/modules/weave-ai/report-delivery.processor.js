@@ -4,7 +4,7 @@ const {
   getEmailQueueRedisKey,
 } = require("../../queues/queue-queue-keys");
 const { executeQuery } = require("../../database/connection");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 const { buildAiReportEmail } = require("../../mail/templates/template.ai-report");
 const { localeFromUserPreference } = require("../../mail/i18n/locales.translator");
 

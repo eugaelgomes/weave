@@ -1,7 +1,7 @@
 const redis = require("../../queues/queue-client");
 const { prisma } = require("@theweave/shared");
 const { getTracingEventsQueueRedisKey } = require("../../queues/queue-queue-keys");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 
 class TracingEventsProcessor {
   constructor() {

@@ -9,14 +9,10 @@ const requiredEnvVars = [
   "NODE_ENV",
   "RESEND_API_KEY",
   "EMAIL_FROM",
-  "S3_ENDPOINT",
-  "S3_ACCESS_KEY",
-  "S3_SECRET_KEY",
-  "S3_BUCKET_NAME",
-  "S3_REGION",
   "CONTACT_EMAIL",
-  "API_URL",
   "FRONTEND_URL",
+  // S3_* vars are optional — SpacesService disables itself gracefully when unconfigured
+  // API_URL is optional — backup processor falls back to http://localhost:8080
 ];
 
 function validateEnv() {

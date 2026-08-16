@@ -99,12 +99,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   trailingSlash: true,
 
-  // Explicitly set the Turbopack root to this app's directory so it doesn't
-  // accidentally pick up the monorepo root's package-lock.json and fail to
-  // resolve packages like tailwindcss that live in weave-app/node_modules.
-  turbopack: {
-    root: path.resolve(__dirname),
-  },
+  // turbopack root foi removido pois no novo formato de monorepo 
+  // os pacotes (incluindo next) são "hoisted" para a raiz.
 
   // Redirects de rotas públicas removidas (agora no blog subdomain)
   async redirects() {

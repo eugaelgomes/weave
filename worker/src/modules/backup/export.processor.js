@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const redis = require("../../queues/queue-client");
 const { executeQuery } = require("../../database/connection");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 const storageService = require("../storage");
 const { createMailService } = require("../../mail/sender");
 const { buildBackupEmailPayload } = require("../../mail/templates/template.backup-notification");

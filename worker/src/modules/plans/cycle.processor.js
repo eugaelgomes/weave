@@ -1,5 +1,5 @@
 const { getConnection } = require("../../database/connection");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 const { USAGE_PATHS } = require("./paths");
 const redis = require("../../queues/queue-client");
 const { getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");

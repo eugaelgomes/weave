@@ -1,6 +1,6 @@
 const { Resend } = require("resend");
 const { env } = require("../config/enviroment");
-const { logger } = require("../config/logger");
+const { logger } = require("@theweave/database");
 const { DEV_SENDER, normalizeSenderFrom } = require("./sender-name");
 
 let mailServiceInstance = null;

@@ -1,4 +1,5 @@
-require("module-alias/register");
+const moduleAlias = require("module-alias");
+moduleAlias.addAlias("@", __dirname);
 require("dotenv").config();
 require("./instrument");
 const http = require("http");

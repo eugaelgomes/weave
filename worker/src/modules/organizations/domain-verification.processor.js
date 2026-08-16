@@ -1,6 +1,6 @@
 const redis = require("../../queues/queue-client");
 const { executeQuery } = require("../../database/connection");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 const { verifyDomainToken } = require("./verifier");
 const {
   DOMAIN_VERIFY_RETRY_INTERVAL_MS,

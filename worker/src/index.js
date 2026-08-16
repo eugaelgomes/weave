@@ -1,8 +1,7 @@
 require("./instrument");
 const { validateEnv, env } = require("./config/enviroment");
-const { logger } = require("./config/logger");
+const { logger, closePool } = require("@theweave/database");
 const { setupGracefulShutdown, registerShutdownHandler } = require("./config/graceful-shutdown");
-const { closePool } = require("./database/connection");
 const { initializeJobs, startAllJobs, stopAllJobs } = require("./app");
 
 async function bootstrap() {

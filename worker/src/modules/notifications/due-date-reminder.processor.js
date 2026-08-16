@@ -1,5 +1,5 @@
 const { executeQuery } = require("../../database/connection");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 const { createMailService } = require("../../mail/sender");
 const { buildDueReminderTemplate } = require("../../mail/templates/template.due-reminder");
 

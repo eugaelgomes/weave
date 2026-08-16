@@ -1,5 +1,5 @@
 const { promises: dns } = require("dns");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 
 const NON_FATAL_CODES = new Set([
   "EAI_AGAIN",

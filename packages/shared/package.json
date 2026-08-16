@@ -1,7 +1,8 @@
 {
   "name": "@theweave/database",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "generate": "prisma generate",
     "pull": "prisma db pull"

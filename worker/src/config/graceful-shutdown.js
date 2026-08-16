@@ -1,4 +1,4 @@
-const { logger } = require("./logger");
+const { logger } = require("@theweave/database");
 
 const shutdownHandlers = [];
 let isShuttingDown = false;

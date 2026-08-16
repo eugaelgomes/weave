@@ -3,7 +3,7 @@ const { executeQuery } = require("../../database/connection");
 const { getNoteEmbeddingsQueueRedisKey } = require("../../queues/queue-queue-keys");
 const { extractPlainTextFromBlockRows } = require("./note-blocks-text");
 const { resolveNoteIdToUuid } = require("../../utils/note-id-lookup");
-const { logger } = require("../../config/logger");
+const { logger } = require("@theweave/database");
 
 const MAX_RETRIES = 3;
 const EMBEDDING_MODEL = "text-embedding-3-small";

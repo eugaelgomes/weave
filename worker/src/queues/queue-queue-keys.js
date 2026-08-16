@@ -77,6 +77,14 @@ function getNoteEmbeddingsQueueRedisKey() {
   return requireEnv("REDIS_NOTE_EMBEDDINGS_QUEUE_KEY");
 }
 
+/**
+ * List key for tracing events sent by engine to API.
+ * @returns {string}
+ */
+function getTracingEventsQueueRedisKey() {
+  return process.env.REDIS_TRACING_EVENTS_QUEUE_KEY || "weave:tracing:events:queue";
+}
+
 module.exports = {
   DOMAIN_VERIFY_RETRY_INTERVAL_MS,
   getAiReportDeliveryQueueRedisKey,
@@ -87,5 +95,6 @@ module.exports = {
   getNoteEmbeddingsQueueRedisKey,
   getPlanUsageDelayedQueueRedisKey,
   getPlanUsageQueueRedisKey,
+  getTracingEventsQueueRedisKey,
   PLAN_USAGE_RETRY_INTERVAL_MS,
 };
