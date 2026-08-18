@@ -1,7 +1,7 @@
 const BaseController = require("./base.controller");
 const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-const { presignObjectFields } = require("@/utils/data/presign-storage-files");
+const { presignObjectFields } = require("@/utils/storage.util");
 const updateProfileLogs = require("../utils/update-profile-logs.util");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
 const UserDataService = require("@/modules/users/utils/user-data.util");
@@ -59,6 +59,7 @@ const mapDefaultAreaInfo = (defaultAreaData) => {
 const mapOrganizationInfo = (organizationData) => {
   if (!organizationData) return null;
   return {
+    active_modules: organizationData.active_modules,
     id: organizationData.org_id,
     logo_url: organizationData.org_logo_url,
     member_role: organizationData.org_member_role,
@@ -66,7 +67,6 @@ const mapOrganizationInfo = (organizationData) => {
     name: organizationData.org_name,
     public_id: organizationData.org_public_id,
     unique_name: organizationData.org_unique_name,
-    active_modules: organizationData.active_modules,
   };
 };
 
@@ -207,6 +207,13 @@ class UserDataController extends BaseController {
           current_plan_usage: planUsage,
           usage_preference: normalizeAppPreferences(user.user_preference || {}),
           user_organization: {
+            active_modules: protectedOrg?.active_modules || {
+              agent_house: true,
+              calendar: true,
+              notes: true,
+              projects: true,
+              weave_flow: true,
+            },
             default_area: defaultArea,
             id: protectedOrg?.id || null,
             logo_url: protectedOrg?.logo_url || null,
@@ -215,13 +222,6 @@ class UserDataController extends BaseController {
             name: protectedOrg?.name || null,
             public_id: protectedOrg?.public_id || null,
             unique_name: protectedOrg?.unique_name || null,
-            active_modules: protectedOrg?.active_modules || {
-              projects: true,
-              notes: true,
-              agent_house: true,
-              weave_flow: true,
-              calendar: true,
-            },
           },
           user_profile: {
             avatar_url: protectedUser.avatar_url,

@@ -1,6 +1,6 @@
 const BaseRepository = require("./base.repository");
-const { NOTE_STATUS } = require("@/utils/patterns/product-patterns");
-const { generatePublicId } = require("@/utils/generate-public-id");
+const { NOTE_STATUS } = require("@/utils/patterns.util");
+const { generatePublicId } = require("@/utils/formatters.util");
 const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
 
 const DEFAULT_NOTE_PROPERTIES = {

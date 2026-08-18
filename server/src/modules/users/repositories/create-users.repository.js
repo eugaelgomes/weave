@@ -2,7 +2,7 @@ const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
 const { defaultAppPreferences } = require("@/modules/users/normalize");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { generatePublicId } = require("@/utils/generate-public-id");
+const { generatePublicId } = require("@/utils/formatters.util");
 
 /**
  * @typedef {Object} CreateUserRow

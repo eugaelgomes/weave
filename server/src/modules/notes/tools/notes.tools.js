@@ -1,6 +1,6 @@
 const { manageNotesSchema } = require("../schemas/tools.schema");
 const { NotesService } = require("../services/notes.service");
-const McpLinksUtil = require("@/utils/mcp-links.util");
+const { enrichWithAppUrl } = require("@/utils/url.util");
 const { API_SCOPES } = require("@/config/api-scopes");
 const spacesService = require("@/services/storage/index");
 const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
@@ -64,7 +64,7 @@ FUNCTIONALITIES (Actions):
             tags,
             title,
           });
-          const enrichedNote = McpLinksUtil.enrichWithAppUrl(newNote, "note", "public_note_id");
+          const enrichedNote = enrichWithAppUrl(newNote, "note", "public_note_id");
           return {
             content: [{ text: JSON.stringify(enrichedNote, null, 2), type: "text" }],
           };
@@ -73,7 +73,7 @@ FUNCTIONALITIES (Actions):
         if (action === "get") {
           if (!note_id) throw new Error("note_id is required for get action");
           const note = await NotesService.getNoteById(note_id, userId);
-          const enrichedNote = McpLinksUtil.enrichWithAppUrl(note, "note", "public_note_id");
+          const enrichedNote = enrichWithAppUrl(note, "note", "public_note_id");
           return {
             content: [{ text: JSON.stringify(enrichedNote, null, 2), type: "text" }],
           };
@@ -88,7 +88,7 @@ FUNCTIONALITIES (Actions):
             tags,
             title,
           });
-          const enrichedNote = McpLinksUtil.enrichWithAppUrl(updated, "note", "public_note_id");
+          const enrichedNote = enrichWithAppUrl(updated, "note", "public_note_id");
           return {
             content: [{ text: JSON.stringify(enrichedNote, null, 2), type: "text" }],
           };
@@ -114,12 +114,12 @@ FUNCTIONALITIES (Actions):
 
           if (result && result.notes) {
             result.notes = result.notes.map((n) =>
-              McpLinksUtil.enrichWithAppUrl(n, "note", "public_note_id")
+              enrichWithAppUrl(n, "note", "public_note_id")
             );
           } else if (Array.isArray(result)) {
             // Fallback se não for paginado
             for (let i = 0; i < result.length; i++) {
-              result[i] = McpLinksUtil.enrichWithAppUrl(result[i], "note", "public_note_id");
+              result[i] = enrichWithAppUrl(result[i], "note", "public_note_id");
             }
           }
 

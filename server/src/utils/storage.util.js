@@ -1,6 +1,6 @@
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const spacesService = require("../../services/storage");
+const spacesService = require("@/services/storage");
 const { assertFileAccess, StorageAccessError } = require("@/services/storage/access-control");
 const redis = require("@/services/queue/connection");
 
@@ -9,7 +9,7 @@ function getSpacesHostname() {
     if (!spacesService.spacesEndpoint) return "";
     const url = new URL(spacesService.spacesEndpoint);
     return url.hostname;
-  } catch (error) {
+  } catch {
     return "";
   }
 }
@@ -39,7 +39,7 @@ function isSpacesManagedValue(value) {
       const host = getSpacesHostname();
       return (host && hostname === host) || hostname.includes(spacesService.bucketName);
     } catch (error) {
-      console.error("URL inválida ao verificar domínio do Spaces:", error);
+      console.error("Invalid URL when verifying Spaces domain:", error);
       return false;
     }
   }
@@ -79,7 +79,7 @@ async function generatePresignedUrl(key, expiresIn = SESSION_MAX_AGE_SECONDS) {
 
     return url;
   } catch (error) {
-    console.error("Erro ao gerar URL pré-assinada:", error);
+    console.error("Error generating presigned URL:", error);
     return null;
   }
 }
@@ -114,7 +114,7 @@ async function presignObjectFields(data, fields = [], options = {}) {
   const { expiresIn, userId } = normalizeOptions(options);
 
   if (!userId) {
-    throw new StorageAccessError("Contexto do usuário é obrigatório para gerar URLs assinadas.");
+    throw new StorageAccessError("User context is required to generate presigned URLs.");
   }
 
   const result = { ...data };
@@ -151,7 +151,19 @@ async function presignObjectFields(data, fields = [], options = {}) {
  */
 async function presignListFields(list, fields = [], options = {}) {
   if (!list || !Array.isArray(list)) return [];
-  return Promise.all(list.map((item) => presignObjectFields(item, fields, options)));
+
+  const results = [];
+  const chunkSize = 20;
+
+  for (let i = 0; i < list.length; i += chunkSize) {
+    const chunk = list.slice(i, i + chunkSize);
+    const chunkResults = await Promise.all(
+      chunk.map((item) => presignObjectFields(item, fields, options))
+    );
+    results.push(...chunkResults);
+  }
+
+  return results;
 }
 
 module.exports = {

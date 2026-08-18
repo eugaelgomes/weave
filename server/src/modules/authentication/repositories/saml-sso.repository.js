@@ -1,6 +1,6 @@
 const BaseRepository = require("./base.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { generatePublicId } = require("@/utils/generate-public-id");
+const { generatePublicId } = require("@/utils/formatters.util");
 
 /**
  * Persistence for SAML SSO flow.
@@ -38,7 +38,7 @@ class SamlSsoRepository extends BaseRepository {
       planId,
       publicUserId,
     ]);
-    
+
     return results[0];
   }
 }

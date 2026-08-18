@@ -1,5 +1,5 @@
 const { z } = require("zod");
-const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
+const { hasPlusAliasInLocalPart } = require("@/utils/formatters.util");
 const { validRoles } = require("@/modules/organizations/normalizer");
 
 const PROJECT_MEMBER_ROLES = ["PROJECT_MANAGER", "CONTRIBUTOR", "COMMENTER", "VIEWER"];

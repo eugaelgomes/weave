@@ -1,4 +1,4 @@
-const SystemSettingsRepository = require('../repositories/system-settings.repository');
+const SystemSettingsRepository = require("../repositories/system-settings.repository");
 
 class SystemSettingsCache {
   constructor() {
@@ -15,14 +15,14 @@ class SystemSettingsCache {
         this.settings = await SystemSettingsRepository.getSettings();
         this.lastFetched = now;
       } catch (error) {
-        console.error('[SystemSettingsCache] Error loading settings:', error);
+        console.error("[SystemSettingsCache] Error loading settings:", error);
         // Fallback básico para não quebrar a aplicação caso o BD falhe
         this.settings = this.settings || {
-          storage_config: {},
-          smtp_config: {},
-          oauth_config: {},
           ai_global_config: {},
-          instance_branding: {}
+          instance_branding: {},
+          oauth_config: {},
+          smtp_config: {},
+          storage_config: {}
         };
       }
     }

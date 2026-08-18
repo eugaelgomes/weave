@@ -1,5 +1,5 @@
 const { z } = require("zod");
-const { uuidSchema } = require("@/utils/mcp-schemas.util");
+const { uuidSchema } = require("@/utils/mcp.util");
 
 // ==========================================
 // manage_notes

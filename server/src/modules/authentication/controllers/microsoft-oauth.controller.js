@@ -122,7 +122,7 @@ class MicrosoftOauthController extends AuthBaseController {
         const existingUser = await FindUserRepository.findUserByEmail(userEmail);
         let existingPendingUser = null;
 
-        if (existingUser && existingUser.status === 'PENDING_INVITE') {
+        if (existingUser && existingUser.status === "PENDING_INVITE") {
            existingPendingUser = existingUser;
         }
 
@@ -147,7 +147,7 @@ class MicrosoftOauthController extends AuthBaseController {
 
           const hasInvite = existingPendingUser !== null;
           if (!hasInvite) {
-            const orgName = `Workspace de ${microsoftUser.displayName || userEmail.split('@')[0]}`;
+            const orgName = `Workspace de ${microsoftUser.displayName || userEmail.split("@")[0]}`;
             const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
             await OrganizationsRepository.createOrgs(
               newUser.user_id,
@@ -162,7 +162,7 @@ class MicrosoftOauthController extends AuthBaseController {
               {}
             );
           }
-          
+
           user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
         }
       }

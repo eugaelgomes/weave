@@ -87,9 +87,9 @@ class SpacesService {
         region: this.region,
       });
       this.isConfigured = true;
-      console.log("✅ Storage Service initialized from system_settings.");
+      console.info("Storage Service initialized from system_settings.");
     } catch (error) {
-      console.error("❌ Error initializing Storage Service:", error);
+      console.error("Error initializing Storage Service:", error);
       this.isConfigured = false;
     }
   }

@@ -6,26 +6,14 @@
 
 const { fromUnknown } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
-const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
-const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
-const spacesService = require("@/services/storage");
-const bcrypt = require("bcrypt");
 
 const { send_organization_invite } = require("@/services/email/templates/invite-member");
-const {
-  send_organization_invite_accepted,
-} = require("@/services/email/templates/invite-member-accepted");
 const { getUserEmailLocale } = require("@/services/email/i18n");
 
 const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
-const {
-  buildUniqueConflictPayload,
-  getUniqueFieldFromPgError,
-} = require("@/modules/users/utils/unique-conflicts");
 
 const MAX_SUPER_ADMINS = 3;
 

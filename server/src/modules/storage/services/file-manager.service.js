@@ -46,8 +46,8 @@ class FileManagerService {
 
     const command = new ListObjectsV2Command({
       Bucket: spacesService.bucketName,
-      Prefix: normalizedPrefix,
-      Delimiter: "/", // Agrupa os resultados por pasta
+      Delimiter: "/",
+      Prefix: normalizedPrefix, // Agrupa os resultados por pasta
     });
 
     const response = await spacesService.s3Client.send(command);
@@ -56,10 +56,10 @@ class FileManagerService {
     const folders = (response.CommonPrefixes || []).map((p) => {
       const folderKey = p.Prefix;
       return {
-        type: "folder",
+        isProtected: this.isProtectedPath(folderKey),
         key: folderKey,
         name: folderKey.replace(normalizedPrefix, "").replace("/", ""),
-        isProtected: this.isProtectedPath(folderKey),
+        type: "folder",
       };
     });
 
@@ -68,12 +68,12 @@ class FileManagerService {
       .filter((item) => item.Key !== normalizedPrefix)
       .map((item) => {
         return {
-          type: "file",
+          isProtected: this.isProtectedPath(item.Key),
           key: item.Key,
+          lastModified: item.LastModified,
           name: item.Key.replace(normalizedPrefix, ""),
           size: item.Size,
-          lastModified: item.LastModified,
-          isProtected: this.isProtectedPath(item.Key),
+          type: "file",
         };
       });
 
@@ -92,9 +92,9 @@ class FileManagerService {
     const key = folderPath.endsWith("/") ? folderPath : `${folderPath}/`;
 
     const command = new PutObjectCommand({
+      Body: "",
       Bucket: spacesService.bucketName,
       Key: key,
-      Body: "",
     });
 
     await spacesService.s3Client.send(command);

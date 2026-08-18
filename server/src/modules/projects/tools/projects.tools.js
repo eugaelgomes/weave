@@ -3,7 +3,7 @@ const projectsReadRepository = require("@/modules/projects/repositories/projects
 const projectsCreateRepository = require("@/modules/projects/repositories/projects-create.repository");
 const projectsUpdateRepository = require("@/modules/projects/repositories/projects-update.repository");
 const projectsDeleteRepository = require("@/modules/projects/repositories/projects-delete.repository");
-const McpLinksUtil = require("@/utils/mcp-links.util");
+const { enrichWithAppUrl } = require("@/utils/url.util");
 const createNotesRepository = require("@/modules/notes/repositories/create-notes.repository");
 const mutateNotesRepository = require("@/modules/notes/repositories/mutate-notes.repository");
 const spacesService = require("@/services/storage/index");
@@ -165,7 +165,7 @@ const createProjectsTools = (user) => ({
             project_stage_id: stageId,
             title,
           });
-          const enriched = McpLinksUtil.enrichWithAppUrl(result, "task", "public_note_id");
+          const enriched = enrichWithAppUrl(result, "task", "public_note_id");
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
@@ -225,7 +225,7 @@ const createProjectsTools = (user) => ({
             },
             []
           );
-          const enriched = McpLinksUtil.enrichWithAppUrl(result, "project", "id");
+          const enriched = enrichWithAppUrl(result, "project", "id");
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
@@ -237,7 +237,7 @@ const createProjectsTools = (user) => ({
             description,
             title: name,
           });
-          const enriched = McpLinksUtil.enrichWithAppUrl(result, "project", "id");
+          const enriched = enrichWithAppUrl(result, "project", "id");
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
@@ -260,7 +260,7 @@ const createProjectsTools = (user) => ({
           if (!projectId) throw new Error("projectId is required for get action");
           const result = await projectsReadRepository.getProjectById(projectId, user.userId);
           if (!result) throw new Error("Project not found or access denied.");
-          const enriched = McpLinksUtil.enrichWithAppUrl(result, "project", "id");
+          const enriched = enrichWithAppUrl(result, "project", "id");
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
@@ -268,7 +268,7 @@ const createProjectsTools = (user) => ({
 
         if (action === "list") {
           const result = await projectsReadRepository.getProjectsForUser(user.userId);
-          const enriched = result.map((p) => McpLinksUtil.enrichWithAppUrl(p, "project", "id"));
+          const enriched = result.map((p) => enrichWithAppUrl(p, "project", "id"));
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };

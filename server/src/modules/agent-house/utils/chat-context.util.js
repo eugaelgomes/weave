@@ -255,10 +255,10 @@ class ChatContextService {
         .requestEngineChat({
           message: `Generate a short title (maximum 5 words) for this conversation based on the user's first message: "${payload.message}". Return ONLY the title text, without quotes or additional commentary.`,
           model: payload.model,
+          organizationId,
           systemMessage:
             "You are a helpful assistant that generates extremely concise chat titles.",
           userId,
-          organizationId,
           userLanguage,
         })
         .then(async (result) => {
@@ -268,7 +268,7 @@ class ChatContextService {
           if (generatedTitle) {
             await chatRepository.updateSessionTitle(sessionId, userId, generatedTitle);
             if (onChunk) {
-              onChunk({ sessionId, type: "title_updated", title: generatedTitle });
+              onChunk({ sessionId, title: generatedTitle, type: "title_updated" });
             }
           }
         })

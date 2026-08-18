@@ -8,7 +8,7 @@ const sprintContextBuilder = require("./sprint-context-builder");
 const {
   appendInstructionBlock,
   resolveInstructionAppends,
-} = require("@/utils/reasoning-instructions");
+} = require("@/utils/mcp.util");
 
 class ReasoningTriggerConsumer {
   constructor() {

@@ -1,5 +1,5 @@
 const { z } = require("zod");
-const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
+const { hasPlusAliasInLocalPart } = require("@/utils/formatters.util");
 
 /**
  * Validates the request body for forgot password.

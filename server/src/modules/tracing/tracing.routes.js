@@ -16,7 +16,7 @@ router.get("/:organizationId/tracing/settings", async (req, res) => {
     const { organizationId } = req.params;
     let settings = await TracingRepository.getSettings(organizationId);
     if (!settings) {
-      settings = { enabled: false, retention_days: 7, export_target: "local" };
+      settings = { enabled: false, export_target: "local", retention_days: 7 };
     }
     return res.status(200).json(settings);
   } catch (error) {
@@ -33,10 +33,10 @@ router.put("/:organizationId/tracing/settings", requireOrgPermission(ORG_PERMISS
 
     const updated = await TracingRepository.upsertSettings(organizationId, {
       enabled,
-      retention_days,
       export_target,
       otlp_endpoint,
       otlp_headers,
+      retention_days,
     });
 
     return res.status(200).json(updated);

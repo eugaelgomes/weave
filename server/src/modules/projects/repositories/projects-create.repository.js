@@ -1,6 +1,6 @@
 const { executeQuery } = require("@/database/connection");
 const { PROJECT_WRITE_CAPABLE_ROLES } = require("@/modules/projects/project-role-policy");
-const { generatePublicId } = require("@/utils/generate-public-id");
+const { generatePublicId } = require("@/utils/formatters.util");
 
 const PROJECT_WRITE_CAPABLE_ROLES_SQL = PROJECT_WRITE_CAPABLE_ROLES.map((role) => `'${role}'`).join(
   ", "

@@ -105,7 +105,7 @@ function registerHandlers(server, registry) {
     tools: Object.entries(registry.tools).map(([toolKey, tool]) => {
       const toolName = tool.name || toolKey;
 
-      let rawJsonSchema =
+      const rawJsonSchema =
         typeof tool.schema?.toJSONSchema === "function" ? tool.schema.toJSONSchema() : {};
       delete rawJsonSchema.$schema;
 

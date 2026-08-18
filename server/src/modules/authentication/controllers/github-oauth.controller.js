@@ -143,7 +143,7 @@ class GithubOauthController extends AuthBaseController {
         const existingUser = await FindUserRepository.findUserByEmail(userEmail);
         let existingPendingUser = null;
 
-        if (existingUser && existingUser.status === 'PENDING_INVITE') {
+        if (existingUser && existingUser.status === "PENDING_INVITE") {
            existingPendingUser = existingUser;
         }
 
@@ -179,7 +179,7 @@ class GithubOauthController extends AuthBaseController {
             userEmail,
             githubUser.avatar_url
           );
-          
+
           const hasInvite = existingPendingUser !== null;
           if (!hasInvite) {
             const orgName = `Workspace de ${githubUser.name || githubUser.login}`;

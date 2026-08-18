@@ -30,11 +30,11 @@ function requireModule(moduleName) {
       }
 
       const activeModules = organization.settings?.modules || {
-        projects: true,
-        notes: true,
         agent_house: true,
-        weave_flow: true,
         calendar: true,
+        notes: true,
+        projects: true,
+        weave_flow: true,
       };
 
       // Se a chave existir no JSONB mas estiver explicitamente como 'false', bloqueia.

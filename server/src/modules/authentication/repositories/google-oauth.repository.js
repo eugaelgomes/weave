@@ -1,6 +1,6 @@
 const BaseRepository = require("./base.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { generatePublicId } = require("@/utils/generate-public-id");
+const { generatePublicId } = require("@/utils/formatters.util");
 
 /**
  * Persistence related to the Google OAuth flow.

@@ -4,7 +4,7 @@ const { AppError } = require("@/errors/app-error");
 const AuthBaseController = require("./base.controller");
 const SigninRepository = require("@/modules/authentication/repositories/signin.repository");
 const authLogs = require("../utils/auth-logs.util");
-const storageFileUtils = require("@/utils/data/presign-storage-files");
+const storageFileUtils = require("@/utils/storage.util");
 const { buildJwtPayload } = require("@/modules/authentication/schemas/jwt-payload.schema");
 
 const presignObjectFields = storageFileUtils.presignObjectFields;

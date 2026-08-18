@@ -1,6 +1,6 @@
 const { executeQuery, getConnection } = require("@/database/connection");
 const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
-const { generatePublicId } = require("@/utils/generate-public-id");
+const { generatePublicId } = require("@/utils/formatters.util");
 
 class OrganizationsRepository {
   /**
@@ -781,7 +781,7 @@ class OrganizationsRepository {
     invited_by,
     name = null,
     username = null,
-    target_areas = []
+    _target_areas = []
   ) {
     const client = await getConnection();
     try {
@@ -790,7 +790,7 @@ class OrganizationsRepository {
       // Check if user already exists
       const findUserQuery = `SELECT user_id, status FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`;
       const findUserRes = await client.query(findUserQuery, [email]);
-      
+
       let userId;
       let userStatus;
 
@@ -809,9 +809,9 @@ class OrganizationsRepository {
           RETURNING user_id, status;
         `;
         const insertRes = await client.query(insertUserQuery, [
-          email, 
-          name, 
-          username || email.split('@')[0], 
+          email,
+          name,
+          username || email.split("@")[0],
           publicUserId
         ]);
         userId = insertRes.rows[0].user_id;
@@ -819,17 +819,20 @@ class OrganizationsRepository {
       }
 
       // Add to organization members if not already
-      await this.addOrganizationMember(organization_id, userId, role, 'ACTIVE', invited_by, client);
+      await this.addOrganizationMember(organization_id, userId, role, "ACTIVE", invited_by, client);
 
       // (Optional) target_areas can be handled here if needed in the future
 
       await client.query("COMMIT");
-      return { 
-        invite_id: userId, // Mock invite_id for compatibility with old code that might return invite.invite_id
-        user_id: userId,
-        email, 
-        role,
-        status: userStatus
+      return {
+        email,
+        invite_id: userId,
+
+role,
+
+status: userStatus,
+        // Mock invite_id for compatibility with old code that might return invite.invite_id
+user_id: userId
       };
     } catch(err) {
       await client.query("ROLLBACK");

@@ -5,7 +5,7 @@ const OrganizationDomainsRepository = require("@/modules/organizations/repositor
 const FindUserRepository = require("@/modules/authentication/repositories/find-user.repository");
 const SamlSsoRepository = require("@/modules/authentication/repositories/saml-sso.repository");
 const { buildJwtPayload } = require("@/modules/authentication/schemas/jwt-payload.schema");
-const { getFrontendUrl, getBackendUrl } = require("@/utils/url-builder");
+const { getFrontendUrl, getBackendUrl } = require("@/utils/url.util");
 
 class SamlSsoController extends AuthBaseController {
   /**
@@ -19,13 +19,18 @@ class SamlSsoController extends AuthBaseController {
     const cert = domain.sso_metadata.certificate.replace(/\\n/g, "\n");
 
     return new SAML({
-      callbackUrl: `${getBackendUrl()}/api/v1/auth/sso/saml/acs`,
-      entryPoint: domain.sso_metadata.ssoUrl,
-      issuer: "weave-notes", // Weave SP Entity ID
-      cert: cert, // IdP Public Certificate
-      identifierFormat: null,
-      signatureAlgorithm: "sha256",
       acceptedClockSkewMs: 120000,
+
+callbackUrl: `${getBackendUrl()}/api/v1/auth/sso/saml/acs`,
+
+// Weave SP Entity ID
+cert: cert,
+
+entryPoint: domain.sso_metadata.ssoUrl,
+      // IdP Public Certificate
+identifierFormat: null,
+      issuer: "weave-notes",
+      signatureAlgorithm: "sha256",
     });
   }
 
@@ -52,16 +57,16 @@ class SamlSsoController extends AuthBaseController {
 
       if (domain && domain.status === "VERIFIED" && domain.sso_enabled) {
         return res.status(200).json({
-          success: true,
-          requires_sso: true,
           domain_id: domain.id,
           provider: domain.sso_provider,
+          requires_sso: true,
+          success: true,
         });
       }
 
       return res.status(200).json({
-        success: true,
         requires_sso: false,
+        success: true,
       });
     } catch (error) {
       console.error("SSO Discovery error:", error);
@@ -84,9 +89,9 @@ class SamlSsoController extends AuthBaseController {
       }
 
       const saml = this._getSamlInstance(domain);
-      
+
       // RelayState helps us remember which domain this login belongs to when the IdP posts back to ACS
-      const relayState = domainId; 
+      const relayState = domainId;
 
       const authUrl = await saml.getAuthorizeUrlAsync(relayState, null, {});
       return res.redirect(authUrl);
@@ -121,7 +126,7 @@ class SamlSsoController extends AuthBaseController {
 
       // Validate the SAML assertion
       const { profile } = await saml.validatePostResponseAsync({ SAMLResponse });
-      
+
       if (!profile || (!profile.email && !profile.nameID)) {
         throw new Error("SAML profile did not contain an email or NameID.");
       }
@@ -141,10 +146,10 @@ class SamlSsoController extends AuthBaseController {
       if (!user) {
         // Create user automatically for SAML SSO (Just in Time Provisioning)
         const displayName = profile.displayName || profile.firstName || userEmail.split("@")[0];
-        
+
         await SamlSsoRepository.createUserWithSaml(
-          `saml-${profile.nameID || userEmail}`, 
-          displayName, 
+          `saml-${profile.nameID || userEmail}`,
+          displayName,
           userEmail
         );
         user = await FindUserRepository.findUserByEmail(userEmail);

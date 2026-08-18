@@ -1,5 +1,5 @@
 const { z } = require("zod");
-const { hasPlusAliasInLocalPart } = require("@/utils/data/email-rules");
+const { hasPlusAliasInLocalPart } = require("@/utils/formatters.util");
 
 const nameRegex = /^[\p{L}\s]+$/u;
 const usernameRegex = /^[a-zA-Z0-9._-]+$/;

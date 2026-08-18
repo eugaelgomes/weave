@@ -22,9 +22,9 @@ class CreateUsersService {
         if (!existingPendingUser) {
           throw new Error("CORPORATE_DOMAIN_INVITE_REQUIRED");
         }
-        
+
         const isMember = await OrganizationsRepository.getMembershipRole(
-          domainInfo.organization_id, 
+          domainInfo.organization_id,
           existingPendingUser.user_id
         );
         if (!isMember) {
@@ -53,10 +53,10 @@ class CreateUsersService {
 
     const existingUsersByEmail = await SearchUsersRepository.findByUsernameOrEmail("", email);
     const existingUser = existingUsersByEmail.find(u => u.email === email);
-    
+
     let existingPendingUser = null;
     if (existingUser) {
-       if (existingUser.status === 'PENDING_INVITE') {
+       if (existingUser.status === "PENDING_INVITE") {
            existingPendingUser = existingUser;
        } else {
            return { conflict: "email" };
@@ -72,7 +72,7 @@ class CreateUsersService {
       phone_number,
       username,
     }, existingPendingUser ? { excludeUserId: existingPendingUser.user_id } : {});
-    
+
     if (!availability.email.available) return { conflict: "email" };
     if (!availability.username.available) return { conflict: "username" };
     if (!availability.phone_number.available) return { conflict: "phone_number" };
@@ -92,13 +92,13 @@ class CreateUsersService {
         const activatedUser = await CreateUsersRepository.updateUserActivation(
           existingPendingUser.user_id,
           {
+            birth_date,
             name: userName,
-            username,
             password: hashedPassword,
             phone_number,
+            private_profile,
             timezone,
-            birth_date,
-            private_profile
+            username
           },
           client
         );

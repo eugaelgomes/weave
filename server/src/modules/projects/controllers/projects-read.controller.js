@@ -1,8 +1,8 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const { normalizeProjectStatus } = require("@/utils/patterns/product-patterns");
+const { normalizeProjectStatus } = require("@/utils/patterns.util");
 
-const { buildListEnvelope, hasAnyQueryKey } = require("@/utils/http/list-query");
+const { buildListEnvelope, hasAnyQueryKey } = require("@/utils/query.util");
 const {
   PROJECTS_LIST_TRIGGER_KEYS,
   PROJECT_STAGES_LIST_TRIGGER_KEYS,

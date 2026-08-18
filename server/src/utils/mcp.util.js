@@ -1,9 +1,25 @@
+const { z } = require("zod");
+
+/** UUID v1–v5 Zod Schema Validator */
+const uuidSchema = z.string().uuid("Must be a valid UUID");
+
+/** RFC 5321 Email Zod Schema Validator */
+const emailSchema = z.string().email("Must be a valid email address");
+
+/** Calendar event sync states Zod Schema Validator */
+const syncStatusSchema = z.enum(["SYNCED", "PENDING", "FAILED", "OUT_OF_SYNC"]);
+
+/** Maximum allowed character length for reasoning instructions payloads */
 const MAX_INSTRUCTIONS_CHARS = 16000;
 
 /**
- * Normalizes reasoning instructions payload from API clients.
- * @param {unknown} raw
+ * Normalizes a reasoning instructions payload received from API clients.
+ * Slices text up to 8000 characters per field to prevent memory exhaustion,
+ * and validates that the overall length does not exceed maximum boundaries.
+ *
+ * @param {unknown} raw - The raw JSON payload from the request
  * @returns {{ global: { systemAppend: string, promptAppend: string }, byType: Record<string, { systemAppend: string, promptAppend: string }> }}
+ * @throws {Error} if the combined length exceeds MAX_INSTRUCTIONS_CHARS
  */
 function normalizeReasoningInstructions(raw) {
   const emptySlice = () => ({ promptAppend: "", systemAppend: "" });
@@ -48,7 +64,7 @@ function normalizeReasoningInstructions(raw) {
 
   if (totalLength > MAX_INSTRUCTIONS_CHARS) {
     const err = new Error(
-      `reasoning_instructions exceeds maximum length of ${MAX_INSTRUCTIONS_CHARS} characters`
+      `Reasoning instructions exceed the maximum length of ${MAX_INSTRUCTIONS_CHARS} characters`
     );
     err.statusCode = 400;
     throw err;
@@ -58,10 +74,11 @@ function normalizeReasoningInstructions(raw) {
 }
 
 /**
- * Appends custom instruction text to a base string when non-empty.
- * @param {string} base
- * @param {string} append
- * @returns {string}
+ * Appends a custom instruction text block to a base prompt string safely.
+ *
+ * @param {string} base - The base prompt
+ * @param {string} append - The text to append
+ * @returns {string} The combined prompt string
  */
 function appendInstructionBlock(base, append) {
   const trimmed = typeof append === "string" ? append.trim() : "";
@@ -70,10 +87,12 @@ function appendInstructionBlock(base, append) {
 }
 
 /**
- * Resolves effective append slices for a report type.
- * @param {object|null|undefined} instructions
- * @param {string} reportType
- * @returns {{ systemAppend: string, promptAppend: string }}
+ * Resolves the effective prompt slices by merging global instructions
+ * with specific type-bound instructions for a given report type.
+ *
+ * @param {object|null|undefined} instructions - The raw instructions payload
+ * @param {string} reportType - The specific report type to resolve for
+ * @returns {{ systemAppend: string, promptAppend: string }} The final resolved appends
  */
 function resolveInstructionAppends(instructions, reportType) {
   const normalized = normalizeReasoningInstructions(instructions);
@@ -97,7 +116,10 @@ function resolveInstructionAppends(instructions, reportType) {
 
 module.exports = {
   appendInstructionBlock,
+  emailSchema,
   MAX_INSTRUCTIONS_CHARS,
   normalizeReasoningInstructions,
   resolveInstructionAppends,
+  syncStatusSchema,
+  uuidSchema,
 };

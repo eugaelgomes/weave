@@ -9,7 +9,7 @@ const {
   parsePagination,
   parseSort,
   trimSearch,
-} = require("@/utils/http/list-query");
+} = require("@/utils/query.util");
 
 function isUuid(v) {
   return (

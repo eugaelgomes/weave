@@ -26,8 +26,8 @@ const {
 } = require("./schemas/users.schema");
 
 // Utils
-const upload = require("@/utils/data/profile-img");
-const validateCompressedImageSize = require("@/utils/image-validator");
+const { multipartImageUpload } = require("@/utils/middlewares.util");
+const { validateImageMimeAndSize: validateCompressedImageSize } = require("@/utils/middlewares.util");
 
 const router = express.Router();
 
@@ -37,7 +37,7 @@ const router = express.Router();
 router.post(
   "/create-account",
   structuralLimiter,
-  upload.single("profileImage"),
+  multipartImageUpload.single("profileImage"),
   validateCompressedImageSize,
   validate(createAccountSchema, "body"),
   CreateUsersController.createUser.bind(CreateUsersController)
@@ -81,7 +81,7 @@ router.put(
   "/me/update-profile",
   verifyToken,
   standardTrafficLimiter,
-  upload.single("profilePicture"),
+  multipartImageUpload.single("profilePicture"),
   validateCompressedImageSize,
   validate(updateProfileSchema, "body"),
   UserDataController.updateProfile.bind(UserDataController)

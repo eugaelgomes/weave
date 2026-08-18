@@ -23,24 +23,24 @@ async function getProvidersWithModels() {
         id: m.provider_id,
         isDefault: m.provider_id === "gemini", // Pode ser movido pro banco futuramente se precisar
         logoUrl: m.logo_url,
-        name: m.provider_name,
         models: [],
+        name: m.provider_name,
       };
     }
 
     providersMap[m.provider_id].models.push({
+      contextWindow: m.context_window,
+      deprecated: m.deprecated,
+      description: m.description,
+      features: m.features || [],
       id: m.identifier,
+      maxOutputTokens: m.max_output_tokens,
       name: m.name,
       providerId: m.provider_id,
-      version: m.version,
-      description: m.description,
-      contextWindow: m.context_window,
-      maxOutputTokens: m.max_output_tokens,
-      supportedForAgents: m.supported_for_agents,
-      features: m.features || [],
-      tags: m.tags || [],
       reasoningLevels: m.reasoning_levels || ["none"],
-      deprecated: m.deprecated,
+      supportedForAgents: m.supported_for_agents,
+      tags: m.tags || [],
+      version: m.version,
     });
   }
 
@@ -54,18 +54,18 @@ async function getProvidersWithModels() {
 async function getModelEntries(provider) {
   const result = await pool.query("SELECT * FROM ai_llm_models WHERE provider_id = $1", [provider]);
   return result.rows.map((m) => ({
+    contextWindow: m.context_window,
+    deprecated: m.deprecated,
+    description: m.description,
+    features: m.features || [],
     id: m.identifier,
+    maxOutputTokens: m.max_output_tokens,
     name: m.name,
     providerId: m.provider_id,
-    version: m.version,
-    description: m.description,
-    contextWindow: m.context_window,
-    maxOutputTokens: m.max_output_tokens,
-    supportedForAgents: m.supported_for_agents,
-    features: m.features || [],
-    tags: m.tags || [],
     reasoningLevels: m.reasoning_levels || ["none"],
-    deprecated: m.deprecated,
+    supportedForAgents: m.supported_for_agents,
+    tags: m.tags || [],
+    version: m.version,
   }));
 }
 

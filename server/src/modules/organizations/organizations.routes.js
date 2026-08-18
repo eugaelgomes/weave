@@ -17,8 +17,8 @@ const {
 } = require("@/middlewares/security/request-limiters");
 
 // Utils
-const upload = require("@/utils/data/profile-img");
-const validateImages = require("@/utils/image-validator");
+const { multipartImageUpload } = require("@/utils/middlewares.util");
+const { validateImageMimeAndSize } = require("@/utils/middlewares.util");
 const { validate } = require("@/middlewares/validation/validate");
 
 // Schemas
@@ -226,15 +226,15 @@ router.post(
 
 router.put(
   "/logo",
-  upload.single("image"),
-  validateImages,
+  multipartImageUpload.single("image"),
+  validateImageMimeAndSize,
   organizationsController.uploadLogo.bind(organizationsController)
 );
 
 router.put(
   "/banner",
-  upload.single("image"),
-  validateImages,
+  multipartImageUpload.single("image"),
+  validateImageMimeAndSize,
   organizationsController.uploadBanner.bind(organizationsController)
 );
 

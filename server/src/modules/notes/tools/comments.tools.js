@@ -4,7 +4,7 @@ const notesCommentsRepository = require("@/modules/notes/repositories/notes-comm
 const { API_SCOPES } = require("@/config/api-scopes");
 const spacesService = require("@/services/storage/index");
 const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
-const McpLinksUtil = require("@/utils/mcp-links.util");
+const { enrichWithAppUrl } = require("@/utils/url.util");
 const { markdownToBlocks } = require("@/modules/agent-house/utils/markdown-to-blocks.util");
 const { serializeBlocksToMarkdown } = require("@/services/reasoning/notes-to-markdown");
 
@@ -80,7 +80,7 @@ EXAMPLES (How to structure data):
             parentId: null,
           });
           newComment.note_id = note_id; // Ensures we have note_id for enrichment
-          const enriched = McpLinksUtil.enrichWithAppUrl(newComment, "comment", "note_id", "id");
+          const enriched = enrichWithAppUrl(newComment, "comment", "note_id", "id");
           return {
             content: [
               {
@@ -116,7 +116,7 @@ EXAMPLES (How to structure data):
           );
           const enrichedObj = updatedComment || { ...existing, content: finalContent };
           enrichedObj.note_id = note_id || existing.note_id;
-          const enriched = McpLinksUtil.enrichWithAppUrl(enrichedObj, "comment", "note_id", "id");
+          const enriched = enrichWithAppUrl(enrichedObj, "comment", "note_id", "id");
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],
           };
@@ -148,7 +148,7 @@ EXAMPLES (How to structure data):
             if (c.content && c.content.blocks) {
               c.markdown = serializeBlocksToMarkdown(c.content.blocks);
             }
-            return McpLinksUtil.enrichWithAppUrl(c, "comment", "note_id", "id");
+            return enrichWithAppUrl(c, "comment", "note_id", "id");
           });
           return {
             content: [{ text: JSON.stringify(enriched, null, 2), type: "text" }],

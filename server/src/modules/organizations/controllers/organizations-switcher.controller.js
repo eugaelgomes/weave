@@ -3,7 +3,7 @@ const organizationsRepository = require("../repositories/organizations.repositor
 const areasRepository = require("../repositories/areas.repository");
 const signinRepository = require("@/modules/authentication/repositories/signin.repository");
 const { buildJwtPayload } = require("@/modules/authentication/schemas/jwt-payload.schema");
-const { presignObjectFields } = require("@/utils/data/presign-storage-files");
+const { presignObjectFields } = require("@/utils/storage.util");
 
 /**
  * Controller handling organization listing and workspace context switching for multi-tenant users.
@@ -27,11 +27,11 @@ class OrganizationsSwitcherController extends OrganizationsBaseController {
           });
           return {
             id: org.id,
-            org_name: org.org_name,
-            unique_name: org.unique_name,
+            joined_at: org.joined_at,
             logo_url: presigned.logo_url || null,
             member_role: org.member_role,
-            joined_at: org.joined_at,
+            org_name: org.org_name,
+            unique_name: org.unique_name,
           };
         })
       );
@@ -84,10 +84,10 @@ class OrganizationsSwitcherController extends OrganizationsBaseController {
 
       const organization = {
         id: targetOrg.id,
-        org_name: targetOrg.org_name,
-        unique_name: targetOrg.unique_name,
         logo_url: targetOrg.logo_url,
         member_role: targetOrg.member_role,
+        org_name: targetOrg.org_name,
+        unique_name: targetOrg.unique_name,
       };
 
       // Get default area for this organization if any
@@ -108,9 +108,9 @@ class OrganizationsSwitcherController extends OrganizationsBaseController {
         success: true,
         user_organization: {
           id: organization.id,
+          member_role: role,
           name: organization.org_name,
           unique_name: organization.unique_name,
-          member_role: role,
         },
       });
     } catch (error) {

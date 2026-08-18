@@ -14,7 +14,7 @@ const {
   ORG_PERMISSIONS,
 } = require("@/modules/organizations/organization-role-policy");
 const { PLAN_PATHS } = require("@/modules/plans/utils/plan-paths.util");
-const { ALLOWED_NOTE_STATUSES, normalizeNoteStatus } = require("@/utils/patterns/product-patterns");
+const { ALLOWED_NOTE_STATUSES, normalizeNoteStatus } = require("@/utils/patterns.util");
 const { normalizeBlocksTree } = require("../block-normalizer");
 const {
   resolveNoteTitle,

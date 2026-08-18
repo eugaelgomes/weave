@@ -5,12 +5,12 @@ const sharedDatabase = require("@theweave/database");
 
 if (!sharedDatabase.pool) {
   sharedDatabase.initPgPool({
+    database: process.env.DATABASE_NAME,
     host: process.env.DATABASE_HOST_URL,
+    max: parseInt(process.env.DATABASE_CONNECTION_POOL || "5", 10),
+    password: process.env.DATABASE_PASSWORD,
     port: parseInt(process.env.DATABASE_SERVICE_PORT || "5432", 10),
     user: process.env.DATABASE_USERNAME,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE_NAME,
-    max: parseInt(process.env.DATABASE_CONNECTION_POOL || "5", 10),
   });
 }
 

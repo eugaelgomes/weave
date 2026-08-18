@@ -4,7 +4,7 @@ const NotificationsRepository = require("@/modules/notifications/repositories/no
 const {
   ALLOWED_PROJECT_STATUSES,
   normalizeProjectStatus,
-} = require("@/utils/patterns/product-patterns");
+} = require("@/utils/patterns.util");
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 // Removed PLAN_PATHS
