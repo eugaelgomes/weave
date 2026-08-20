@@ -1,8 +1,8 @@
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const secretsService = require("@/services/secrets");
+const secretsService = require("@/services/secrets.service");
 
-const secretsManager = secretsService.secretsManager;
+const getSecretKey = secretsService.getSecretKey;
 
 const STATE_TTL_SEC = 10 * 60;
 const STATE_TYP = "slack-oauth-install";
@@ -23,7 +23,7 @@ function issueSlackInstallState({ organizationId, userId }) {
       userId,
       weaveTyp: STATE_TYP,
     },
-    secretsManager(),
+    getSecretKey(),
     { algorithm: "HS256", expiresIn: STATE_TTL_SEC }
   );
 }
@@ -39,7 +39,7 @@ function verifySlackInstallState(stateToken) {
     return null;
   }
   try {
-    const decoded = jwt.verify(stateToken, secretsManager(), {
+    const decoded = jwt.verify(stateToken, getSecretKey(), {
       algorithms: ["HS256"],
     });
     if (decoded?.weaveTyp !== STATE_TYP) return null;

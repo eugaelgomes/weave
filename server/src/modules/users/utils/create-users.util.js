@@ -6,7 +6,7 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const queueController = require("@/services/queue/queue-controller");
+const queueController = require("@/services/queue.service");
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 
@@ -52,26 +52,29 @@ class CreateUsersService {
     } = userData;
 
     const existingUsersByEmail = await SearchUsersRepository.findByUsernameOrEmail("", email);
-    const existingUser = existingUsersByEmail.find(u => u.email === email);
+    const existingUser = existingUsersByEmail.find((u) => u.email === email);
 
     let existingPendingUser = null;
     if (existingUser) {
-       if (existingUser.status === "PENDING_INVITE") {
-           existingPendingUser = existingUser;
-       } else {
-           return { conflict: "email" };
-       }
+      if (existingUser.status === "PENDING_INVITE") {
+        existingPendingUser = existingUser;
+      } else {
+        return { conflict: "email" };
+      }
     }
 
     await this._validateCorporateDomain(email, existingPendingUser);
 
     const userName = user_name || name;
 
-    const availability = await SearchUsersRepository.checkUniqueAvailability({
-      email,
-      phone_number,
-      username,
-    }, existingPendingUser ? { excludeUserId: existingPendingUser.user_id } : {});
+    const availability = await SearchUsersRepository.checkUniqueAvailability(
+      {
+        email,
+        phone_number,
+        username,
+      },
+      existingPendingUser ? { excludeUserId: existingPendingUser.user_id } : {}
+    );
 
     if (!availability.email.available) return { conflict: "email" };
     if (!availability.username.available) return { conflict: "username" };
@@ -98,7 +101,7 @@ class CreateUsersService {
             phone_number,
             private_profile,
             timezone,
-            username
+            username,
           },
           client
         );

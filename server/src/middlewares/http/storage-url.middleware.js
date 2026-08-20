@@ -1,4 +1,4 @@
-const spacesService = require("@/services/storage");
+const spacesService = require("@/services/storage.service");
 
 // Known storage folder prefixes (from SpacesService.FOLDER_PATHS)
 const STORAGE_PREFIXES = [

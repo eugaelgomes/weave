@@ -1,6 +1,6 @@
 const { AppError, fromUnknown, ERROR_CODES } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
-const spacesService = require("@/services/storage");
+const spacesService = require("@/services/storage.service");
 const areasRepository = require("@/modules/organizations/repositories/areas.repository");
 const {
   normalizeOrganizationName,

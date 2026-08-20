@@ -138,7 +138,7 @@ class ChatContextService {
     // Upload attached files to Digital Ocean Spaces and build metadata with URLs/keys
     const filesMetadata = [];
     if (Array.isArray(files) && files.length > 0) {
-      const spacesService = require("@/services/storage");
+      const spacesService = require("@/services/storage.service");
       const { v4: uuidv4 } = require("uuid");
       for (const file of files) {
         try {

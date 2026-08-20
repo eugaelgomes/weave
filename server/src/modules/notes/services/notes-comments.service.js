@@ -1,5 +1,5 @@
 const notesCommentsRepository = require("../repositories/notes-comments.repository");
-const spacesService = require("@/services/storage");
+const spacesService = require("@/services/storage.service");
 const {
   assertCommentFilesStorageScope,
   normalizeCommentCreatePayload,

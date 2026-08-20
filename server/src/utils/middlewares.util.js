@@ -2,7 +2,7 @@ const multer = require("multer");
 const os = require("os");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const spacesService = require("@/services/storage");
+const spacesService = require("@/services/storage.service");
 
 /**
  * Express middleware to recursively parse top-level primitive values in the request body to strings.
@@ -18,7 +18,11 @@ const parseBodyPrimitivesToString = async (req, res, next) => {
     for (const propertyKey in req.body) {
       if (Object.prototype.hasOwnProperty.call(req.body, propertyKey)) {
         const propertyValue = req.body[propertyKey];
-        if (propertyValue !== null && typeof propertyValue !== "object" && typeof propertyValue !== "string") {
+        if (
+          propertyValue !== null &&
+          typeof propertyValue !== "object" &&
+          typeof propertyValue !== "string"
+        ) {
           req.body[propertyKey] = String(propertyValue);
         }
       }

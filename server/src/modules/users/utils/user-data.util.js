@@ -7,7 +7,7 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
 const { sendEmailChangeValidation } = require("@/services/email/templates/reset-password");
-const spacesService = require("@/services/storage");
+const spacesService = require("@/services/storage.service");
 const updateProfileLogs = require("@/modules/users/utils/update-profile-logs.util");
 const {
   normalizeEmail,

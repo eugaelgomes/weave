@@ -2,13 +2,13 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
 const cookieHelper = require("./utils/cookie-helper.util");
-const secretsService = require("@/services/secrets");
+const secretsService = require("@/services/secrets.service");
 
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const OAUTH_STATE_COOKIE_PREFIX = "oauth_state_";
 
 const getAuthCookieOptions = cookieHelper.getAuthCookieOptions;
-const secretsManager = secretsService.secretsManager;
+const getSecretKey = secretsService.getSecretKey;
 
 /**
  * @param {"google"|"github"|"microsoft"} provider
@@ -33,7 +33,7 @@ function issueOauthState({ provider, req, res }) {
       nonce: crypto.randomBytes(24).toString("hex"),
       provider,
     },
-    secretsManager(),
+    getSecretKey(),
     {
       algorithm: "HS256",
       expiresIn: Math.floor(OAUTH_STATE_TTL_MS / 1000),
@@ -74,7 +74,7 @@ function consumeAndValidateOauthState({ provider, req, res, state }) {
   }
 
   try {
-    const decoded = jwt.verify(state, secretsManager(), {
+    const decoded = jwt.verify(state, getSecretKey(), {
       algorithms: ["HS256"],
     });
     return decoded?.provider === provider && Boolean(decoded?.nonce);

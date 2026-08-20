@@ -1,4 +1,4 @@
-const spacesService = require("@/services/storage");
+const spacesService = require("@/services/storage.service");
 const BaseController = require("./base.controller");
 const CreateUsersService = require("@/modules/users/utils/create-users.util");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");

@@ -1,6 +1,7 @@
 {
   "name": "theweave-workspace",
   "private": true,
+  "packageManager": "npm@11.18.0",
   "scripts": {
     "deploy": "./scripts/deploy.sh",
     "deploy:engine": "./scripts/deploy.sh engine",
@@ -8,7 +9,12 @@
     "deploy:worker": "./scripts/deploy.sh worker",
     "clean:ports": "./scripts/clean-ports.sh",
     "dev:clean": "./scripts/clean-ports.sh && npm run dev",
-    "dev": "doppler run --project weave-api --config dev -- concurrently -c \"blue,green,magenta,yellow\" -n \"server,web,worker,llm\" \"npm run dev -w server\" \"npm run dev -w web\" \"npm run dev -w worker\" \"npm run dev -w llm\"",
+    "dev": "doppler run --project weave-api --config dev -- turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "format": "turbo format",
+    "check": "turbo check",
     "db:migrate": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma migrate dev --schema=packages/shared/prisma/schema.prisma'",
     "db:generate": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma generate --schema=packages/shared/prisma/schema.prisma'",
     "db:push": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma db push --schema=packages/shared/prisma/schema.prisma'",
@@ -16,10 +22,6 @@
     "db:pull": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma db pull --schema=packages/shared/prisma/schema.prisma'",
     "db:studio": "doppler run --project weave-api --config dev -- bash -c 'export DATABASE_URL=\"postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public\" && prisma studio --schema=packages/shared/prisma/schema.prisma'",
     "db:migrate:local": "prisma migrate dev --schema=packages/shared/prisma/schema.prisma",
-    "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "format": "npm run format --workspaces --if-present",
-    "check": "npm run check --workspaces --if-present",
     "knip": "knip"
   },
   "devDependencies": {
@@ -36,6 +38,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.7.4",
     "prisma": "5.22.0",
+    "turbo": "^2.10.11",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.2.0"
   },

@@ -1,15 +1,12 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
 const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
-const {
-  ALLOWED_PROJECT_STATUSES,
-  normalizeProjectStatus,
-} = require("@/utils/patterns.util");
+const { ALLOWED_PROJECT_STATUSES, normalizeProjectStatus } = require("@/utils/patterns.util");
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 // Removed PLAN_PATHS
 const { inviteProjectMember } = require("@/services/email/templates/project-add-person");
-const spacesService = require("@/services/storage");
+const spacesService = require("@/services/storage.service");
 const notesRepository = require("@/modules/notes/notes.repository");
 const taskPrioritiesRepository = require("@/modules/projects/repositories/task-priorities.repository");
 const { ASSIGNABLE_PROJECT_ROLES } = require("@/modules/projects/project-role-policy");

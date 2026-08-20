@@ -4,6 +4,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "build": "prisma generate",
     "generate": "prisma generate",
     "pull": "prisma db pull"
   },

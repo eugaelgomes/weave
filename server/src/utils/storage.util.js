@@ -1,8 +1,8 @@
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const spacesService = require("@/services/storage");
-const { assertFileAccess, StorageAccessError } = require("@/services/storage/access-control");
-const redis = require("@/services/queue/connection");
+const spacesService = require("@/services/storage.service");
+const { assertFileAccess, StorageAccessError } = require("@/services/storage-access.service");
+const { redis } = require("@/services/queue.service");
 
 function getSpacesHostname() {
   try {

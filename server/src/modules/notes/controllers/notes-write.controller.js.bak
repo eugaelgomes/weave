@@ -7,7 +7,7 @@ const {
   ALLOWED_NOTE_STATUSES,
   normalizeNoteStatus,
 } = require("@/utils/patterns/product-patterns");
-const spacesService = require("@/services/storage");
+const spacesService = require("@/services/storage.service");
 const { normalizeBlocksTree } = require("../block-normalizer");
 const {
   resolveNoteTitle,

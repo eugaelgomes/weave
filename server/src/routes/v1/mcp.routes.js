@@ -3,7 +3,7 @@ const { SSEServerTransport } = require("@modelcontextprotocol/sdk/server/sse.js"
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { verifyInternalService } = require("@/middlewares/security/verify-internal-service");
 const { configureServerForUser } = require("@/config/mcp");
-const redisPublisher = require("@/services/queue/connection");
+const redisPublisher = require("@/services/queue.service");
 
 // Create a dedicated Redis subscriber connection for MCP events
 const redisSubscriber = redisPublisher.duplicate();
