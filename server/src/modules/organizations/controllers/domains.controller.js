@@ -8,7 +8,7 @@ const crypto = require("crypto");
 
 const OrganizationsBaseController = require("./base-controller");
 const domainRepository = require("../repositories/domains.repository");
-const { enqueueDomainVerificationJob } = require("@/services/queue.service");
+const { enqueueDomainVerificationJob } = require("@theweave/database");
 
 /**
  * Controller for organizations domains management.

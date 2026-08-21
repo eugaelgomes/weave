@@ -1,6 +1,6 @@
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { executeQuery } = require("@/database/connection");
-const { enqueuePlanUsageJob } = require("@/services/queue.service");
+const { enqueuePlanUsageJob } = require("@theweave/database");
 const { USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 
 class PlansService {

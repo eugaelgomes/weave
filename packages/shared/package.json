@@ -9,7 +9,8 @@
     "pull": "prisma db pull"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0"
+    "@prisma/client": "^5.22.0",
+    "ioredis": "^5.4.1"
   },
   "devDependencies": {
     "prisma": "^5.22.0"

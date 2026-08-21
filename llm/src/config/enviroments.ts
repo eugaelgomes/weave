@@ -8,7 +8,7 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   REDIS_ENGINE_LLM_REQUEST_QUEUE_KEY: z.string().optional(),
   REDIS_ENGINE_LLM_RESPONSE_PREFIX: z.string().optional(),
-  REDIS_URL: z.string().min(1),
+  REDIS_URL: z.string().default("redis://localhost:6379"),
 });
 
 // For backwards compatibility of the exported objects

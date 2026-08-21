@@ -1,5 +1,5 @@
 const BaseRepository = require("./base.repository");
-const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
+const { enqueueNoteEmbeddingJob } = require("@theweave/database");
 const {
   buildNoteIdWhereClause,
   buildNotesBulkDeleteWhere,

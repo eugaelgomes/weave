@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import redis from "@/queues/redis.client";
+import { redis } from "@theweave/database";
 
 export const TRACING_EVENTS_QUEUE_KEY = "weave:tracing:events:queue";
 

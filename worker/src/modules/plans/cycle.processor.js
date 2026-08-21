@@ -1,7 +1,7 @@
 const { getConnection } = require("../../database/connection");
 const { logger } = require("@theweave/database");
 const { USAGE_PATHS } = require("./paths");
-const redis = require("../../queues/queue-client");
+const { redisConsumer: redis } = require("@theweave/database");
 const { getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
 const { buildCycleSummaryTemplate } = require("../../mail/templates/template.cycle-summary");
 

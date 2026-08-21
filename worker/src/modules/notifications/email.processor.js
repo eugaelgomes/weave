@@ -1,12 +1,19 @@
 const { Resend } = require("resend");
-const redis = require("../../queues/queue-client");
+const { redisConsumer: redis } = require("@theweave/database");
 const { getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
 const { DEV_SENDER, normalizeSenderFrom } = require("../../mail/sender-name");
 const { logger } = require("@theweave/database");
 
 class EmailProcessor {
   constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY);
+    if (!process.env.RESEND_API_KEY) {
+      logger.warn(
+        "[Email Processor] RESEND_API_KEY is not defined. Email processor disabled."
+      );
+      this.resend = null;
+    } else {
+      this.resend = new Resend(process.env.RESEND_API_KEY);
+    }
     this.isRunning = false;
   }
 

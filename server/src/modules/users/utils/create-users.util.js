@@ -6,7 +6,7 @@ const SearchUsersRepository = require("@/modules/users/repositories/search-users
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
 const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const queueController = require("@/services/queue.service");
+const queueController = require("@theweave/database");
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 

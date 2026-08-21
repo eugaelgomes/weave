@@ -1,4 +1,4 @@
-const redis = require("../../queues/queue-client");
+const { redisConsumer: redis } = require("@theweave/database");
 const { executeQuery } = require("../../database/connection");
 const { getNoteEmbeddingsQueueRedisKey } = require("../../queues/queue-queue-keys");
 const { extractPlainTextFromBlockRows } = require("./note-blocks-text");

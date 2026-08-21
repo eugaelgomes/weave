@@ -51,7 +51,7 @@ class SpacesService {
 
   async init() {
     try {
-      const db = require("../../database/connection");
+      const db = require("../database/connection");
       const result = await db.executeQuery(
         "SELECT storage_config FROM system_settings WHERE id = 1"
       );

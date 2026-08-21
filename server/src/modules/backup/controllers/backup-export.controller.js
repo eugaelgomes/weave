@@ -4,7 +4,7 @@ const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlansService = require("@/modules/plans/services/plans.service");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
-const { enqueueBackupExportJob } = require("@/services/queue.service");
+const { enqueueBackupExportJob } = require("@theweave/database");
 
 /**
  * Asynchronous backup request and job execution (CSV, storage, e-mail).

@@ -1,7 +1,7 @@
 const BaseRepository = require("./base.repository");
 const { NOTE_STATUS } = require("@/utils/patterns.util");
 const { generatePublicId } = require("@/utils/formatters.util");
-const { enqueueNoteEmbeddingJob } = require("../../../services/queue/queue-controller");
+const { enqueueNoteEmbeddingJob } = require("@theweave/database");
 
 const DEFAULT_NOTE_PROPERTIES = {
   banner: { name: "", path: "", type: "" },

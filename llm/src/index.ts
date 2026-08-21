@@ -2,7 +2,7 @@ import "./instrument";
 import { validateEnv, env } from "@/config/enviroments";
 import { logger } from "@/config/logger";
 import { registerShutdownHandler, setupGracefulShutdown } from "@/config/shutdown";
-import redis from "@/queues/redis.client";
+import { redis } from "@theweave/database";
 import chatWorker from "@/routes/queue.routes";
 import * as Sentry from "@sentry/node";
 

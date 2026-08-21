@@ -13,8 +13,8 @@
  */
 
 import { z } from "zod";
-import redis from "@/queues/redis.client";
-import { REDIS_QUEUES } from "@/queues/redis-queues";
+import { redis } from "@theweave/database";
+import { REDIS_QUEUE_KEYS } from "@theweave/database";
 import { logger } from "@/config/logger";
 import { callLLMProvider } from "@/providers/normalizer";
 import { executeTask } from "@/processor/executor";
@@ -39,7 +39,7 @@ const ENGINE_CHAT_TASK_TIMEOUT_MS = Number.parseInt(
   10
 );
 const ENGINE_JOB_MAX_RETRIES = Number.parseInt(process.env.WEAVE_ENGINE_JOB_MAX_RETRIES || "4", 10);
-const ENGINE_DEAD_LETTER_QUEUE_KEY = REDIS_QUEUES.ENGINE_DEAD_LETTER.key;
+const ENGINE_DEAD_LETTER_QUEUE_KEY = "weave:engine:llm:dead-letter";
 
 const jobEnvelopeSchema = z
   .object({
@@ -75,7 +75,7 @@ class LlmQueueProcessor {
 
   constructor() {
     this.isRunning = false;
-    this.queueName = REDIS_QUEUES.ENGINE_LLM_REQUESTS.key;
+    this.queueName = REDIS_QUEUE_KEYS.ENGINE_LLM_REQUEST;
   }
 
   /**

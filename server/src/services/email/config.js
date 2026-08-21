@@ -1,4 +1,4 @@
-const { enqueueEmailJob } = require("../queue/queue-controller");
+const { enqueueEmailJob } = require("@theweave/database");
 const { DEV_SENDER, normalizeSenderFrom } = require("./sender-name");
 
 let mailServiceInstance = null;

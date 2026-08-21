@@ -1,4 +1,4 @@
-const redis = require("../../queues/queue-client");
+const { redisConsumer: redis } = require("@theweave/database");
 const {
   getAiReportDeliveryQueueRedisKey,
   getEmailQueueRedisKey,

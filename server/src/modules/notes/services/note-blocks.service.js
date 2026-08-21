@@ -2,7 +2,7 @@ const notesRepository = require("@/modules/notes/notes.repository");
 const { normalizeBlocksTree, flattenBlocksForInsert } = require("../block-normalizer");
 const { getConnection } = require("@/database/connection");
 const spacesService = require("@/services/storage.service");
-const { enqueueNoteEmbeddingJob } = require("@/services/queue.service");
+const { enqueueNoteEmbeddingJob } = require("@theweave/database");
 const {
   resolveNoteIdToUuid,
   buildNoteIdWhereClause,

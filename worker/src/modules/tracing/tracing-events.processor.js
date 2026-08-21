@@ -1,4 +1,4 @@
-const redis = require("../../queues/queue-client");
+const { redisConsumer: redis } = require("@theweave/database");
 const { prisma } = require("@theweave/shared");
 const { getTracingEventsQueueRedisKey } = require("../../queues/queue-queue-keys");
 const { logger } = require("@theweave/database");

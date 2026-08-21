@@ -2,7 +2,7 @@ const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const spacesService = require("@/services/storage.service");
 const { assertFileAccess, StorageAccessError } = require("@/services/storage-access.service");
-const { redis } = require("@/services/queue.service");
+const { redis } = require("@theweave/database");
 
 function getSpacesHostname() {
   try {

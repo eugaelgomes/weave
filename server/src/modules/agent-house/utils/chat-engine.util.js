@@ -12,16 +12,16 @@
  */
 const { randomUUID } = require("crypto");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
-const { engineRpcRedis } = require("@/services/queue.service");
+const { engineRpcRedis } = require("@theweave/database");
 const {
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
-} = require("@/services/queue.service");
+} = require("@theweave/database");
 const chatFormatterUtil = require("./chat-formatter.util");
 const { getI18n } = require("./agent-house-i18n.util");
 
 const Redis = require("ioredis");
-const { getBlockingRedisOptions } = require("@/services/queue.service");
+const { getBlockingRedisOptions } = require("@theweave/database");
 const subscriberClient = new Redis(process.env.REDIS_URL, getBlockingRedisOptions());
 const streamCallbacks = new Map();
 
