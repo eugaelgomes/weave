@@ -3,7 +3,7 @@ import { validateEnv, env } from "@/config/enviroments";
 import { logger } from "@/config/logger";
 import { registerShutdownHandler, setupGracefulShutdown } from "@/config/shutdown";
 import redis from "@/queues/redis.client";
-import queueRouter from "@/worker/queue-router";
+import chatWorker from "@/routes/queue.routes";
 import * as Sentry from "@sentry/node";
 
 async function bootstrap() {
@@ -12,12 +12,12 @@ async function bootstrap() {
   validateEnv();
   logger.info("Environment validated");
 
-  queueRouter.start().catch((err: unknown) => {
-    logger.error("QueueRouter loop failed fatally", { error: (err as Error).message });
+  chatWorker.start().catch((err: unknown) => {
+    logger.error("ChatWorker loop failed fatally", { error: (err as Error).message });
   });
 
-  registerShutdownHandler("queue-router", async () => {
-    queueRouter.stop();
+  registerShutdownHandler("chat-worker", async () => {
+    chatWorker.stop();
   });
   registerShutdownHandler("redis", async () => {
     await redis.quit();

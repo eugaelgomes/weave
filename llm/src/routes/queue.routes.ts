@@ -17,9 +17,9 @@ import redis from "@/queues/redis.client";
 import { REDIS_QUEUES } from "@/queues/redis-queues";
 import { logger } from "@/config/logger";
 import { callLLMProvider } from "@/providers/normalizer";
-import { executeTask } from "@/core/executor";
-import type { AgenticExecutionContext } from "@/core/executor";
-import { Tracer } from "@/core/tracing";
+import { executeTask } from "@/processor/executor";
+import type { AgenticExecutionContext } from "@/types/engine.types";
+import { Tracer } from "@/config/tracing";
 
 const RESPONSE_TTL_SECONDS = 60;
 const CHAT_HISTORY_MAX_MESSAGES = Number.parseInt(
@@ -259,25 +259,8 @@ class LlmQueueProcessor {
         const conversationHistory = this.normalizeConversationHistory(payload.conversationHistory);
 
         const providerStr = (payload.provider as string) || "openai";
-        let resolvedApiKey = (payload.apiKey as string) || "";
-        let resolvedBaseURL = (payload.baseURL as string) || undefined;
-
-        if (!resolvedApiKey) {
-          if (providerStr === "google" || providerStr === "gemini") {
-            resolvedApiKey = process.env.GEMINI_API_KEY || "";
-          } else if (providerStr === "anthropic") {
-            resolvedApiKey = process.env.ANTHROPIC_API_KEY || "";
-          } else if (providerStr === "azure") {
-            resolvedApiKey = process.env.FOUNDRY_API_KEY || process.env.AZURE_OPENAI_API_KEY || "";
-            resolvedBaseURL =
-              resolvedBaseURL ||
-              process.env.FOUNDRY_PROJECT_URL ||
-              process.env.AZURE_OPENAI_ENDPOINT;
-          } else {
-            resolvedApiKey = process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY || "";
-            resolvedBaseURL = resolvedBaseURL || process.env.FOUNDRY_PROJECT_URL;
-          }
-        }
+        const resolvedApiKey = (payload.apiKey as string) || "";
+        const resolvedBaseURL = (payload.baseURL as string) || undefined;
 
         const executionContext: AgenticExecutionContext = {
           apiKey: resolvedApiKey,
@@ -349,22 +332,6 @@ class LlmQueueProcessor {
       case "provider_call":
       default: {
         const providerStr = (payload.provider as string) || "openai";
-        if (!payload.apiKey) {
-          if (providerStr === "google" || providerStr === "gemini") {
-            payload.apiKey = process.env.GEMINI_API_KEY || "";
-          } else if (providerStr === "anthropic") {
-            payload.apiKey = process.env.ANTHROPIC_API_KEY || "";
-          } else if (providerStr === "azure") {
-            payload.apiKey = process.env.FOUNDRY_API_KEY || process.env.AZURE_OPENAI_API_KEY || "";
-            payload.baseURL =
-              payload.baseURL ||
-              process.env.FOUNDRY_PROJECT_URL ||
-              process.env.AZURE_OPENAI_ENDPOINT;
-          } else {
-            payload.apiKey = process.env.FOUNDRY_API_KEY || process.env.OPENAI_API_KEY || "";
-            payload.baseURL = payload.baseURL || process.env.FOUNDRY_PROJECT_URL;
-          }
-        }
 
         const { data, provider: providerUsed } = await callLLMProvider(payload as any);
         return {
@@ -467,6 +434,38 @@ class LlmQueueProcessor {
     }
 
     return lines.length > 0 ? lines.join("\n") : "No prior messages in this session.";
+  }
+
+  async start() {
+    if (this.isRunning) return;
+    this.isRunning = true;
+    logger.info(`LlmQueueProcessor started listening on ${this.queueName}`);
+
+    while (this.isRunning) {
+      try {
+        const result = await redis.brpop(this.queueName, 2);
+        if (!result) continue;
+
+        const [, rawPayload] = result;
+        if (!rawPayload) continue;
+
+        try {
+          const job = this.parseRawJob(rawPayload);
+          await this.processJob(job);
+        } catch (error: unknown) {
+          logger.error("Job parsing or structural validation failed", {
+            error: (error as Error).message,
+            rawPayload,
+          });
+        }
+      } catch (error: unknown) {
+        logger.error("Redis BRPOP failed in LlmQueueProcessor", {
+          error: (error as Error).message,
+        });
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+    }
+    logger.info("LlmQueueProcessor stopped");
   }
 
   stop() {

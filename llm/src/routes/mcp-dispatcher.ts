@@ -5,7 +5,8 @@
  */
 
 import { logger } from "@/config/logger";
-import { getMCPClient, ExecutionContext } from "@/providers/mcp.client";
+import { getMCPClient } from "@/config/mcp.client";
+import { ExecutionContext } from "@/types/mcp.types";
 
 /**
  * Evaluates whether a given tool name is registered as an internal execution target.

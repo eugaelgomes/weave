@@ -5,8 +5,11 @@
  */
 
 import type { LLMRequestParams, LLMResponse } from "@theweave/shared";
-import { callOpenAICompatProvider } from "./openai";
-import { callAnthropicProvider } from "./anthropic";
+import { callOpenAICompatProvider } from "./models.openai";
+import { callAnthropicProvider } from "./models.anthropic";
+import { callDeepseekProvider } from "./models.deepseek";
+import { callKimiProvider } from "./models.kimi";
+import { callXAIProvider } from "./models.xai";
 
 export * from "@theweave/shared";
 
@@ -29,11 +32,20 @@ export async function callLLMProvider(params: LLMRequestParams): Promise<CallLLM
 
   try {
     let data: LLMResponse;
-    if (params.provider === "anthropic") {
+    const prov = params.provider.toLowerCase();
+    
+    if (prov === "anthropic") {
       data = await callAnthropicProvider(params);
+    } else if (prov === "deepseek") {
+      data = await callDeepseekProvider(params);
+    } else if (prov === "kimi" || prov === "moonshot") {
+      data = await callKimiProvider(params);
+    } else if (prov === "xai" || prov === "grok") {
+      data = await callXAIProvider(params);
     } else {
       data = await callOpenAICompatProvider(params);
     }
+    
     return { data, model: params.model, provider: params.provider };
   } catch (error: unknown) {
     const err = error as Error & { code?: string; response?: Record<string, unknown> };

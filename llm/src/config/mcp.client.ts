@@ -2,10 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { logger } from "@/config/logger";
 
-export interface ExecutionContext {
-  userId: string | number;
-  organizationId?: string | number | null;
-}
+import { ExecutionContext } from "@/types/mcp.types";
 
 export class MCPClient {
   private executionContext: ExecutionContext;
