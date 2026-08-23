@@ -10,7 +10,6 @@ export function VersionMonitor() {
   const [currentVersion, setCurrentVersion] = useState<string | null>(null);
 
   useEffect(() => {
-    let checkInterval: NodeJS.Timeout;
 
     const checkVersion = async () => {
       try {
@@ -48,7 +47,7 @@ export function VersionMonitor() {
     checkVersion();
 
     // Check on interval
-    checkInterval = setInterval(checkVersion, POLLING_INTERVAL);
+    const checkInterval = setInterval(checkVersion, POLLING_INTERVAL);
 
     // Check when window regains focus
     const handleFocus = () => checkVersion();

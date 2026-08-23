@@ -283,7 +283,7 @@ export default function RootLayout({
                 "color: red; font-size: 24px; font-weight: bold;",
                 "color: inherit; font-size: 14px;"
               );
-            `
+            `,
           }}
         />
         <Analytics />

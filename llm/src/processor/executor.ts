@@ -8,7 +8,10 @@
  * via executionContext — nothing is hardcoded in the engine.
  */
 
-import { LLMRequestParams, Message, ToolSchema } from "@/providers/normalizer";
+import { LLMRequestParams } from "@/providers/normalizer";
+
+// ToolSchema mirrors the OpenAI function-calling tool format
+type ToolSchema = { type: string; function: { name: string; description?: string; parameters?: unknown } };
 import {
   isInternalTool,
   executeInternalTool,

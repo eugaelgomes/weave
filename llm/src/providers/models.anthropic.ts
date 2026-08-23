@@ -95,11 +95,14 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
 
   // Tools
   if (Array.isArray(params.tools) && params.tools.length > 0) {
-    body.tools = params.tools.map((t) => ({
-      description: t.function.description,
-      input_schema: t.function.parameters ?? { properties: {}, type: "object" },
-      name: t.function.name,
-    }));
+    body.tools = params.tools.map((t) => {
+      const tool = t as { function: { name: string; description?: string; parameters?: unknown } };
+      return {
+        description: tool.function.description,
+        input_schema: tool.function.parameters ?? { properties: {}, type: "object" },
+        name: tool.function.name,
+      };
+    });
     if (params.toolChoice) {
       body.tool_choice =
         typeof params.toolChoice === "string" ? { type: params.toolChoice } : params.toolChoice;
