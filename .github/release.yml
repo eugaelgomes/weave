@@ -1,0 +1,25 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+    authors:
+      - dependabot
+  categories:
+    - title: "🚀 New Features"
+      labels:
+        - "type: feature"
+      exclude:
+        labels:
+          - "type: fix"
+      # Also match conventional commit prefix in title
+    - title: "🐛 Bug Fixes"
+      labels:
+        - "type: fix"
+    - title: "🔧 Refactoring"
+      labels:
+        - "type: refactor"
+    - title: "📦 Infrastructure & Deps"
+      labels:
+        - "type: infra"
+        - "dependencies"
+    - title: "📝 Other Changes"

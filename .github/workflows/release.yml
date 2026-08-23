@@ -4,28 +4,38 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Nome da tag (ex: v1.0.0)'
-        required: true
-        type: string
 
 permissions:
   contents: write
 
 jobs:
-  create-release:
+  release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Generate Release Notes and Create Release
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Generate Release Notes
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: "Weave ${{ steps.version.outputs.VERSION }}"
           generate_release_notes: true
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+          body: |
+            ## What's Changed
+
+            See the full list of changes below, generated from commits since the last release.
+
+            > **Self-hosted users:** Update your deployment by pulling the latest Docker images:
+            > ```bash
+            > docker compose -f docker-compose.prod.yml pull
+            > docker compose -f docker-compose.prod.yml up -d
+            > ```

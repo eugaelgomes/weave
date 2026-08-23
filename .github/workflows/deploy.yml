@@ -1,18 +1,21 @@
-name: Deploy Infrastructure
+name: Deploy
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "weave-api/**"
-      - "weave-engine/**"
-      - "weave-worker/**"
-      - "packages/**"
-      - "docker-compose.prod.yml"
-      - "Caddyfile"
-      - ".github/workflows/deploy.yml"
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      services:
+        description: 'Services to deploy (all, server, engine, worker)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - server
+          - engine
+          - worker
 
 permissions:
   contents: read
@@ -22,42 +25,48 @@ concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  REGISTRY: ghcr.io
+  REGISTRY_OWNER: eugaelgomes
+
 jobs:
-  build-api:
-    name: Build API
+  # ─────────────────────────────────────────────
+  # Build jobs — run in parallel
+  # ─────────────────────────────────────────────
+  build-server:
+    name: Build API (server)
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'weave-api/') || contains(github.event.head_commit.modified, 'packages/') || contains(github.event.head_commit.modified, 'docker-compose.prod.yml') || contains(github.event.head_commit.modified, '.github/workflows/deploy.yml')
-    defaults:
-      run:
-        working-directory: weave-api
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.services == 'all' || github.event.inputs.services == 'server'))
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: weave-api/package-lock.json
-      - run: npm ci
-      - run: npm run build
-      
+
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
+
       - uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/weave-api
+          images: ${{ env.REGISTRY }}/${{ env.REGISTRY_OWNER }}/weave-api
           tags: |
-            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+
       - uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./weave-api/Dockerfile
+          file: ./server/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
@@ -66,40 +75,39 @@ jobs:
           cache-to: type=gha,mode=max
 
   build-engine:
-    name: Build Engine
+    name: Build Engine (llm)
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'weave-engine/') || contains(github.event.head_commit.modified, 'packages/') || contains(github.event.head_commit.modified, 'docker-compose.prod.yml') || contains(github.event.head_commit.modified, '.github/workflows/deploy.yml')
-    defaults:
-      run:
-        working-directory: weave-engine
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.services == 'all' || github.event.inputs.services == 'engine'))
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: weave-engine/package-lock.json
-      - run: npm ci
-      - run: npm run check
-      
+
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
+
       - uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/weave-engine
+          images: ${{ env.REGISTRY }}/${{ env.REGISTRY_OWNER }}/weave-engine
           tags: |
-            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+
       - uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./weave-engine/Dockerfile
+          file: ./llm/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
@@ -110,38 +118,37 @@ jobs:
   build-worker:
     name: Build Worker
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'weave-worker/') || contains(github.event.head_commit.modified, 'packages/') || contains(github.event.head_commit.modified, 'docker-compose.prod.yml') || contains(github.event.head_commit.modified, '.github/workflows/deploy.yml')
-    defaults:
-      run:
-        working-directory: weave-worker
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.services == 'all' || github.event.inputs.services == 'worker'))
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: weave-worker/package-lock.json
-      - run: npm ci
-      - run: npm run check
-      
+
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
+
       - uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/weave-worker
+          images: ${{ env.REGISTRY }}/${{ env.REGISTRY_OWNER }}/weave-worker
           tags: |
-            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+
       - uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./weave-worker/Dockerfile
+          file: ./worker/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
@@ -149,16 +156,23 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ─────────────────────────────────────────────
+  # Deploy — runs after all builds succeed
+  # ─────────────────────────────────────────────
   deploy:
-    name: Deploy
+    name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build-api, build-engine, build-worker]
-    if: always() && contains(needs.*.result, 'success') && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    
+    needs: [build-server, build-engine, build-worker]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    environment: production
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate deploy secrets
+      - name: Validate required secrets
         env:
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
@@ -167,23 +181,14 @@ jobs:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
           set -e
-          [ -n "$REMOTE_HOST" ] || { echo "Missing secret: REMOTE_HOST" >&2; exit 1; }
-          [ -n "$REMOTE_USER" ] || { echo "Missing secret: REMOTE_USER" >&2; exit 1; }
-          [ -n "$SSH_PRIVATE_KEY" ] || { echo "Missing secret: SSH_PRIVATE_KEY" >&2; exit 1; }
-          [ -n "$APP_DIR" ] || { echo "Missing secret: APP_DIR" >&2; exit 1; }
-          [ -n "$DOPPLER_TOKEN" ] || { echo "Missing secret: DOPPLER_TOKEN" >&2; exit 1; }
+          [ -n "$REMOTE_HOST" ]      || { echo "❌ Missing secret: REMOTE_HOST" >&2; exit 1; }
+          [ -n "$REMOTE_USER" ]      || { echo "❌ Missing secret: REMOTE_USER" >&2; exit 1; }
+          [ -n "$SSH_PRIVATE_KEY" ]  || { echo "❌ Missing secret: SSH_PRIVATE_KEY" >&2; exit 1; }
+          [ -n "$APP_DIR" ]          || { echo "❌ Missing secret: APP_DIR" >&2; exit 1; }
+          [ -n "$DOPPLER_TOKEN" ]    || { echo "❌ Missing secret: DOPPLER_TOKEN" >&2; exit 1; }
+          echo "✅ All required secrets are present."
 
-      - name: Create App Directory
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            mkdir -p "${{ secrets.APP_DIR }}"
-            mkdir -p "${{ secrets.APP_DIR }}/etc/caddy"
-
-      - name: Copy Compose and Caddyfile via SCP
+      - name: Copy compose files to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.REMOTE_HOST }}
@@ -202,34 +207,42 @@ jobs:
             set -e
             cd "${{ secrets.APP_DIR }}"
 
+            # Write runtime env
             echo "DOPPLER_TOKEN=${{ secrets.DOPPLER_TOKEN }}" > .env
 
+            # Ensure PATH is available (non-login shells on some distros)
             [ -f /etc/profile ] && . /etc/profile
             [ -f "$HOME/.profile" ] && . "$HOME/.profile"
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
 
-            if ! command -v docker >/dev/null 2>&1; then
-              echo "Docker not found on target server. Please install Docker Engine." >&2
-              exit 127
-            fi
+            # Validate Docker
+            command -v docker >/dev/null 2>&1 || { echo "❌ Docker not found on target server." >&2; exit 127; }
 
+            # Login to GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+            # Detect compose command
             if docker compose version >/dev/null 2>&1; then
               COMPOSE="docker compose"
             elif command -v docker-compose >/dev/null 2>&1; then
               COMPOSE="docker-compose"
             else
-              echo "Docker Compose plugin missing." >&2
-              exit 127
+              echo "❌ Docker Compose not found." >&2; exit 127
             fi
 
+            echo "📦 Pulling latest images..."
             $COMPOSE -f docker-compose.prod.yml pull
+
+            echo "🚀 Starting services..."
             $COMPOSE -f docker-compose.prod.yml up -d
-            
+
+            # Reload Caddy config if present
             if [ -f Caddyfile ]; then
-               $COMPOSE -f docker-compose.prod.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
+              $COMPOSE -f docker-compose.prod.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || true
             fi
 
+            echo "🧹 Pruning unused images and cache..."
             docker image prune -f || true
             docker builder prune -f || true
+
+            echo "✅ Deployment complete — version: ${{ github.ref_name }}"
