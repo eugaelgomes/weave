@@ -3,3 +3,9 @@
         lb_policy ip_hash
     }
 }
+
+{$WEB_DOMAIN:localhost} {
+    reverse_proxy web:3000 {
+        lb_policy ip_hash
+    }
+}

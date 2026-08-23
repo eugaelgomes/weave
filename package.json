@@ -7,7 +7,14 @@
     "url": "https://gaelgomes.dev"
   },
   "packageManager": "npm@11.18.0",
+  "bin": {
+    "theweave-workspace": "./bin/create-weave.js",
+    "theweave": "./bin/create-weave.js",
+    "create-weave": "./bin/create-weave.js",
+    "weave": "./bin/create-weave.js"
+  },
   "scripts": {
+    "create-weave": "node ./bin/create-weave.js",
     "deploy": "./scripts/deploy.sh",
     "deploy:engine": "./scripts/deploy.sh engine",
     "deploy:server": "./scripts/deploy.sh server",

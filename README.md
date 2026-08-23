@@ -6,6 +6,22 @@ Built around an extensible multi-module architecture, the system lets users and 
 
 ---
 
+## Quick Start via `npx`
+
+You can initialize a new Weave workspace directly using `npx` (no cloning required):
+
+```bash
+npx github:eugaelgomes/theweave
+```
+
+Or run non-interactively:
+
+```bash
+npx github:eugaelgomes/theweave --dir my-weave-app -y
+```
+
+---
+
 ## Repository structure
 
 ```
