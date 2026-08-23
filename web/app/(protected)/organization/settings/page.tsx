@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 export default async function OrganizationSettingsRedirectPage({
   params,
 }: {
-  params: Promise<{ }>;
+  params: Promise<Record<string, never>>;
 }) {
-  
   redirect(`/organization/general`);
 }

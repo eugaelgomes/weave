@@ -13,7 +13,7 @@
  */
 
 import { z } from "zod";
-import { redis } from "@theweave/database";
+import { redis, redisConsumer } from "@theweave/database";
 import { REDIS_QUEUE_KEYS } from "@theweave/database";
 import { logger } from "@/config/logger";
 import { callLLMProvider } from "@/providers/normalizer";
@@ -133,10 +133,10 @@ class LlmQueueProcessor {
       "";
 
     const traceContext = {
-      traceId: requestId || "",
       organizationId,
-      userId: (payload.userId as string) || null,
       sessionId: (payload.sessionId as string) || null,
+      traceId: requestId || "",
+      userId: (payload.userId as string) || null,
     };
 
     if (organizationId && requestId) {
@@ -177,8 +177,8 @@ class LlmQueueProcessor {
 
       if (organizationId && requestId) {
         await Tracer.endTrace(traceContext.traceId, traceContext, {
-          status: "error",
           error: normalizedError.message,
+          status: "error",
         });
       }
 
@@ -281,21 +281,21 @@ class LlmQueueProcessor {
             null,
           provider: (payload.provider as string) || "openai",
           thinking: (payload.thinking as AgenticExecutionContext["thinking"]) || undefined,
-          userId: (payload.userId as string) || null,
           traceId: requestId || "",
+          userId: (payload.userId as string) || null,
         };
 
         const result = await Promise.race([
           executeTask({
-            allowEdit: Boolean(payload.allowEdit),
             _allowWebSearch: Boolean(payload.allowWebSearch),
+            allowEdit: Boolean(payload.allowEdit),
             conversationHistory,
             executionContext,
             files: Array.isArray(payload.files) ? payload.files : [],
-            tools: Array.isArray(payload.tools) ? payload.tools : [],
             message: (payload.message as string) || "",
             model: (payload.model as string) || "",
             systemMessage,
+            tools: Array.isArray(payload.tools) ? payload.tools : [],
           }),
           new Promise<never>((_, reject) => {
             setTimeout(() => {
@@ -443,7 +443,7 @@ class LlmQueueProcessor {
 
     while (this.isRunning) {
       try {
-        const result = await redis.brpop(this.queueName, 2);
+        const result = await redisConsumer.brpop(this.queueName, 2);
         if (!result) continue;
 
         const [, rawPayload] = result;

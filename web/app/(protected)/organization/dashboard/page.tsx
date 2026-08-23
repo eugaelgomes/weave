@@ -40,7 +40,7 @@ const ProjectsPage = () => {
   // Assumindo que o seu useProjects expõe a lista de projetos e o estado de loading
   const { projects = [], loading: isLoading } = useProjects();
   const params = useParams();
-  
+
   const [searchTerm, setSearchTerm] = useState("");
 
   // Lógica de filtragem no client-side (ideal para dezenas/centenas de projetos)

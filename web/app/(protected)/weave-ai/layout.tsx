@@ -18,7 +18,7 @@ import { routes } from "@/app/_utils/routes";
 function WeaveAiSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const router = useRouter();
   const params = useParams();
-  
+
   const pathname = usePathname();
   const { t } = useLanguage();
 
@@ -244,9 +244,7 @@ function WeaveAiLayoutContent({ children }: { children: React.ReactNode }) {
   const isSandboxOpen = searchParams?.get("sandbox") === "1";
 
   return (
-    <ModuleLayout
-      header={<WeaveAIHeader />}
-    >
+    <ModuleLayout header={<WeaveAIHeader />}>
       <div className="custom-scrollbar flex h-full flex-1 flex-col overflow-auto text-neutral-900 dark:text-neutral-100">
         {children}
       </div>

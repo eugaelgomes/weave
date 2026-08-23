@@ -19,19 +19,6 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
   const { searchUsers } = useNotes();
   const { postProjectCollaborator } = useProjects();
 
-  if (!state.created.projectId) {
-    return (
-      <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
-        <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
-          <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
-          Crie o projeto no passo “Básico” para convidar pessoas.
-        </div>
-      </section>
-    );
-  }
-
-  const projectId = state.created.projectId;
-
   const [collabSearch, setCollabSearch] = useState("");
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
@@ -63,6 +50,19 @@ export function CollaboratorsStep({ state, actions }: CreateProjectWizardStepPro
     }, 400);
     return () => clearTimeout(t);
   }, [collabSearch, pendingIds, searchUsers]);
+
+  if (!state.created.projectId) {
+    return (
+      <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
+        <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
+          <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
+          Crie o projeto no passo “Básico” para convidar pessoas.
+        </div>
+      </section>
+    );
+  }
+
+  const projectId = state.created.projectId;
 
   const addPendingCollaborator = (user: SearchUser, role: string) => {
     actions.addCollaboratorDraft(user, role);

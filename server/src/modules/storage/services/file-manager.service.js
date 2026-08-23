@@ -4,7 +4,7 @@ const {
   CopyObjectCommand,
   PutObjectCommand,
 } = require("@aws-sdk/client-s3");
-const spacesService = require("@/services/storage/index");
+const spacesService = require("@/services/storage.service");
 
 const SYSTEM_RESERVED_ROOTS = [
   "agents",

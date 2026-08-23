@@ -10,6 +10,11 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
+  const channels = useMemo(() => {
+    const list = state.draft.reportForm.channels ?? [];
+    return list.length ? list : (["in_app"] as ("in_app" | "email")[]);
+  }, [state.draft.reportForm.channels]);
+
   if (!state.created.projectId) {
     return (
       <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
@@ -22,11 +27,6 @@ export function AiReportsStep({ state, actions }: CreateProjectWizardStepProps) 
   }
 
   const projectId = state.created.projectId;
-
-  const channels = useMemo(() => {
-    const list = state.draft.reportForm.channels ?? [];
-    return list.length ? list : (["in_app"] as ("in_app" | "email")[]);
-  }, [state.draft.reportForm.channels]);
 
   const onApplyAndContinue = async () => {
     if (!projectId) return;

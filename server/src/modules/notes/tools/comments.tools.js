@@ -2,11 +2,11 @@ const { manageNoteCommentsSchema } = require("../schemas/tools.schema");
 const { NotesCommentsService } = require("../services/notes-comments.service");
 const notesCommentsRepository = require("@/modules/notes/repositories/notes-comments.repository");
 const { API_SCOPES } = require("@/config/api-scopes");
-const spacesService = require("@/services/storage/index");
+const spacesService = require("@/services/storage.service");
 const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 const { enrichWithAppUrl } = require("@/utils/url.util");
 const { markdownToBlocks } = require("@/modules/agent-house/utils/markdown-to-blocks.util");
-const { serializeBlocksToMarkdown } = require("@/services/reasoning/notes-to-markdown");
+const { serializeBlocksToMarkdown } = require("@/modules/notes/utils/blocks-to-markdown.util");
 
 const createCommentsTools = (user) => ({
   manage_note_comments: {

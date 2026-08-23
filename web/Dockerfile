@@ -58,4 +58,4 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["doppler", "run", "--project", "theweave", "--config", "prd", "--", "npm", "start"]
+CMD ["npm", "start"]

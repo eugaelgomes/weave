@@ -76,57 +76,57 @@ export function createChatModel(options: ModelFactoryOptions): BaseChatModel {
   switch (provider.toLowerCase()) {
     case "anthropic":
       return new ChatAnthropic({
-        modelName: model,
         apiKey,
         clientOptions: baseURL ? { baseURL } : undefined,
-        streaming: streaming ?? true,
         maxTokens: thinking?.enabled && thinking.budgetTokens ? undefined : 4096,
+        modelName: model,
+        streaming: streaming ?? true,
         thinking: thinking?.enabled
           ? {
-              type: "enabled",
               budget_tokens: thinking.budgetTokens || 1024,
+              type: "enabled",
             }
           : undefined,
       });
 
     case "deepseek":
       return new ChatOpenAI({
+        configuration: { baseURL: baseURL || "https://api.deepseek.com" },
+        maxTokens: 4096,
         modelName: model,
         openAIApiKey: apiKey,
-        configuration: { baseURL: baseURL || "https://api.deepseek.com" },
         streaming: streaming ?? true,
-        maxTokens: 4096,
       });
 
     case "kimi":
     case "moonshot":
       return new ChatOpenAI({
+        configuration: { baseURL: baseURL || "https://api.moonshot.cn/v1" },
+        maxTokens: 4096,
         modelName: model,
         openAIApiKey: apiKey,
-        configuration: { baseURL: baseURL || "https://api.moonshot.cn/v1" },
         streaming: streaming ?? true,
-        maxTokens: 4096,
       });
 
     case "xai":
     case "grok":
       return new ChatOpenAI({
+        configuration: { baseURL: baseURL || "https://api.x.ai/v1" },
+        maxTokens: 4096,
         modelName: model,
         openAIApiKey: apiKey,
-        configuration: { baseURL: baseURL || "https://api.x.ai/v1" },
         streaming: streaming ?? true,
-        maxTokens: 4096,
       });
 
     case "openai":
     default:
       // Default to OpenAI-compatible provider
       return new ChatOpenAI({
+        configuration: baseURL ? { baseURL } : undefined,
+        maxTokens: 4096,
         modelName: model,
         openAIApiKey: apiKey,
-        configuration: baseURL ? { baseURL } : undefined,
         streaming: streaming ?? true,
-        maxTokens: 4096,
       });
   }
 }
@@ -141,18 +141,18 @@ function convertToLangChainMessages(
   if (systemMessage) {
     lcMessages.push(new SystemMessage(systemMessage));
   }
-  
+
   for (const msg of history as any[]) {
     if (msg.role === "user") {
       lcMessages.push(new HumanMessage({ content: msg.content }));
     } else if (msg.role === "assistant") {
       if (msg.tool_calls && msg.tool_calls.length > 0) {
-         lcMessages.push(new AIMessage({ 
-           content: msg.content || "", 
+         lcMessages.push(new AIMessage({
+           content: msg.content || "",
            tool_calls: msg.tool_calls.map((t: any) => ({
+             args: typeof t.function.arguments === "string" ? JSON.parse(t.function.arguments) : t.function.arguments,
              id: t.id,
-             name: t.function.name,
-             args: typeof t.function.arguments === "string" ? JSON.parse(t.function.arguments) : t.function.arguments
+             name: t.function.name
            }))
          }));
       } else {
@@ -161,17 +161,17 @@ function convertToLangChainMessages(
     } else if (msg.role === "tool") {
       lcMessages.push(new ToolMessage({
          content: msg.content || "",
-         tool_call_id: msg.tool_call_id,
-         name: msg.name
+         name: msg.name,
+         tool_call_id: msg.tool_call_id
       }));
     }
   }
 
   if (files && files.length > 0) {
-    const contentParts: any[] = [{ type: "text", text: userMessage }];
+    const contentParts: any[] = [{ text: userMessage, type: "text" }];
     for (const f of files as any[]) {
       if (f.type === "image_url") {
-         contentParts.push({ type: "image_url", image_url: { url: f.image_url.url } });
+         contentParts.push({ image_url: { url: f.image_url.url }, type: "image_url" });
       }
     }
     lcMessages.push(new HumanMessage({ content: contentParts }));
@@ -214,20 +214,20 @@ export async function executeTask({
     availableTools.push(...(mcpTools as ToolSchema[]));
   }
 
-  let messages = convertToLangChainMessages(systemMessage, conversationHistory, message, files);
+  const messages = convertToLangChainMessages(systemMessage, conversationHistory, message, files);
 
   let chatModel = createChatModel({
-    provider: executionContext.provider,
-    model,
     apiKey: executionContext.apiKey,
     baseURL: executionContext.baseURL,
+    model,
+    provider: executionContext.provider,
+    streaming: Boolean(executionContext.onChunk),
     thinking: executionContext.thinking
       ? {
-          enabled: true,
           budgetTokens: typeof executionContext.thinking === "object" ? (executionContext.thinking as any).budget_tokens : undefined,
+          enabled: true,
         }
       : undefined,
-    streaming: Boolean(executionContext.onChunk),
   });
 
   if (availableTools.length > 0) {
@@ -248,7 +248,7 @@ export async function executeTask({
     let llmSpanId: string | undefined;
     if (executionContext.traceId && executionContext.organizationId) {
       llmSpanId = await Tracer.startSpan(
-        { traceId: executionContext.traceId, organizationId: executionContext.organizationId },
+        { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
         `llm_call:${model}`, "llm", { model }
       );
     }
@@ -261,7 +261,7 @@ export async function executeTask({
         for await (const chunk of stream) {
           if (!fullMessage) fullMessage = chunk as AIMessage;
           else fullMessage = (fullMessage as any).concat(chunk) as AIMessage;
-          
+
           if (chunk.content) {
              executionContext.onChunk(chunk.content as string);
           }
@@ -274,16 +274,16 @@ export async function executeTask({
       if (llmSpanId && executionContext.traceId && executionContext.organizationId) {
         await Tracer.endSpan(
           llmSpanId,
-          { traceId: executionContext.traceId, organizationId: executionContext.organizationId },
-          { status: "success", completion_tokens: aiMessage.usage_metadata?.output_tokens || 0 }
+          { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
+          { completion_tokens: aiMessage.usage_metadata?.output_tokens || 0, status: "success" }
         );
       }
     } catch (err: unknown) {
       if (llmSpanId && executionContext.traceId && executionContext.organizationId) {
         await Tracer.endSpan(
           llmSpanId,
-          { traceId: executionContext.traceId, organizationId: executionContext.organizationId },
-          { status: "error", error_message: (err as Error).message }
+          { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
+          { error_message: (err as Error).message, status: "error" }
         );
       }
       throw err;
@@ -305,7 +305,7 @@ export async function executeTask({
                let spanId: string | undefined;
                if (executionContext.traceId && executionContext.organizationId) {
                  spanId = await Tracer.startSpan(
-                   { traceId: executionContext.traceId, organizationId: executionContext.organizationId },
+                   { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
                    tc.name, "tool", tc.args
                  );
                }
@@ -314,14 +314,14 @@ export async function executeTask({
                  const result = await executeInternalTool(tc.name, tc.args as any, executionContext as any);
                  if (executionContext.onChunk) executionContext.onChunk({ name: tc.name, status: "completed", success: true, type: "action_state" });
                  if (spanId && executionContext.traceId && executionContext.organizationId) {
-                   await Tracer.endSpan(spanId, { traceId: executionContext.traceId, organizationId: executionContext.organizationId }, { status: "success", output: result });
+                   await Tracer.endSpan(spanId, { organizationId: executionContext.organizationId, traceId: executionContext.traceId }, { output: result, status: "success" });
                  }
                  return { error: null, result, tc };
                } catch (err: unknown) {
                  const errorMessage = (err as Error).message;
                  if (executionContext.onChunk) executionContext.onChunk({ name: tc.name, status: "completed", success: false, type: "action_state" });
                  if (spanId && executionContext.traceId && executionContext.organizationId) {
-                   await Tracer.endSpan(spanId, { traceId: executionContext.traceId, organizationId: executionContext.organizationId }, { status: "error", error_message: errorMessage });
+                   await Tracer.endSpan(spanId, { organizationId: executionContext.organizationId, traceId: executionContext.traceId }, { error_message: errorMessage, status: "error" });
                  }
                  return { error: errorMessage || "Tool execution failed", result: null, tc };
                }
@@ -349,7 +349,7 @@ export async function executeTask({
           continue;
        } else {
          return {
-           data: { type: "function_call", toolCalls: aiMessage.tool_calls.map(tc => ({ name: tc.name, arguments: tc.args, id: tc.id })) },
+           data: { toolCalls: aiMessage.tool_calls.map(tc => ({ arguments: tc.args, id: tc.id, name: tc.name })), type: "function_call" },
            executedActions,
            providerUsed: executionContext.provider
          };
@@ -359,9 +359,9 @@ export async function executeTask({
     return {
       data: {
         content: typeof aiMessage.content === "string" ? aiMessage.content : JSON.stringify(aiMessage.content),
+        resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined,
         text: typeof aiMessage.content === "string" ? aiMessage.content : JSON.stringify(aiMessage.content),
         type: "text",
-        resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined,
       },
       executedActions,
       providerUsed: executionContext.provider,

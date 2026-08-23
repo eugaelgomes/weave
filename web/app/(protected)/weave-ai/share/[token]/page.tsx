@@ -13,7 +13,7 @@ import {
 
 export default function SharedChatPreviewPage() {
   const params = useParams();
-  
+
   const token = params?.token as string;
   const router = useRouter();
   const { t, locale } = useLanguage();

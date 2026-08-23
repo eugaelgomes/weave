@@ -991,7 +991,6 @@ export default function ProjectBoardV2({
   const { updateProjectNoteStage } = useProjects();
   const [activeNote, setActiveNote] = useState<any>(null);
   const params = useParams();
-  
 
   const handleOpenNote = useCallback(
     (noteId: string) => {

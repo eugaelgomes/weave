@@ -1,3 +1,4 @@
 setup:
-  project: theweave
+  project: weave
   config: dev
+

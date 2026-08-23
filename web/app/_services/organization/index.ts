@@ -1065,7 +1065,9 @@ export interface UserWorkspaceSummary {
 export const fetchMyOrganizations = async (): Promise<UserWorkspaceSummary[]> => {
   try {
     const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_MY_ORGANIZATIONS);
-    const data = await handleResponse<{ data?: UserWorkspaceSummary[]; success?: boolean }>(response);
+    const data = await handleResponse<{ data?: UserWorkspaceSummary[]; success?: boolean }>(
+      response
+    );
     if (data.data && Array.isArray(data.data)) {
       return data.data;
     }

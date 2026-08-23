@@ -1,9 +1,6 @@
 #!/bin/sh
 set -e
 
-# When the app directory is bind-mounted from the host, image `node_modules` is hidden.
-# If the host tree is empty or stale, `npm ci` restores packages from `package-lock.json`
-# (no need to run npm on the host for Docker-only workflows).
 if [ "${WEAVE_APP_AUTO_DEPS:-0}" = "1" ] && [ -f package-lock.json ]; then
   if ! npm ls --depth=0 >/dev/null 2>&1; then
     echo "weave-app: node_modules out of sync with lockfile — running npm ci..."
@@ -11,5 +8,15 @@ if [ "${WEAVE_APP_AUTO_DEPS:-0}" = "1" ] && [ -f package-lock.json ]; then
   fi
 fi
 
-# CMD is wrapped with `doppler run --` in the Dockerfile; avoid double-wrapping here.
-exec "$@"
+USE_DOPPLER_FLAG="${USE_DOPPLER:-${DOPPLER_ENABLE:-true}}"
+
+if [ "$USE_DOPPLER_FLAG" = "false" ] || [ "$USE_DOPPLER_FLAG" = "0" ] || [ -z "$DOPPLER_TOKEN" ]; then
+  echo "[docker-entrypoint] Running without Doppler..."
+  exec "$@"
+fi
+
+PROJECT="${DOPPLER_PROJECT:-weave}"
+CONFIG="${DOPPLER_CONFIG:-prd}"
+
+echo "[docker-entrypoint] Running command with Doppler (project: $PROJECT, config: $CONFIG)..."
+exec doppler run --project "$PROJECT" --config "$CONFIG" -- "$@"

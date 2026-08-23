@@ -6,7 +6,6 @@ const {
   notes,
   organizations,
   plans,
-  storage,
   tracing,
   "weave-ai": weaveAi,
 } = require("./modules");

@@ -73,7 +73,7 @@ export default function ProjectsCarousel({
 }: ProjectsCarouselProps) {
   const projects = (initialProjects || []).slice(0, 10);
   const params = useParams();
-  
+
   const { t, locale } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);

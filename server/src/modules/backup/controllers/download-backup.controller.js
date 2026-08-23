@@ -1,6 +1,6 @@
 const BackupBaseController = require("./base.controller");
 const BackupDownloadTokensRepository = require("@/modules/backup/repositories/backup-download-tokens.repository");
-const storageService = require("@/services/storage/index");
+const storageService = require("@/services/storage.service");
 
 /**
  * Public download by token (route without `verifyToken`).

@@ -74,7 +74,7 @@ export function AgentForm({
 }) {
   const router = useRouter();
   const params = useParams();
-  
+
   const { createAgent, updateAgent, agentProviders, duplicateAgent, toggleAgentActive } =
     useAgent();
   const [loading, setLoading] = useState(false);
@@ -562,8 +562,8 @@ function AgentDetailSkeleton() {
 }
 
 export default function AgentDetailPage() {
-  const params = useParams<{ id: string; }>();
-  
+  const params = useParams<{ id: string }>();
+
   const idParam = params?.id;
   const id = Array.isArray(idParam) ? idParam[0] : idParam;
   const { getAgent } = useAgent();

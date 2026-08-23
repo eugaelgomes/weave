@@ -41,7 +41,7 @@ function processInline(line) {
   result = result.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
   // Strikethrough: ~~text~~
-  result = result.replace(/~~(.+?)~~/g, '<span style="text-decoration: line-through;">$1</span>');
+  result = result.replace(/~~(.+?)~~/g, "<span style=\"text-decoration: line-through;\">$1</span>");
 
   // Inline code: `text`
   result = result.replace(
@@ -58,7 +58,7 @@ function processInline(line) {
   // Highlight: ==text==
   result = result.replace(
     /==(.+?)==/g,
-    '<mark style="background: #FEF3C7; padding: 1px 3px; border-radius: 2px;">$1</mark>'
+    "<mark style=\"background: #FEF3C7; padding: 1px 3px; border-radius: 2px;\">$1</mark>"
   );
 
   // Underline: <u>text</u> (already HTML, just unescape)

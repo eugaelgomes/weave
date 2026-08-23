@@ -70,7 +70,6 @@ export function TaskNoteModalProvider({ children }: { children: React.ReactNode 
   const [state, setState] = useState<TaskNoteModalState>(initialState);
   const [callbacks, setCallbacks] = useState<TaskNoteModalCallbacks>({});
   const params = useParams();
-  
 
   const openModal = useCallback<TaskNoteModalContextType["openModal"]>((mode, options = {}) => {
     setState({

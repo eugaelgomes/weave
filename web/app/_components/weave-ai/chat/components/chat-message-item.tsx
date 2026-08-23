@@ -170,8 +170,7 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                     const project = Array.isArray(projectsOverview)
                       ? projectsOverview.find((p: any) => p.id === projectId)
                       : null;
-                    const href = routes.projects.board((project as any)?.public_id || projectId
-                    );
+                    const href = routes.projects.board((project as any)?.public_id || projectId);
                     const projectIcon =
                       (project as any)?.icon || (project as any)?.properties?.icon;
                     return (
@@ -467,7 +466,8 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                             let resolvedHref = href;
                             // Link resolution is handled centrally
                             if (project) {
-                              resolvedHref = routes.projects.board((project as any).public_id || entityId
+                              resolvedHref = routes.projects.board(
+                                (project as any).public_id || entityId
                               );
                             }
                             const projectIcon = (project as any)?.icon;
@@ -495,7 +495,8 @@ export function ChatMessageItem(props: ChatMessageItemProps) {
                             let resolvedHref = href;
                             // Link resolution is handled centrally
                             if (note) {
-                              resolvedHref = routes.notes.details((note as any).public_id || entityId
+                              resolvedHref = routes.notes.details(
+                                (note as any).public_id || entityId
                               );
                             }
                             const noteIcon = (note as any)?.properties?.icon;

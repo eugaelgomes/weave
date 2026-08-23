@@ -23,6 +23,14 @@ for PORT in "${TARGET_PORTS[@]}"; do
   fi
 done
 
+# Clean any lingering next dev processes
+NEXT_PIDS=$(pgrep -f "next dev" 2>/dev/null)
+if [ -n "$NEXT_PIDS" ]; then
+  echo "[clean-ports] Terminating lingering next dev processes (PIDs: $(echo $NEXT_PIDS | tr '\n' ' '))..."
+  kill -9 $NEXT_PIDS 2>/dev/null || true
+  KILLED_ANY=true
+fi
+
 if [ "$KILLED_ANY" = true ]; then
   echo "[clean-ports] Port cleanup complete."
 else

@@ -19,8 +19,7 @@ export const routes = {
     new: () => `/projects/new/`,
     details: (projectId: string) => `/projects/${projectId}/details/`,
     board: (projectId: string) => `/projects/${projectId}/`,
-    task: (projectId: string, taskId: string) =>
-      `/projects/${projectId}/tasks/${taskId}/`,
+    task: (projectId: string, taskId: string) => `/projects/${projectId}/tasks/${taskId}/`,
   },
 
   notes: {

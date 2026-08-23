@@ -239,11 +239,7 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
   );
 
   return (
-    <ModuleLayout
-      header={<WorkspaceHeader type={activeLeaf.type} />}
-    >
-      {children}
-    </ModuleLayout>
+    <ModuleLayout header={<WorkspaceHeader type={activeLeaf.type} />}>{children}</ModuleLayout>
   );
 }
 

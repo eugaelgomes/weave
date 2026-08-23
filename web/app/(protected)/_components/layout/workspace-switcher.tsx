@@ -4,7 +4,11 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { ChevronDown, Check, Plus, Loader2, Building2, X } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { fetchMyOrganizations, type UserWorkspaceSummary, createOrganization } from "@/app/_services/organization";
+import {
+  fetchMyOrganizations,
+  type UserWorkspaceSummary,
+  createOrganization,
+} from "@/app/_services/organization";
 import { cn } from "@/lib/utils";
 
 export const WorkspaceSwitcher = () => {
@@ -13,7 +17,7 @@ export const WorkspaceSwitcher = () => {
   const [workspaces, setWorkspaces] = useState<UserWorkspaceSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
-  
+
   // Create Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newOrgName, setNewOrgName] = useState("");
@@ -109,7 +113,7 @@ export const WorkspaceSwitcher = () => {
           className={cn(
             "group flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-700 transition-all duration-150",
             "hover:bg-black/5 dark:text-gray-200 dark:hover:bg-white/10",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary-500/50",
+            "focus-visible:ring-brand-primary-500/50 focus-visible:ring-2 focus-visible:outline-none",
             isOpen && "bg-black/5 dark:bg-white/10"
           )}
           aria-expanded={isOpen}
@@ -147,10 +151,10 @@ export const WorkspaceSwitcher = () => {
         </button>
 
         {isOpen && (
-          <div className="absolute top-full left-0 z-50 mt-1.5 w-60 origin-top-left rounded-xl border border-gray-200/80 bg-white/95 p-1 shadow-2xl backdrop-blur-lg transition-all animate-in fade-in-50 zoom-in-95 dark:border-white/10 dark:bg-[#20201e]/95">
+          <div className="animate-in fade-in-50 zoom-in-95 absolute top-full left-0 z-50 mt-1.5 w-60 origin-top-left rounded-xl border border-gray-200/80 bg-white/95 p-1 shadow-2xl backdrop-blur-lg transition-all dark:border-white/10 dark:bg-[#20201e]/95">
             {loading && workspaces.length === 0 ? (
               <div className="flex items-center justify-center p-4 text-xs text-gray-500 dark:text-gray-400">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin text-brand-primary-500" />
+                <Loader2 className="text-brand-primary-500 mr-2 h-4 w-4 animate-spin" />
                 Carregando...
               </div>
             ) : (
@@ -199,7 +203,7 @@ export const WorkspaceSwitcher = () => {
 
                       <div className="flex shrink-0 items-center gap-1">
                         {isCurrentlySwitching ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-primary-500" />
+                          <Loader2 className="text-brand-primary-500 h-3.5 w-3.5 animate-spin" />
                         ) : isActive ? (
                           <Check className="h-3.5 w-3.5 text-gray-900 dark:text-white" />
                         ) : null}
@@ -229,7 +233,7 @@ export const WorkspaceSwitcher = () => {
 
       {/* Modal Criar Workspace */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in-50">
+        <div className="animate-in fade-in-50 fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#1d1d1b]">
             <div className="flex items-center justify-between pb-4">
               <div className="flex items-center gap-2">
@@ -266,7 +270,7 @@ export const WorkspaceSwitcher = () => {
                   value={newOrgName}
                   onChange={(e) => setNewOrgName(e.target.value)}
                   placeholder="Ex: Minha Empresa"
-                  className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 placeholder-gray-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-white dark:focus:ring-white"
+                  className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-white dark:focus:ring-white"
                   autoFocus
                 />
               </div>

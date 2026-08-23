@@ -149,7 +149,7 @@ function NavItem({ item, pathname, isCollapsed, onLinkClick, t }: NavItemProps) 
           aria-label={item.label}
           className={cn(
             "group flex min-w-0 flex-1 items-center",
-            isCollapsed ? "justify-center w-full gap-0" : "gap-1.5"
+            isCollapsed ? "w-full justify-center gap-0" : "gap-1.5"
           )}
         >
           <span
@@ -163,7 +163,7 @@ function NavItem({ item, pathname, isCollapsed, onLinkClick, t }: NavItemProps) 
               className={cn(
                 "size-3.5 shrink-0 transition-colors",
                 active
-                  ? "text-slate-950 dark:text-white font-medium"
+                  ? "font-medium text-slate-950 dark:text-white"
                   : "text-gray-700 group-hover:text-slate-950 dark:text-gray-300 dark:group-hover:text-white"
               )}
             />
@@ -251,7 +251,7 @@ function RecentItems({
                   title={item.title}
                   className={cn(
                     "group flex min-w-0 flex-1 items-center",
-                    isCollapsed ? "justify-center w-full gap-0" : "gap-2"
+                    isCollapsed ? "w-full justify-center gap-0" : "gap-2"
                   )}
                 >
                   <span
@@ -432,6 +432,10 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
+  const projectsCtx = useProjects();
+  const { chatHistory } = useChat();
+  const { isModuleActive } = useModules();
+
   useEffect(() => {
     // No sub-items to expand currently
   }, [pathname, isCollapsed]);
@@ -445,11 +449,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   };
 
   if (!authenticated) return null;
-
-  // Projects and Chats for Recent Items
-  const projectsCtx = useProjects();
-  const { chatHistory } = useChat();
-  const { isModuleActive } = useModules();
 
   const hasOrg = !!user?.org_id;
   const orgPrefix = user?.org_public_id
@@ -465,21 +464,41 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
         { path: "/chat", icon: MessageCircle, label: "Chat" },
         isModuleActive("agent_house") && { path: "/weave-ai/agents", icon: Bot, label: "Agentes" },
         isModuleActive("agent_house") && { path: "/weave-ai/llms", icon: Cpu, label: "Provedores" },
-        isModuleActive("agent_house") && { path: "/weave-ai/tools", icon: Wrench, label: "Ferramentas & MCP" },
+        isModuleActive("agent_house") && {
+          path: "/weave-ai/tools",
+          icon: Wrench,
+          label: "Ferramentas & MCP",
+        },
         isModuleActive("weave_flow") && { path: "/weave-flow", icon: Workflow, label: "Flow" },
       ].filter(Boolean) as NavigationItem[],
     },
     {
       title: "Workspace",
       items: [
-        isModuleActive("notes") && { path: "/notes", icon: NotebookPen, label: t.nav.notes || "Notas" },
-        isModuleActive("projects") && { path: "/projects", icon: Folder, label: t.nav.projects || "Projetos" },
+        isModuleActive("notes") && {
+          path: "/notes",
+          icon: NotebookPen,
+          label: t.nav.notes || "Notas",
+        },
+        isModuleActive("projects") && {
+          path: "/projects",
+          icon: Folder,
+          label: t.nav.projects || "Projetos",
+        },
         { path: "/calendar", icon: Calendar, label: "Agenda & Calendário" },
         hasOrg && { path: "/organization/general", icon: Building2, label: "Visão Geral" },
         hasOrg && { path: "/organization/members/list", icon: Users, label: "Membros & Usuários" },
-        hasOrg && { path: "/organization/integrations", icon: Puzzle, label: "Integrações & Chaves API" },
+        hasOrg && {
+          path: "/organization/integrations",
+          icon: Puzzle,
+          label: "Integrações & Chaves API",
+        },
         hasOrg && { path: "/organization/plans", icon: CreditCard, label: "Planos & Faturamento" },
-        hasOrg && { path: "/organization/settings", icon: Sliders, label: "Configurações do Workspace" },
+        hasOrg && {
+          path: "/organization/settings",
+          icon: Sliders,
+          label: "Configurações do Workspace",
+        },
       ].filter(Boolean) as NavigationItem[],
     },
   ].filter(Boolean) as NavigationSectionData[];

@@ -46,7 +46,7 @@ export default function NotesCarousel({
 }: NotesCarouselProps) {
   const notes = (initialNotes || []).slice(0, 10);
   const params = useParams();
-  
+
   const { t, locale } = useLanguage();
   const { openModal } = useTaskNoteModal();
   const [currentSlide, setCurrentSlide] = useState(0);

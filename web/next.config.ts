@@ -99,7 +99,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   trailingSlash: true,
 
-  // turbopack root foi removido pois no novo formato de monorepo 
+  // turbopack root foi removido pois no novo formato de monorepo
   // os pacotes (incluindo next) são "hoisted" para a raiz.
 
   // Redirects de rotas públicas removidas (agora no blog subdomain)

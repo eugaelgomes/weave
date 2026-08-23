@@ -75,11 +75,11 @@ case "$SERVICE" in
     ;;
 esac
 
-TARGET_HOST=${HOST:-${REMOTE_HOST:-$(fetch_doppler_sec theweave REMOTE_HOST)}}
-TARGET_USER=${USER:-${REMOTE_USER:-$(fetch_doppler_sec theweave REMOTE_USER)}}
+TARGET_HOST=${HOST:-${REMOTE_HOST:-$(fetch_doppler_sec weave REMOTE_HOST)}}
+TARGET_USER=${USER:-${REMOTE_USER:-$(fetch_doppler_sec weave REMOTE_USER)}}
 TARGET_USER=${TARGET_USER:-ubuntu}
 APP_DIR=${APP_DIR:-"/home/$TARGET_USER/theweave"}
-DOPPLER_TOKEN_VAL=${DOPPLER_TOKEN:-$(fetch_doppler_sec theweave DOPPLER_TOKEN)}
+DOPPLER_TOKEN_VAL=${DOPPLER_TOKEN:-$(fetch_doppler_sec weave DOPPLER_TOKEN)}
 
 if [ -z "$TARGET_HOST" ]; then
   echo "Error: Remote host not found."

@@ -136,7 +136,7 @@ function AgentCard({ agent, onOpen }: { agent: Agent; onOpen: () => void }) {
 export default function AgentsOverviewPage() {
   const router = useRouter();
   const params = useParams();
-  
+
   const { agents } = useAgent();
   const [query, setQuery] = useState("");
   const [providerFilter, setProviderFilter] = useState<"all" | "gemini" | "perplexity">("all");

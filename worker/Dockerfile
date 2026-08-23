@@ -32,4 +32,4 @@ RUN chmod +x /app/weave-worker/docker-entrypoint.sh
 WORKDIR /app/weave-worker
 EXPOSE 8081
 ENTRYPOINT ["/app/weave-worker/docker-entrypoint.sh"]
-CMD ["doppler", "run", "--project", "theweave", "--config", "prd", "--", "npm", "start"]
+CMD ["npm", "start"]

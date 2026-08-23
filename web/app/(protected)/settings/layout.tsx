@@ -116,13 +116,7 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
     </div>
   );
 
-  return (
-    <ModuleLayout
-      header={<SettingsHeader type={activeItem.type} />}
-    >
-      {children}
-    </ModuleLayout>
-  );
+  return <ModuleLayout header={<SettingsHeader type={activeItem.type} />}>{children}</ModuleLayout>;
 }
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

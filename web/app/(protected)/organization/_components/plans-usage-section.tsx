@@ -23,7 +23,7 @@ export function PlansUsageSection({
 }: PlansUsageSectionProps) {
   const { t } = useLanguage();
   const params = useParams();
-  
+
   const currentPlan = organization?.plan_name || "Free";
   const planValue = organization?.plan_value || 0;
   const currency = organization?.currency || "BRL";

@@ -4,10 +4,7 @@ import { type Organization, type OrganizationProperties } from "@/app/_services/
 import { type OrganizationStats } from "@/app/_contexts/organization-context";
 import { Settings, Bell, Layers, ShieldAlert, MapPin, Network } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
-import {
-  Toggle,
-  Select,
-} from "@/app/(protected)/organization/general/_components/form-primitives";
+import { Toggle, Select } from "@/app/(protected)/organization/general/_components/form-primitives";
 import {
   type OnDirectPropertyChange,
   type OnNestedPropertyChange,

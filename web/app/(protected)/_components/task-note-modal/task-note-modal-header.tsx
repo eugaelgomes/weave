@@ -75,7 +75,6 @@ export function TaskNoteModalHeader({
 }: TaskNoteModalHeaderProps) {
   const router = useRouter();
   const params = useParams();
-  
 
   const handleOpenFullPage = () => {
     if (note) {

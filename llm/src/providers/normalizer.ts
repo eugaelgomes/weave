@@ -33,7 +33,7 @@ export async function callLLMProvider(params: LLMRequestParams): Promise<CallLLM
   try {
     let data: LLMResponse;
     const prov = params.provider.toLowerCase();
-    
+
     if (prov === "anthropic") {
       data = await callAnthropicProvider(params);
     } else if (prov === "deepseek") {
@@ -45,7 +45,7 @@ export async function callLLMProvider(params: LLMRequestParams): Promise<CallLLM
     } else {
       data = await callOpenAICompatProvider(params);
     }
-    
+
     return { data, model: params.model, provider: params.provider };
   } catch (error: unknown) {
     const err = error as Error & { code?: string; response?: Record<string, unknown> };

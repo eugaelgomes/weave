@@ -24,15 +24,15 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
     : "https://api.deepseek.com/chat/completions";
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
   };
 
   // --- Build messages ---
   const messages: Record<string, unknown>[] = [];
 
   if (params.systemMessage) {
-    messages.push({ role: "system", content: params.systemMessage });
+    messages.push({ content: params.systemMessage, role: "system" });
   }
 
   if (Array.isArray(params.messages)) {
@@ -45,12 +45,12 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
 
       if (msg.role === "assistant" && msg.tool_calls) {
         clean.tool_calls = msg.tool_calls.map((tc) => ({
+          function: {
+            arguments: tc.function.arguments,
+            name: tc.function.name,
+          },
           id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}`,
           type: "function",
-          function: {
-            name: tc.function.name,
-            arguments: tc.function.arguments,
-          },
         }));
       }
 
@@ -73,15 +73,15 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
   const userContent: Record<string, unknown>[] = [];
 
   if (params.prompt) {
-    userContent.push({ type: "text", text: params.prompt });
+    userContent.push({ text: params.prompt, type: "text" });
   }
 
   const normalizedFiles = normalizeFiles(params.files);
   for (const file of normalizedFiles) {
     if (file.mimeType.startsWith("image/")) {
       userContent.push({
-        type: "image_url",
         image_url: { url: `data:${file.mimeType};base64,${file.base64Data}` },
+        type: "image_url",
       });
     } else if (
       file.mimeType === "application/pdf" ||
@@ -91,8 +91,8 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
       try {
         const text = Buffer.from(file.base64Data, "base64").toString("utf-8");
         userContent.push({
-          type: "text",
           text: `\n\n--- FILE: ${file.name} ---\n${text}\n--- END ---`,
+          type: "text",
         });
       } catch {
         /* skip */
@@ -101,11 +101,11 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
   }
 
   if (userContent.length > 0) {
-    messages.push({ role: "user", content: userContent });
+    messages.push({ content: userContent, role: "user" });
   }
 
   // --- Build request body ---
-  const body: Record<string, unknown> = { model, messages };
+  const body: Record<string, unknown> = { messages, model };
 
   if (params.temperature !== undefined) body.temperature = params.temperature;
   if (params.topP !== undefined) body.top_p = params.topP;
@@ -116,8 +116,8 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
     const thinkingParam = params.thinking as unknown as Record<string, unknown>;
     if (thinkingParam.type === "enabled" || thinkingParam.enabled === true) {
       body.thinking = {
-        type: "enabled",
         budget_tokens: thinkingParam.budget_tokens || thinkingParam.budgetTokens || 8000,
+        type: "enabled",
       };
       // reasoning_effort is mutually exclusive with thinking object
       // use thinking.budget_tokens instead
@@ -189,9 +189,9 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
               const idx = tc.index ?? (finalToolCalls.length > 0 ? finalToolCalls.length - 1 : 0);
               if (!finalToolCalls[idx]) {
                 finalToolCalls[idx] = {
+                  function: { arguments: "", name: "" },
                   id: tc.id,
                   type: "function",
-                  function: { name: "", arguments: "" },
                 };
               }
               if (tc.id && !finalToolCalls[idx].id) finalToolCalls[idx].id = tc.id;
@@ -212,31 +212,31 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
       ? {
           inputTokens: (finalUsage.prompt_tokens as number) || 0,
           outputTokens: (finalUsage.completion_tokens as number) || 0,
-          totalTokens: (finalUsage.total_tokens as number) || 0,
           thinkingTokens:
             (
               (finalUsage.completion_tokens_details as Record<string, unknown>)
                 ?.reasoning_tokens as number
             ) || 0,
+          totalTokens: (finalUsage.total_tokens as number) || 0,
         }
       : null;
 
     if (finalToolCalls && finalToolCalls.length > 0) {
       const toolCalls = parseAccumulatedToolCalls(finalToolCalls);
       return {
-        type: "function_call",
-        text: null,
         functionCall: {
-          name: toolCalls[0].name,
           arguments: toolCalls[0].arguments,
+          name: toolCalls[0].name,
         },
+        text: null,
         toolCallId: finalToolCalls[0].id,
         toolCalls,
+        type: "function_call",
         usage,
       };
     }
 
-    return { type: "text", text: fullContent, functionCall: null, usage };
+    return { functionCall: null, text: fullContent, type: "text", usage };
   }
 
   // --- Non-streaming ---
@@ -251,9 +251,9 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
     ? {
         inputTokens: usageData.prompt_tokens || 0,
         outputTokens: usageData.completion_tokens || 0,
-        totalTokens: usageData.total_tokens || 0,
         thinkingTokens:
           usageData.completion_tokens_details?.reasoning_tokens || 0,
+        totalTokens: usageData.total_tokens || 0,
       }
     : null;
 
@@ -269,28 +269,28 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
     const toolCalls: ToolCallResult[] = msg.tool_calls.map((tc: Record<string, unknown>) => {
       const fn = (tc.function || {}) as Record<string, unknown>;
       return {
+        arguments: safeParse(fn.arguments as string),
         id: tc.id as string,
         name: fn.name as string,
-        arguments: safeParse(fn.arguments as string),
       };
     });
     return {
-      type: "function_call",
-      text: null,
       functionCall: {
-        name: (first.function as Record<string, unknown>).name as string,
         arguments: safeParse((first.function as Record<string, unknown>).arguments as string),
+        name: (first.function as Record<string, unknown>).name as string,
       },
+      text: null,
       toolCallId: first.id as string,
       toolCalls,
+      type: "function_call",
       usage,
     };
   }
 
   return {
-    type: "text",
-    text: msg?.content || "",
     functionCall: null,
+    text: msg?.content || "",
+    type: "text",
     usage,
   };
 }

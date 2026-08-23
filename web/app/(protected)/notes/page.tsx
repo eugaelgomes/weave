@@ -145,7 +145,6 @@ function formatShortDateTime(date: string | null | undefined): string {
 const NotesWithPagination = () => {
   const router = useRouter();
   const params = useParams();
-  
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -1101,9 +1100,7 @@ const NotesWithPagination = () => {
                       </div>
                     )}
                     <Link
-                      href={
-                        selectionMode ? "#" : routes.notes.details(note.public_id || note.id)
-                      }
+                      href={selectionMode ? "#" : routes.notes.details(note.public_id || note.id)}
                       onClick={(e) => {
                         if (selectionMode) {
                           e.preventDefault();

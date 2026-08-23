@@ -58,33 +58,23 @@ function TaskNoteModalInner() {
 
   const notesContext = useContext(NotesContext);
   const projectsContext = useContext(ProjectsContext);
-
-  if (!notesContext || !projectsContext) {
-    console.warn("TaskNoteModal: NotesContext or ProjectsContext is missing.");
-    return null;
-  }
-
-  const {
-    getNoteById,
-    createNote: createNoteService,
-    updateNote,
-    deleteNote,
-    exportNoteAsPDF,
-    putNoteBlocksSync,
-  } = notesContext;
-
   const { user } = useAuth();
 
-  const {
-    projects,
-    getProjectStages,
-    getTaskPriorities,
-    addNoteToProject,
-    updateProjectNoteStage,
-    createTaskInStage,
-    getProjectTags,
-    getCollaborators,
-  } = projectsContext;
+  const getNoteById = notesContext?.getNoteById;
+  const createNoteService = notesContext?.createNote;
+  const updateNote = notesContext?.updateNote;
+  const deleteNote = notesContext?.deleteNote;
+  const exportNoteAsPDF = notesContext?.exportNoteAsPDF;
+  const putNoteBlocksSync = notesContext?.putNoteBlocksSync;
+
+  const projects = projectsContext?.projects ?? [];
+  const getProjectStages = projectsContext?.getProjectStages;
+  const getTaskPriorities = projectsContext?.getTaskPriorities;
+  const addNoteToProject = projectsContext?.addNoteToProject;
+  const updateProjectNoteStage = projectsContext?.updateProjectNoteStage;
+  const createTaskInStage = projectsContext?.createTaskInStage;
+  const getProjectTags = projectsContext?.getProjectTags;
+  const getCollaborators = projectsContext?.getCollaborators;
 
   const [mounted, setMounted] = useState(false);
   const [note, setNote] = useState<Note | null>(null);
@@ -598,7 +588,7 @@ function TaskNoteModalInner() {
 
   const canEdit = mode === "edit" || mode === "create";
 
-  if (!mounted || !isOpen) return null;
+  if (!mounted || !isOpen || !notesContext || !projectsContext) return null;
 
   const modalContent = (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
@@ -619,11 +609,7 @@ function TaskNoteModalInner() {
         {mode === "edit" && noteId ? (
           <div className="flex min-h-0 flex-1 overflow-hidden">
             <NoteCommentsPanelProvider>
-              <SharedTaskDetail
-                taskId={noteId}
-                isModal={true}
-                onClose={closeModal}
-              />
+              <SharedTaskDetail taskId={noteId} isModal={true} onClose={closeModal} />
             </NoteCommentsPanelProvider>
           </div>
         ) : loading ? (

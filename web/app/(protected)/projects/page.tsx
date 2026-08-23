@@ -11,7 +11,7 @@ import Link from "next/link";
 const ProjectsPage = () => {
   const router = useRouter();
   const params = useParams();
-  
+
   const { canCreateProject } = usePlanUsage();
   const { loading, getRecentProjects } = useProjects();
   const projects = useMemo(() => getRecentProjects(), [getRecentProjects]);

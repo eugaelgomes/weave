@@ -33,17 +33,6 @@ function stageDefaultsFor(methodology: string): StageDraft[] {
 
 export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
   const { getProjectStages, patchProjectStage } = useProjects();
-  if (!state.created.projectId) {
-    return (
-      <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
-        <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
-          <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
-          Crie o projeto no passo “Básico” para configurar etapas.
-        </div>
-      </section>
-    );
-  }
-
   const projectId = state.created.projectId;
   const [loadingStages, setLoadingStages] = useState(false);
   const [stagesFromApi, setStagesFromApi] = useState<Array<{
@@ -86,6 +75,17 @@ export function StagesStep({ state, actions }: CreateProjectWizardStepProps) {
       alive = false;
     };
   }, [getProjectStages, projectId]);
+
+  if (!state.created.projectId) {
+    return (
+      <section className="dark:border-surface-dark-border rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]/50">
+        <div className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-200">
+          <AlertCircle className="mt-0.5 h-4 w-4 text-neutral-400" aria-hidden />
+          Crie o projeto no passo “Básico” para configurar etapas.
+        </div>
+      </section>
+    );
+  }
 
   const moveStage = (index: number, dir: -1 | 1) => {
     actions.setStageDrafts((rows) => {

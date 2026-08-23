@@ -20,9 +20,9 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
     : `https://api.anthropic.com/v1/messages`;
 
   const headers: Record<string, string> = {
+    "anthropic-version": "2023-06-01",
     "Content-Type": "application/json",
     "x-api-key": apiKey,
-    "anthropic-version": "2023-06-01",
   };
 
   // --- Build messages ---
@@ -34,25 +34,22 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
 
       if (msg.role === "tool") {
         messages.push({
-          role: "user",
           content: [
             {
-              type: "tool_result",
-              tool_use_id: msg.tool_call_id,
               content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
+              tool_use_id: msg.tool_call_id,
+              type: "tool_result",
             },
           ],
+          role: "user",
         });
         continue;
       }
 
       if (msg.role === "assistant" && msg.tool_calls) {
         messages.push({
-          role: "assistant",
           content: msg.tool_calls.map((tc) => ({
-            type: "tool_use",
             id: tc.id,
-            name: tc.function.name,
             input: (() => {
               try {
                 return JSON.parse(tc.function.arguments);
@@ -60,23 +57,26 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
                 return {};
               }
             })(),
+            name: tc.function.name,
+            type: "tool_use",
           })),
+          role: "assistant",
         });
         continue;
       }
 
-      messages.push({ role: msg.role, content: msg.content });
+      messages.push({ content: msg.content, role: msg.role });
     }
   }
 
   if (params.prompt) {
-    messages.push({ role: "user", content: params.prompt });
+    messages.push({ content: params.prompt, role: "user" });
   }
 
   const body: Record<string, unknown> = {
-    model,
     max_tokens: params.maxTokens ?? 4096,
     messages,
+    model,
   };
 
   if (params.systemMessage) {
@@ -96,9 +96,9 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
   // Tools
   if (Array.isArray(params.tools) && params.tools.length > 0) {
     body.tools = params.tools.map((t) => ({
-      name: t.function.name,
       description: t.function.description,
-      input_schema: t.function.parameters ?? { type: "object", properties: {} },
+      input_schema: t.function.parameters ?? { properties: {}, type: "object" },
+      name: t.function.name,
     }));
     if (params.toolChoice) {
       body.tool_choice =
@@ -189,16 +189,16 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
         }
       };
       const toolCalls: ToolCallResult[] = toolIndices.map((idx) => ({
+        arguments: safeParse(toolInputBuffers[idx] || "{}"),
         id: toolMeta[idx].id,
         name: toolMeta[idx].name,
-        arguments: safeParse(toolInputBuffers[idx] || "{}"),
       }));
       return {
-        type: "function_call",
+        functionCall: { arguments: toolCalls[0].arguments, name: toolCalls[0].name },
         text: null,
-        functionCall: { name: toolCalls[0].name, arguments: toolCalls[0].arguments },
         toolCallId: toolCalls[0].id,
         toolCalls,
+        type: "function_call",
         usage: {
           inputTokens,
           outputTokens,
@@ -209,9 +209,9 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
     }
 
     return {
-      type: "text",
-      text: fullContent,
       functionCall: null,
+      text: fullContent,
+      type: "text",
       usage: {
         inputTokens,
         outputTokens,
@@ -242,16 +242,16 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
 
   if (toolUseBlocks.length > 0) {
     const toolCalls: ToolCallResult[] = toolUseBlocks.map((b: Record<string, unknown>) => ({
+      arguments: (b.input as Record<string, unknown>) || {},
       id: b.id as string,
       name: b.name as string,
-      arguments: (b.input as Record<string, unknown>) || {},
     }));
     return {
-      type: "function_call",
+      functionCall: { arguments: toolCalls[0].arguments, name: toolCalls[0].name },
       text: null,
-      functionCall: { name: toolCalls[0].name, arguments: toolCalls[0].arguments },
       toolCallId: toolCalls[0].id,
       toolCalls,
+      type: "function_call",
       usage,
     };
   }
@@ -259,9 +259,9 @@ export async function callAnthropicProvider(params: LLMRequestParams): Promise<L
   const textBlock = (msg.content || []).find((b: Record<string, unknown>) => b.type === "text");
 
   return {
-    type: "text",
-    text: (textBlock?.text as string) || "",
     functionCall: null,
+    text: (textBlock?.text as string) || "",
+    type: "text",
     usage,
   };
 }

@@ -39,7 +39,7 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
   const { getRecentProjects } = useProjects();
   const pathname = usePathname();
   const params = useParams();
-  
+
   const [expandedProjects, setExpandedProjects] = useState<string[]>([]);
 
   const toggleProject = (e: React.MouseEvent, projectId: string) => {
@@ -206,11 +206,7 @@ function ProjectsLayoutContent({ children }: { children: React.ReactNode }) {
     </div>
   );
 
-  return (
-    <ModuleLayout header={<ProjectsHeader />}>
-      {children}
-    </ModuleLayout>
-  );
+  return <ModuleLayout header={<ProjectsHeader />}>{children}</ModuleLayout>;
 }
 
 // ---------------------------------------------------------------------------

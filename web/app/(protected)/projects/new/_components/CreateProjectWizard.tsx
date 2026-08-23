@@ -73,7 +73,7 @@ function storageKey(userId: string): string {
 export function CreateProjectWizard() {
   const router = useRouter();
   const params = useParams();
-  
+
   const { user } = useAuth();
 
   const [state, setState] = useState<CreateProjectWizardState>(() => ({

@@ -88,7 +88,7 @@ export default function ChatInterface({
 } = {}) {
   const router = useRouter();
   const params = useParams();
-  
+
   const pathname = usePathname();
   const { t, locale } = useLanguage();
   const {

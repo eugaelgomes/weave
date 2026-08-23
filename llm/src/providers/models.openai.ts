@@ -52,12 +52,12 @@ export async function callOpenAICompatProvider(params: LLMRequestParams): Promis
 
       if (msg.role === "assistant" && msg.tool_calls) {
         clean.tool_calls = msg.tool_calls.map((tc) => ({
+          function: {
+            arguments: tc.function.arguments,
+            name: tc.function.name,
+          },
           id: tc.id || `call_${Math.random().toString(36).substring(2, 11)}`,
           type: "function",
-          function: {
-            name: tc.function.name,
-            arguments: tc.function.arguments,
-          },
           ...(tc.extra_content ? { extra_content: tc.extra_content } : {}),
         }));
       }
@@ -81,15 +81,15 @@ export async function callOpenAICompatProvider(params: LLMRequestParams): Promis
   const userContent: Record<string, unknown>[] = [];
 
   if (params.prompt) {
-    userContent.push({ type: "text", text: params.prompt });
+    userContent.push({ text: params.prompt, type: "text" });
   }
 
   const normalizedFiles = normalizeFiles(params.files);
   for (const file of normalizedFiles) {
     if (file.mimeType.startsWith("image/")) {
       userContent.push({
-        type: "image_url",
         image_url: { url: `data:${file.mimeType};base64,${file.base64Data}` },
+        type: "image_url",
       });
     } else if (
       file.mimeType === "application/pdf" ||
@@ -99,8 +99,8 @@ export async function callOpenAICompatProvider(params: LLMRequestParams): Promis
       try {
         const text = Buffer.from(file.base64Data, "base64").toString("utf-8");
         userContent.push({
-          type: "text",
           text: `\n\n--- FILE: ${file.name} ---\n${text}\n--- END ---`,
+          type: "text",
         });
       } catch {
         /* skip */
@@ -109,11 +109,11 @@ export async function callOpenAICompatProvider(params: LLMRequestParams): Promis
   }
 
   if (userContent.length > 0) {
-    messages.push({ role: "user", content: userContent });
+    messages.push({ content: userContent, role: "user" });
   }
 
   // --- Build request body ---
-  const body: Record<string, unknown> = { model, messages };
+  const body: Record<string, unknown> = { messages, model };
 
   if (params.temperature !== undefined) body.temperature = params.temperature;
   if (params.topP !== undefined) body.top_p = params.topP;
@@ -184,9 +184,9 @@ export async function callOpenAICompatProvider(params: LLMRequestParams): Promis
               const idx = tc.index ?? (finalToolCalls.length > 0 ? finalToolCalls.length - 1 : 0);
               if (!finalToolCalls[idx]) {
                 finalToolCalls[idx] = {
+                  function: { arguments: "", name: "" },
                   id: tc.id,
                   type: "function",
-                  function: { name: "", arguments: "" },
                 };
               }
               if (tc.id && !finalToolCalls[idx].id) finalToolCalls[idx].id = tc.id;
@@ -215,19 +215,19 @@ export async function callOpenAICompatProvider(params: LLMRequestParams): Promis
     if (finalToolCalls && finalToolCalls.length > 0) {
       const toolCalls = parseAccumulatedToolCalls(finalToolCalls);
       return {
-        type: "function_call",
-        text: null,
         functionCall: {
-          name: toolCalls[0].name,
           arguments: toolCalls[0].arguments,
+          name: toolCalls[0].name,
         },
+        text: null,
         toolCallId: finalToolCalls[0].id,
         toolCalls,
+        type: "function_call",
         usage,
       };
     }
 
-    return { type: "text", text: fullContent, functionCall: null, usage };
+    return { functionCall: null, text: fullContent, type: "text", usage };
   }
 
   // --- Non-streaming ---
@@ -258,30 +258,30 @@ export async function callOpenAICompatProvider(params: LLMRequestParams): Promis
     const toolCalls: ToolCallResult[] = msg.tool_calls.map((tc: Record<string, unknown>) => {
       const fn = (tc.function || {}) as Record<string, unknown>;
       const result: ToolCallResult = {
+        arguments: safeParse(fn.arguments as string),
         id: tc.id as string,
         name: fn.name as string,
-        arguments: safeParse(fn.arguments as string),
       };
       if (tc.extra_content) result.extra_content = tc.extra_content as string;
       return result;
     });
     return {
-      type: "function_call",
-      text: null,
       functionCall: {
-        name: (first.function as Record<string, unknown>).name as string,
         arguments: safeParse((first.function as Record<string, unknown>).arguments as string),
+        name: (first.function as Record<string, unknown>).name as string,
       },
+      text: null,
       toolCallId: first.id as string,
       toolCalls,
+      type: "function_call",
       usage,
     };
   }
 
   return {
-    type: "text",
-    text: msg?.content || "",
     functionCall: null,
+    text: msg?.content || "",
+    type: "text",
     usage,
   };
 }

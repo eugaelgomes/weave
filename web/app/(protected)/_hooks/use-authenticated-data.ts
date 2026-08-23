@@ -6,13 +6,12 @@ import { useProjects } from "@/app/_contexts/projects-context";
 
 export function useAuthenticatedData() {
   const { authenticated, user } = useAuth();
+  const notesContext = useNotes();
+  const projectsContext = useProjects();
 
   if (!authenticated || !user) {
     throw new Error("useAuthenticatedData must be used in authenticated components");
   }
-
-  const notesContext = useNotes();
-  const projectsContext = useProjects();
 
   return {
     user,
@@ -23,16 +22,8 @@ export function useAuthenticatedData() {
 
 export function useSafeAuthenticatedData() {
   const { authenticated, user } = useAuth();
-
-  let notesContext;
-  let projectsContext;
-
-  try {
-    notesContext = useNotes();
-    projectsContext = useProjects();
-  } catch {
-    return null;
-  }
+  const notesContext = useNotes();
+  const projectsContext = useProjects();
 
   if (!authenticated || !user) {
     return null;

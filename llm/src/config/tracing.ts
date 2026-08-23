@@ -15,7 +15,7 @@ export class Tracer {
   static async emitEvent(type: string, payload: Record<string, any>) {
     try {
       if (redis) {
-        await redis.lpush(TRACING_EVENTS_QUEUE_KEY, JSON.stringify({ type, payload }));
+        await redis.lpush(TRACING_EVENTS_QUEUE_KEY, JSON.stringify({ payload, type }));
       }
     } catch (error) {
       console.error("[Tracer] Failed to emit tracing event:", error);
@@ -28,13 +28,13 @@ export class Tracer {
 
     await this.emitEvent("trace_start", {
       id: traceId,
+      name,
       organization_id: context.organizationId,
-      user_id: context.userId,
       project_id: context.projectId,
       session_id: context.sessionId,
-      name,
       start_time: now,
       status: "running",
+      user_id: context.userId,
     });
 
     return traceId;
@@ -51,13 +51,13 @@ export class Tracer {
     } = {}
   ) {
     await this.emitEvent("trace_end", {
-      id: traceId,
-      organization_id: context.organizationId,
       end_time: new Date().toISOString(),
-      status: options.status || "success",
-      total_tokens: options.totalTokens || 0,
-      total_cost: options.totalCost || 0,
+      id: traceId,
       metadata: options.error ? { error: options.error } : {},
+      organization_id: context.organizationId,
+      status: options.status || "success",
+      total_cost: options.totalCost || 0,
+      total_tokens: options.totalTokens || 0,
     });
   }
 
@@ -72,14 +72,14 @@ export class Tracer {
 
     await this.emitEvent("span_start", {
       id: spanId,
-      trace_id: context.traceId,
-      parent_span_id: context.parentSpanId || null,
-      organization_id: context.organizationId,
+      input,
       name,
+      organization_id: context.organizationId,
+      parent_span_id: context.parentSpanId || null,
       span_type: spanType,
       start_time: now,
       status: "running",
-      input,
+      trace_id: context.traceId,
     });
 
     return spanId;
@@ -99,17 +99,17 @@ export class Tracer {
     } = {}
   ) {
     await this.emitEvent("span_end", {
-      id: spanId,
-      trace_id: context.traceId,
-      organization_id: context.organizationId,
-      end_time: new Date().toISOString(),
-      status: options.status || "success",
-      output: options.output || {},
-      error_message: options.error_message || null,
-      prompt_tokens: options.prompt_tokens || 0,
       completion_tokens: options.completion_tokens || 0,
-      model: options.model || null,
+      end_time: new Date().toISOString(),
+      error_message: options.error_message || null,
+      id: spanId,
       metadata: options.metadata || {},
+      model: options.model || null,
+      organization_id: context.organizationId,
+      output: options.output || {},
+      prompt_tokens: options.prompt_tokens || 0,
+      status: options.status || "success",
+      trace_id: context.traceId,
     });
   }
 }

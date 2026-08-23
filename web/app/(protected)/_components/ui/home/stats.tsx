@@ -16,7 +16,7 @@ interface StatsProps {
 export function Stats({ stats, projectsStats, tagCloudData }: StatsProps) {
   const { t } = useLanguage();
   const params = useParams();
-  
+
   const [showMetrics, setShowMetrics] = useState(false);
   const [showTags, setShowTags] = useState(false);
 

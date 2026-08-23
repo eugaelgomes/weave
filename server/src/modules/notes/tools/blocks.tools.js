@@ -2,7 +2,7 @@ const { manageNoteBlocksSchema } = require("../schemas/tools.schema");
 const { NoteBlocksService } = require("../services/note-blocks.service");
 const { API_SCOPES } = require("@/config/api-scopes");
 const { markdownToBlocks } = require("@/modules/agent-house/utils/markdown-to-blocks.util");
-const { blocksToMarkdown } = require("@/services/reasoning/notes-to-markdown");
+const { blocksToMarkdown } = require("@/modules/notes/utils/blocks-to-markdown.util");
 const notesRepository = require("@/modules/notes/notes.repository");
 const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 

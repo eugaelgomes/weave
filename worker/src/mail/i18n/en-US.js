@@ -69,7 +69,7 @@ module.exports = {
   "deleteRequest.title": "Confirm account deletion",
   "dueReminder.cta": "Open note",
   "dueReminder.info": "We recommend reviewing the note today to avoid delays.",
-  "dueReminder.intro": 'The note "{noteTitle}" is due tomorrow ({dueDateLabel}).',
+  "dueReminder.intro": "The note \"{noteTitle}\" is due tomorrow ({dueDateLabel}).",
   "dueReminder.preheader": "Reminder for your note deadline.",
   "dueReminder.subject": "Reminder: due tomorrow - {noteTitle}",
   "dueReminder.subtitle": "Note due date",
@@ -102,7 +102,7 @@ module.exports = {
   "project.intro": "{addedByName} added you as a collaborator on the project below.",
   "project.outro": "You can now view and collaborate on the project.",
   "project.preheader": "You were added to a project.",
-  "project.subject": '{firstName}, you were added to project "{projectName}"',
+  "project.subject": "{firstName}, you were added to project \"{projectName}\"",
   "project.subtitle": "Project collaboration",
 
   "project.title": "New project shared with you",

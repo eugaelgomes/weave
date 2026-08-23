@@ -67,7 +67,7 @@ export default function ProjectDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params?.public_id as string;
-  
+
   const { user } = useAuth();
 
   const {

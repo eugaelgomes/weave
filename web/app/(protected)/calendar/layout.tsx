@@ -14,7 +14,7 @@ export default function CalendarLayout({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const base = pathname.replace(/\/+$/, "");
   const params = useParams();
-  
+
   const isCalendarHome = base === `/calendar`;
 
   return (

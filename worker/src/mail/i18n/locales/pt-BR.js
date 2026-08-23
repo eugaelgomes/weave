@@ -70,7 +70,7 @@ module.exports = {
   "deleteRequest.title": "Confirmar exclusão de conta",
   "dueReminder.cta": "Abrir nota",
   "dueReminder.info": "Recomendamos revisar a nota hoje para evitar atrasos.",
-  "dueReminder.intro": 'A nota "{noteTitle}" vence amanhã ({dueDateLabel}).',
+  "dueReminder.intro": "A nota \"{noteTitle}\" vence amanhã ({dueDateLabel}).",
   "dueReminder.preheader": "Lembrete de prazo da sua nota.",
   "dueReminder.subject": "Lembrete: prazo amanhã — {noteTitle}",
   "dueReminder.subtitle": "Vencimento da nota",
@@ -104,7 +104,7 @@ module.exports = {
   "project.intro": "{addedByName} adicionou você como colaborador(a) no projeto abaixo.",
   "project.outro": "Agora você pode visualizar e colaborar no projeto normalmente.",
   "project.preheader": "Você foi adicionado(a) a um projeto.",
-  "project.subject": '{firstName}, você foi adicionado ao projeto "{projectName}"',
+  "project.subject": "{firstName}, você foi adicionado ao projeto \"{projectName}\"",
   "project.subtitle": "Colaboração em projetos",
 
   "project.title": "Novo projeto compartilhado com você",

@@ -30,7 +30,6 @@ export const useOrganizationSettingsPage = () => {
   } = useOrganization();
   const router = useRouter();
   const params = useParams();
-  
 
   const [isCreating, setIsCreating] = useState(false);
   const [isEditingInfo, setIsEditingInfo] = useState(false);

@@ -57,7 +57,7 @@ export const ToolCallGroup = ({
         const success = toolMsg && !resultObj?.error && toolMsg.status !== "error";
 
         // Mapeamento de texto via I18n fallback manual (já que t.weaveAi pode não ter tudo)
-        let name = tc?.function?.name || tc?.name || "tool";
+        const name = tc?.function?.name || tc?.name || "tool";
         let title = "";
 
         if (name === "create_artifact" || name === "create_reasoning") {

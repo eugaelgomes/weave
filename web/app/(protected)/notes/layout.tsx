@@ -24,7 +24,6 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { commentsPanelOpen, setCommentsPanelOpen } = useNoteCommentsPanel();
   const params = useParams();
-  
 
   React.useEffect(() => {
     setCommentsPanelOpen(false);
@@ -104,13 +103,7 @@ function NotesLayoutContent({ children }: { children: React.ReactNode }) {
     </div>
   );
 
-  return (
-    <ModuleLayout
-      header={<NotesHeader />}
-    >
-      {children}
-    </ModuleLayout>
-  );
+  return <ModuleLayout header={<NotesHeader />}>{children}</ModuleLayout>;
 }
 
 export default function NotesLayout({ children }: { children: React.ReactNode }) {

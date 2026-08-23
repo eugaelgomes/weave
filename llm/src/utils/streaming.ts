@@ -31,9 +31,9 @@ export function parseAccumulatedToolCalls(
 
   return finalToolCalls.map((tc) => {
     const result: ToolCallResult = {
+      arguments: safeParse(tc.function.arguments),
       id: tc.id,
       name: tc.function.name,
-      arguments: safeParse(tc.function.arguments),
     };
     if (tc.extra_content) result.extra_content = tc.extra_content;
     return result;

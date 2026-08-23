@@ -6,7 +6,7 @@ const projectsDeleteRepository = require("@/modules/projects/repositories/projec
 const { enrichWithAppUrl } = require("@/utils/url.util");
 const createNotesRepository = require("@/modules/notes/repositories/create-notes.repository");
 const mutateNotesRepository = require("@/modules/notes/repositories/mutate-notes.repository");
-const spacesService = require("@/services/storage/index");
+const spacesService = require("@/services/storage.service");
 
 const manageProjectsSchema = z.discriminatedUnion("action", [
   z.object({

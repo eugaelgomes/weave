@@ -102,7 +102,7 @@ const inputFieldClass =
 export default function OrganizationCreatePage() {
   const router = useRouter();
   const params = useParams();
-  
+
   const { refreshOrganization, uploadLogo, organization } = useOrganization();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);

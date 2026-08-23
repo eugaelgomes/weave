@@ -2,7 +2,7 @@ const { manageNotesSchema } = require("../schemas/tools.schema");
 const { NotesService } = require("../services/notes.service");
 const { enrichWithAppUrl } = require("@/utils/url.util");
 const { API_SCOPES } = require("@/config/api-scopes");
-const spacesService = require("@/services/storage/index");
+const spacesService = require("@/services/storage.service");
 const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
 
 const createNotesTools = (user) => ({
@@ -113,9 +113,7 @@ FUNCTIONALITIES (Actions):
           });
 
           if (result && result.notes) {
-            result.notes = result.notes.map((n) =>
-              enrichWithAppUrl(n, "note", "public_note_id")
-            );
+            result.notes = result.notes.map((n) => enrichWithAppUrl(n, "note", "public_note_id"));
           } else if (Array.isArray(result)) {
             // Fallback se não for paginado
             for (let i = 0; i < result.length; i++) {
