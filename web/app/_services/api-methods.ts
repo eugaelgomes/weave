@@ -253,16 +253,23 @@ class ApiClient {
       credentials: "include", // HttpOnly
     };
 
+    const requestId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const internal = await getInternalChallengeHeaders();
+
     if (!(options.body instanceof FormData)) {
       config.headers = {
         ...this.defaultHeaders,
         ...internal,
+        "x-request-id": requestId,
         ...((options.headers as Record<string, string>) || {}),
       };
     } else {
       config.headers = {
         ...internal,
+        "x-request-id": requestId,
         ...(options.headers || {}),
       } as HeadersInit;
     }
@@ -434,7 +441,12 @@ export async function handleResponse<T = unknown>(
 
   try {
     if (contentType?.includes("application/json")) {
-      return await response.json();
+      const json = await response.json();
+      // Gracefully handle standard API envelopes while maintaining backwards compatibility
+      if (json && typeof json === "object" && json.success === true && "data" in json) {
+        return json.data as T;
+      }
+      return json as T;
     } else {
       return (await response.text()) as T;
     }

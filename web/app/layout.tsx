@@ -8,6 +8,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "./_contexts/theme-context";
 import { LanguageProvider } from "./_contexts/language-context";
 import { InternetConnectionMonitor } from "./_components/internet-connection-monitor";
+import { VersionMonitor } from "./_components/version-monitor";
 import { getSiteOrigin } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 
@@ -259,6 +260,32 @@ export default function RootLayout({
             `,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              console.log(
+                "%c" +
+                "  ██╗   ██╗ ███████╗  █████╗  ██╗   ██╗ ███████╗\\n" +
+                "  ██║   ██║ ██╔════╝ ██╔══██╗ ██║   ██║ ██╔════╝\\n" +
+                "  ██║██╗██║ █████╗   ███████║ ██║   ██║ █████╗  \\n" +
+                "  ████████║ ██╔══╝   ██╔══██║ ╚██╗ ██╔╝ ██╔══╝  \\n" +
+                "  ╚██████╔╝ ███████╗ ██║  ██║  ╚████╔╝  ███████╗\\n" +
+                "\\n" +
+                "  %cWeave %c— Enterprise AI Agent & Workflow Engine\\n" +
+                "  %cCreated by Gael R. Gomes <gael.rens@gmail.com> (https://gaelgomes.dev)\\n",
+                "color: #FFD500; font-family: monospace; font-weight: bold;",
+                "color: #FFD500; font-family: monospace; font-weight: bold;",
+                "color: gray; font-family: monospace;",
+                "color: gray; font-family: monospace;"
+              );
+              console.log(
+                "%c⚠️ Stop!\\n\\n%cThis is a browser feature intended for developers.\\nIf someone told you to copy and paste something here, it is a scam and will give them access to your account and organization data.",
+                "color: red; font-size: 24px; font-weight: bold;",
+                "color: inherit; font-size: 14px;"
+              );
+            `
+          }}
+        />
         <Analytics />
       </head>
       <body className={cn("antialiased", fredoka.variable)} suppressHydrationWarning>
@@ -267,6 +294,7 @@ export default function RootLayout({
             <LanguageProvider>{children}</LanguageProvider>
           </AuthProviderClient>
           <InternetConnectionMonitor />
+          <VersionMonitor />
           <Toaster position="top-right" expand closeButton />
         </ThemeProvider>
       </body>

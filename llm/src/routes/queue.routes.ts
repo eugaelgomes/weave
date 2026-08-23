@@ -451,7 +451,16 @@ class LlmQueueProcessor {
 
         try {
           const job = this.parseRawJob(rawPayload);
-          await this.processJob(job);
+          if (job.requestId) {
+            const { requestContext } = require("@theweave/database");
+            await new Promise((resolve, reject) => {
+              requestContext.run({ requestId: job.requestId }, () => {
+                this.processJob(job).then(resolve).catch(reject);
+              });
+            });
+          } else {
+            await this.processJob(job);
+          }
         } catch (error: unknown) {
           logger.error("Job parsing or structural validation failed", {
             error: (error as Error).message,

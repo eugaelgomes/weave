@@ -7,6 +7,7 @@ const { sessionMiddleware } = require("./session");
 const { sessionTrackerMiddleware } = require("./session-tracker");
 const { makeCorsOptions } = require("./cors");
 const { requestIdMiddleware } = require("@/middlewares/request-id");
+const { telemetryMiddleware } = require("./telemetry");
 const { storageUrlInterceptorMiddleware } = require("./storage-url.middleware");
 
 /**
@@ -21,6 +22,7 @@ function captureRawBody(req, _res, buf) {
 
 function configureGlobalMiddlewares(app) {
   app.use(requestIdMiddleware);
+  app.use(telemetryMiddleware);
   app.use(cookieParser());
   app.use(sessionMiddleware);
   app.use(sessionTrackerMiddleware);

@@ -10,9 +10,13 @@ const LOG_LEVELS = {
 
 const currentLevel = env.isProduction ? LOG_LEVELS.info : LOG_LEVELS.debug;
 
+import { getRequestId } from "@theweave/database";
+
 function formatMessage(level: string, message: string, meta: Record<string, unknown> = {}): string {
   const timestamp = new Date().toISOString();
-  const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
+  const requestId = getRequestId();
+  const finalMeta = requestId && !meta.requestId ? { ...meta, requestId } : meta;
+  const metaStr = Object.keys(finalMeta).length > 0 ? ` ${JSON.stringify(finalMeta)}` : "";
   return `[${timestamp}] [${level.toUpperCase()}] ${message}${metaStr}`;
 }
 

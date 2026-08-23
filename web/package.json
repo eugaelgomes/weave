@@ -18,7 +18,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/generate-version.js && next build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check": "npm run lint",

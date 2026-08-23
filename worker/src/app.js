@@ -16,6 +16,24 @@ function registerJob(type, processor) {
   if (jobProcessors.has(type)) {
     logger.warn(`Job processor for type "${type}" is being overwritten`);
   }
+
+  if (processor && typeof processor.processJob === "function" && !processor.__wrappedWithContext) {
+    const originalProcessJob = processor.processJob.bind(processor);
+    const { requestContext } = require("@theweave/database");
+
+    processor.processJob = async function(job) {
+      if (job && job.requestId) {
+        return new Promise((resolve, reject) => {
+          requestContext.run({ requestId: job.requestId }, () => {
+            originalProcessJob(job).then(resolve).catch(reject);
+          });
+        });
+      }
+      return originalProcessJob(job);
+    };
+    processor.__wrappedWithContext = true;
+  }
+
   jobProcessors.set(type, processor);
   logger.debug(`Registered job processor: ${type}`);
 }

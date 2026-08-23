@@ -34,15 +34,20 @@ function buildDevDetails(appError, originalError) {
 
 /**
  * @param {AppError} appError
+ * @param {import('express').Request} req
  * @returns {Record<string, unknown>}
  */
-function buildErrorBody(appError) {
+function buildErrorBody(appError, req) {
+  const { buildMeta } = require("../http/telemetry");
+
   const body = {
     error: {
       code: appError.code,
       message: appError.message,
       status: appError.statusCode,
     },
+    meta: buildMeta(req),
+    success: false,
   };
 
   if (appError.body && typeof appError.body === "object") {
@@ -98,7 +103,7 @@ const errorHandler = {
     logServerError(originalError, req);
 
     const statusCode = clientError.statusCode || 500;
-    return res.status(statusCode).json(buildErrorBody(clientError));
+    return res.status(statusCode).json(buildErrorBody(clientError, req));
   },
 
   notFoundHandler: (req, res, next) => {
