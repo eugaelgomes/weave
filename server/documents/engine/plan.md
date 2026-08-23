@@ -2,7 +2,7 @@
 
 ## Contexto
 
-O `weave-engine` é o serviço de IA proativa do Weave Notes. O processador proativo gera raciocínios no contexto de **sprints** de projetos. Os tipos de raciocínio estão alinhados com os report types de `project_ai_report_configs`.
+O `weave-engine` é o serviço de IA proativa do Weave. O processador proativo gera raciocínios no contexto de **sprints** de projetos. Os tipos de raciocínio estão alinhados com os report types de `project_ai_report_configs`.
 
 ---
 

@@ -1,7 +1,7 @@
 /** @type {Record<string, string>} */
 module.exports = {
   "aiReport.cta": "Ver report completo",
-  "aiReport.footer": "Este report foi gerado automaticamente pela IA do Weave Notes.",
+  "aiReport.footer": "Este report foi gerado automaticamente pela IA do Weave.",
   "aiReport.intro": "O Weave Engine gerou um novo report para o projeto {projectTitle}.",
   "aiReport.preheader": "Novo {reportType} para {projectTitle}",
   "aiReport.sprintSuffix": " (Sprint {sprintNumber})",
@@ -25,7 +25,7 @@ module.exports = {
   "collab.subtitle": "Compartilhamento de nota",
   "collab.title": "Nova colaboracao em nota",
   "common.autoFooter": "Este email foi enviado automaticamente. Por favor, nao responda.",
-  "common.brandName": "Weave Notes",
+  "common.brandName": "Weave",
   "common.content": "Conteudo",
   "common.contentNotesBlocks": "notas e blocos ativos",
 
@@ -45,13 +45,12 @@ module.exports = {
   "deleteMessage.bodyDetail": "Todos os dados vinculados foram apagados de forma definitiva.",
   "deleteMessage.bodyUser": "Usuario removido",
   "deleteMessage.footer": "Voce recebeu este email como confirmacao da exclusao da sua conta.",
-  "deleteMessage.intro":
-    "Sua conta no Weave Notes foi excluida permanentemente conforme solicitado.",
+  "deleteMessage.intro": "Sua conta no Weave foi excluida permanentemente conforme solicitado.",
   "deleteMessage.outro":
     "Se voce nao reconhece esta acao, entre em contato com nosso suporte imediatamente.",
   "deleteMessage.preheader": "Sua conta foi excluida com sucesso.",
 
-  "deleteMessage.subject": "Conta excluida com sucesso - Weave Notes",
+  "deleteMessage.subject": "Conta excluida com sucesso - Weave",
   "deleteMessage.subtitle": "Confirmacao de exclusao",
   "deleteMessage.title": "Conta excluida",
   "deleteRequest.bodyDetail":
@@ -66,7 +65,7 @@ module.exports = {
     "Se voce nao solicitou essa exclusao, ignore este email e considere alterar sua senha.",
   "deleteRequest.preheader": "Confirmacao de exclusao de conta.",
 
-  "deleteRequest.subject": "Confirmacao de exclusao de conta - Weave Notes",
+  "deleteRequest.subject": "Confirmacao de exclusao de conta - Weave",
   "deleteRequest.subtitle": "Acao irreversivel",
   "deleteRequest.title": "Confirmar exclusao de conta",
   "dueReminder.cta": "Abrir nota",
@@ -82,7 +81,7 @@ module.exports = {
   "invite.info": "Este convite expira em 7 dias.",
   "invite.intro": "{inviterName} convidou voce para entrar na organizacao {organizationName}.",
   "invite.preheader": "Convite para participar de uma organizacao.",
-  "invite.subject": "Convite para {organizationName} - Weave Notes",
+  "invite.subject": "Convite para {organizationName} - Weave",
 
   "invite.subtitle": "Convite para organizacao",
   "invite.title": "Voce foi convidado(a)",
@@ -91,17 +90,17 @@ module.exports = {
   "inviteAccepted.feature2": "Trabalhar em projetos com etapas, prioridades e prazos.",
   "inviteAccepted.feature3": "Compartilhar conteudo e colaborar com seu time.",
   "inviteAccepted.feature4": "Centralizar arquivos, links e contexto em um so lugar.",
-  "inviteAccepted.featuresIntro": "No Weave Notes voce pode:",
-  "inviteAccepted.intro1": "Seu acesso foi confirmado e voce ja pode usar o Weave Notes.",
+  "inviteAccepted.featuresIntro": "No Weave voce pode:",
+  "inviteAccepted.intro1": "Seu acesso foi confirmado e voce ja pode usar o Weave.",
   "inviteAccepted.intro2":
     "Aqui voce centraliza planejamento, execucao e colaboracao em um unico lugar.",
   "inviteAccepted.preheader": "Convite aceito com sucesso.",
-  "inviteAccepted.subject": "Bem-vindo a {organizationName} - Weave Notes",
+  "inviteAccepted.subject": "Bem-vindo a {organizationName} - Weave",
 
   "inviteAccepted.subtitle": "Sua conta esta pronta para uso",
   "inviteAccepted.title": "Bem-vindo(a) a {organizationName}",
   "project.cta": "Acessar projetos",
-  "project.footer": "Voce recebeu este email porque foi adicionado a um projeto no Weave Notes.",
+  "project.footer": "Voce recebeu este email porque foi adicionado a um projeto no Weave.",
   "project.intro": "{addedByName} adicionou voce como colaborador(a) no projeto abaixo.",
   "project.outro": "Agora voce pode visualizar e colaborar no projeto normalmente.",
   "project.preheader": "Voce foi adicionado(a) a um projeto.",
@@ -124,7 +123,7 @@ module.exports = {
   "rescue.outro":
     "Se voce nao solicitou esta alteracao, ignore este email. Nenhuma mudanca sera realizada.",
   "rescue.preheader": "Solicitacao de redefinicao de senha.",
-  "rescue.subject": "Redefinicao de senha - Weave Notes",
+  "rescue.subject": "Redefinicao de senha - Weave",
   "rescue.subtitle": "Seguranca da conta",
   "rescue.title": "Redefinicao de Senha",
 
@@ -134,7 +133,7 @@ module.exports = {
   "reset.intro2": "Use o botao abaixo para validar essa alteracao.",
   "reset.outro": "Se voce nao solicitou essa alteracao, ignore este email.",
   "reset.preheader": "Valide a mudanca de email da sua conta.",
-  "reset.subject": "Validacao de mudanca de email - Weave Notes",
+  "reset.subject": "Validacao de mudanca de email - Weave",
   "reset.subtitle": "Seguranca da conta",
 
   "reset.title": "Confirmacao de mudanca de email",
@@ -146,14 +145,14 @@ module.exports = {
   "role.super_admin": "Super administrador",
   "role.viewer": "Visualizador",
   "welcome.cta": "Ativar conta",
-  "welcome.footer": "Voce recebeu este email porque criou uma conta no Weave Notes.",
+  "welcome.footer": "Voce recebeu este email porque criou uma conta no Weave.",
   "welcome.info": "Este link expira em 7 dias.",
   "welcome.intro1": "Sua conta foi criada com sucesso.",
 
   "welcome.intro2": "Para comecar a usar a plataforma, confirme seu email no botao abaixo.",
   "welcome.outro1": "Se voce nao se cadastrou, ignore este email.",
-  "welcome.preheader": "Ative sua conta Weave Notes.",
-  "welcome.subject": "Bem-vindo ao Weave Notes - Ative sua conta",
+  "welcome.preheader": "Ative sua conta Weave.",
+  "welcome.subject": "Bem-vindo ao Weave - Ative sua conta",
   "welcome.subtitle": "Ativacao de conta",
-  "welcome.title": "Bem-vindo(a) ao Weave Notes",
+  "welcome.title": "Bem-vindo(a) ao Weave",
 };

@@ -123,7 +123,7 @@ class MicrosoftOauthController extends AuthBaseController {
         let existingPendingUser = null;
 
         if (existingUser && existingUser.status === "PENDING_INVITE") {
-           existingPendingUser = existingUser;
+          existingPendingUser = existingUser;
         }
 
         if (existingUser) {
@@ -134,8 +134,13 @@ class MicrosoftOauthController extends AuthBaseController {
           if (emailDomain) {
             const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
 
-            if (domainInfo && (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")) {
-              throw new Error("This email belongs to a restricted corporate domain. You must be invited.");
+            if (
+              domainInfo &&
+              (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")
+            ) {
+              throw new Error(
+                "This email belongs to a restricted corporate domain. You must be invited."
+              );
             }
           }
 

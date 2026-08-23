@@ -8,11 +8,7 @@
  * via executionContext — nothing is hardcoded in the engine.
  */
 
-import {
-  LLMRequestParams,
-  Message,
-  ToolSchema,
-} from "@/providers/normalizer";
+import { LLMRequestParams, Message, ToolSchema } from "@/providers/normalizer";
 import {
   isInternalTool,
   executeInternalTool,
@@ -24,7 +20,13 @@ import { ModelFactoryOptions } from "@/types/models.types";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { HumanMessage, SystemMessage, AIMessage, ToolMessage, BaseMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  SystemMessage,
+  AIMessage,
+  ToolMessage,
+  BaseMessage,
+} from "@langchain/core/messages";
 
 const MAX_REACT_ITERATIONS = Number.parseInt(
   process.env.WEAVE_ENGINE_MAX_REACT_ITERATIONS || "4",
@@ -147,23 +149,30 @@ function convertToLangChainMessages(
       lcMessages.push(new HumanMessage({ content: msg.content }));
     } else if (msg.role === "assistant") {
       if (msg.tool_calls && msg.tool_calls.length > 0) {
-         lcMessages.push(new AIMessage({
-           content: msg.content || "",
-           tool_calls: msg.tool_calls.map((t: any) => ({
-             args: typeof t.function.arguments === "string" ? JSON.parse(t.function.arguments) : t.function.arguments,
-             id: t.id,
-             name: t.function.name
-           }))
-         }));
+        lcMessages.push(
+          new AIMessage({
+            content: msg.content || "",
+            tool_calls: msg.tool_calls.map((t: any) => ({
+              args:
+                typeof t.function.arguments === "string"
+                  ? JSON.parse(t.function.arguments)
+                  : t.function.arguments,
+              id: t.id,
+              name: t.function.name,
+            })),
+          })
+        );
       } else {
-         lcMessages.push(new AIMessage({ content: msg.content || "" }));
+        lcMessages.push(new AIMessage({ content: msg.content || "" }));
       }
     } else if (msg.role === "tool") {
-      lcMessages.push(new ToolMessage({
-         content: msg.content || "",
-         name: msg.name,
-         tool_call_id: msg.tool_call_id
-      }));
+      lcMessages.push(
+        new ToolMessage({
+          content: msg.content || "",
+          name: msg.name,
+          tool_call_id: msg.tool_call_id,
+        })
+      );
     }
   }
 
@@ -171,7 +180,7 @@ function convertToLangChainMessages(
     const contentParts: any[] = [{ text: userMessage, type: "text" }];
     for (const f of files as any[]) {
       if (f.type === "image_url") {
-         contentParts.push({ image_url: { url: f.image_url.url }, type: "image_url" });
+        contentParts.push({ image_url: { url: f.image_url.url }, type: "image_url" });
       }
     }
     lcMessages.push(new HumanMessage({ content: contentParts }));
@@ -224,7 +233,10 @@ export async function executeTask({
     streaming: Boolean(executionContext.onChunk),
     thinking: executionContext.thinking
       ? {
-          budgetTokens: typeof executionContext.thinking === "object" ? (executionContext.thinking as any).budget_tokens : undefined,
+          budgetTokens:
+            typeof executionContext.thinking === "object"
+              ? (executionContext.thinking as any).budget_tokens
+              : undefined,
           enabled: true,
         }
       : undefined,
@@ -238,9 +250,17 @@ export async function executeTask({
 
   while (iterations < MAX_REACT_ITERATIONS) {
     if (Date.now() - startedAt >= maxDurationMs) {
-      const isPt = typeof executionContext.language === "string" && executionContext.language.toLowerCase().startsWith("pt");
-      const msg = isPt ? "Atingi o limite de tempo interno da ferramenta e precisei parar o raciocínio." : "I hit the internal time limit for this task and had to stop early.";
-      return { data: { content: msg, text: msg, type: "text" }, executedActions, providerUsed: executionContext.provider };
+      const isPt =
+        typeof executionContext.language === "string" &&
+        executionContext.language.toLowerCase().startsWith("pt");
+      const msg = isPt
+        ? "Atingi o limite de tempo interno da ferramenta e precisei parar o raciocínio."
+        : "I hit the internal time limit for this task and had to stop early.";
+      return {
+        data: { content: msg, text: msg, type: "text" },
+        executedActions,
+        providerUsed: executionContext.provider,
+      };
     }
 
     iterations++;
@@ -249,7 +269,9 @@ export async function executeTask({
     if (executionContext.traceId && executionContext.organizationId) {
       llmSpanId = await Tracer.startSpan(
         { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
-        `llm_call:${model}`, "llm", { model }
+        `llm_call:${model}`,
+        "llm",
+        { model }
       );
     }
 
@@ -263,7 +285,7 @@ export async function executeTask({
           else fullMessage = (fullMessage as any).concat(chunk) as AIMessage;
 
           if (chunk.content) {
-             executionContext.onChunk(chunk.content as string);
+            executionContext.onChunk(chunk.content as string);
           }
         }
         aiMessage = fullMessage!;
@@ -292,75 +314,139 @@ export async function executeTask({
     messages.push(aiMessage);
 
     if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-       const internalCalls = aiMessage.tool_calls.filter((t) => isInternalTool(t.name));
-       const externalCalls = aiMessage.tool_calls.filter((t) => !isInternalTool(t.name));
+      const internalCalls = aiMessage.tool_calls.filter((t) => isInternalTool(t.name));
+      const externalCalls = aiMessage.tool_calls.filter((t) => !isInternalTool(t.name));
 
-       if (internalCalls.length > 0 && externalCalls.length === 0) {
-          const results = await Promise.all(
-             internalCalls.map(async (tc) => {
-               if (executionContext.onChunk) {
-                  executionContext.onChunk({ name: tc.name, status: "running", type: "action_state" });
-               }
-
-               let spanId: string | undefined;
-               if (executionContext.traceId && executionContext.organizationId) {
-                 spanId = await Tracer.startSpan(
-                   { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
-                   tc.name, "tool", tc.args
-                 );
-               }
-
-               try {
-                 const result = await executeInternalTool(tc.name, tc.args as any, executionContext as any);
-                 if (executionContext.onChunk) executionContext.onChunk({ name: tc.name, status: "completed", success: true, type: "action_state" });
-                 if (spanId && executionContext.traceId && executionContext.organizationId) {
-                   await Tracer.endSpan(spanId, { organizationId: executionContext.organizationId, traceId: executionContext.traceId }, { output: result, status: "success" });
-                 }
-                 return { error: null, result, tc };
-               } catch (err: unknown) {
-                 const errorMessage = (err as Error).message;
-                 if (executionContext.onChunk) executionContext.onChunk({ name: tc.name, status: "completed", success: false, type: "action_state" });
-                 if (spanId && executionContext.traceId && executionContext.organizationId) {
-                   await Tracer.endSpan(spanId, { organizationId: executionContext.organizationId, traceId: executionContext.traceId }, { error_message: errorMessage, status: "error" });
-                 }
-                 return { error: errorMessage || "Tool execution failed", result: null, tc };
-               }
-             })
-          );
-
-          let circuitBreakerTripped = false;
-          let failingToolName: string | null = null;
-
-          for (const { tc, result, error } of results) {
-            const signature = `${tc.name}:${JSON.stringify(tc.args)}`;
-            if (error) {
-              failureCounts[signature] = (failureCounts[signature] || 0) + 1;
-              if (failureCounts[signature] >= 2) { circuitBreakerTripped = true; failingToolName = tc.name; }
+      if (internalCalls.length > 0 && externalCalls.length === 0) {
+        const results = await Promise.all(
+          internalCalls.map(async (tc) => {
+            if (executionContext.onChunk) {
+              executionContext.onChunk({ name: tc.name, status: "running", type: "action_state" });
             }
-            const output = error ? { error } : result;
-            executedActions.push({ args: tc.args, name: tc.name, result: output });
-            messages.push(new ToolMessage({ content: truncateToolOutput(output, 12000), name: tc.name, tool_call_id: tc.id! }));
-          }
 
-          if (circuitBreakerTripped) {
-            const msg = "Estou tendo problemas técnicos contínuos com a ferramenta " + (failingToolName || "") + " e não consegui concluir a tarefa. Por favor, tente novamente mais tarde.";
-            return { data: { content: msg, text: msg, type: "text" }, executedActions, providerUsed: executionContext.provider };
+            let spanId: string | undefined;
+            if (executionContext.traceId && executionContext.organizationId) {
+              spanId = await Tracer.startSpan(
+                {
+                  organizationId: executionContext.organizationId,
+                  traceId: executionContext.traceId,
+                },
+                tc.name,
+                "tool",
+                tc.args
+              );
+            }
+
+            try {
+              const result = await executeInternalTool(
+                tc.name,
+                tc.args as any,
+                executionContext as any
+              );
+              if (executionContext.onChunk)
+                executionContext.onChunk({
+                  name: tc.name,
+                  status: "completed",
+                  success: true,
+                  type: "action_state",
+                });
+              if (spanId && executionContext.traceId && executionContext.organizationId) {
+                await Tracer.endSpan(
+                  spanId,
+                  {
+                    organizationId: executionContext.organizationId,
+                    traceId: executionContext.traceId,
+                  },
+                  { output: result, status: "success" }
+                );
+              }
+              return { error: null, result, tc };
+            } catch (err: unknown) {
+              const errorMessage = (err as Error).message;
+              if (executionContext.onChunk)
+                executionContext.onChunk({
+                  name: tc.name,
+                  status: "completed",
+                  success: false,
+                  type: "action_state",
+                });
+              if (spanId && executionContext.traceId && executionContext.organizationId) {
+                await Tracer.endSpan(
+                  spanId,
+                  {
+                    organizationId: executionContext.organizationId,
+                    traceId: executionContext.traceId,
+                  },
+                  { error_message: errorMessage, status: "error" }
+                );
+              }
+              return { error: errorMessage || "Tool execution failed", result: null, tc };
+            }
+          })
+        );
+
+        let circuitBreakerTripped = false;
+        let failingToolName: string | null = null;
+
+        for (const { tc, result, error } of results) {
+          const signature = `${tc.name}:${JSON.stringify(tc.args)}`;
+          if (error) {
+            failureCounts[signature] = (failureCounts[signature] || 0) + 1;
+            if (failureCounts[signature] >= 2) {
+              circuitBreakerTripped = true;
+              failingToolName = tc.name;
+            }
           }
-          continue;
-       } else {
-         return {
-           data: { toolCalls: aiMessage.tool_calls.map(tc => ({ arguments: tc.args, id: tc.id, name: tc.name })), type: "function_call" },
-           executedActions,
-           providerUsed: executionContext.provider
-         };
-       }
+          const output = error ? { error } : result;
+          executedActions.push({ args: tc.args, name: tc.name, result: output });
+          messages.push(
+            new ToolMessage({
+              content: truncateToolOutput(output, 12000),
+              name: tc.name,
+              tool_call_id: tc.id!,
+            })
+          );
+        }
+
+        if (circuitBreakerTripped) {
+          const msg =
+            "Estou tendo problemas técnicos contínuos com a ferramenta " +
+            (failingToolName || "") +
+            " e não consegui concluir a tarefa. Por favor, tente novamente mais tarde.";
+          return {
+            data: { content: msg, text: msg, type: "text" },
+            executedActions,
+            providerUsed: executionContext.provider,
+          };
+        }
+        continue;
+      } else {
+        return {
+          data: {
+            toolCalls: aiMessage.tool_calls.map((tc) => ({
+              arguments: tc.args,
+              id: tc.id,
+              name: tc.name,
+            })),
+            type: "function_call",
+          },
+          executedActions,
+          providerUsed: executionContext.provider,
+        };
+      }
     }
 
     return {
       data: {
-        content: typeof aiMessage.content === "string" ? aiMessage.content : JSON.stringify(aiMessage.content),
+        content:
+          typeof aiMessage.content === "string"
+            ? aiMessage.content
+            : JSON.stringify(aiMessage.content),
         resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined,
-        text: typeof aiMessage.content === "string" ? aiMessage.content : JSON.stringify(aiMessage.content),
+        text:
+          typeof aiMessage.content === "string"
+            ? aiMessage.content
+            : JSON.stringify(aiMessage.content),
         type: "text",
       },
       executedActions,
@@ -368,11 +454,20 @@ export async function executeTask({
     };
   }
 
-  const isPt = typeof executionContext.language === "string" && executionContext.language.toLowerCase().startsWith("pt");
-  const fallbackMsg = isPt ? "Pensei por muitas iterações e não consegui chegar numa conclusão final." : "I thought for many iterations but couldn't reach a final conclusion.";
+  const isPt =
+    typeof executionContext.language === "string" &&
+    executionContext.language.toLowerCase().startsWith("pt");
+  const fallbackMsg = isPt
+    ? "Pensei por muitas iterações e não consegui chegar numa conclusão final."
+    : "I thought for many iterations but couldn't reach a final conclusion.";
 
   return {
-    data: { content: fallbackMsg, resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined, text: fallbackMsg, type: "text" },
+    data: {
+      content: fallbackMsg,
+      resolvedInternalTools: executedActions.length > 0 ? executedActions : undefined,
+      text: fallbackMsg,
+      type: "text",
+    },
     executedActions,
     providerUsed: executionContext.provider,
   };

@@ -232,7 +232,7 @@ export async function callXAIProvider(params: LLMRequestParams): Promise<LLMResp
         inputTokens: usageData.prompt_tokens || 0,
         outputTokens: usageData.completion_tokens || 0,
         // Grok reasoning models include reasoning token count
-thinkingTokens: (usageDetails.reasoning_tokens as number) || 0,
+        thinkingTokens: (usageDetails.reasoning_tokens as number) || 0,
 
         totalTokens: usageData.total_tokens || 0,
       }

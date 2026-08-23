@@ -10,7 +10,7 @@ class SystemSettingsCache {
   async load() {
     const now = Date.now();
     // Se não tiver configurações no cache ou o tempo TTL expirou
-    if (!this.settings || (now - this.lastFetched > this.ttlMs)) {
+    if (!this.settings || now - this.lastFetched > this.ttlMs) {
       try {
         this.settings = await SystemSettingsRepository.getSettings();
         this.lastFetched = now;
@@ -22,7 +22,7 @@ class SystemSettingsCache {
           instance_branding: {},
           oauth_config: {},
           smtp_config: {},
-          storage_config: {}
+          storage_config: {},
         };
       }
     }

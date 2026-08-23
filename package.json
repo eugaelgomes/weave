@@ -1,6 +1,11 @@
 {
   "name": "theweave-workspace",
   "private": true,
+  "author": {
+    "name": "Gael R. Gomes",
+    "email": "gael.rens@gmail.com",
+    "url": "https://gaelgomes.dev"
+  },
   "packageManager": "npm@11.18.0",
   "scripts": {
     "deploy": "./scripts/deploy.sh",

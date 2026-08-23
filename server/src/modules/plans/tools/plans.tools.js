@@ -4,7 +4,7 @@ const { API_SCOPES } = require("@/config/api-scopes");
 
 const createPlansTools = (user) => ({
   manage_plans: {
-    description: `Manage Weave Notes subscription plans, usage limits, and quotas.
+    description: `Manage Weave subscription plans, usage limits, and quotas.
 FUNCTIONALITIES (Actions):
 1. 'get_current': Retrieves the active plan details.
    - How to use: Provide 'action' as "get_current". No extra arguments are required.

@@ -13,7 +13,7 @@ Expõe um `MailService` singleton que valida payload de email e enfileira envio 
 
 - Campos obrigatorios: `to` e `subject`.
 - Usa `EMAIL_FROM` como remetente padrao.
-- Fora de producao, usa fallback `Weave Notes <onboarding@resend.dev>`.
+- Fora de producao, usa fallback `Weave <onboarding@resend.dev>`.
 - Normaliza destinatarios para array e valida formatos basicos de estrutura.
 
 ## Uso comum

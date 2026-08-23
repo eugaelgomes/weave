@@ -27,7 +27,9 @@ const {
 
 // Utils
 const { multipartImageUpload } = require("@/utils/middlewares.util");
-const { validateImageMimeAndSize: validateCompressedImageSize } = require("@/utils/middlewares.util");
+const {
+  validateImageMimeAndSize: validateCompressedImageSize,
+} = require("@/utils/middlewares.util");
 
 const router = express.Router();
 

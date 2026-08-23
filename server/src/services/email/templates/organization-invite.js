@@ -8,16 +8,16 @@ async function welcome_message(email, organization_name) {
     const { html, text } = buildMailTemplate({
       ctaText: "Acessar plataforma",
       ctaUrl: frontendUrl,
-      introLines: [`A organizacao ${organization_name} convidou voce para usar o Weave Notes.`],
-      preheader: "Voce foi convidado(a) para o Weave Notes.",
+      introLines: [`A organizacao ${organization_name} convidou voce para usar o Weave.`],
+      preheader: "Voce foi convidado(a) para o Weave.",
       subtitle: "Organizacao",
-      title: "Convite para o Weave Notes",
+      title: "Convite para o Weave",
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
       html,
-      subject: `Ola, voce foi convidado para o Weave Notes pela ${organization_name}`,
+      subject: `Ola, voce foi convidado para o Weave pela ${organization_name}`,
       text,
       to: email,
     });

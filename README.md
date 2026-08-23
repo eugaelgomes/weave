@@ -236,6 +236,13 @@ docker compose logs -f caddy
 
 ---
 
+## Author
+
+Created and maintained by **Gael R. Gomes** ([gael.rens@gmail.com](mailto:gael.rens@gmail.com)).
+Website: [https://gaelgomes.dev](https://gaelgomes.dev)
+
+---
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

@@ -190,7 +190,7 @@ const buildOrganizationActionContent = (payload) => {
     const message =
       payload.content?.message ||
       `You have been added to the organization ${
-        organizationName || "Weave Notes"
+        organizationName || "Weave"
       }${roleLabel ? ` as ${roleLabel}` : ""}.`;
 
     return createBaseContent(payload, {
@@ -213,7 +213,7 @@ const buildOrganizationInviteContent = (payload) => {
     const message =
       payload.content?.message ||
       `${inviterName || "A member"} invited you to the organization ${
-        organizationName || "Weave Notes"
+        organizationName || "Weave"
       }${roleLabel ? ` as ${roleLabel}` : ""}.`;
 
     return createBaseContent(payload, {
@@ -228,7 +228,7 @@ const buildOrganizationInviteContent = (payload) => {
     const newMemberName = payload.content?.new_member_name;
     const message =
       payload.content?.message ||
-      `${newMemberName || "A new member"} accepted your invite and is now part of the organization ${organizationName || "Weave Notes"}.`;
+      `${newMemberName || "A new member"} accepted your invite and is now part of the organization ${organizationName || "Weave"}.`;
 
     return createBaseContent(payload, {
       actionKey,

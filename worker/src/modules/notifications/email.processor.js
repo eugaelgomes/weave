@@ -7,9 +7,7 @@ const { logger } = require("@theweave/database");
 class EmailProcessor {
   constructor() {
     if (!process.env.RESEND_API_KEY) {
-      logger.warn(
-        "[Email Processor] RESEND_API_KEY is not defined. Email processor disabled."
-      );
+      logger.warn("[Email Processor] RESEND_API_KEY is not defined. Email processor disabled.");
       this.resend = null;
     } else {
       this.resend = new Resend(process.env.RESEND_API_KEY);

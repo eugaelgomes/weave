@@ -21,14 +21,14 @@ class SamlSsoController extends AuthBaseController {
     return new SAML({
       acceptedClockSkewMs: 120000,
 
-callbackUrl: `${getBackendUrl()}/api/v1/auth/sso/saml/acs`,
+      callbackUrl: `${getBackendUrl()}/api/v1/auth/sso/saml/acs`,
 
-// Weave SP Entity ID
-cert: cert,
+      // Weave SP Entity ID
+      cert: cert,
 
-entryPoint: domain.sso_metadata.ssoUrl,
+      entryPoint: domain.sso_metadata.ssoUrl,
       // IdP Public Certificate
-identifierFormat: null,
+      identifierFormat: null,
       issuer: "weave-notes",
       signatureAlgorithm: "sha256",
     });
@@ -174,7 +174,6 @@ identifierFormat: null,
         }
         return res.redirect(`${frontendURL}/home/?auth=success`);
       });
-
     } catch (error) {
       console.error("SAML ACS Callback error:", error);
       return res.redirect(`${frontendURL}/auth?error=sso_validation_failed`);

@@ -7,7 +7,7 @@ const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.ut
 
 const createNotesTools = (user) => ({
   manage_notes: {
-    description: `Manage Weave Notes (create, update, delete, get, list).
+    description: `Manage notes (create, update, delete, get, list).
 IMPORTANT: A "Weave Note" is a fully-fledged RICH TEXT DOCUMENT composed of a hierarchical tree of structural blocks (headings, paragraphs, lists, todos, code). It is NOT a simple flashcard or sticky note. Use manage_note_blocks to add or modify its rich text content.
 
 FUNCTIONALITIES (Actions):

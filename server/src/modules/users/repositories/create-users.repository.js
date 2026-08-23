@@ -121,15 +121,8 @@ class CreateUsersRepository extends BaseRepository {
    * Activates a PENDING_INVITE user.
    */
   async updateUserActivation(userId, userData, client = null) {
-    const {
-      name,
-      username,
-      password,
-      timezone,
-      private_profile,
-      birth_date,
-      phone_number,
-    } = userData;
+    const { name, username, password, timezone, private_profile, birth_date, phone_number } =
+      userData;
 
     const query = `
       UPDATE users SET

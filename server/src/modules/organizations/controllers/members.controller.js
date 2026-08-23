@@ -276,7 +276,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
         });
       }
 
-
       const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", email);
       const targetUser = existingUsers.find((u) => u.email === email);
 
@@ -337,8 +336,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
     }
   }
 
-
-
   /**
    * Bulk invite members
    * @param {Request & AuthenticatedRequest} req
@@ -373,7 +370,6 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
         try {
           const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
-
 
           const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", email);
           const targetUser = existingUsers.find((u) => u.email === email);

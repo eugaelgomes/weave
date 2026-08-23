@@ -812,7 +812,7 @@ class OrganizationsRepository {
           email,
           name,
           username || email.split("@")[0],
-          publicUserId
+          publicUserId,
         ]);
         userId = insertRes.rows[0].user_id;
         userStatus = insertRes.rows[0].status;
@@ -828,13 +828,13 @@ class OrganizationsRepository {
         email,
         invite_id: userId,
 
-role,
+        role,
 
-status: userStatus,
+        status: userStatus,
         // Mock invite_id for compatibility with old code that might return invite.invite_id
-user_id: userId
+        user_id: userId,
       };
-    } catch(err) {
+    } catch (err) {
       await client.query("ROLLBACK");
       throw err;
     } finally {

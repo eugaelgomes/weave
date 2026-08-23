@@ -213,10 +213,8 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
           inputTokens: (finalUsage.prompt_tokens as number) || 0,
           outputTokens: (finalUsage.completion_tokens as number) || 0,
           thinkingTokens:
-            (
-              (finalUsage.completion_tokens_details as Record<string, unknown>)
-                ?.reasoning_tokens as number
-            ) || 0,
+            ((finalUsage.completion_tokens_details as Record<string, unknown>)
+              ?.reasoning_tokens as number) || 0,
           totalTokens: (finalUsage.total_tokens as number) || 0,
         }
       : null;
@@ -251,8 +249,7 @@ export async function callDeepseekProvider(params: LLMRequestParams): Promise<LL
     ? {
         inputTokens: usageData.prompt_tokens || 0,
         outputTokens: usageData.completion_tokens || 0,
-        thinkingTokens:
-          usageData.completion_tokens_details?.reasoning_tokens || 0,
+        thinkingTokens: usageData.completion_tokens_details?.reasoning_tokens || 0,
         totalTokens: usageData.total_tokens || 0,
       }
     : null;

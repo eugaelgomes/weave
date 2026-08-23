@@ -31,13 +31,7 @@ class SamlSsoRepository extends BaseRepository {
       RETURNING user_id, public_user_id, username, name, email, created_at;
     `;
 
-    const results = await this.executeQuery(query, [
-      name,
-      email,
-      username,
-      planId,
-      publicUserId,
-    ]);
+    const results = await this.executeQuery(query, [name, email, username, planId, publicUserId]);
 
     return results[0];
   }

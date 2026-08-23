@@ -1,11 +1,11 @@
 {
   "name": "weave-engine",
   "version": "1.0.0",
-  "description": "AI engine service for Weave Notes",
+  "description": "AI engine service for Weave",
   "license": "ISC",
   "author": {
-    "name": "Gael Renê Gomes",
-    "email": "hello@gaelgomes.dev",
+    "name": "Gael R. Gomes",
+    "email": "gael.rens@gmail.com",
     "url": "https://gaelgomes.dev"
   },
   "type": "commonjs",

@@ -1,6 +1,6 @@
-# Weave Notes — Front end
+# Weave — Front end
 
-Web UI for Weave Notes, built with Next.js, React 19, and Tailwind CSS.
+Web UI for Weave, built with Next.js, React 19, and Tailwind CSS.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16+-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
@@ -10,7 +10,7 @@ Web UI for Weave Notes, built with Next.js, React 19, and Tailwind CSS.
 
 ## Overview
 
-The **Weave Notes** front end is a Next.js application for structured work: block-based notes, drag-and-drop, collaboration, and Weave AI chat.
+The **Weave** front end is a Next.js application for structured work: block-based notes, drag-and-drop, collaboration, and Weave AI chat.
 
 ## Technologies
 

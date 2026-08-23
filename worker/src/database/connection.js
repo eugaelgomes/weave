@@ -16,5 +16,5 @@ if (!sharedDatabase.pool) {
 
 module.exports = {
   ...sharedDatabase,
-  pool: sharedDatabase.pool
+  pool: sharedDatabase.pool,
 };

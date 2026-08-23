@@ -1,6 +1,6 @@
-# Weave Notes — Backend (`weave-api`)
+# Weave — Backend (`weave-api`)
 
-REST API for Weave Notes. **Node.js 20+** (see CI) / **Express 4**. Default port: **8080**.
+REST API for Weave. **Node.js 20+** (see CI) / **Express 4**. Default port: **8080**.
 
 ---
 

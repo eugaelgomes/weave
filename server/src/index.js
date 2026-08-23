@@ -53,7 +53,7 @@ server.on("error", onError);
 server.on("listening", () => {
   const addr = server.address();
   const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
-  console.info(`Weave Notes API running on ${bind}`);
+  console.info(`Weave API running on ${bind}`);
 
   // Background consumers migrated to Agent House worker.
 });

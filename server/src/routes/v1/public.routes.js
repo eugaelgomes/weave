@@ -22,7 +22,7 @@ const publicRoutes = [
     handler: (req, res) => {
       res.json({
         apiToken: req.apiToken,
-        message: "Successfully accessed Weave Notes Public API.",
+        message: "Successfully accessed Weave Public API.",
         status: "OK",
         user: req.user,
       });

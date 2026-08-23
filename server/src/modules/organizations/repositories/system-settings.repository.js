@@ -33,7 +33,15 @@ class SystemSettingsRepository {
 
     for (const [key, value] of Object.entries(updates)) {
       // Allow only known JSON fields
-      if (["storage_config", "smtp_config", "oauth_config", "ai_global_config", "instance_branding"].includes(key)) {
+      if (
+        [
+          "storage_config",
+          "smtp_config",
+          "oauth_config",
+          "ai_global_config",
+          "instance_branding",
+        ].includes(key)
+      ) {
         fields.push(`${key} = $${count}`);
         values.push(value); // Assuming value is an object, node-postgres might need JSON.stringify if not handled. Let's send raw object and pg driver stringifies it or we do. We will use JSON.stringify to be safe.
       }

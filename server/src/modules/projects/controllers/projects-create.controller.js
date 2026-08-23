@@ -1,8 +1,5 @@
 const ProjectsCoreController = require("@/modules/projects/controllers/projects-core.controller");
-const {
-  ALLOWED_PROJECT_STATUSES,
-  normalizeProjectStatus,
-} = require("@/utils/patterns.util");
+const { ALLOWED_PROJECT_STATUSES, normalizeProjectStatus } = require("@/utils/patterns.util");
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");

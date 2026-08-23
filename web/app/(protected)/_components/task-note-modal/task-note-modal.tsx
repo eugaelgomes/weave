@@ -5,14 +5,14 @@ import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 import {
-  NotesContext,
+  useNotes,
   type Note,
   type Block,
   type UpdateNoteData,
 } from "@/app/_contexts/notes-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import {
-  ProjectsContext,
+  useProjects,
   type ProjectStage,
   type TaskPriority,
 } from "@/app/_contexts/projects-context";
@@ -56,25 +56,27 @@ function TaskNoteModalInner() {
   const { state, callbacks, closeModal, openModal } = useTaskNoteModal();
   const { isOpen, mode, noteId, projectId, projectPublicId, stageId, parentNoteId } = state;
 
-  const notesContext = useContext(NotesContext);
-  const projectsContext = useContext(ProjectsContext);
+  const {
+    getNoteById,
+    createNote: createNoteService,
+    updateNote,
+    deleteNote,
+    exportNoteAsPDF,
+    putNoteBlocksSync,
+  } = useNotes();
+
+  const {
+    projects,
+    getProjectStages,
+    getTaskPriorities,
+    addNoteToProject,
+    updateProjectNoteStage,
+    createTaskInStage,
+    getProjectTags,
+    getCollaborators,
+  } = useProjects();
+
   const { user } = useAuth();
-
-  const getNoteById = notesContext?.getNoteById;
-  const createNoteService = notesContext?.createNote;
-  const updateNote = notesContext?.updateNote;
-  const deleteNote = notesContext?.deleteNote;
-  const exportNoteAsPDF = notesContext?.exportNoteAsPDF;
-  const putNoteBlocksSync = notesContext?.putNoteBlocksSync;
-
-  const projects = projectsContext?.projects ?? [];
-  const getProjectStages = projectsContext?.getProjectStages;
-  const getTaskPriorities = projectsContext?.getTaskPriorities;
-  const addNoteToProject = projectsContext?.addNoteToProject;
-  const updateProjectNoteStage = projectsContext?.updateProjectNoteStage;
-  const createTaskInStage = projectsContext?.createTaskInStage;
-  const getProjectTags = projectsContext?.getProjectTags;
-  const getCollaborators = projectsContext?.getCollaborators;
 
   const [mounted, setMounted] = useState(false);
   const [note, setNote] = useState<Note | null>(null);
@@ -469,7 +471,7 @@ function TaskNoteModalInner() {
   }, [note, deleteNote, callbacks, closeModal]);
 
   const handleExport = useCallback(async () => {
-    if (!note || isExporting) return;
+    if (!note || isExporting || !exportNoteAsPDF) return;
     setIsExporting(true);
     try {
       const exported = await exportNoteAsPDF(note.id);
@@ -514,13 +516,19 @@ function TaskNoteModalInner() {
           await saveAndApply({ project_id: null });
           await loadTaskPriorities({ orgId: note.associated_organization?.id });
         } else {
-          await addNoteToProject(newProjectId, note.id);
-          const stages = await getProjectStages(newProjectId);
-          setProjectStages(stages || []);
+          if (addNoteToProject) {
+            await addNoteToProject(newProjectId, note.id);
+          }
+          if (getProjectStages) {
+            const stages = await getProjectStages(newProjectId);
+            setProjectStages(stages || []);
+          }
           await loadTaskPriorities({ projectId: newProjectId });
-          const fresh = await getNoteById(note.id);
-          if (fresh) {
-            applyServerNote(fresh, { replaceBlocks: false });
+          if (getNoteById) {
+            const fresh = await getNoteById(note.id);
+            if (fresh) {
+              applyServerNote(fresh, { replaceBlocks: false });
+            }
           }
         }
       } catch (err) {
@@ -547,7 +555,9 @@ function TaskNoteModalInner() {
 
       setIsSaving(true);
       try {
-        await updateProjectNoteStage(note.associated_project.id, note.id, newStageId);
+        if (updateProjectNoteStage) {
+          await updateProjectNoteStage(note.associated_project.id, note.id, newStageId);
+        }
         const stageName = projectStages.find((s) => s.id === newStageId)?.name ?? "";
         setNote((prev) =>
           prev?.associated_project
@@ -588,7 +598,7 @@ function TaskNoteModalInner() {
 
   const canEdit = mode === "edit" || mode === "create";
 
-  if (!mounted || !isOpen || !notesContext || !projectsContext) return null;
+  if (!mounted || !isOpen) return null;
 
   const modalContent = (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
@@ -714,8 +724,7 @@ function TaskNoteModalInner() {
 }
 
 function TaskNoteModalCommentsPanel({ note, onClose }: { note: Note; onClose: () => void }) {
-  const notesContext = useContext(NotesContext);
-  const searchUsers = notesContext ? notesContext.searchUsers : async () => [];
+  const { searchUsers } = useNotes();
 
   const embeddableFiles: NoteCommentsEmbeddableFile[] = React.useMemo(() => {
     const files = note.properties?.files || [];

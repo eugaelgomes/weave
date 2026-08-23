@@ -1,11 +1,11 @@
 {
   "name": "weave-worker",
   "version": "1.0.0",
-  "description": "Background worker for Weave Notes API",
+  "description": "Background worker for Weave API",
   "license": "ISC",
   "author": {
-    "name": "Gael Renê Gomes",
-    "email": "hello@gaelgomes.dev",
+    "name": "Gael R. Gomes",
+    "email": "gael.rens@gmail.com",
     "url": "https://gaelgomes.dev"
   },
   "type": "commonjs",
