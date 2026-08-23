@@ -18,21 +18,21 @@ const colors = {
   dim: "\x1b[2m",
   cyan: "\x1b[36m",
   green: "\x1b[32m",
-  yellow: "\x1b[33m",
+  yellow: "\x1b[93m", // Bright Brand Yellow (#FFD500)
   red: "\x1b[31m",
   magenta: "\x1b[35m",
   blue: "\x1b[34m",
 };
 
 const logo = `
-${colors.cyan}${colors.bright}
+${colors.yellow}${colors.bright}
   ██╗   ██╗ ███████╗  █████╗  ██╗   ██╗ ███████╗
   ██║   ██║ ██╔════╝ ██╔══██╗ ██║   ██║ ██╔════╝
   ██║██╗██║ █████╗   ███████║ ██║   ██║ █████╗  
   ████████║ ██╔══╝   ██╔══██║ ╚██╗ ██╔╝ ██╔══╝  
   ╚██████╔╝ ███████╗ ██║  ██║  ╚████╔╝  ███████╗
 ${colors.reset}
-${colors.bright}  Weave${colors.reset} ${colors.dim} — Enterprise AI Agent & Workflow Engine${colors.reset}
+${colors.yellow}${colors.bright}  Weave${colors.reset} ${colors.dim} — Enterprise AI Agent & Workflow Engine${colors.reset}
 ${colors.dim}  Created by Gael R. Gomes <gael.rens@gmail.com> (https://gaelgomes.dev)${colors.reset}
 `;
 
@@ -60,7 +60,7 @@ function createInterface() {
 
 function prompt(rl, question, defaultValue = "", autoYes = false) {
   if (autoYes) {
-    console.log(`${colors.bright}${question}${colors.reset}: ${colors.cyan}${defaultValue}${colors.reset} (auto-selected)`);
+    console.log(`${colors.bright}${question}${colors.reset}: ${colors.yellow}${defaultValue}${colors.reset} (auto-selected)`);
     return Promise.resolve(defaultValue);
   }
   return new Promise((resolve) => {
@@ -101,6 +101,72 @@ function copyRecursiveSync(src, dest) {
   }
 }
 
+async function configureDatabaseAndRedis(rl, autoYes = false) {
+  console.log(`\n${colors.bright}Database Setup (PostgreSQL):${colors.reset}`);
+  console.log(`  ${colors.yellow}1)${colors.reset} Local Docker Container (PostgreSQL)`);
+  console.log(`  ${colors.yellow}2)${colors.reset} External PostgreSQL Database (AWS RDS, Supabase, Neon, Self-Hosted)`);
+
+  const dbChoice = await prompt(rl, "PostgreSQL Choice [1-2]", "1", autoYes);
+
+  let dbHost = "localhost";
+  let dbPort = "5432";
+  let dbName = "theweave";
+  let dbUser = "postgres";
+  let dbPass = "postgres";
+  let dbUrl = "";
+  let usesDockerDb = true;
+
+  if (dbChoice === "2") {
+    usesDockerDb = false;
+    const enterUrl = await prompt(rl, "Use full DATABASE_URL connection string? (y/n)", "n", autoYes);
+    if (enterUrl.toLowerCase() === "y") {
+      dbUrl = await prompt(rl, "DATABASE_URL string", "postgresql://postgres:postgres@localhost:5432/theweave?schema=public", autoYes);
+    } else {
+      dbHost = await prompt(rl, "PostgreSQL Host", "localhost", autoYes);
+      dbPort = await prompt(rl, "PostgreSQL Port", "5432", autoYes);
+      dbName = await prompt(rl, "PostgreSQL Database Name", "theweave", autoYes);
+      dbUser = await prompt(rl, "PostgreSQL User", "postgres", autoYes);
+      dbPass = await prompt(rl, "PostgreSQL Password", "postgres", autoYes);
+    }
+  }
+
+  if (!dbUrl) {
+    dbUrl = `postgresql://${dbUser}:${dbPass}@${dbHost}:${dbPort}/${dbName}?schema=public`;
+  }
+
+  console.log(`\n${colors.bright}Redis Infrastructure Setup:${colors.reset}`);
+  console.log(`  ${colors.yellow}1)${colors.reset} Local Docker Container (Redis)`);
+  console.log(`  ${colors.yellow}2)${colors.reset} External Redis Cache (Upstash, AWS ElastiCache, Self-Hosted)`);
+
+  const redisChoice = await prompt(rl, "Redis Choice [1-2]", "1", autoYes);
+
+  let redisHost = "localhost";
+  let redisPort = "6379";
+  let redisPass = "";
+  let usesDockerRedis = true;
+
+  if (redisChoice === "2") {
+    usesDockerRedis = false;
+    redisHost = await prompt(rl, "Redis Host", "localhost", autoYes);
+    redisPort = await prompt(rl, "Redis Port", "6379", autoYes);
+    redisPass = await prompt(rl, "Redis Password (optional)", "", autoYes);
+  }
+
+  return {
+    dbHost,
+    dbPort,
+    dbName,
+    dbUser,
+    dbPass,
+    dbUrl,
+    usesDockerDb,
+    redisHost,
+    redisPort,
+    redisPass,
+    usesDockerRedis,
+  };
+}
+
 async function main() {
   const args = process.argv.slice(2);
   let autoYes = false;
@@ -127,10 +193,10 @@ async function main() {
 
   if (!autoYes && !customDir) {
     console.log(`${colors.bright}Select Installation Action:${colors.reset}`);
-    console.log(`  ${colors.cyan}1)${colors.reset} Create new Weave workspace (Clone & Install)`);
-    console.log(`  ${colors.cyan}2)${colors.reset} Configure Environment (.env) for current directory`);
-    console.log(`  ${colors.cyan}3)${colors.reset} Setup Production Docker Compose stack`);
-    console.log(`  ${colors.cyan}4)${colors.reset} Exit\n`);
+    console.log(`  ${colors.yellow}1)${colors.reset} Create new Weave workspace (Clone & Install)`);
+    console.log(`  ${colors.yellow}2)${colors.reset} Configure Environment (.env) for current directory`);
+    console.log(`  ${colors.yellow}3)${colors.reset} Setup Production Docker Compose stack`);
+    console.log(`  ${colors.yellow}4)${colors.reset} Exit\n`);
   }
 
   const choice = await prompt(rl, "Choice [1-4]", "1", autoYes);
@@ -150,7 +216,7 @@ async function main() {
     const targetDirName = customDir || (await prompt(rl, "Target directory", "theweave", autoYes));
     const targetPath = path.resolve(process.cwd(), targetDirName);
 
-    console.log(`\n${colors.cyan}➜ Setting up project at: ${targetPath}${colors.reset}`);
+    console.log(`\n${colors.yellow}➜ Setting up project at: ${targetPath}${colors.reset}`);
 
     if (fs.existsSync(targetPath) && fs.readdirSync(targetPath).length > 0 && targetPath !== rootRepoPath) {
       const overwrite = await prompt(rl, `Directory '${targetDirName}' is not empty. Continue anyway? (y/n)`, "y", autoYes);
@@ -178,31 +244,47 @@ async function main() {
       }
     }
 
-    // Step 2: Configure .env
+    // Step 2: Configure Database & Redis infrastructure choices
+    const infra = await configureDatabaseAndRedis(rl, autoYes);
+
     const envPath = path.join(targetPath, ".env");
-    const envExamplePath = path.join(targetPath, ".env.example");
+    const jwtSecret = generateSecret(64);
 
-    if (!fs.existsSync(envPath) && fs.existsSync(envExamplePath)) {
-      console.log(`${colors.dim}Creating .env file with default secrets...${colors.reset}`);
-      let envContent = fs.readFileSync(envExamplePath, "utf-8");
+    const customEnv = `
+# Generated by Weave CLI
+PORT=5000
+NODE_ENV=development
+USE_DOPPLER=false
 
-      // Auto-generate JWT secrets if placeholder exists
-      const jwtSecret = generateSecret(64);
-      envContent = envContent.replace(/JWT_SECRET=.*/g, `JWT_SECRET=${jwtSecret}`);
-      fs.writeFileSync(envPath, envContent);
-    }
+DATABASE_HOST_URL=${infra.dbHost}
+DATABASE_SERVICE_PORT=${infra.dbPort}
+DATABASE_NAME=${infra.dbName}
+DATABASE_USERNAME=${infra.dbUser}
+DATABASE_PASSWORD=${infra.dbPass}
+DATABASE_URL="${infra.dbUrl}"
+
+REDIS_HOST=${infra.redisHost}
+REDIS_PORT=${infra.redisPort}
+REDIS_URL="redis://${infra.redisHost}:${infra.redisPort}"
+${infra.redisPass ? `REDIS_PASSWORD=${infra.redisPass}\n` : ""}
+JWT_SECRET=${jwtSecret}
+JWT_EXPIRATION=7d
+`;
+
+    fs.writeFileSync(envPath, customEnv.trim() + "\n");
+    console.log(`\n${colors.green}✓ Saved custom configuration to .env${colors.reset}`);
 
     // Step 3: Install dependencies
     const installDeps = await prompt(rl, "Install workspace dependencies now? (y/n)", "y", autoYes);
     if (installDeps.toLowerCase() === "y") {
-      console.log(`\n${colors.cyan}Installing workspace dependencies via npm...${colors.reset}`);
+      console.log(`\n${colors.yellow}Installing workspace dependencies via npm...${colors.reset}`);
       try {
         spawnSync("npm", ["install"], { cwd: targetPath, stdio: "inherit" });
       } catch (err) {
         console.warn(`${colors.yellow}npm install encountered an issue. You can run it manually later.${colors.reset}`);
       }
 
-      console.log(`\n${colors.cyan}Generating Prisma client...${colors.reset}`);
+      console.log(`\n${colors.yellow}Generating Prisma client...${colors.reset}`);
       try {
         spawnSync("npm", ["run", "db:generate"], { cwd: targetPath, stdio: "inherit" });
       } catch (err) {
@@ -213,24 +295,23 @@ async function main() {
     console.log(`\n${colors.green}${colors.bright}🎉 Weave Workspace Initialized Successfully!${colors.reset}\n`);
     console.log(`${colors.bright}Next Steps:${colors.reset}`);
     if (process.cwd() !== targetPath) {
-      console.log(`  ${colors.cyan}cd ${targetDirName}${colors.reset}`);
+      console.log(`  ${colors.yellow}cd ${targetDirName}${colors.reset}`);
     }
-    console.log(`  ${colors.cyan}npm run services:up${colors.reset}   # Start PostgreSQL and Redis containers`);
-    console.log(`  ${colors.cyan}npm run db:migrate${colors.reset}    # Run database schema migrations`);
-    console.log(`  ${colors.cyan}npm run dev${colors.reset}           # Launch development services\n`);
-  } else if (choice === "2") {
-    console.log(`\n${colors.cyan}➜ Configuring .env file...${colors.reset}`);
-    const envPath = path.resolve(process.cwd(), ".env");
-    const envExamplePath = path.resolve(process.cwd(), ".env.example");
 
+    if (infra.usesDockerDb || infra.usesDockerRedis) {
+      console.log(`  ${colors.yellow}npm run services:up${colors.reset}   # Start PostgreSQL and Redis containers`);
+    } else {
+      console.log(`  ${colors.dim}# (PostgreSQL and Redis external connections configured)${colors.reset}`);
+    }
+
+    console.log(`  ${colors.yellow}npm run db:migrate${colors.reset}    # Run database schema migrations`);
+    console.log(`  ${colors.yellow}npm run dev${colors.reset}           # Launch development services\n`);
+  } else if (choice === "2") {
+    console.log(`\n${colors.yellow}➜ Configuring .env file...${colors.reset}`);
+    const infra = await configureDatabaseAndRedis(rl, autoYes);
+
+    const envPath = path.resolve(process.cwd(), ".env");
     const jwtSecret = generateSecret(64);
-    const dbHost = await prompt(rl, "PostgreSQL Host", "localhost", autoYes);
-    const dbPort = await prompt(rl, "PostgreSQL Port", "5432", autoYes);
-    const dbName = await prompt(rl, "PostgreSQL Database Name", "theweave", autoYes);
-    const dbUser = await prompt(rl, "PostgreSQL User", "postgres", autoYes);
-    const dbPass = await prompt(rl, "PostgreSQL Password", "postgres", autoYes);
-    const redisHost = await prompt(rl, "Redis Host", "localhost", autoYes);
-    const redisPort = await prompt(rl, "Redis Port", "6379", autoYes);
 
     const customEnv = `
 # Generated by Weave CLI
@@ -238,16 +319,17 @@ PORT=5000
 NODE_ENV=development
 USE_DOPPLER=false
 
-DATABASE_HOST_URL=${dbHost}
-DATABASE_SERVICE_PORT=${dbPort}
-DATABASE_NAME=${dbName}
-DATABASE_USERNAME=${dbUser}
-DATABASE_PASSWORD=${dbPass}
-DATABASE_URL="postgresql://${dbUser}:${dbPass}@${dbHost}:${dbPort}/${dbName}?schema=public"
+DATABASE_HOST_URL=${infra.dbHost}
+DATABASE_SERVICE_PORT=${infra.dbPort}
+DATABASE_NAME=${infra.dbName}
+DATABASE_USERNAME=${infra.dbUser}
+DATABASE_PASSWORD=${infra.dbPass}
+DATABASE_URL="${infra.dbUrl}"
 
-REDIS_HOST=${redisHost}
-REDIS_PORT=${redisPort}
-
+REDIS_HOST=${infra.redisHost}
+REDIS_PORT=${infra.redisPort}
+REDIS_URL="redis://${infra.redisHost}:${infra.redisPort}"
+${infra.redisPass ? `REDIS_PASSWORD=${infra.redisPass}\n` : ""}
 JWT_SECRET=${jwtSecret}
 JWT_EXPIRATION=7d
 `;
@@ -255,7 +337,7 @@ JWT_EXPIRATION=7d
     fs.writeFileSync(envPath, customEnv.trim() + "\n");
     console.log(`\n${colors.green}✓ Saved custom configuration to .env${colors.reset}\n`);
   } else if (choice === "3") {
-    console.log(`\n${colors.cyan}➜ Production Docker Compose Stack:${colors.reset}`);
+    console.log(`\n${colors.yellow}➜ Production Docker Compose Stack:${colors.reset}`);
     console.log(`Run the following command to boot services in production mode:\n`);
     console.log(`  ${colors.bright}docker compose -f docker-compose.yml up -d --build${colors.reset}\n`);
   }
