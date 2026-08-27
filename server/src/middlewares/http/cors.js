@@ -35,6 +35,7 @@ function makeCorsOptions() {
       "Accept",
       "Cookie",
       "X-Weave-Internal-Challenge",
+      "X-Request-Id",
     ],
     credentials: true,
     exposedHeaders: ["Content-Range", "X-Content-Range", "Set-Cookie"],

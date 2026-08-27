@@ -1,6 +1,5 @@
 const axios = require("axios");
 const { z } = require("zod");
-const crypto = require("crypto");
 
 const AuthBaseController = require("./base.controller");
 const MicrosoftOauthRepository = require("@/modules/authentication/repositories/microsoft-oauth.repository");
@@ -120,15 +119,9 @@ class MicrosoftOauthController extends AuthBaseController {
 
       if (!user) {
         const existingUser = await FindUserRepository.findUserByEmail(userEmail);
-        let existingPendingUser = null;
-
-        if (existingUser && existingUser.status === "PENDING_INVITE") {
-          existingPendingUser = existingUser;
-        }
 
         if (existingUser) {
           await MicrosoftOauthRepository.updateUserWithMicrosoft(existingUser.user_id, microsoftId);
-          user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
         } else {
           const emailDomain = userEmail.split("@")[1];
           if (emailDomain) {
@@ -144,36 +137,26 @@ class MicrosoftOauthController extends AuthBaseController {
             }
           }
 
-          const newUser = await MicrosoftOauthRepository.createUserWithMicrosoft(
+          await MicrosoftOauthRepository.createUserWithMicrosoft(
             microsoftId,
             microsoftUser.displayName || userEmail.split("@")[0],
             userEmail
           );
+        }
 
-          const hasInvite = existingPendingUser !== null;
-          if (!hasInvite) {
-            const orgName = `Workspace de ${microsoftUser.displayName || userEmail.split("@")[0]}`;
-            const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
-            await OrganizationsRepository.createOrgs(
-              newUser.user_id,
-              orgName,
-              uniqueName,
-              null,
-              null,
-              null,
-              "UTC",
-              "en",
-              null,
-              {}
-            );
-          }
+        user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
 
+        if (!user) {
+          throw new Error("Failed to create or retrieve user.");
+        }
+
+        if (!user.organization) {
+          await OrganizationsRepository.autoProvisionPersonalWorkspace(
+            user.user_id,
+            microsoftUser.displayName || userEmail.split("@")[0]
+          );
           user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
         }
-      }
-
-      if (!user) {
-        throw new Error("Failed to create or retrieve user.");
       }
 
       const organization = this._normalizeOrganization(user.organization);
@@ -189,7 +172,7 @@ class MicrosoftOauthController extends AuthBaseController {
           console.error("Session save error during Microsoft OAuth:", err);
           return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
         }
-        return res.redirect(`${frontendURL}/home/?auth=success`);
+        return res.redirect(`${frontendURL}/chat/?auth=success`);
       });
     } catch (error) {
       console.error("Microsoft OAuth callback error:", error.message);

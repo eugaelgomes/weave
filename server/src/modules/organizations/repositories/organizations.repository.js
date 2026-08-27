@@ -483,6 +483,9 @@ class OrganizationsRepository {
       const defaultPlan = defaultPlanResult.rows[0] || null;
       const defaultPlanId = defaultPlan?.plan_id || null;
 
+      const publicId = generatePublicId();
+      const publicOrganizationId = `org_${publicId}`;
+
       const insertOrgQuery = `
       INSERT INTO organizations (
         user_id,
@@ -495,11 +498,15 @@ class OrganizationsRepository {
         default_locale,
         country,
         settings,
-        plan_id
+        plan_id,
+        public_id,
+        public_organization_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13)
       RETURNING
         id,
+        public_id,
+        public_organization_id,
         user_id,
         org_name,
         unique_name,
@@ -529,6 +536,8 @@ class OrganizationsRepository {
         country,
         settings,
         defaultPlanId,
+        publicId,
+        publicOrganizationId,
       ]);
 
       const organization = orgResult.rows[0];
@@ -579,6 +588,25 @@ class OrganizationsRepository {
     } finally {
       client.release();
     }
+  }
+
+  async autoProvisionPersonalWorkspace(userId, displayName, locale = "en", timezone = "UTC") {
+    const crypto = require("crypto");
+    const orgName = `Workspace de ${displayName}`;
+    const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
+
+    return await this.createOrgs(
+      userId,
+      orgName,
+      uniqueName,
+      null,
+      null,
+      null,
+      timezone,
+      locale,
+      null,
+      {}
+    );
   }
 
   async updateOrg(

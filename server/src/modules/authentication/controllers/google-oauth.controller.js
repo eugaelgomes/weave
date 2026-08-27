@@ -1,6 +1,5 @@
 const axios = require("axios");
 const { z } = require("zod");
-const crypto = require("crypto");
 
 const AuthBaseController = require("./base.controller");
 const GoogleOauthRepository = require("@/modules/authentication/repositories/google-oauth.repository");
@@ -102,11 +101,6 @@ class GoogleOauthController extends AuthBaseController {
 
       if (!user) {
         const existingUser = await FindUserRepository.findUserByEmail(googleUser.email);
-        let existingPendingUser = null;
-
-        if (existingUser && existingUser.status === "PENDING_INVITE") {
-          existingPendingUser = existingUser;
-        }
 
         if (existingUser) {
           await GoogleOauthRepository.updateUserWithGoogle(
@@ -114,7 +108,6 @@ class GoogleOauthController extends AuthBaseController {
             googleUser.id,
             googleUser.picture
           );
-          user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
         } else {
           const emailDomain = googleUser.email.split("@")[1];
           if (emailDomain) {
@@ -130,37 +123,27 @@ class GoogleOauthController extends AuthBaseController {
             }
           }
 
-          const newUser = await GoogleOauthRepository.createUserWithGoogle(
+          await GoogleOauthRepository.createUserWithGoogle(
             googleUser.id,
             googleUser.name,
             googleUser.email,
             googleUser.picture
           );
+        }
 
-          const hasInvite = existingPendingUser !== null;
-          if (!hasInvite) {
-            const orgName = `Workspace de ${googleUser.name || googleUser.email.split("@")[0]}`;
-            const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
-            await OrganizationsRepository.createOrgs(
-              newUser.user_id,
-              orgName,
-              uniqueName,
-              null,
-              null,
-              null,
-              "UTC",
-              "en",
-              null,
-              {}
-            );
-          }
+        user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
 
+        if (!user) {
+          throw new Error("Failed to create or retrieve user.");
+        }
+
+        if (!user.organization) {
+          await OrganizationsRepository.autoProvisionPersonalWorkspace(
+            user.user_id,
+            googleUser.name || googleUser.email.split("@")[0]
+          );
           user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
         }
-      }
-
-      if (!user) {
-        throw new Error("Failed to create or retrieve user.");
       }
 
       const organization = this._normalizeOrganization(user.organization);
@@ -176,7 +159,7 @@ class GoogleOauthController extends AuthBaseController {
           console.error("Session save error during Google OAuth:", err);
           return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
         }
-        return res.redirect(`${frontendURL}/home/?auth=success`);
+        return res.redirect(`${frontendURL}/chat/?auth=success`);
       });
     } catch (error) {
       console.error("Google OAuth callback error:", error.message);

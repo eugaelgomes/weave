@@ -6,7 +6,7 @@ const FindUserRepository = require("@/modules/authentication/repositories/find-u
 const SamlSsoRepository = require("@/modules/authentication/repositories/saml-sso.repository");
 const { buildJwtPayload } = require("@/modules/authentication/schemas/jwt-payload.schema");
 const { getFrontendUrl, getBackendUrl } = require("@/utils/url.util");
-
+const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
 class SamlSsoController extends AuthBaseController {
   /**
    * Generates a dynamic SAML instance based on the domain's metadata
@@ -152,11 +152,18 @@ class SamlSsoController extends AuthBaseController {
           displayName,
           userEmail
         );
+
         user = await FindUserRepository.findUserByEmail(userEmail);
       }
 
       if (!user) {
         throw new Error("Failed to provision SSO user.");
+      }
+
+      if (!user.organization) {
+        const displayName = profile?.displayName || profile?.firstName || userEmail.split("@")[0];
+        await OrganizationsRepository.autoProvisionPersonalWorkspace(user.user_id, displayName);
+        user = await FindUserRepository.findUserByEmail(userEmail);
       }
 
       // Issue session
@@ -172,7 +179,7 @@ class SamlSsoController extends AuthBaseController {
           console.error("Session save error during SAML OAuth:", err);
           return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
         }
-        return res.redirect(`${frontendURL}/home/?auth=success`);
+        return res.redirect(`${frontendURL}/chat/?auth=success`);
       });
     } catch (error) {
       console.error("SAML ACS Callback error:", error);

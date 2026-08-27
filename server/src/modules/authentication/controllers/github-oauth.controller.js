@@ -1,6 +1,5 @@
 const axios = require("axios");
 const { z } = require("zod");
-const crypto = require("crypto");
 
 const AuthBaseController = require("./base.controller");
 const GithubOauthRepository = require("@/modules/authentication/repositories/github-oauth.repository");
@@ -141,11 +140,6 @@ class GithubOauthController extends AuthBaseController {
 
       if (!user) {
         const existingUser = await FindUserRepository.findUserByEmail(userEmail);
-        let existingPendingUser = null;
-
-        if (existingUser && existingUser.status === "PENDING_INVITE") {
-          existingPendingUser = existingUser;
-        }
 
         if (existingUser) {
           await GithubOauthRepository.updateUserWithGithub(
@@ -153,7 +147,6 @@ class GithubOauthController extends AuthBaseController {
             githubId,
             githubUser.avatar_url
           );
-          user = await GithubOauthRepository.findUserByGithubId(githubId);
         } else {
           const emailDomain = userEmail.split("@")[1];
           if (emailDomain) {
@@ -177,38 +170,28 @@ class GithubOauthController extends AuthBaseController {
             return `${cleanUsername}_${randomSuffix}`;
           };
 
-          const newUser = await GithubOauthRepository.createUserWithGithub(
+          await GithubOauthRepository.createUserWithGithub(
             githubId,
             githubUser.name || githubUser.login,
             generatedRandomUsername(githubUser.login),
             userEmail,
             githubUser.avatar_url
           );
+        }
 
-          const hasInvite = existingPendingUser !== null;
-          if (!hasInvite) {
-            const orgName = `Workspace de ${githubUser.name || githubUser.login}`;
-            const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
-            await OrganizationsRepository.createOrgs(
-              newUser.user_id,
-              orgName,
-              uniqueName,
-              null,
-              null,
-              null,
-              "UTC",
-              "en",
-              null,
-              {}
-            );
-          }
+        user = await GithubOauthRepository.findUserByGithubId(githubId);
 
+        if (!user) {
+          throw new Error("Failed to create or retrieve user.");
+        }
+
+        if (!user.organization) {
+          await OrganizationsRepository.autoProvisionPersonalWorkspace(
+            user.user_id,
+            githubUser.name || githubUser.login
+          );
           user = await GithubOauthRepository.findUserByGithubId(githubId);
         }
-      }
-
-      if (!user) {
-        throw new Error("Failed to create or retrieve user.");
       }
 
       const organization = this._normalizeOrganization(user.organization);
@@ -224,7 +207,7 @@ class GithubOauthController extends AuthBaseController {
           console.error("Session save error during GitHub OAuth:", err);
           return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
         }
-        return res.redirect(`${frontendURL}/home/?auth=success`);
+        return res.redirect(`${frontendURL}/chat/?auth=success`);
       });
     } catch (error) {
       console.error("GitHub OAuth callback error:", error.message);

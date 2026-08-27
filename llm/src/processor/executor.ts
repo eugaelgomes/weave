@@ -11,7 +11,10 @@
 import { LLMRequestParams } from "@/providers/normalizer";
 
 // ToolSchema mirrors the OpenAI function-calling tool format
-type ToolSchema = { type: string; function: { name: string; description?: string; parameters?: unknown } };
+type ToolSchema = {
+  type: string;
+  function: { name: string; description?: string; parameters?: unknown };
+};
 import {
   isInternalTool,
   executeInternalTool,

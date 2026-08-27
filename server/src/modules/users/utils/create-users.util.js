@@ -143,23 +143,13 @@ class CreateUsersService {
       };
     });
 
-    // Auto-provision organization if user had no pending invites (new organic sign-up)
-    if (!existingPendingUser) {
-      const orgName = `Workspace de ${result.userName}`;
-      const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
-      await OrganizationsRepository.createOrgs(
-        result.userId,
-        orgName,
-        uniqueName,
-        null,
-        null,
-        null,
-        timezone || "UTC",
-        locale || "en",
-        null,
-        {}
-      );
-    }
+    // Auto-provision personal organization
+    await OrganizationsRepository.autoProvisionPersonalWorkspace(
+      result.userId,
+      result.userName,
+      locale,
+      timezone
+    );
 
     // Dispatch async welcome email to Redis queue
     try {
