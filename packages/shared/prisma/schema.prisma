@@ -115,7 +115,6 @@ model workspace_members {
   id                                        String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   workspace_id                              String                       @db.Uuid
   user_id                                   String                       @db.Uuid
-  role_id                                   String                       @db.Uuid
   status                                    workspace_member_status_enum @default(ACTIVE)
   invited_by                                String?                      @db.Uuid
   suspended                                 Boolean                      @default(false)
@@ -126,15 +125,25 @@ model workspace_members {
   created_at                                DateTime                     @default(now()) @db.Timestamptz(6)
   updated_at                                DateTime?                    @db.Timestamptz(6)
   workspaces                                workspaces                   @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_workspace_members_workspace")
-  workspace_roles                           workspace_roles              @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "fk_workspace_members_role")
   users_workspace_members_user_idTousers    users                        @relation("workspace_members_user_idTousers", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_workspace_members_user")
   users_workspace_members_invited_byTousers users?                       @relation("workspace_members_invited_byTousers", fields: [invited_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "workspace_members_invited_by_fk")
   users_workspace_members_removed_byTousers users?                       @relation("workspace_members_removed_byTousers", fields: [removed_by], references: [user_id], onDelete: Restrict, onUpdate: NoAction, map: "workspace_members_removed_by_fk")
+  workspace_member_roles                    workspace_member_roles[]
 
   @@unique([workspace_id, user_id], map: "unique_workspace_user")
   @@index([workspace_id], map: "idx_workspace_members_workspace_id")
   @@index([user_id], map: "idx_workspace_members_user_id")
-  @@index([role_id], map: "idx_workspace_members_role_id")
+}
+
+model workspace_member_roles {
+  workspace_member_id String            @db.Uuid
+  role_id             String            @db.Uuid
+  workspace_members   workspace_members @relation(fields: [workspace_member_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_wm_roles_member")
+  workspace_roles     workspace_roles   @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_wm_roles_role")
+
+  @@id([workspace_member_id, role_id])
+  @@index([workspace_member_id], map: "idx_wm_roles_member")
+  @@index([role_id], map: "idx_wm_roles_role")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -239,11 +248,11 @@ model workspace_roles {
   created_at   DateTime  @default(now()) @db.Timestamptz(6)
   updated_at   DateTime  @default(now()) @db.Timestamptz(6)
 
-  workspaces                              workspaces          @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  workspace_members                       workspace_members[]
+  workspaces                              workspaces               @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  workspace_member_roles                  workspace_member_roles[]
   team_members                            team_members[]
-  users_workspace_roles_created_byTousers users?              @relation("workspace_roles_created_byTousers", fields: [created_by], references: [user_id])
-  users_workspace_roles_deleted_byTousers users?              @relation("workspace_roles_deleted_byTousers", fields: [deleted_by], references: [user_id])
+  users_workspace_roles_created_byTousers users?                   @relation("workspace_roles_created_byTousers", fields: [created_by], references: [user_id])
+  users_workspace_roles_deleted_byTousers users?                   @relation("workspace_roles_deleted_byTousers", fields: [deleted_by], references: [user_id])
 
   @@unique([workspace_id, name])
   @@map("workspaces_roles")

@@ -43,7 +43,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       if (!authUserId) return;
 
       const { memberId } = req.params;
-      const { role } = req.body;
+      const { roles } = req.body;
 
       const currentWorkspace = await this._getUserWorkspace(authUserId);
       if (!currentWorkspace) {
@@ -58,10 +58,10 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         return res.status(400).json({ error: "Cannot change the workspace owner's role" });
       }
 
-      await this.workspacesRepository.updateMemberRole(currentWorkspace.id, memberId, role);
+      await this.workspacesRepository.updateMemberRole(currentWorkspace.id, memberId, roles);
 
       res.status(200).json({
-        data: { role },
+        data: { roles },
         message: "Role updated successfully",
         status: "OK",
       });
@@ -100,17 +100,14 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         });
       }
 
-      // ADMIN/SUPER_ADMIN must always keep their workspace-level record.
-      // They need to be demoted first before removal.
+      // Administrators cannot be removed directly.
+      // We rely on the repository's `removeWorkspaceMember` returning nothing if the member has `manage_workspace`.
       const targetMember = await this.workspacesRepository.getWorkspaceMember(
         currentWorkspace.id,
         memberId
       );
-      if (targetMember && ["ADMIN", "SUPER_ADMIN"].includes(targetMember.role)) {
-        return res.status(400).json({
-          error: "Cannot remove an administrator. Change role to MEMBER before removing.",
-          success: false,
-        });
+      if (!targetMember) {
+        return res.status(404).json({ error: "Member not found", success: false });
       }
 
       const removed = await this.workspacesRepository.removeWorkspaceMember(
@@ -158,21 +155,38 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         return;
       }
 
-      const members = await this.workspacesRepository.getWorkspaceMembers(currentWorkspace.id);
+      const { page = 1, limit = 50, search = "", role_id = null, status = null } = req.query;
+      const parsedPage = parseInt(page, 10);
+      const parsedLimit = parseInt(limit, 10);
+
+      const members = await this.workspacesRepository.getWorkspaceMembers(currentWorkspace.id, {
+        limit: parsedLimit,
+        page: parsedPage,
+        role_id,
+        search,
+        status,
+      });
+
+      const totalCount = members.length > 0 ? parseInt(members[0].total_count, 10) : 0;
+      const totalPages = Math.ceil(totalCount / parsedLimit);
 
       res.status(200).json({
         count: members.length,
         count_by_role: members.reduce((acc, member) => {
-          acc[member.role] = (acc[member.role] || 0) + 1;
+          (member.roles || []).forEach((role) => {
+            acc[role] = (acc[role] || 0) + 1;
+          });
           return acc;
         }, {}),
         count_by_status: members.reduce((acc, member) => {
           acc[member.status] = (acc[member.status] || 0) + 1;
           return acc;
         }, {}),
+        current_page: parsedPage,
         list_workspace_members: memberListResponseSchema.parse(members),
         status: "OK",
-
+        total_count: totalCount,
+        total_pages: totalPages,
         workspace_id: currentWorkspace.id,
       });
     } catch (error) {

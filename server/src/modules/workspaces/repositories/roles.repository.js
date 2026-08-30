@@ -58,50 +58,6 @@ class WorkspaceRolesRepository {
     return results[0];
   }
 
-  async createDefaultRoles(workspaceId, createdBy = null, txClient = null) {
-    const defaultRoles = [
-      {
-        description: "Full access to all workspace settings, billing, and teams.",
-        name: "SUPER_ADMIN",
-        permissions: ["*"],
-      },
-      {
-        description: "Can manage members, teams, and workspace configurations.",
-        name: "ADMIN",
-        permissions: ["manage_workspace", "manage_members", "manage_teams"],
-      },
-      {
-        description: "Standard member. Can create and join teams, create projects and use AI.",
-        name: "MEMBER",
-        permissions: ["use_ai", "create_team", "join_team", "manage_own_projects"],
-      },
-      {
-        description:
-          "Limited access. Can only interact with specific teams or projects they are invited to.",
-        name: "GUEST",
-        permissions: ["use_ai"],
-      },
-    ];
-
-    const rolesMap = {};
-    for (const role of defaultRoles) {
-      const createdRole = await this.createRole(
-        {
-          createdBy,
-          description: role.description,
-          isSystem: true,
-          name: role.name,
-          permissions: role.permissions,
-          workspaceId,
-        },
-        txClient
-      );
-      rolesMap[role.name] = createdRole.id;
-    }
-
-    return rolesMap;
-  }
-
   async updateRole(roleId, workspaceId, { name, description, permissions }, _updatedBy = null) {
     const fields = [];
     const values = [roleId, workspaceId];

@@ -3,7 +3,6 @@ const { generatePublicId } = require("@/utils/formatters.util");
 
 const settingsRepository = require("./settings.repository");
 const membersRepository = require("./members.repository");
-const rolesRepository = require("./roles.repository");
 
 class WorkspaceBaseRepository {
   async getActiveWorkspaceWithMembership(user_id) {
@@ -228,12 +227,16 @@ class WorkspaceBaseRepository {
 
       await client.query(updateUserQuery, [workspace.id, user_id, defaultPlanId]);
 
-      const rolesMap = await rolesRepository.createDefaultRoles(workspace.id, user_id, client);
+      const adminRoleQuery = await client.query(
+        "SELECT id FROM workspaces_roles WHERE workspace_id = $1 AND permissions ? 'manage_workspace' LIMIT 1",
+        [workspace.id]
+      );
+      const adminRoleIds = adminRoleQuery.rows.map((r) => r.id);
 
       await membersRepository.addWorkspaceMember(
         workspace.id,
         user_id,
-        rolesMap["ADMIN"],
+        adminRoleIds,
         "ACTIVE",
         null,
         client
@@ -322,7 +325,11 @@ class WorkspaceBaseRepository {
               AND om.user_id = $2
               
               AND om.deleted = false
-              AND om.role IN ('SUPER_ADMIN', 'ADMIN')
+              AND EXISTS (
+                SELECT 1 FROM workspace_member_roles wmr 
+                JOIN workspaces_roles r ON r.id = wmr.role_id 
+                WHERE wmr.workspace_member_id = om.id AND r.permissions ? 'manage_workspace'
+              )
           )
         )
       RETURNING
@@ -353,8 +360,13 @@ class WorkspaceBaseRepository {
   async updateWorkspaceLogo(workspace_id, logo_url, user_id) {
     const query = `
 WITH user_check AS (
-    SELECT 1 FROM workspace_members 
-    WHERE workspace_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
+    SELECT 1 FROM workspace_members om
+    WHERE om.workspace_id = $1 AND om.user_id = $3 AND om.deleted = false
+      AND EXISTS (
+        SELECT 1 FROM workspace_member_roles wmr 
+        JOIN workspaces_roles r ON r.id = wmr.role_id 
+        WHERE wmr.workspace_member_id = om.id AND r.permissions ? 'manage_workspace'
+      )
 )
 UPDATE workspaces
 SET logo_url = $2, updated_at = NOW()
@@ -368,8 +380,13 @@ RETURNING *;
   async updateWorkspaceBanner(workspace_id, banner_url, user_id) {
     const query = `
 WITH user_check AS (
-    SELECT 1 FROM workspace_members 
-    WHERE workspace_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
+    SELECT 1 FROM workspace_members om
+    WHERE om.workspace_id = $1 AND om.user_id = $3 AND om.deleted = false
+      AND EXISTS (
+        SELECT 1 FROM workspace_member_roles wmr 
+        JOIN workspaces_roles r ON r.id = wmr.role_id 
+        WHERE wmr.workspace_member_id = om.id AND r.permissions ? 'manage_workspace'
+      )
 )
 UPDATE workspaces
 SET banner_url = $2, updated_at = NOW()

@@ -1,6 +1,5 @@
 const { z } = require("zod");
 const { hasPlusAliasInLocalPart } = require("@/utils/formatters.util");
-const { validRoles } = require("@/modules/workspaces/normalizer");
 
 const PROJECT_MEMBER_ROLES = ["PROJECT_MANAGER", "CONTRIBUTOR", "COMMENTER", "VIEWER"];
 
@@ -36,17 +35,10 @@ const inviteMemberSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .describe("The full name of the user to invite."),
-  role: z
-    .enum(validRoles, {
-      errorMap: () => ({
-        message: "Invalid role. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST",
-      }),
-    })
-    .optional()
-    .default("MEMBER")
-    .describe(
-      "The role of the member in the workspace. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST."
-    ),
+  roles: z
+    .array(z.string().uuid("Invalid role ID format"))
+    .min(1, "At least one role is required")
+    .describe("An array of role UUIDs for the member in the workspace."),
   target_teams: z
     .array(targetTeamSchema)
     .optional()
@@ -90,13 +82,10 @@ const acceptInviteSchema = z.object({
  * Validates the request body for updating a member's role.
  */
 const updateMemberRoleSchema = z.object({
-  role: z
-    .enum(validRoles, {
-      errorMap: () => ({ message: "Invalid role" }),
-    })
-    .describe(
-      "The role of the member in the workspace. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST."
-    ),
+  roles: z
+    .array(z.string().uuid("Invalid role ID format"))
+    .min(1, "At least one role is required")
+    .describe("An array of role UUIDs for the member in the workspace."),
 });
 
 /**
@@ -115,7 +104,7 @@ const memberResponseSchema = z
     name: z.string(),
     notes_count: z.union([z.string(), z.number()]).optional(),
     projects: z.array(z.any()).optional(),
-    role: z.string(),
+    roles: z.array(z.string()),
     status: z.string(),
     teams: z.array(z.any()).optional(),
     updated_at: z.union([z.string(), z.date()]).optional(),
@@ -146,7 +135,7 @@ const memberResponseSchema = z
         : null,
       membership: {
         created_at: member.created_at,
-        role: member.role,
+        roles: member.roles,
         status: member.status,
         updated_at: member.updated_at,
       },

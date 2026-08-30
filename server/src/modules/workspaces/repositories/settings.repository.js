@@ -142,7 +142,11 @@ class WorkspaceSettingsRepository {
               AND om.user_id = $2
               
               AND om.deleted = false
-              AND om.role IN ('SUPER_ADMIN', 'ADMIN')
+              AND EXISTS (
+                SELECT 1 FROM workspace_member_roles wmr 
+                JOIN workspaces_roles r ON r.id = wmr.role_id 
+                WHERE wmr.workspace_member_id = om.id AND r.permissions ? 'manage_workspace'
+              )
           )
         )
       RETURNING
@@ -188,7 +192,11 @@ class WorkspaceSettingsRepository {
               AND om.user_id = $2
               
               AND om.deleted = false
-              AND om.role IN ('SUPER_ADMIN', 'ADMIN', 'BILLING_MANAGER')
+              AND EXISTS (
+                SELECT 1 FROM workspace_member_roles wmr 
+                JOIN workspaces_roles r ON r.id = wmr.role_id 
+                WHERE wmr.workspace_member_id = om.id AND r.permissions ?| array['manage_workspace', 'manage_billing']
+              )
           )
         )
       RETURNING
