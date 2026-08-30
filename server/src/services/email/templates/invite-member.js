@@ -27,7 +27,7 @@ async function send_organization_invite(
     const { html, text } = buildMailTemplate({
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
-          <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.organization"))}:</strong> ${escapeHtml(organizationName)}</p>
+          <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.workspace"))}:</strong> ${escapeHtml(organizationName)}</p>
           <p style="margin: 0; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.role"))}:</strong> ${escapeHtml(translatedRole)}</p>
         </div>
       `,
@@ -51,7 +51,7 @@ async function send_organization_invite(
 
     return { success: true };
   } catch (error) {
-    console.error("Organization invite email failed:", error);
+    console.error("Workspace invite email failed:", error);
     return { error: error.message, success: false };
   }
 }

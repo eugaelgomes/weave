@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const { fromUnknown } = require("@/errors");
 const CreateApiTokensRepository = require("@/modules/api-tokens/repositories/create-api-tokens.repository");
 const ApiTokensNormalizer = require("@/modules/api-tokens/normalizer");
-const { ORG_ROLES } = require("@/modules/organizations/organization-role-policy");
+const { ORG_ROLES } = require("@/modules/workspaces/workspace-role-policy");
 
 const TOKEN_PREFIX = "wn_";
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS, 10) || 12;
@@ -40,14 +40,14 @@ class CreateApiTokensController {
 
       const isOrgScope = cleanScopes.some(
         (s) =>
-          s.startsWith("organizations:") || s.startsWith("projects:") || s.startsWith("calendar:")
+          s.startsWith("workspaces:") || s.startsWith("projects:") || s.startsWith("calendar:")
       );
 
       if (organizationId || isOrgScope) {
         if (!organizationId) {
           return res.status(400).json({
             error:
-              "Organization ID is required for tokens that access organization, project, or calendar data.",
+              "Workspace ID is required for tokens that access workspace, project, or calendar data.",
           });
         }
 
@@ -55,7 +55,7 @@ class CreateApiTokensController {
 
         if (role !== ORG_ROLES.SUPER_ADMIN && role !== ORG_ROLES.ADMIN) {
           return res.status(403).json({
-            error: "Only administrators can create API tokens with organization-level permissions.",
+            error: "Only administrators can create API tokens with workspace-level permissions.",
           });
         }
       }

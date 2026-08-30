@@ -24,14 +24,14 @@ const setDefaultChannelSchema = z
       .string()
       .trim()
       .min(1, "organization_id is required")
-      .describe("The unique identifier of the organization in UUID format."),
+      .describe("The unique identifier of the workspace in UUID format."),
   })
   .refine((data) => data.channel_id || data.channelId || data.default_channel_id, {
     message: "channel_id is required",
     path: ["channel_id"],
   })
   .describe(
-    "Schema for setting a default Slack channel for an organization. Requires an organization identifier and a channel identifier."
+    "Schema for setting a default Slack channel for an workspace. Requires an workspace identifier and a channel identifier."
   );
 
 /**
@@ -64,10 +64,10 @@ const listSlackIntegrationSchema = z
       .string()
       .min(1, "organization_id is required")
       .describe(
-        "The unique identifier of the organization whose Slack integrations are being retrieved."
+        "The unique identifier of the workspace whose Slack integrations are being retrieved."
       ),
   })
-  .describe("Schema for listing the active Slack integration for an organization.");
+  .describe("Schema for listing the active Slack integration for an workspace.");
 
 const removeSlackIntegrationSchema = z
   .object({
@@ -75,10 +75,10 @@ const removeSlackIntegrationSchema = z
       .string()
       .min(1, "organization_id is required")
       .describe(
-        "The unique identifier of the organization whose Slack integration is to be disconnected and removed."
+        "The unique identifier of the workspace whose Slack integration is to be disconnected and removed."
       ),
   })
-  .describe("Schema for removing/disconnecting the Slack integration for an organization.");
+  .describe("Schema for removing/disconnecting the Slack integration for an workspace.");
 
 module.exports = {
   listSlackIntegrationSchema,

@@ -1,7 +1,8 @@
+const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 const notesRepository = require("@/modules/notes/notes.repository");
 
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
-const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+
 const taskPrioritiesRepository = require("@/modules/projects/repositories/task-priorities.repository");
 const PlansService = require("@/modules/plans/services/plans.service");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
@@ -12,7 +13,7 @@ const { AppError, ERROR_CODES } = require("@/errors");
 const {
   orgRoleHasPermission,
   ORG_PERMISSIONS,
-} = require("@/modules/organizations/organization-role-policy");
+} = require("@/modules/workspaces/workspace-role-policy");
 const { PLAN_PATHS } = require("@/modules/plans/utils/plan-paths.util");
 const { ALLOWED_NOTE_STATUSES, normalizeNoteStatus } = require("@/utils/patterns.util");
 const { normalizeBlocksTree } = require("../block-normalizer");
@@ -54,7 +55,7 @@ class NotesService {
 
   async _hasOrgWideAccessToProjectNote(note, userId) {
     if (!note?.project_id) return false;
-    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await baseRepository.getActiveOrganizationWithMembership(userId);
     if (!this._canAccessAllOrganizationProjects(membership) || !membership.id) return false;
     const rows = await projectsRepository.getProjectByIdWithOrgScope(
       String(note.project_id),
@@ -64,7 +65,7 @@ class NotesService {
   }
 
   async _getOrgWideNotesScopeOrganizationId(userId) {
-    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await baseRepository.getActiveOrganizationWithMembership(userId);
     if (this._canAccessAllOrganizationProjects(membership) && membership.id) return membership.id;
     return null;
   }
@@ -543,7 +544,7 @@ class NotesService {
         if (tp.project_id && tp.project_id !== noteProjectId)
           throw AppError.badRequest("Priority does not belong to the project of this note");
         if (tp.org_id && (!scopeOrg || tp.org_id !== scopeOrg))
-          throw AppError.badRequest("Priority does not belong to the organization of this note");
+          throw AppError.badRequest("Priority does not belong to the workspace of this note");
       }
     }
 

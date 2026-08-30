@@ -51,7 +51,7 @@ class PlansSubscriptionController {
 
   /**
    * PUT /plans/subscription
-   * Change plan (upgrade/downgrade) for the authenticated user or their organization.
+   * Change plan (upgrade/downgrade) for the authenticated user or their workspace.
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res

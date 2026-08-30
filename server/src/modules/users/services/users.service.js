@@ -1,6 +1,7 @@
+const membersRepository = require("@/modules/workspaces/repositories/members.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 // Import repositories
-const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+
 const ProjectsCollaboratorsRepository = require("@/modules/projects/repositories/projects-collaborators.repository");
 const NoteCollaboratorsRepository = require("@/modules/notes/repositories/note-collaborators.repository");
 const NotesCommentsRepository = require("@/modules/notes/repositories/notes-comments.repository");
@@ -57,8 +58,8 @@ class UsersService {
   async _fetchContextData(userIds, contextType, contextId) {
     const map = {};
     try {
-      if (contextType === "organization") {
-        const members = await OrganizationsRepository.getMembershipsByUserIds(userIds, contextId);
+      if (contextType === "workspace") {
+        const members = await membersRepository.getMembershipsByUserIds(userIds, contextId);
         members.forEach((m) => {
           map[m.user_id] = { is_member: true, role: m.role, status: m.status };
         });

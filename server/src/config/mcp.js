@@ -12,7 +12,7 @@ const {
 const { createPlansTools } = require("@/modules/plans/tools/plans.tools");
 const { createTaskPriorityTools } = require("@/modules/projects/tools/task-priorities.tools");
 const { createWebhooksTools } = require("@/modules/webhooks/tools/webhooks.tools");
-const { createPasswordTools } = require("@/modules/authentication/tools/password.tools");
+
 const { createApiTokensTools } = require("@/modules/api-tokens/tools/api-tokens.tools");
 const { createProjectsTools } = require("@/modules/projects/tools/projects.tools");
 const { createNotificationsTools } = require("@/modules/notifications/tools/notifications.tools");
@@ -24,14 +24,12 @@ const { createNotesTools } = require("@/modules/notes/tools/notes.tools");
 const { createNoteBlocksTools } = require("@/modules/notes/tools/blocks.tools");
 const { createNoteCollaboratorsTools } = require("@/modules/notes/tools/collaborators.tools");
 const { createCommentsTools } = require("@/modules/notes/tools/comments.tools");
-const {
-  createAuthenticationTools,
-} = require("@/modules/authentication/tools/authentication.tools");
+
 const { createUsersTools } = require("@/modules/users/tools/users.tools");
 const { createSlackTools } = require("@/modules/slack/tools/slack.tools");
 
 const { createAgentHouseTools } = require("@/modules/agent-house/tools/agent-house.tools");
-const { createOrganizationsTools } = require("@/modules/organizations/tools/organizations.tools");
+const { createOrganizationsTools } = require("@/modules/workspaces/tools/workspaces.tools");
 
 /**
  * Builds the MCP registry for the given user.
@@ -45,7 +43,7 @@ function buildRegistry(user) {
     ...createPlansTools(user),
     ...createTaskPriorityTools(user),
     ...createWebhooksTools(user),
-    ...createPasswordTools(user),
+
     ...createApiTokensTools(user),
     ...createProjectsTools(user),
     ...createNotificationsTools(user),
@@ -57,7 +55,7 @@ function buildRegistry(user) {
     ...createNoteBlocksTools(user),
     ...createNoteCollaboratorsTools(user),
     ...createCommentsTools(user),
-    ...createAuthenticationTools(user),
+
     ...createUsersTools(user),
     ...createSlackTools(user),
 

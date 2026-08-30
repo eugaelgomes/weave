@@ -13,7 +13,7 @@ class AgentDelegationService {
    * Executes the delegation to a specialized agent.
    *
    * @param {string} userId - The user ID.
-   * @param {string|null} organizationId - The organization ID.
+   * @param {string|null} organizationId - The workspace ID.
    * @param {string} userLanguage - The user's language.
    * @param {string} agentId - The target agent ID to invoke.
    * @param {string} taskDescription - The description of the task.

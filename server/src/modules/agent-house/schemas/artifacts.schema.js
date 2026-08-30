@@ -13,7 +13,7 @@ const createArtifactSchema = z.object({
     .describe("O conteúdo real do artefato, que pode ser um objeto JSON ou uma lista/array."),
   organizationId: z
     .string()
-    .uuid("Invalid organization ID")
+    .uuid("Invalid workspace ID")
     .optional()
     .nullable()
     .describe(

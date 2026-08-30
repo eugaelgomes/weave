@@ -1,11 +1,12 @@
+const settingsRepository = require("@/modules/workspaces/repositories/settings.repository");
 const { withTransaction } = require("@/database/connection");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const CreateUsersRepository = require("@/modules/users/repositories/create-users.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
-const OrganizationDomainsRepository = require("@/modules/organizations/repositories/domains.repository");
-const OrganizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+
+const OrganizationsRepository = require("@/modules/workspaces/repositories/workspaces.repository");
 const queueController = require("@theweave/database");
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
@@ -17,8 +18,8 @@ class CreateUsersService {
   async _validateCorporateDomain(email, existingPendingUser) {
     const emailDomain = email.split("@")[1];
     if (emailDomain) {
-      const domainInfo = await OrganizationDomainsRepository.findActiveByDomain(emailDomain);
-      if (domainInfo && (domainInfo.status === "VERIFIED" || domainInfo.status === "PENDING")) {
+      const domainInfo = await settingsRepository.findByDomain(emailDomain);
+      if (domainInfo) {
         if (!existingPendingUser) {
           throw new Error("CORPORATE_DOMAIN_INVITE_REQUIRED");
         }
@@ -143,7 +144,7 @@ class CreateUsersService {
       };
     });
 
-    // Auto-provision personal organization
+    // Auto-provision personal workspace
     await OrganizationsRepository.autoProvisionPersonalWorkspace(
       result.userId,
       result.userName,

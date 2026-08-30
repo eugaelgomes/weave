@@ -47,7 +47,7 @@ class ChatEngineService {
    * Builds compact plan usage context for Weave Engine prompts.
    *
    * @param {string} userId - Authenticated user's ID.
-   * @param {string|null} [organizationId=null] - User's current organization ID.
+   * @param {string|null} [organizationId=null] - User's current workspace ID.
    * @returns {Promise<Record<string, unknown>|null>} Plan usage context object or null.
    */
   async buildPlanUsageContext(userId, organizationId = null) {

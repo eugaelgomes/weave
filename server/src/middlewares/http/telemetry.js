@@ -65,8 +65,8 @@ function telemetryMiddleware(req, res, next) {
     if (req.user) {
       logPayload.userId = req.user.userId || req.user.id;
     }
-    if (req.organization) {
-      logPayload.orgId = req.organization.id;
+    if (req.workspace) {
+      logPayload.orgId = req.workspace.id;
     }
 
     const logMessage = `[HTTP OUT] ${req.method} ${logPayload.path} - ${res.statusCode} (${logPayload.durationMs}ms)`;

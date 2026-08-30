@@ -6,15 +6,15 @@ const manageSlackSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("add_default_channel"),
     channel_id: z.string().describe("ID of the Slack channel"),
-    organization_id: z.string().uuid().describe("ID of the organization"),
+    organization_id: z.string().uuid().describe("ID of the workspace"),
   }),
   z.object({
     action: z.literal("list"),
-    organization_id: z.string().uuid().describe("ID of the organization"),
+    organization_id: z.string().uuid().describe("ID of the workspace"),
   }),
   z.object({
     action: z.literal("remove"),
-    organization_id: z.string().uuid().describe("ID of the organization"),
+    organization_id: z.string().uuid().describe("ID of the workspace"),
   }),
 ]);
 
@@ -36,7 +36,7 @@ const createSlackTools = (_user) => ({
           return {
             content: [
               {
-                text: `Successfully set default Slack channel to ${channel_id} for organization ${organization_id}`,
+                text: `Successfully set default Slack channel to ${channel_id} for workspace ${organization_id}`,
                 type: "text",
               },
             ],
@@ -51,7 +51,7 @@ const createSlackTools = (_user) => ({
               {
                 text: result
                   ? JSON.stringify(result, null, 2)
-                  : "No active Slack integration found for this organization.",
+                  : "No active Slack integration found for this workspace.",
                 type: "text",
               },
             ],
@@ -63,7 +63,7 @@ const createSlackTools = (_user) => ({
           return {
             content: [
               {
-                text: `Successfully removed Slack integration for organization ${organization_id}`,
+                text: `Successfully removed Slack integration for workspace ${organization_id}`,
                 type: "text",
               },
             ],

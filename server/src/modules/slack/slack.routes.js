@@ -14,7 +14,7 @@ const SlackEventsController = require("@/modules/slack/controllers/slack-events.
 const router = express.Router();
 
 // -----------------------------------------------------------------------------
-// Organization Integrations
+// Workspace Integrations
 // -----------------------------------------------------------------------------
 
 router.get(

@@ -125,14 +125,14 @@ class PlansRepository {
   }
 
   /**
-   * Resolve effective plan source (organization subscription preferred).
+   * Resolve effective plan source (workspace subscription preferred).
    * @param {string} userId
    * @returns {Promise<{
    *   plan_id: string|null,
    *   plan_name?: string|null,
    *   plan_version?: number|null,
    *   plan_details: object|null,
-   *   subscriber_type: "organization"|"user",
+   *   subscriber_type: "workspace"|"user",
    *   subscriber_id: string|null,
    *   subscription_id: string|null
    * }|null>}
@@ -150,7 +150,7 @@ class PlansRepository {
           SELECT s.*
           FROM subscriptions s
           INNER JOIN user_ctx u ON u.organization_id = s.subscriber_id
-          WHERE s.subscriber_type = 'organization'
+          WHERE s.subscriber_type = 'workspace'
             AND s.status IN ('active', 'past_due', 'trialing')
           ORDER BY s.updated_at DESC
           LIMIT 1
@@ -171,7 +171,7 @@ class PlansRepository {
             COALESCE(
               org_sub.subscriber_type,
               user_sub.subscriber_type,
-              CASE WHEN user_ctx.organization_id IS NOT NULL THEN 'organization' ELSE 'user' END
+              CASE WHEN user_ctx.organization_id IS NOT NULL THEN 'workspace' ELSE 'user' END
             ) AS subscriber_type,
             COALESCE(org_sub.subscriber_id, user_sub.subscriber_id, user_ctx.user_id) AS subscriber_id
           FROM user_ctx
@@ -214,7 +214,7 @@ class PlansRepository {
    * @param {object} params
    * @param {string} params.planId
    * @param {string} params.subscriberId
-   * @param {"organization"|"user"} params.subscriberType
+   * @param {"workspace"|"user"} params.subscriberType
    * @returns {Promise<Record<string, any>|null>}
    */
   async getPlanLimitOverrides({ planId, subscriberId, subscriberType }) {
@@ -245,7 +245,7 @@ class PlansRepository {
     const effective = orgId
       ? {
           subscriber_id: orgId,
-          subscriber_type: "organization",
+          subscriber_type: "workspace",
         }
       : await this.getEffectivePlanByUserId(userId);
 
@@ -267,7 +267,7 @@ class PlansRepository {
   }
 
   /**
-   * Resolve individual user usage (subscriber=user) without organization fallback.
+   * Resolve individual user usage (subscriber=user) without workspace fallback.
    *
    * @param {string} userId
    * @returns {Promise<Record<string, any> | null>}

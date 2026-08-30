@@ -1,10 +1,11 @@
+const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 const notesRepository = require("@/modules/notes/notes.repository");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
-const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+
 const {
   orgRoleHasPermission,
   ORG_PERMISSIONS,
-} = require("@/modules/organizations/organization-role-policy");
+} = require("@/modules/workspaces/workspace-role-policy");
 const { AppError, fromUnknown, ERROR_CODES } = require("@/errors");
 /**
  * Base of the notes controllers: authentication, access, and formatting.
@@ -31,13 +32,13 @@ class NotesBaseController {
   }
 
   /**
-   * Note associated with a project of the active organization and user with ACCESS_ALL_ORG_PROJECTS.
+   * Note associated with a project of the active workspace and user with ACCESS_ALL_ORG_PROJECTS.
    * @param {Object} note - getNoteById row
    * @param {string} userId
    */
   async _hasOrgWideAccessToProjectNote(note, userId) {
     if (!note?.project_id) return false;
-    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await baseRepository.getActiveOrganizationWithMembership(userId);
     if (!this._canAccessAllOrganizationProjects(membership) || !membership.id) {
       return false;
     }
@@ -50,7 +51,7 @@ class NotesBaseController {
 
   /** Active org when the user can see all notes of the projects of this org (via `project_id`). */
   async _getOrgWideNotesScopeOrganizationId(userId) {
-    const membership = await organizationsRepository.getActiveOrganizationWithMembership(userId);
+    const membership = await baseRepository.getActiveOrganizationWithMembership(userId);
     if (this._canAccessAllOrganizationProjects(membership) && membership.id) {
       return membership.id;
     }

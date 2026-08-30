@@ -2,7 +2,7 @@ const express = require("express");
 const TracingRepository = require("./repositories/tracing.repository");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireOrgPermission } = require("@/middlewares/auth/require-org-permission");
-const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
+const { ORG_PERMISSIONS } = require("@/modules/workspaces/workspace-role-policy");
 
 const router = express.Router();
 

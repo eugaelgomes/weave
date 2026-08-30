@@ -7,7 +7,7 @@ const STORAGE_PREFIXES = [
   "images/",
   "notes/",
   "notes-comments-files/",
-  "organizations/",
+  "workspaces/",
   "projects/",
   "users-content/",
 ];

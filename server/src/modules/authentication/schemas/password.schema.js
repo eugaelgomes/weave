@@ -14,7 +14,7 @@ const forgotPasswordSchema = z.object({
       "Emails with a plus (+) alias in the address are not allowed."
     )
     .describe(
-      "O endereço de e-mail do usuário para o qual o link de redefinição de senha será enviado."
+      "The user's email address to which the password reset link will be sent."
     ),
 });
 
@@ -25,12 +25,12 @@ const resetPasswordSchema = z.object({
   password: z
     .string()
     .min(1, "Password is required")
-    .describe("A nova senha escolhida pelo usuário para substituir a antiga."),
+    .describe("The new password chosen by the user to replace the old one."),
   token: z
     .string()
     .min(1, "Token is required")
     .describe(
-      "O token de segurança único recebido pelo usuário por e-mail para autorizar a redefinição de senha."
+      "The unique security token received by the user via email to authorize password reset."
     ),
 });
 

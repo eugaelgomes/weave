@@ -189,7 +189,7 @@ const buildOrganizationActionContent = (payload) => {
   if (actionKey === "member_added") {
     const message =
       payload.content?.message ||
-      `You have been added to the organization ${
+      `You have been added to the workspace ${
         organizationName || "Weave"
       }${roleLabel ? ` as ${roleLabel}` : ""}.`;
 
@@ -212,13 +212,13 @@ const buildOrganizationInviteContent = (payload) => {
     const inviterName = payload.content?.inviter_name;
     const message =
       payload.content?.message ||
-      `${inviterName || "A member"} invited you to the organization ${
+      `${inviterName || "A member"} invited you to the workspace ${
         organizationName || "Weave"
       }${roleLabel ? ` as ${roleLabel}` : ""}.`;
 
     return createBaseContent(payload, {
       actionKey,
-      actionText: "Access your organizations to accept or decline the invite.",
+      actionText: "Access your workspaces to accept or decline the invite.",
       entityName: organizationName,
       message,
     });
@@ -228,7 +228,7 @@ const buildOrganizationInviteContent = (payload) => {
     const newMemberName = payload.content?.new_member_name;
     const message =
       payload.content?.message ||
-      `${newMemberName || "A new member"} accepted your invite and is now part of the organization ${organizationName || "Weave"}.`;
+      `${newMemberName || "A new member"} accepted your invite and is now part of the workspace ${organizationName || "Weave"}.`;
 
     return createBaseContent(payload, {
       actionKey,

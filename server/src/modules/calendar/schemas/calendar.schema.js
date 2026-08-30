@@ -68,7 +68,7 @@ const calendarEventSchema = z.object({
   organization_id: uuidSchema
     .nullable()
     .optional()
-    .describe("ID of the organization the event belongs to"),
+    .describe("ID of the workspace the event belongs to"),
   outlook_calendar_id: z
     .string()
     .nullable()
@@ -104,7 +104,7 @@ const listEventsQuerySchema = z.object({
     .boolean()
     .optional()
     .describe("Whether to include soft-deleted events in the list"),
-  organization_id: uuidSchema.optional().describe("Organization ID to filter events by"),
+  organization_id: uuidSchema.optional().describe("Workspace ID to filter events by"),
   to: z
     .string()
     .datetime({ offset: true })
@@ -150,7 +150,7 @@ const createEventSchema = z
     organization_id: uuidSchema
       .optional()
       .nullable()
-      .describe("ID of the organization the event belongs to"),
+      .describe("ID of the workspace the event belongs to"),
     project_id: publicIdOrUuidSchema
       .optional()
       .nullable()
@@ -196,7 +196,7 @@ const updateEventSchema = z.object({
   is_all_day: z.boolean().optional().nullable().describe("Whether the event lasts all day"),
   location: z.string().optional().nullable().describe("Updated location"),
   note_id: publicIdOrUuidSchema.optional().nullable().describe("Updated note association ID"),
-  organization_id: uuidSchema.optional().nullable().describe("Updated organization ID"),
+  organization_id: uuidSchema.optional().nullable().describe("Updated workspace ID"),
   project_id: publicIdOrUuidSchema.optional().nullable().describe("Updated project association ID"),
   start_time: z.string().optional().describe("Updated start time (ISO 8601)"),
   sync_with_google: z

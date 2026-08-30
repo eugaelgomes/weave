@@ -56,7 +56,7 @@ class WeaveAIRepository {
    * @typedef {Object} ChatMessageData
    * @property {string} sessionId - UUID of the chat session.
    * @property {string} userId - UUID of the user.
-   * @property {string|null} [organizationId=null] - UUID of the organization.
+   * @property {string|null} [organizationId=null] - UUID of the workspace.
    * @property {string} role - The role of the message sender (user, assistant, tool).
    * @property {string|null} [content] - The text content of the message.
    * @property {string} [model] - The name and version of the LLM model used.

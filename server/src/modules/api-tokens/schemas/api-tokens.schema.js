@@ -29,7 +29,7 @@ const createApiTokenSchema = z.object({
     .describe("O nome descritivo fornecido para identificar o token da API."),
   organizationId: z
     .string()
-    .uuid("Invalid organization ID format")
+    .uuid("Invalid workspace ID format")
     .optional()
     .nullable()
     .describe(

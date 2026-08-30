@@ -7,7 +7,7 @@ const { executeQuery } = require("@/database/connection");
 class WorkspaceUserScopeRepository {
   /**
    * @param {string} userId
-   * @returns {Promise<string[]>} Distinct organization UUIDs as strings.
+   * @returns {Promise<string[]>} Distinct workspace UUIDs as strings.
    */
   async getActiveOrganizationIdsForUser(userId) {
     const query = `
@@ -24,7 +24,7 @@ class WorkspaceUserScopeRepository {
   /**
    * Whether two users may discover or share with each other:
    * - both outside any workspace (no active org membership), or
-   * - both inside at least one workspace and share an organization.
+   * - both inside at least one workspace and share an workspace.
    *
    * @param {string} actorUserId
    * @param {string} targetUserId

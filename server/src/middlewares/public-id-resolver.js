@@ -59,7 +59,7 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
     if (id && id.length === 12 && !id.includes("-")) {
       const query = `
         SELECT id
-        FROM organizations
+        FROM workspaces
         WHERE public_id = $1 AND deleted = false;
       `;
       const { executeQuery } = require("@/database/connection");

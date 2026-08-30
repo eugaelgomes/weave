@@ -141,7 +141,7 @@ class ReadNotesRepository extends BaseRepository {
       LEFT JOIN project_stages pst
         ON pst.id = n.project_stage_id
         AND pst.project_id = n.project_id
-      LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
+      LEFT JOIN workspaces o ON p.organization_id = o.id AND o.deleted = false
       LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
       LEFT JOIN LATERAL (
         SELECT json_agg(
@@ -286,7 +286,7 @@ class ReadNotesRepository extends BaseRepository {
     LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
       LEFT JOIN note_collaborators nc ON n.id = nc.note_id
       LEFT JOIN users c ON nc.user_id = c.user_id
-      LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
+      LEFT JOIN workspaces o ON p.organization_id = o.id AND o.deleted = false
       WHERE ${whereConditions.join(" AND ")}
       GROUP BY 
         n.id,
@@ -394,7 +394,7 @@ class ReadNotesRepository extends BaseRepository {
     LEFT JOIN task_priorities tp ON n.priority_id = tp.id AND tp.deleted = false
     LEFT JOIN note_collaborators nc ON n.id = nc.note_id
     LEFT JOIN users c ON nc.user_id = c.user_id
-    LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
+    LEFT JOIN workspaces o ON p.organization_id = o.id AND o.deleted = false
     WHERE ${noteIdWhere}
       AND n.deleted = false
     GROUP BY 

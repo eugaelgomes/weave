@@ -17,7 +17,7 @@ class ChatFunctionsService {
    *
    * @param {string} userId - The ID of the authenticated user.
    * @param {{name: string, arguments?: Record<string, unknown>}} functionCall - The tool execution details.
-   * @param {string|null} [organizationId=null] - Optional organization ID scope for the call.
+   * @param {string|null} [organizationId=null] - Optional workspace ID scope for the call.
    * @param {string} [lang="pt"] - User language for error translations.
    * @returns {Promise<{name: string, success: boolean, result?: object}>} Result of the tool execution.
    */
@@ -66,7 +66,7 @@ class ChatFunctionsService {
    *
    * @param {string} userId - The ID of the authenticated user.
    * @param {Array<{name: string, arguments?: Record<string, unknown>}>} functionCalls - Array of tool execution details.
-   * @param {string|null} [organizationId=null] - Optional organization ID scope for the calls.
+   * @param {string|null} [organizationId=null] - Optional workspace ID scope for the calls.
    * @param {string} [lang="pt"] - User language for error translations.
    * @param {Function} [onChunk=null] - Callback to stream real-time execution state.
    * @returns {Promise<Array<object>>} Results of all tool executions.

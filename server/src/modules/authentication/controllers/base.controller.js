@@ -1,5 +1,5 @@
 /**
- * Base controller for the authentication module: organization and default area normalization.
+ * Base controller for the authentication module: workspace and default team normalization.
  */
 class AuthBaseController {
   /**
@@ -8,8 +8,6 @@ class AuthBaseController {
    *   id: string | null,
    *   name: string | null,
    *   slug: string | null,
-   *   role: string | null,
-   *   member_since: string | Date | null,
    *   description: string | null,
    *   properties: Record<string, unknown>
    * } | null}
@@ -22,10 +20,8 @@ class AuthBaseController {
     return {
       description: defaultAreaData.org_default_area_description,
       id: defaultAreaData.org_default_area_id,
-      member_since: defaultAreaData.org_default_area_member_since,
       name: defaultAreaData.org_default_area_name,
       properties: defaultAreaData.org_default_area_properties || {},
-      role: defaultAreaData.org_default_area_role,
       slug: defaultAreaData.org_default_area_slug,
     };
   }

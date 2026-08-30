@@ -57,59 +57,60 @@ class DomainVerificationProcessor {
   }
 
   async processJob(job) {
-    const domainId = job?.domainId;
+    const organizationId = job?.organizationId;
+    const domainName = job?.domainName;
     const requestedByUserId = job?.requestedByUserId;
     const retryCount = Number(job?.retryCount || 0);
 
-    if (!domainId) {
-      logger.warn("Skipping domain verification job without domainId");
+    if (!organizationId || !domainName) {
+      logger.warn("Skipping domain verification job without organizationId or domainName");
       return;
     }
 
-    const domain = await this.findActiveDomainById(domainId);
+    const domain = await this.findActiveDomain(organizationId, domainName);
     if (!domain) {
-      logger.warn("Domain not found for verification job", { domainId });
+      logger.warn("Domain not found for verification job", { domainName, organizationId });
       return;
     }
 
     if (domain.status === "VERIFIED") {
       logger.debug("Domain already verified, skipping verification job", {
-        domainId,
-        domainName: domain.domain_name,
+        domainName,
+        organizationId,
       });
       return;
     }
 
     const { checkedHosts, isVerified } = await verifyDomainToken(
-      domain.domain_name,
+      domainName,
       domain.verification_token
     );
 
     if (!isVerified) {
       await this.scheduleRetry({
-        domainId,
+        domainName,
+        organizationId,
         requestedByUserId,
         retryCount: retryCount + 1,
       });
       logger.info("Domain DNS token not found, retry scheduled", {
         checkedHosts,
-        domainId,
-        domainName: domain.domain_name,
+        domainName,
+        organizationId,
         retryCount: retryCount + 1,
       });
       return;
     }
 
-    await this.markDomainAsVerified(domain.id);
+    await this.markDomainAsVerified(organizationId, domainName);
     await this.promoteRequesterToSuperAdminIfAllowed({
-      organizationId: domain.organization_id,
+      organizationId,
       requestedByUserId,
     });
 
     logger.info("Domain verified by worker", {
-      domainId: domain.id,
-      domainName: domain.domain_name,
-      organizationId: domain.organization_id,
+      domainName,
+      organizationId,
       retryCount,
     });
   }
@@ -139,27 +140,39 @@ class DomainVerificationProcessor {
     await redis.zadd(this.delayedQueueName, runAt, JSON.stringify(job));
   }
 
-  async findActiveDomainById(domainId) {
+  async findActiveDomain(organizationId, domainName) {
     const query = `
-      SELECT *
-      FROM organization_domains
-      WHERE id = $1
-        AND deleted = false
-      LIMIT 1;
+      SELECT domains
+      FROM organization_settings
+      WHERE organization_id = $1 AND deleted = false
     `;
-    const results = await executeQuery(query, [domainId]);
-    return results[0] || null;
+    const results = await executeQuery(query, [organizationId]);
+    if (!results[0]) return null;
+    const domains = results[0].domains || [];
+    return domains.find((d) => d.domain_name === domainName) || null;
   }
 
-  async markDomainAsVerified(domainId) {
+  async markDomainAsVerified(organizationId, domainName) {
     const query = `
-      UPDATE organization_domains
-      SET status = 'VERIFIED',
-          verified_at = NOW(),
-          updated_at = NOW()
-      WHERE id = $1;
+      SELECT domains
+      FROM organization_settings
+      WHERE organization_id = $1 AND deleted = false
     `;
-    await executeQuery(query, [domainId]);
+    const results = await executeQuery(query, [organizationId]);
+    if (!results[0]) return;
+    const domains = results[0].domains || [];
+    const index = domains.findIndex((d) => d.domain_name === domainName);
+    if (index === -1) return;
+
+    domains[index].status = "VERIFIED";
+    domains[index].verified_at = new Date().toISOString();
+
+    const updateQuery = `
+      UPDATE organization_settings
+      SET domains = $2::jsonb, updated_at = NOW()
+      WHERE organization_id = $1 AND deleted = false
+    `;
+    await executeQuery(updateQuery, [organizationId, JSON.stringify(domains)]);
   }
 
   async promoteRequesterToSuperAdminIfAllowed({ organizationId, requestedByUserId }) {

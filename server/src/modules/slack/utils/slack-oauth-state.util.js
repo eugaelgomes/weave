@@ -8,7 +8,7 @@ const STATE_TTL_SEC = 10 * 60;
 const STATE_TYP = "slack-oauth-install";
 
 /**
- * Issues a short-lived signed JWT for Slack OAuth `state` (organization install flow).
+ * Issues a short-lived signed JWT for Slack OAuth `state` (workspace install flow).
  *
  * @param {object} params
  * @param {string} params.organizationId

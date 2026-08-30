@@ -12,8 +12,7 @@ const userRoutes = require("@/modules/users/users.routes");
 
 const notesRoutes = require("@/modules/notes/notes.routes");
 const backupRoutes = require("@/modules/backup/backup.routes");
-const projectsRoutes = require("@/modules/projects/projects.routes");
-const organizationsRoutes = require("@/modules/organizations/organizations.routes");
+const organizationsRoutes = require("@/modules/workspaces/workspaces.routes");
 const plansRoutes = require("@/modules/plans/plans.routes");
 const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
 const notificationsRoutes = require("@/modules/notifications/notifications.routes");
@@ -89,7 +88,7 @@ let missingOriginConfigLogged = false;
  */
 const shouldSkipOriginGuard = (path) =>
   path.startsWith("/webhooks") ||
-  path.startsWith("/auth/signin/sso") ||
+  path.startsWith("/auth/oauth") ||
   path.startsWith("/auth/sso");
 
 /**
@@ -133,17 +132,16 @@ const routeRegistry = [
   { basePath: "/backup", handler: backupRoutes },
   { basePath: "/calendar", handler: calendarRoutes },
   { basePath: "/notes", handler: notesRoutes },
-  { basePath: "/organizations", handler: organizationsRoutes },
+  { basePath: "/workspaces", handler: organizationsRoutes },
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/notifications", handler: notificationsRoutes },
-  { basePath: "/projects", handler: projectsRoutes },
   { basePath: "/storage", handler: storageRoutes },
   { basePath: "/users", handler: userRoutes },
   { basePath: "/webhooks", handler: webhooksRoutes },
   { basePath: "/weave-ai", handler: agentHouseRoutes },
   { basePath: "/slack", handler: slackRoutes },
   { basePath: "/artifacts", handler: artifactsRoutes },
-  { basePath: "/organizations", handler: tracingRoutes },
+  { basePath: "/workspaces", handler: tracingRoutes },
 ];
 
 /**

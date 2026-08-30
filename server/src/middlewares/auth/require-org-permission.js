@@ -1,5 +1,6 @@
-const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
-const { orgRoleHasPermission } = require("@/modules/organizations/organization-role-policy");
+const baseRepository = require("@/modules/workspaces/repositories/base.repository");
+
+const { orgRoleHasPermission } = require("@/modules/workspaces/workspace-role-policy");
 
 /**
  * Exige organização ativa com papel que tenha a permissão indicada (ex.: super_admin).
@@ -19,26 +20,26 @@ function requireOrgPermission(permission) {
         });
       }
 
-      const organization =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const workspace =
+        await baseRepository.getActiveOrganizationWithMembership(userId);
 
-      if (!organization) {
+      if (!workspace) {
         return res.status(404).json({
-          error: "Organization not found",
+          error: "Workspace not found",
           success: false,
         });
       }
 
-      const role = organization.member_role;
+      const role = workspace.member_role;
       if (!role || !orgRoleHasPermission(role, permission)) {
         return res.status(403).json({
           code: "ORG_FORBIDDEN",
-          error: "Insufficient organization permissions",
+          error: "Insufficient workspace permissions",
           success: false,
         });
       }
 
-      req.organizationContext = organization;
+      req.organizationContext = workspace;
       return next();
     } catch (err) {
       console.error("[requireOrgPermission]", err);

@@ -4,7 +4,6 @@ const { API_SCOPES } = require("@/config/api-scopes");
 const { logPublicApiRequest } = require("@/middlewares/http/log-public-api-request");
 
 const notesRoutes = require("@/modules/notes/notes.routes");
-const projectsRoutes = require("@/modules/projects/projects.routes");
 const calendarRoutes = require("@/modules/calendar/calendar.routes");
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
@@ -57,7 +56,6 @@ const createPublicRouter = ({ version = DEFAULT_VERSION } = {}) => {
   });
 
   router.use("/notes", notesRoutes);
-  router.use("/projects", projectsRoutes);
   router.use("/calendar", calendarRoutes);
   router.use("/agent-house", agentHouseRoutes);
 

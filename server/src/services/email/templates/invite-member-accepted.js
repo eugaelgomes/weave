@@ -9,13 +9,13 @@ const { getUserEmailLocale, t } = require("@/services/email/i18n");
  */
 async function send_organization_invite_accepted(toEmail, organizationName, homeUrl) {
   const locale = await getUserEmailLocale({ email: toEmail });
-  const safeOrg = organizationName || t(locale, "common.organization");
+  const safeOrg = organizationName || t(locale, "common.workspace");
 
   try {
     const { html, text } = buildMailTemplate({
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
-          <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.organization"))}:</strong> ${escapeHtml(safeOrg)}</p>
+          <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.workspace"))}:</strong> ${escapeHtml(safeOrg)}</p>
           <p style="margin: 0; font-size: 13px; color: #374151;">${escapeHtml(t(locale, "inviteAccepted.featuresIntro"))}</p>
           <ul style="margin: 8px 0 0 18px; padding: 0; color: #374151; font-size: 13px; line-height: 1.6;">
             <li>${escapeHtml(t(locale, "inviteAccepted.feature1"))}</li>

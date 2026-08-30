@@ -12,7 +12,7 @@ const API_SCOPES = {
   NOTES_DELETE: "notes:delete",
   NOTES_READ: "notes:read",
   NOTES_WRITE: "notes:write",
-  ORGANIZATIONS_READ: "organizations:read",
+  ORGANIZATIONS_READ: "workspaces:read",
   PRIORITIES_READ: "priorities:read",
   PRIORITIES_WRITE: "priorities:write",
   PROFILE_READ: "profile:read",

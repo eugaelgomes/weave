@@ -12,6 +12,12 @@ const {
   normalizePhoneNumber,
 } = require("@/modules/users/utils/unique-conflicts");
 
+const workspacesBaseRepository = require("@/modules/workspaces/repositories/base.repository");
+const workspacesMembersRepository = require("@/modules/workspaces/repositories/members.repository");
+const workspacesTeamsRepository = require("@/modules/workspaces/repositories/teams.repository");
+const credentialsRepository = require("@/modules/authentication/repositories/credentials.repository");
+const { buildJwtPayload } = require("@/modules/authentication/schemas/session.schema");
+
 /**
  * @typedef {import('express').Request & {
  *   user: { userId: string|number, username: string },
@@ -26,8 +32,6 @@ const {
  *   id: unknown,
  *   name: unknown,
  *   slug: unknown,
- *   role: unknown,
- *   member_since: unknown,
  *   description: unknown,
  *   properties: Record<string, unknown>
  * }}
@@ -37,10 +41,8 @@ const mapDefaultAreaInfo = (defaultAreaData) => {
   return {
     description: defaultAreaData.org_default_area_description,
     id: defaultAreaData.org_default_area_id,
-    member_since: defaultAreaData.org_default_area_member_since,
     name: defaultAreaData.org_default_area_name,
     properties: defaultAreaData.org_default_area_properties || {},
-    role: defaultAreaData.org_default_area_role,
     slug: defaultAreaData.org_default_area_slug,
   };
 };
@@ -163,7 +165,7 @@ class UserDataController extends BaseController {
   }
 
   /**
-   * Complete profile (`/me`): profile, organization, plan data and pre-signed URLs.
+   * Complete profile (`/me`): profile, workspace, plan data and pre-signed URLs.
    *
    * @param {UserDataRequest} req
    * @param {import('express').Response} res
@@ -179,7 +181,7 @@ class UserDataController extends BaseController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const organization = mapOrganizationInfo(user.organization);
+      const workspace = mapOrganizationInfo(user.workspace);
       const defaultArea = mapDefaultAreaInfo(user.default_area);
       const planUsage = mapPlanUsageInfo(user.current_usage);
 
@@ -189,8 +191,8 @@ class UserDataController extends BaseController {
         expiresIn: 12 * 60 * 60,
         userId: req.user.userId,
       });
-      const protectedOrg = organization
-        ? await presignObjectFields(organization, ["logo_url"], {
+      const protectedOrg = workspace
+        ? await presignObjectFields(workspace, ["logo_url"], {
             expiresIn: 12 * 60 * 60,
             userId: req.user.userId,
           })
@@ -384,6 +386,114 @@ class UserDataController extends BaseController {
       });
 
       this._handleError(error, res, next);
+    }
+  }
+
+  /**
+   * List all active workspaces where the logged-in user is a member.
+   */
+  async listMyOrganizations(req, res, next) {
+    try {
+      const userId = this._validateAuthentication(req);
+
+      const orgs = await workspacesBaseRepository.getUserOrganizationsWithMembership(userId);
+
+      const protectedOrgs = await Promise.all(
+        orgs.map(async (org) => {
+          const presigned = await presignObjectFields(org, ["logo_url"], {
+            expiresIn: 12 * 60 * 60,
+            userId,
+          });
+          return {
+            id: org.id,
+            joined_at: org.joined_at,
+            logo_url: presigned.logo_url || null,
+            member_role: org.member_role,
+            org_name: org.org_name,
+            unique_name: org.unique_name,
+          };
+        })
+      );
+
+      res.status(200).json({
+        data: protectedOrgs,
+        success: true,
+      });
+    } catch (error) {
+      console.error("Error listing user workspaces:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * Switch the active workspace context in the user's session.
+   */
+  async switchOrganization(req, res, next) {
+    try {
+      const userId = this._validateAuthentication(req);
+
+      const { organizationId } = req.body;
+      if (!organizationId) {
+        return res.status(400).json({ error: "organizationId is required", success: false });
+      }
+
+      // Check membership
+      const role = await workspacesMembersRepository.getMembershipRole(organizationId, userId);
+      if (!role) {
+        return res.status(403).json({
+          error: "You are not an active member of this workspace",
+          success: false,
+        });
+      }
+
+      // Fetch user full data to rebuild session
+      const user = await credentialsRepository.findUserById(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found", success: false });
+      }
+
+      // Fetch workspace details
+      const userOrgs = await workspacesBaseRepository.getUserOrganizationsWithMembership(userId);
+      const targetOrg = userOrgs.find((o) => o.id === organizationId);
+
+      if (!targetOrg) {
+        return res.status(404).json({ error: "Workspace not found", success: false });
+      }
+
+      const workspace = {
+        id: targetOrg.id,
+        logo_url: targetOrg.logo_url,
+        member_role: targetOrg.member_role,
+        org_name: targetOrg.org_name,
+        unique_name: targetOrg.unique_name,
+      };
+
+      // Get default team for this workspace if any
+      let defaultArea = null;
+      try {
+        defaultArea = await workspacesTeamsRepository.getDefaultArea(organizationId);
+      } catch {
+        // Team optional fallback
+      }
+
+      const payload = buildJwtPayload(user, workspace, defaultArea);
+
+      req.session.user = payload;
+      req.session.userId = user.user_id;
+
+      res.status(200).json({
+        message: "Switched workspace successfully",
+        success: true,
+        user_organization: {
+          id: workspace.id,
+          member_role: role,
+          name: workspace.org_name,
+          unique_name: workspace.unique_name,
+        },
+      });
+    } catch (error) {
+      console.error("Error switching workspace:", error);
+      next(error);
     }
   }
 }

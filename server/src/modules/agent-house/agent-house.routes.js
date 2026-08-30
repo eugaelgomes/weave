@@ -49,7 +49,7 @@ const {
   createCustomToolSchema,
   updateCustomToolSchema,
 } = require("./schemas/agent-house.schema");
-const { ORG_PERMISSIONS } = require("@/modules/organizations/organization-role-policy");
+const { ORG_PERMISSIONS } = require("@/modules/workspaces/workspace-role-policy");
 const { strictLimiter } = require("@/middlewares/security/request-limiters");
 const { handleChatFilesUpload } = require("./utils/chat-upload.util");
 

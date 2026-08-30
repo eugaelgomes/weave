@@ -8,7 +8,7 @@ function normalizeFrontendBase(url) {
 }
 
 /**
- * Builds the canonical organization invite acceptance URL.
+ * Builds the canonical workspace invite acceptance URL.
  * @param {string} inviteId - organization_member_invites.invite_id (UUID)
  * @param {string} [frontendUrl] - optional override for FRONTEND_URL
  * @returns {string}

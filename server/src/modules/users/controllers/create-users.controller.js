@@ -93,7 +93,7 @@ class CreateUsersController extends BaseController {
       if (error.message === "CORPORATE_DOMAIN_INVITE_REQUIRED") {
         return res.status(403).json({
           message:
-            "This email belongs to a verified corporate domain. You need an invitation from the organization to create an account.",
+            "This email belongs to a verified corporate domain. You need an invitation from the workspace to create an account.",
           status: "error",
         });
       }

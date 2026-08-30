@@ -95,9 +95,9 @@ function isFunctionAuthorized({ access, functionName, schema, context }) {
   const noteScoped = category === FunctionCategory.NOTES || category === FunctionCategory.BLOCKS;
   const projectScoped = category === FunctionCategory.PROJECTS;
   const orgScoped =
-    category === FunctionCategory.ORGANIZATIONS ||
+    category === FunctionCategory.WORKSPACES ||
     functionName.includes("org_") ||
-    functionName.includes("organization");
+    functionName.includes("workspace");
 
   if (orgScoped && !context?.organizationId) {
     return false;

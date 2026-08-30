@@ -85,7 +85,7 @@ class PlansService {
       ]);
     } else {
       await executeQuery(
-        `UPDATE organizations SET plan_id = $1, updated_at = NOW() WHERE id = $2`,
+        `UPDATE workspaces SET plan_id = $1, updated_at = NOW() WHERE id = $2`,
         [planId, subscriberId]
       );
     }
@@ -361,7 +361,7 @@ class PlansService {
       ]);
     }
 
-    const subscriberType = orgId ? "organization" : effectivePlan?.subscriber_type || "user";
+    const subscriberType = orgId ? "workspace" : effectivePlan?.subscriber_type || "user";
     const subscriberId = orgId || effectivePlan?.subscriber_id || userId;
 
     const startDate = new Date();
@@ -397,7 +397,7 @@ class PlansService {
     return await PlansRepository.createInitialUsage(
       planId,
       userId,
-      orgId ? "organization" : "user",
+      orgId ? "workspace" : "user",
       initialUsageDetails,
       orgId,
       subscriberType,

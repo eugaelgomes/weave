@@ -1,4 +1,5 @@
-const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+const baseRepository = require("@/modules/workspaces/repositories/base.repository");
+
 
 /**
  * Middleware para bloquear acesso a módulos desativados pela organização.
@@ -18,18 +19,18 @@ function requireModule(moduleName) {
         });
       }
 
-      const organization =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
+      const workspace =
+        await baseRepository.getActiveOrganizationWithMembership(userId);
 
-      if (!organization) {
+      if (!workspace) {
         // Se o usuário não tem organização, não pode acessar os módulos corporativos
         return res.status(403).json({
-          error: "No active organization found.",
+          error: "No active workspace found.",
           success: false,
         });
       }
 
-      const activeModules = organization.settings?.modules || {
+      const activeModules = workspace.settings?.modules || {
         agent_house: true,
         calendar: true,
         notes: true,

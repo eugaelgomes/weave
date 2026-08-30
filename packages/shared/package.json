@@ -18,7 +18,8 @@
     "@aws-sdk/s3-request-presigner": "^3.893.0",
     "@prisma/client": "^5.22.0",
     "ioredis": "^5.4.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/uuid": "^10.0.0",

@@ -29,7 +29,7 @@ class ChatAccessUtil {
    *
    * @param {string} userId - The ID of the user requesting access.
    * @param {string} noteId - The internal UUID or public note ID to verify.
-   * @param {string|null} [organizationId=null] - Optional organization ID for scope verification.
+   * @param {string|null} [organizationId=null] - Optional workspace ID for scope verification.
    * @param {string} [lang="pt"] - The language code for error translation.
    * @returns {Promise<string>} The resolved internal note UUID.
    * @throws {Error} If note is not found or access is denied.
@@ -76,7 +76,7 @@ class ChatAccessUtil {
 
     // Policy C: Organizational project-level workspace access.
     // If the note belongs to a project, and the project is bound to the user's current
-    // organization workspace, the user is authorized.
+    // workspace workspace, the user is authorized.
     if (organizationId && summary.project_id) {
       const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
         summary.project_id,
@@ -95,12 +95,12 @@ class ChatAccessUtil {
   }
 
   /**
-   * Asserts that a user has mutation access to a project, checking ownership, organization scope,
+   * Asserts that a user has mutation access to a project, checking ownership, workspace scope,
    * or collaborator role permissions.
    *
    * @param {string} userId - The ID of the user requesting access.
    * @param {string} projectId - The project ID to verify.
-   * @param {string|null} [organizationId=null] - Optional organization ID for scope verification.
+   * @param {string|null} [organizationId=null] - Optional workspace ID for scope verification.
    * @param {string} [lang="pt"] - The language code for error translation.
    * @returns {Promise<void>} Resolves if access is authorized.
    * @throws {Error} If project ID is missing or access is denied.
@@ -116,8 +116,8 @@ class ChatAccessUtil {
       throw error;
     }
 
-    // Policy A: Organization scoping check.
-    // If the project is linked to the active workspace organization, verify existence/membership.
+    // Policy A: Workspace scoping check.
+    // If the project is linked to the active workspace workspace, verify existence/membership.
     if (organizationId) {
       const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
         projectId,

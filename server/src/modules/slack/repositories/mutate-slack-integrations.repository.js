@@ -5,7 +5,7 @@ const BaseRepository = require("./base.repository");
  */
 class MutateSlackIntegrationsRepository extends BaseRepository {
   /**
-   * Upserts installation for an organization (one row per org).
+   * Upserts installation for an workspace (one row per org).
    *
    * @param {object} params
    * @param {string} params.organizationId
@@ -100,7 +100,7 @@ class MutateSlackIntegrationsRepository extends BaseRepository {
   }
 
   /**
-   * Soft-delete integration for an organization.
+   * Soft-delete integration for an workspace.
    * @param {string} organizationId
    */
   async softDeleteByOrganizationId(organizationId) {

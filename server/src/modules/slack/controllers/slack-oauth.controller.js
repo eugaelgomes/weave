@@ -1,9 +1,10 @@
+const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 const WebhooksBaseController = require("@/modules/webhooks/controllers/base.controller");
-const organizationsRepository = require("@/modules/organizations/repositories/organizations.repository");
+
 const {
   ORG_PERMISSIONS,
   orgRoleHasPermission,
-} = require("@/modules/organizations/organization-role-policy");
+} = require("@/modules/workspaces/workspace-role-policy");
 const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/mutate-slack-integrations.repository");
 const {
   issueSlackInstallState,
@@ -18,7 +19,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
  */
 class SlackOauthController extends WebhooksBaseController {
   /**
-   * Redirects the authenticated user to Slack OAuth (organization install).
+   * Redirects the authenticated user to Slack OAuth (workspace install).
    * `GET /webhooks/slack/install`
    *
    * @param {import('express').Request} req
@@ -29,22 +30,22 @@ class SlackOauthController extends WebhooksBaseController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (userId === null || userId === undefined) return;
 
-      const organization =
-        await organizationsRepository.getActiveOrganizationWithMembership(userId);
-      if (!organization?.id) {
-        return res.status(404).json({ error: "Organization not found" });
+      const workspace =
+        await baseRepository.getActiveOrganizationWithMembership(userId);
+      if (!workspace?.id) {
+        return res.status(404).json({ error: "Workspace not found" });
       }
 
-      const role = organization.member_role;
+      const role = workspace.member_role;
       if (!role || !orgRoleHasPermission(role, ORG_PERMISSIONS.MANAGE_GLOBAL_INTEGRATIONS)) {
         return res.status(403).json({
           code: "ORG_FORBIDDEN",
-          error: "Insufficient organization permissions",
+          error: "Insufficient workspace permissions",
         });
       }
 
       const state = issueSlackInstallState({
-        organizationId: String(organization.id),
+        organizationId: String(workspace.id),
         userId: String(userId),
       });
       const url = buildAuthorizeUrl({ state });

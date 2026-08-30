@@ -38,7 +38,7 @@ const API_SCOPES = [
   {
     description: "Allows viewing organizational data and members.",
     id: SCOPES.ORGANIZATIONS_READ,
-    name: "Read Organizations",
+    name: "Read Workspaces",
   },
   {
     description: "Allows reading events related to calendars and scheduled tasks.",
@@ -51,7 +51,7 @@ const API_SCOPES = [
     name: "Create/Edit Calendar Events",
   },
   {
-    description: "Allows reading organization and project tags.",
+    description: "Allows reading workspace and project tags.",
     id: SCOPES.TAGS_READ,
     name: "Read Tags",
   },
@@ -61,7 +61,7 @@ const API_SCOPES = [
     name: "Manage Tags",
   },
   {
-    description: "Allows reading organization and project task priorities.",
+    description: "Allows reading workspace and project task priorities.",
     id: SCOPES.PRIORITIES_READ,
     name: "Read Task Priorities",
   },
@@ -71,7 +71,7 @@ const API_SCOPES = [
     name: "Manage Task Priorities",
   },
   {
-    description: "Allows searching and reading user profiles within the organization.",
+    description: "Allows searching and reading user profiles within the workspace.",
     id: SCOPES.USERS_READ,
     name: "Read Users",
   },

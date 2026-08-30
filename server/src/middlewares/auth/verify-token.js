@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const Sentry = require("@sentry/node");
 const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
-const { jwtPayloadSchema } = require("@/modules/authentication/schemas/jwt-payload.schema");
+const { jwtPayloadSchema } = require("@/modules/authentication/schemas/session.schema");
 
 /**
  * Middleware that verifies the authentication of the request.

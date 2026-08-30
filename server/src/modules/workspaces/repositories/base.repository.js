@@ -1,0 +1,375 @@
+const { executeQuery, getConnection } = require("@/database/connection");
+const { ORG_ROLES } = require("@/modules/workspaces/workspace-role-policy");
+const { generatePublicId } = require("@/utils/formatters.util");
+
+const settingsRepository = require("./settings.repository");
+const membersRepository = require("./members.repository");
+
+class OrganizationBaseRepository {
+  async getActiveOrganizationWithMembership(user_id) {
+    const query = `
+    SELECT
+      o.id,
+      o.user_id,
+      o.org_name,
+      o.unique_name,
+      o.logo_url,
+      o.banner_url,
+      o.description,
+      o.country,
+      o.deleted,
+      o.created_at,
+      o.updated_at,
+      p.details AS plan_snapshot,
+      o.deleted_at,
+      o.deleted_by,
+      o.plan_id,
+      p.name as plan_name,
+      p.details as plan_details,
+      p.plan_value,
+      p.currency,
+      COALESCE(p.details #>> '{billing,billing_cycle}', 'monthly') AS billing_cycle,
+      u.avatar_url,
+      u.name,
+      u.username,
+      u.email,
+      om.role AS member_role
+    FROM organization_members om
+    INNER JOIN workspaces o ON o.id = om.organization_id AND o.deleted = false
+    LEFT JOIN plans p ON p.plan_id = o.plan_id
+    LEFT JOIN users u ON u.user_id = o.user_id
+    WHERE om.user_id = $1 AND om.deleted = false
+      
+    ORDER BY om.created_at ASC
+    LIMIT 1;
+    `;
+    const rows = await executeQuery(query, [user_id]);
+    if (rows[0]) return rows[0];
+
+    const owned = (await this.getOrgsByUserId(user_id)).find((o) => !o.deleted);
+    if (!owned) return null;
+    const role = await membersRepository.getMembershipRole(owned.id, user_id);
+    return {
+      ...owned,
+      member_role: role || ORG_ROLES.SUPER_ADMIN,
+    };
+  }
+
+  async getOrgsByUserId(user_id) {
+    const query = `
+    SELECT
+      o.id,
+      o.user_id,
+      o.org_name,
+      o.unique_name,
+      o.logo_url,
+      o.banner_url,
+      o.description,
+      o.country,
+      o.deleted,
+      o.created_at,
+      o.updated_at,
+      p.details AS plan_snapshot,
+      o.deleted_at,
+      o.deleted_by,
+      o.plan_id,
+      p.name as plan_name,
+      p.details as plan_details,
+      p.plan_value,
+      p.currency,
+      COALESCE(p.details #>> '{billing,billing_cycle}', 'monthly') AS billing_cycle,
+      u.avatar_url,
+      u.name,
+      u.username,
+      u.email
+    FROM workspaces o
+    JOIN users u ON u.user_id = o.user_id
+    LEFT JOIN plans p ON p.plan_id = o.plan_id
+    WHERE o.user_id = $1;
+    `;
+    const results = await executeQuery(query, [user_id]);
+    return results;
+  }
+
+  async getUserOrganizationsWithMembership(user_id) {
+    const query = `
+      SELECT
+        o.id,
+        o.user_id,
+        o.org_name,
+        o.unique_name,
+        o.logo_url,
+        o.banner_url,
+        o.description,
+        om.role AS member_role,
+        om.status AS member_status,
+        om.created_at AS joined_at
+      FROM organization_members om
+      INNER JOIN workspaces o ON o.id = om.organization_id AND o.deleted = false
+      WHERE om.user_id = $1
+        AND om.deleted = false
+        AND om.status = 'ACTIVE'
+      ORDER BY om.created_at ASC;
+    `;
+    return await executeQuery(query, [user_id]);
+  }
+
+  async getAvailableOrgNames(baseName) {
+    const query = `
+      SELECT unique_name FROM workspaces
+      WHERE unique_name LIKE $1;
+    `;
+    const results = await executeQuery(query, [`${baseName}%`]);
+    return results.map((row) => row.unique_name);
+  }
+
+  async createOrgs(
+    user_id,
+    org_name,
+    unique_name,
+    logo_url,
+    banner_url,
+    description,
+    country
+  ) {
+    const client = await getConnection();
+    try {
+      await client.query("BEGIN");
+
+      const defaultPlanQuery = `
+        WITH candidates AS (
+          SELECT
+            p.plan_id,
+            p.details,
+            1 AS priority,
+            COALESCE(p.plan_value, 0) AS sort_value,
+            p.created_at
+          FROM plans p
+          WHERE p.deleted = FALSE
+            AND p.is_active = TRUE
+            AND COALESCE((p.details #>> '{metadata,is_signup_default}')::boolean, false) = true
+          UNION ALL
+          SELECT
+            p.plan_id,
+            p.details,
+            2 AS priority,
+            COALESCE(p.plan_value, 0) AS sort_value,
+            p.created_at
+          FROM plans p
+          WHERE p.deleted = FALSE
+            AND p.is_active = TRUE
+        )
+        SELECT plan_id, details
+        FROM candidates
+        ORDER BY priority ASC, sort_value ASC, created_at ASC
+        LIMIT 1;
+      `;
+
+      const defaultPlanResult = await client.query(defaultPlanQuery);
+      const defaultPlan = defaultPlanResult.rows[0] || null;
+      const defaultPlanId = defaultPlan?.plan_id || null;
+
+      const publicId = generatePublicId();
+      const publicOrganizationId = `org_${publicId}`;
+
+      const insertOrgQuery = `
+      INSERT INTO workspaces (
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+    country,
+        plan_id,
+        public_id,
+        public_organization_id
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING
+        id,
+        public_id,
+        public_organization_id,
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+    country,
+        plan_id,
+        NULL AS plan_snapshot,
+        created_at,
+        updated_at,
+        deleted;
+    `;
+
+      const orgResult = await client.query(insertOrgQuery, [
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+    country,
+        defaultPlanId,
+        publicId,
+        publicOrganizationId,
+      ]);
+
+      const workspace = orgResult.rows[0];
+
+      const updateUserQuery = `
+      UPDATE users
+      SET organization_id = $1,
+          plan_id = COALESCE(plan_id, $3)
+      WHERE user_id = $2;
+    `;
+
+      await client.query(updateUserQuery, [workspace.id, user_id, defaultPlanId]);
+
+      await membersRepository.addOrganizationMember(workspace.id, user_id, "ADMIN", "ACTIVE", null, client);
+
+      await settingsRepository.createDefaultSettings(workspace.id, client);
+
+      const rootAreaSlug = unique_name || "central";
+      await client.query(
+        `INSERT INTO organization_areas (
+           organization_id, area_name, slug, description, properties, created_by, is_root_area
+         ) VALUES ($1, 'Central', $2, 'Central team of the workspace', '{}'::jsonb, $3, true)`,
+        [workspace.id, rootAreaSlug, user_id]
+      );
+
+      if (defaultPlanId) {
+        const periodStart = new Date();
+        const periodEnd = new Date();
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+        await client.query(
+          `INSERT INTO subscriptions (subscriber_type, subscriber_id, plan_id, status, provider, current_period_start, current_period_end)
+           VALUES ('workspace', $1, $2, 'active', 'internal', $3, $4)
+           ON CONFLICT (subscriber_type, subscriber_id)
+           DO UPDATE SET plan_id = EXCLUDED.plan_id, status = 'active', updated_at = NOW()`,
+          [workspace.id, defaultPlanId, periodStart, periodEnd]
+        );
+      }
+
+      await client.query("COMMIT");
+
+      return workspace;
+    } catch (err) {
+      await client.query("ROLLBACK");
+      console.error("Erro ao criar organização:", err);
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  async autoProvisionPersonalWorkspace(userId, displayName, locale = "en", timezone = "UTC") {
+    const crypto = require("crypto");
+    const orgName = `Workspace de ${displayName}`;
+    const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
+
+    return await this.createOrgs(
+      userId,
+      orgName,
+      uniqueName,
+      null,
+      null,
+      null,
+      timezone,
+      locale,
+      null,
+      {}
+    );
+  }
+
+  async updateOrg(
+    organization_id,
+    user_id,
+    org_name,
+    unique_name,
+    logo_url,
+    banner_url,
+    description,
+    deleted
+  ) {
+    const query = `
+      UPDATE workspaces o
+      SET org_name = $3,
+          unique_name = $4,
+          logo_url = $5,
+          banner_url = $6,
+          description = $7,
+          deleted = $8,
+          updated_at = NOW()
+      WHERE o.id = $1
+        AND (
+          o.user_id = $2
+          OR EXISTS (
+            SELECT 1 FROM organization_members om
+            WHERE om.organization_id = o.id
+              AND om.user_id = $2
+              
+              AND om.deleted = false
+              AND om.role IN ('SUPER_ADMIN', 'ADMIN')
+          )
+        )
+      RETURNING
+        id,
+        user_id,
+        org_name,
+        unique_name,
+        logo_url,
+        banner_url,
+        description,
+        created_at,
+        updated_at,
+        deleted;
+    `;
+    const results = await executeQuery(query, [
+      organization_id,
+      user_id,
+      org_name,
+      unique_name,
+      logo_url,
+      banner_url,
+      description,
+      deleted,
+    ]);
+    return results[0];
+  }
+
+  async updateOrgLogo(organization_id, logo_url, user_id) {
+    const query = `
+WITH user_check AS (
+    SELECT 1 FROM organization_members 
+    WHERE organization_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
+)
+UPDATE workspaces
+SET logo_url = $2, updated_at = NOW()
+WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
+RETURNING *;
+    `;
+    const results = await executeQuery(query, [organization_id, logo_url, user_id]);
+    return results[0];
+  }
+
+  async updateOrgBanner(organization_id, banner_url, user_id) {
+    const query = `
+WITH user_check AS (
+    SELECT 1 FROM organization_members 
+    WHERE organization_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
+)
+UPDATE workspaces
+SET banner_url = $2, updated_at = NOW()
+WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
+RETURNING *;
+    `;
+    const results = await executeQuery(query, [organization_id, banner_url, user_id]);
+    return results[0];
+  }
+}
+
+module.exports = new OrganizationBaseRepository();

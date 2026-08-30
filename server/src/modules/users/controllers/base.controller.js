@@ -1,4 +1,4 @@
-const SigninRepository = require("@/modules/authentication/repositories/signin.repository");
+const CredentialsRepository = require("@/modules/authentication/repositories/credentials.repository");
 const { AppError, fromUnknown } = require("@/errors");
 const {
   buildUniqueConflictPayload,
@@ -12,7 +12,7 @@ const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone");
  */
 class BaseController {
   constructor() {
-    this.signinRepository = SigninRepository;
+    this.credentialsRepository = CredentialsRepository;
   }
 
   /**

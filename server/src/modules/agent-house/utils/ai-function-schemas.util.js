@@ -234,7 +234,7 @@ const FUNCTION_SCHEMAS = Object.freeze({
   search_users: {
     category: FunctionCategory.USERS,
     description:
-      "Search for users in the organization by name, username, or email to get their user IDs. Essential for resolving names to collaborator IDs.",
+      "Search for users in the workspace by name, username, or email to get their user IDs. Essential for resolving names to collaborator IDs.",
     name: "search_users",
     parameters: {
       additionalProperties: false,

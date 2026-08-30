@@ -2,68 +2,101 @@ const express = require("express");
 const { authLimiter } = require("@/middlewares/security/request-limiters");
 const { validate } = require("@/middlewares/validation/validate");
 
-const SigninController = require("@/modules/authentication/controllers/signin.controller");
-const GoogleOauthController = require("@/modules/authentication/controllers/google-oauth.controller");
-const GithubOauthController = require("@/modules/authentication/controllers/github-oauth.controller");
-const MicrosoftOauthController = require("@/modules/authentication/controllers/microsoft-oauth.controller");
-const LogoutController = require("@/modules/authentication/controllers/logout.controller");
-const PasswordController = require("@/modules/authentication/controllers/password.controller");
-const SamlSsoController = require("@/modules/authentication/controllers/saml-sso.controller");
-const {
-  forgotPasswordSchema,
-  resetPasswordSchema,
-} = require("@/modules/authentication/schemas/password.schema");
-const {
-  oauthCallbackSchema,
-  signinSchema,
-} = require("@/modules/authentication/schemas/auth.schema");
+// Controllers
+const ProvidersController = require("./controllers/providers.controller");
+const CredentialsController = require("./controllers/credentials.controller");
+const GoogleController = require("./controllers/oauth/google.controller");
+const GithubController = require("./controllers/oauth/github.controller");
+const MicrosoftController = require("./controllers/oauth/microsoft.controller");
+const SamlController = require("./controllers/saml/saml.controller");
+const LogoutController = require("./controllers/logout.controller");
+const PasswordController = require("./controllers/password.controller");
+
+// Schemas
+const { signinSchema } = require("./schemas/credentials.schema");
+const { oauthCallbackSchema } = require("./schemas/oauth.schema");
+const { ssoDiscoverSchema, samlAcsCallbackSchema } = require("./schemas/saml.schema");
+const { forgotPasswordSchema, resetPasswordSchema } = require("./schemas/password.schema");
 
 const router = express.Router();
 
+// ── Available Providers ──
+router.get(
+  "/providers",
+  ProvidersController.listProviders.bind(ProvidersController)
+);
+
+// ── Credentials ──
 router.post(
   "/signin",
   authLimiter,
   validate(signinSchema, "body"),
-  SigninController.userSignin.bind(SigninController)
+  CredentialsController.userSignin.bind(CredentialsController)
 );
 
-router.get("/signin/sso/google", GoogleOauthController.googleAuth.bind(GoogleOauthController));
+// ── Social OAuth ──
+router.get(
+  "/oauth/google",
+  GoogleController.googleAuth.bind(GoogleController)
+);
 
 router.get(
-  "/signin/sso/google/callback",
+  "/oauth/google/callback",
   authLimiter,
   validate(oauthCallbackSchema, "query"),
-  GoogleOauthController.googleCallback.bind(GoogleOauthController)
+  GoogleController.googleCallback.bind(GoogleController)
 );
 
-router.get("/signin/sso/github", GithubOauthController.githubAuth.bind(GithubOauthController));
+router.get(
+  "/oauth/github",
+  GithubController.githubAuth.bind(GithubController)
+);
 
 router.get(
-  "/signin/sso/github/callback",
+  "/oauth/github/callback",
   authLimiter,
   validate(oauthCallbackSchema, "query"),
-  GithubOauthController.githubCallback.bind(GithubOauthController)
+  GithubController.githubCallback.bind(GithubController)
 );
 
 router.get(
-  "/signin/sso/microsoft",
-  MicrosoftOauthController.microsoftAuth.bind(MicrosoftOauthController)
+  "/oauth/microsoft",
+  MicrosoftController.microsoftAuth.bind(MicrosoftController)
 );
 
 router.get(
-  "/signin/sso/microsoft/callback",
+  "/oauth/microsoft/callback",
   authLimiter,
   validate(oauthCallbackSchema, "query"),
-  MicrosoftOauthController.microsoftCallback.bind(MicrosoftOauthController)
+  MicrosoftController.microsoftCallback.bind(MicrosoftController)
 );
 
-// Custom SAML SSO
-router.post("/sso/discover", authLimiter, SamlSsoController.discoverSso.bind(SamlSsoController));
-router.get("/sso/saml/:domainId/login", SamlSsoController.samlLogin.bind(SamlSsoController));
-router.post("/sso/saml/acs", SamlSsoController.samlCallback.bind(SamlSsoController));
+// ── Enterprise SSO (SAML) ──
+router.post(
+  "/sso/discover",
+  authLimiter,
+  validate(ssoDiscoverSchema, "body"),
+  SamlController.discoverSso.bind(SamlController)
+);
 
-router.post("/logout", LogoutController.logout.bind(LogoutController));
+router.get(
+  "/sso/saml/:organizationId/login",
+  SamlController.samlLogin.bind(SamlController)
+);
 
+router.post(
+  "/sso/saml/acs",
+  validate(samlAcsCallbackSchema, "body"),
+  SamlController.samlCallback.bind(SamlController)
+);
+
+// ── Session ──
+router.post(
+  "/logout",
+  LogoutController.logout.bind(LogoutController)
+);
+
+// ── Password Recovery ──
 router.post(
   "/forgot-password",
   validate(forgotPasswordSchema, "body"),

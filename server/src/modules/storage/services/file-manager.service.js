@@ -12,7 +12,7 @@ const SYSTEM_RESERVED_ROOTS = [
   "images",
   "notes",
   "notes-comments-files",
-  "organizations",
+  "workspaces",
   "projects",
   "users-content",
 ];

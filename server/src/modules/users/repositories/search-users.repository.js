@@ -127,7 +127,7 @@ class SearchUsersRepository extends BaseRepository {
    * @returns {Promise<import('pg').QueryResultRow[]>}
    */
   async searchUsers(searchTerm, searcherUserId) {
-    // 1. Identify searcher's active organizations
+    // 1. Identify searcher's active workspaces
     const orgsQuery = `
       SELECT DISTINCT organization_id
       FROM organization_members

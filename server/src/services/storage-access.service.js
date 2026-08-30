@@ -89,13 +89,13 @@ const parseResourceDescriptor = (key) => {
         type: "project",
       };
     }
-    case "organizations": {
+    case "workspaces": {
       const organizationId = sanitizeId(segments[1]);
       if (!organizationId) return null;
       return {
         key: normalized,
         organizationId,
-        type: "organization",
+        type: "workspace",
       };
     }
     default:
@@ -154,7 +154,7 @@ const hasOrganizationAccess = async (userId, organizationId) => {
 
   const query = `
     SELECT 1
-    FROM organizations o
+    FROM workspaces o
     WHERE o.id = $1
       AND (
         o.user_id = $2 OR EXISTS (
@@ -198,7 +198,7 @@ const assertFileAccess = async (userId, key) => {
     case "project":
       hasAccess = await hasProjectAccess(normalizedUserId, descriptor.projectId);
       break;
-    case "organization":
+    case "workspace":
       hasAccess = await hasOrganizationAccess(normalizedUserId, descriptor.organizationId);
       break;
     default:
