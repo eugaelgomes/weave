@@ -1,4 +1,4 @@
-const { fromUnknown } = require("@/errors");
+const { AppError, fromUnknown } = require("@/errors");
 const WorkspacesBaseController = require("./base-controller");
 const rolesRepository = require("@/modules/workspaces/repositories/roles.repository");
 const { workspace_permissions_catalog } = require("@/modules/workspaces/permissions-catalog");
@@ -18,11 +18,11 @@ class WorkspaceRolesController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const roles = await this.rolesRepository.listRoles(workspace.id);
-      res.status(200).json({ data: z.array(roleResponseSchema).parse(roles), status: "OK" });
+      res.status(200).json({ data: z.array(roleResponseSchema).parse(roles), success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -35,19 +35,19 @@ class WorkspaceRolesController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       // TODO: require permission 'workspace:manage'
       const { name, description, permissions } = req.body;
 
       if (!name) {
-        return res.status(400).json({ error: "Name is required", success: false });
+        throw AppError.badRequest("Name is required");
       }
 
       const existingRole = await this.rolesRepository.getRoleByName(name, workspace.id);
       if (existingRole) {
-        return res.status(400).json({ error: "Role name already exists", success: false });
+        throw AppError.conflict("Role name already exists");
       }
 
       const newRole = await this.rolesRepository.createRole({
@@ -62,7 +62,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
       res.status(201).json({
         data: roleResponseSchema.parse(newRole),
         message: "Role created successfully",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       next(fromUnknown(error));
@@ -76,7 +76,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       // TODO: require permission 'workspace:manage'
@@ -85,11 +85,11 @@ class WorkspaceRolesController extends WorkspacesBaseController {
 
       const role = await this.rolesRepository.getRoleById(roleId, workspace.id);
       if (!role) {
-        return res.status(404).json({ error: "Role not found", success: false });
+        throw AppError.notFound("Role not found");
       }
 
       if (role.is_system && name !== undefined && name !== role.name) {
-        return res.status(400).json({ error: "Cannot rename a system role", success: false });
+        throw AppError.badRequest("Cannot rename a system role");
       }
 
       const updatedRole = await this.rolesRepository.updateRole(
@@ -102,7 +102,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
       res.status(200).json({
         data: roleResponseSchema.parse(updatedRole),
         message: "Role updated successfully",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       next(fromUnknown(error));
@@ -116,7 +116,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       // TODO: require permission 'workspace:manage'
@@ -124,16 +124,16 @@ class WorkspaceRolesController extends WorkspacesBaseController {
 
       const role = await this.rolesRepository.getRoleById(roleId, workspace.id);
       if (!role) {
-        return res.status(404).json({ error: "Role not found", success: false });
+        throw AppError.notFound("Role not found");
       }
 
       if (role.is_system) {
-        return res.status(400).json({ error: "Cannot delete a system role", success: false });
+        throw AppError.badRequest("Cannot delete a system role");
       }
 
       await this.rolesRepository.deleteRole(roleId, workspace.id, userId);
 
-      res.status(200).json({ message: "Role deleted successfully", status: "OK" });
+      res.status(200).json({ message: "Role deleted successfully", success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -141,7 +141,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
 
   async getPermissionsCatalog(req, res, next) {
     try {
-      res.status(200).json({ data: workspace_permissions_catalog, status: "OK" });
+      res.status(200).json({ data: workspace_permissions_catalog, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }

@@ -4,7 +4,7 @@
  * @typedef {import('./base-controller').AuthenticatedRequest} AuthenticatedRequest
  */
 
-const { fromUnknown } = require("@/errors");
+const { AppError, fromUnknown } = require("@/errors");
 const WorkspacesBaseController = require("./base-controller");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const { memberListResponseSchema } = require("../schemas/members.schema");
@@ -37,7 +37,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
    * @param {Response} res
    * @returns {Promise<void|Response>}
    */
-  async updateMemberRole(req, res) {
+  async updateMemberRole(req, res, next) {
     try {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
@@ -47,7 +47,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
 
       const currentWorkspace = await this._getUserWorkspace(authUserId);
       if (!currentWorkspace) {
-        return res.status(404).json({ error: "Workspace not found" });
+        throw AppError.notFound("Workspace not found");
       }
 
       if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
@@ -55,7 +55,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       }
 
       if (currentWorkspace.user_id === memberId) {
-        return res.status(400).json({ error: "Cannot change the workspace owner's role" });
+        throw AppError.badRequest("Cannot change the workspace owner's role");
       }
 
       await this.workspacesRepository.updateMemberRole(currentWorkspace.id, memberId, roles);
@@ -63,11 +63,11 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       res.status(200).json({
         data: { roles },
         message: "Role updated successfully",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error updating member role:", error);
-      res.status(500).json({ error: "Error updating member role" });
+      return next(fromUnknown(error));
     }
   }
 
@@ -86,7 +86,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
 
       const currentWorkspace = await this._getUserWorkspace(userId);
       if (!currentWorkspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
@@ -94,10 +94,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       }
 
       if (String(currentWorkspace.user_id) === String(memberId)) {
-        return res.status(400).json({
-          error: "Cannot remove the workspace owner",
-          success: false,
-        });
+        throw AppError.badRequest("Cannot remove the workspace owner");
       }
 
       // Administrators cannot be removed directly.
@@ -107,7 +104,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         memberId
       );
       if (!targetMember) {
-        return res.status(404).json({ error: "Member not found", success: false });
+        throw AppError.notFound("Member not found");
       }
 
       const removed = await this.workspacesRepository.removeWorkspaceMember(
@@ -115,13 +112,13 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         memberId
       );
       if (!removed) {
-        return res.status(404).json({ error: "Member not found", success: false });
+        throw AppError.notFound("Member not found");
       }
 
       res.status(200).json({
         data: removed,
         message: "Member removed successfully",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error removing member:", error);
@@ -135,14 +132,14 @@ class WorkspaceMembersController extends WorkspacesBaseController {
    * @param {Response} res
    * @returns {Promise<void|Response>}
    */
-  async getMembers(req, res) {
+  async getMembers(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const currentWorkspace = await this._getUserWorkspace(userId);
       if (!currentWorkspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       if (
@@ -171,27 +168,29 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       const totalPages = Math.ceil(totalCount / parsedLimit);
 
       res.status(200).json({
-        count: members.length,
-        count_by_role: members.reduce((acc, member) => {
-          (member.roles || []).forEach((role) => {
-            acc[role] = (acc[role] || 0) + 1;
-          });
-          return acc;
-        }, {}),
-        count_by_status: members.reduce((acc, member) => {
-          acc[member.status] = (acc[member.status] || 0) + 1;
-          return acc;
-        }, {}),
-        current_page: parsedPage,
-        list_workspace_members: memberListResponseSchema.parse(members),
-        status: "OK",
-        total_count: totalCount,
-        total_pages: totalPages,
+        data: {
+          count: members.length,
+          count_by_role: members.reduce((acc, member) => {
+            (member.roles || []).forEach((role) => {
+              acc[role] = (acc[role] || 0) + 1;
+            });
+            return acc;
+          }, {}),
+          count_by_status: members.reduce((acc, member) => {
+            acc[member.status] = (acc[member.status] || 0) + 1;
+            return acc;
+          }, {}),
+          current_page: parsedPage,
+          list_workspace_members: memberListResponseSchema.parse(members),
+          total_count: totalCount,
+          total_pages: totalPages,
+        },
+        success: true,
         workspace_id: currentWorkspace.id,
       });
     } catch (error) {
       console.error("Error fetching members:", error);
-      res.status(500).json({ error: "Error fetching members", status: "ERROR" });
+      return next(fromUnknown(error));
     }
   }
 
@@ -201,7 +200,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
    * @param {Response} res
    * @returns {Promise<void|Response>}
    */
-  async inviteMember(req, res) {
+  async inviteMember(req, res, next) {
     try {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
@@ -212,7 +211,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
 
       const currentWorkspace = await this._getUserWorkspace(authUserId);
       if (!currentWorkspace) {
-        return res.status(404).json({ error: "Workspace not found" });
+        throw AppError.notFound("Workspace not found");
       }
 
       if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
@@ -223,7 +222,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       for (const tArea of target_teams) {
         if (!tArea.team_id) continue;
         const team = await this.teamsRepository.getTeamById(tArea.team_id, currentWorkspace.id);
-        if (!team) return res.status(404).json({ error: `Team not found: ${tArea.team_id}` });
+        if (!team) throw AppError.notFound(`Team not found: ${tArea.team_id}`);
 
         validTargetTeams.push({
           role: tArea.role,
@@ -240,9 +239,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
           targetUser.user_id
         );
         if (isMember) {
-          return res.status(400).json({
-            error: "This user is already a member of the workspace",
-          });
+          throw AppError.badRequest("This user is already a member of the workspace");
         }
       }
 
@@ -283,11 +280,11 @@ class WorkspaceMembersController extends WorkspacesBaseController {
           target_teams: invite.target_teams,
         },
         message: "Invite sent successfully.",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error inviting member:", error);
-      res.status(500).json({ error: "Error processing member" });
+      return next(fromUnknown(error));
     }
   }
 
@@ -296,7 +293,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
    * @param {Request & AuthenticatedRequest} req
    * @param {Response} res
    */
-  async inviteMembersBulk(req, res) {
+  async inviteMembersBulk(req, res, next) {
     try {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
@@ -305,7 +302,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
 
       const currentWorkspace = await this._getUserWorkspace(authUserId);
       if (!currentWorkspace) {
-        return res.status(404).json({ error: "Workspace not found" });
+        throw AppError.notFound("Workspace not found");
       }
 
       if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
@@ -379,11 +376,11 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       res.status(201).json({
         data: results,
         message: "Bulk invite processed",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error in bulk invite:", error);
-      res.status(500).json({ error: "Error processing bulk invites" });
+      return next(fromUnknown(error));
     }
   }
 }

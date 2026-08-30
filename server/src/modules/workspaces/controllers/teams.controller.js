@@ -1,5 +1,5 @@
 const teamsRepository = require("@/modules/workspaces/repositories/teams.repository");
-const { fromUnknown } = require("@/errors");
+const { AppError, fromUnknown } = require("@/errors");
 const WorkspacesBaseController = require("./base-controller");
 
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
@@ -32,11 +32,9 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
     if (await this._userIsTeamManager(workspace, teamId, userId)) {
       return true;
     }
-    res.status(403).json({
-      error: "Insufficient permissions. Workspace administrator or team manager required.",
-      success: false,
-    });
-    return false;
+    throw AppError.forbidden(
+      "Insufficient permissions. Workspace administrator or team manager required."
+    );
   }
 
   _normalizeSlug(teamName, providedSlug) {
@@ -70,7 +68,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
     if (properties === undefined) return undefined;
     if (properties === null) return {};
     if (typeof properties !== "object" || Array.isArray(properties)) {
-      throw new Error("properties deve ser um objeto");
+      throw AppError.badRequest("properties deve ser um objeto");
     }
     return properties;
   }
@@ -79,7 +77,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
     if (!parentTeamId) return null;
     const parent = await this.teamsRepository.getTeamById(parentTeamId, workspaceId);
     if (!parent) {
-      throw new Error("Parent team not found");
+      throw AppError.notFound("Parent team not found");
     }
     return parent;
   }
@@ -91,15 +89,17 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const teams = await this.teamsRepository.listWorkspaceTeams(workspace.id);
 
       res.status(200).json({
-        count: teams.length,
-        data: z.array(teamResponseSchema).parse(teams),
-        status: "OK",
+        data: {
+          count: teams.length,
+          teams: z.array(teamResponseSchema).parse(teams),
+        },
+        success: true,
         workspace_id: workspace.id,
       });
     } catch (error) {
@@ -115,17 +115,17 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const { teamId } = req.params;
       const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
 
       if (!team) {
-        return res.status(404).json({ error: "Team not found", success: false });
+        throw AppError.notFound("Team not found");
       }
 
-      res.status(200).json({ data: teamResponseSchema.parse(team), status: "OK" });
+      res.status(200).json({ data: teamResponseSchema.parse(team), success: true });
     } catch (error) {
       console.error("Error fetching team:", error);
       return next(fromUnknown(error));
@@ -139,7 +139,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const { team_name, parent_team_id = null, slug, description, properties } = req.body;
@@ -148,10 +148,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       const canWorkspaceStructure = this._canManageWorkspaceStructure(workspace);
 
       if (!isSubArea && !canWorkspaceStructure) {
-        return res.status(403).json({
-          error: "Only workspace administrators can create root teams",
-          success: false,
-        });
+        throw AppError.forbidden("Only workspace administrators can create root teams");
       }
 
       if (isSubArea) {
@@ -165,17 +162,14 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
           );
 
           if (!member || !member.workspace_roles?.permissions?.includes("manage_teams")) {
-            return res.status(403).json({
-              error: "Only team admins of the parent team can create sub-teams",
-              success: false,
-            });
+            throw AppError.forbidden("Only team admins of the parent team can create sub-teams");
           }
         }
       }
 
       const normalizedSlug = this._normalizeSlug(team_name, slug);
       if (!normalizedSlug) {
-        return res.status(400).json({ error: "Invalid team slug", success: false });
+        throw AppError.badRequest("Invalid team slug");
       }
 
       const uniqueSlug = await this._ensureUniqueSlug(workspace.id, normalizedSlug);
@@ -195,7 +189,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       res.status(201).json({
         data: teamResponseSchema.parse(newTeam),
         message: "Team created successfully",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error creating team:", error);
@@ -210,22 +204,19 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const { teamId } = req.params;
       const existingTeam = await this.teamsRepository.getTeamById(teamId, workspace.id);
 
       if (!existingTeam) {
-        return res.status(404).json({ error: "Team not found", success: false });
+        throw AppError.notFound("Team not found");
       }
 
       // Block structural changes in root team
       if (existingTeam.parent_team_id === null && req.body.parent_team_id !== undefined) {
-        return res.status(400).json({
-          error: "The root team cannot be moved to another parent team.",
-          success: false,
-        });
+        throw AppError.badRequest("The root team cannot be moved to another parent team.");
       }
 
       if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
@@ -254,10 +245,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       if (parent_team_id !== undefined) {
         if (parent_team_id === existingTeam.id) {
-          return res.status(400).json({
-            error: "An team cannot be its own parent",
-            success: false,
-          });
+          throw AppError.badRequest("An team cannot be its own parent");
         }
         if (parent_team_id) {
           await this._getParentArea(workspace.id, parent_team_id);
@@ -268,7 +256,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       if (slug !== undefined || updates.team_name) {
         const baseSlug = this._normalizeSlug(updates.team_name || existingTeam.team_name, slug);
         if (!baseSlug) {
-          return res.status(400).json({ error: "Invalid slug", success: false });
+          throw AppError.badRequest("Invalid slug");
         }
 
         const finalSlug = await this._ensureUniqueSlug(workspace.id, baseSlug, existingTeam.slug);
@@ -280,7 +268,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       res.status(200).json({
         data: teamResponseSchema.parse(updatedTeam),
         message: "Team updated successfully",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error updating team:", error);
@@ -295,20 +283,17 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const { teamId } = req.params;
       const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
-        return res.status(404).json({ error: "Team not found", success: false });
+        throw AppError.notFound("Team not found");
       }
 
       if (team.parent_team_id === null) {
-        return res.status(400).json({
-          error: "The root team cannot be removed.",
-          success: false,
-        });
+        throw AppError.badRequest("The root team cannot be removed.");
       }
 
       if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
@@ -320,7 +305,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       res.status(200).json({
         data: teamResponseSchema.parse(deletedTeam),
         message: "Team removed successfully",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error deleting team:", error);
@@ -335,21 +320,23 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const { teamId } = req.params;
       const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
-        return res.status(404).json({ error: "Team not found", success: false });
+        throw AppError.notFound("Team not found");
       }
 
       const members = await this.teamsRepository.listTeamMembers(teamId, workspace.id);
 
       res.status(200).json({
-        members,
-        members_count: members.length,
-        status: "OK",
+        data: {
+          members,
+          members_count: members.length,
+        },
+        success: true,
         team_id: teamId,
       });
     } catch (error) {
@@ -365,13 +352,13 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const { teamId } = req.params;
       const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
-        return res.status(404).json({ error: "Team not found", success: false });
+        throw AppError.notFound("Team not found");
       }
 
       if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
@@ -383,15 +370,12 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const targetUser = await SearchUsersRepository.findById(user_id);
       if (!targetUser) {
-        return res.status(404).json({ error: "User not found", success: false });
+        throw AppError.notFound("User not found");
       }
 
       const isMember = await this.workspacesRepository.isMember(workspace.id, user_id);
       if (!isMember) {
-        return res.status(400).json({
-          error: "User must be an workspace member",
-          success: false,
-        });
+        throw AppError.badRequest("User must be an workspace member");
       }
 
       const existingMember = await this.teamsRepository.getTeamMember(
@@ -400,10 +384,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         user_id
       );
       if (existingMember) {
-        return res.status(400).json({
-          error: "User is already associated with this team",
-          success: false,
-        });
+        throw AppError.badRequest("User is already associated with this team");
       }
 
       const member = await this.teamsRepository.addTeamMember(
@@ -417,7 +398,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       res.status(201).json({
         data: member,
         message: "Member added to team",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error adding team member:", error);
@@ -432,7 +413,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const { teamId, memberId } = req.params;
@@ -441,7 +422,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
-        return res.status(404).json({ error: "Team not found", success: false });
+        throw AppError.notFound("Team not found");
       }
 
       if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
@@ -454,7 +435,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         memberId
       );
       if (!existingMember) {
-        return res.status(404).json({ error: "Team member not found", success: false });
+        throw AppError.notFound("Team member not found");
       }
 
       const updated = await this.teamsRepository.updateTeamMemberRole(
@@ -468,7 +449,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       res.status(200).json({
         data: updated,
         message: "Member updated successfully",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error updating team member:", error);
@@ -483,14 +464,14 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const { teamId, memberId } = req.params;
 
       const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
-        return res.status(404).json({ error: "Team not found", success: false });
+        throw AppError.notFound("Team not found");
       }
 
       if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
@@ -503,7 +484,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         memberId
       );
       if (!existingMember) {
-        return res.status(404).json({ error: "Member not found", success: false });
+        throw AppError.notFound("Member not found");
       }
 
       const removed = await this.teamsRepository.removeTeamMember(
@@ -516,7 +497,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       res.status(200).json({
         data: removed,
         message: "Member removed from team",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
       console.error("Error removing team member:", error);

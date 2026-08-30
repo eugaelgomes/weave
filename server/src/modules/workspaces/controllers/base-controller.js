@@ -41,11 +41,10 @@ class WorkspacesBaseController {
    * @param {Response} res
    * @returns {string|null} Returns userId if authenticated, otherwise null.
    */
-  _validateAuthentication(req, res) {
+  _validateAuthentication(req, _res) {
     const userId = req.user?.userId;
     if (!userId) {
-      res.status(401).json({ error: "User not authenticated" });
-      return null;
+      throw AppError.unauthorized("User not authenticated");
     }
     return userId;
   }
@@ -65,22 +64,13 @@ class WorkspacesBaseController {
    * @param {Response} res
    * @returns {boolean} true if authorized
    */
-  _ensureWorkspacePermission(workspace, permission, res) {
+  _ensureWorkspacePermission(workspace, permission, _res) {
     if (!workspace) {
-      res.status(404).json({
-        error: "Workspace not found",
-        success: false,
-      });
-      return false;
+      throw AppError.notFound("Workspace not found");
     }
     const role = workspace.member_role;
     if (!role || !workspaceRoleHasPermission(role, permission)) {
-      res.status(403).json({
-        code: "WORKSPACE_FORBIDDEN",
-        error: "Insufficient workspace permissions",
-        success: false,
-      });
-      return false;
+      throw AppError.forbidden("Insufficient workspace permissions", "WORKSPACE_FORBIDDEN");
     }
     return true;
   }
@@ -91,22 +81,13 @@ class WorkspacesBaseController {
    * @param {string[]} permissions
    * @param {Response} res
    */
-  _ensureWorkspacePermissionAny(workspace, permissions, res) {
+  _ensureWorkspacePermissionAny(workspace, permissions, _res) {
     if (!workspace) {
-      res.status(404).json({
-        error: "Workspace not found",
-        success: false,
-      });
-      return false;
+      throw AppError.notFound("Workspace not found");
     }
     const role = workspace.member_role;
     if (!role || !permissions.some((p) => workspaceRoleHasPermission(role, p))) {
-      res.status(403).json({
-        code: "WORKSPACE_FORBIDDEN",
-        error: "Insufficient workspace permissions",
-        success: false,
-      });
-      return false;
+      throw AppError.forbidden("Insufficient workspace permissions", "WORKSPACE_FORBIDDEN");
     }
     return true;
   }
@@ -139,10 +120,10 @@ class WorkspacesBaseController {
       throw new Error("Workspace name is required");
     }
     if (data.workspace_name.trim().length < 2) {
-      throw new Error("Workspace name must be at least 2 characters long");
+      throw AppError.badRequest("Workspace name must be at least 2 characters long");
     }
     if (data.workspace_name.length > 100) {
-      throw new Error("Workspace name must be at most 100 characters long");
+      throw AppError.badRequest("Workspace name must be at most 100 characters long");
     }
   }
 
@@ -175,7 +156,7 @@ class WorkspacesBaseController {
     const normalized = this._normalizeDomain(domain);
 
     if (!normalized || !DOMAIN_REGEX.test(normalized)) {
-      throw new Error("Invalid domain. Please use a valid domain such as example.com");
+      throw AppError.badRequest("Invalid domain. Please use a valid domain such as example.com");
     }
 
     return normalized;
@@ -243,7 +224,7 @@ class WorkspacesController extends WorkspacesBaseController {
       );
     } catch (error) {
       console.error("Error creating default workspace team:", error);
-      throw new Error("Failed to create the default central workspace team");
+      throw AppError.internal("Failed to create the default central workspace team");
     }
   }
 
@@ -256,10 +237,7 @@ class WorkspacesController extends WorkspacesBaseController {
 
       const existingWorkspace = await this._getUserWorkspace(userId);
       if (existingWorkspace) {
-        return res.status(400).json({
-          error: "User already has a workspace. Use PUT to update it.",
-          success: false,
-        });
+        throw AppError.conflict("User already has a workspace. Use PUT to update it.");
       }
 
       const {
@@ -274,11 +252,12 @@ class WorkspacesController extends WorkspacesBaseController {
       let unique_name;
       if (providedUniqueName) {
         unique_name = normalizeWorkspaceName(providedUniqueName);
-        if (!unique_name) throw new Error("Provided unique name is invalid after normalization");
+        if (!unique_name)
+          throw AppError.badRequest("Provided unique name is invalid after normalization");
         const existingNames =
           await this.workspacesRepository.getAvailableWorkspaceNames(unique_name);
         if (existingNames.includes(unique_name))
-          throw new Error(`Unique name '${unique_name}' is already in use`);
+          throw AppError.conflict(`Unique name '${unique_name}' is already in use`);
       } else {
         unique_name = await generateUniqueWorkspaceName(workspace_name);
       }
@@ -301,7 +280,6 @@ class WorkspacesController extends WorkspacesBaseController {
       res.status(201).json({
         data: newWorkspace,
         message: "Workspace created successfully",
-        status: "OK",
         success: true,
       });
     } catch (error) {
@@ -310,26 +288,22 @@ class WorkspacesController extends WorkspacesBaseController {
     }
   }
 
-  async getWorkspace(req, res) {
+  async getWorkspace(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({
-          error: "Workspace not found",
-          message: "User does not have a workspace yet",
-          success: false,
-        });
+        throw AppError.notFound("Workspace not found. User does not have a workspace yet.");
       }
 
       const formatted = workspaceResponseSchema.parse(workspace);
 
-      res.status(200).json({ status: "OK", workspace_data: formatted });
+      res.status(200).json({ data: formatted, success: true });
     } catch (error) {
       console.error("Error getting workspace:", error);
-      res.status(500).json({ error: "Error getting workspace", success: false });
+      return next(fromUnknown(error));
     }
   }
 
@@ -341,8 +315,9 @@ class WorkspacesController extends WorkspacesBaseController {
       const { workspace_name, unique_name, logo_url, banner_url, description, settings } = req.body;
 
       const currentWorkspace = await this._getUserWorkspace(userId);
-      if (!currentWorkspace)
-        return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!currentWorkspace) {
+        throw AppError.notFound("Workspace not found");
+      }
 
       const body = req.body || {};
       const touchesBrand = [
@@ -396,17 +371,15 @@ class WorkspacesController extends WorkspacesBaseController {
       );
 
       if (!updatedWorkspace) {
-        return res.status(403).json({
-          code: "WORKSPACE_FORBIDDEN",
-          error: "Insufficient permissions to update workspace",
-          success: false,
-        });
+        throw AppError.forbidden(
+          "Insufficient permissions to update workspace",
+          "WORKSPACE_FORBIDDEN"
+        );
       }
 
       res.status(200).json({
         data: updatedWorkspace,
         message: "Workspace updated successfully",
-        status: "OK",
         success: true,
       });
     } catch (error) {
@@ -418,21 +391,23 @@ class WorkspacesController extends WorkspacesBaseController {
     }
   }
 
-  async updateWorkspaceProperties(req, res) {
-    return res.status(410).json({
-      error: "Workspace properties column has been removed. Use workspace settings fields instead.",
-      success: false,
-    });
+  async updateWorkspaceProperties(req, res, next) {
+    return next(
+      AppError.badRequest(
+        "Workspace properties column has been removed. Use workspace settings fields instead."
+      )
+    );
   }
 
-  async deleteWorkspace(req, res) {
+  async deleteWorkspace(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const currentWorkspace = await this._getUserWorkspace(userId);
-      if (!currentWorkspace)
-        return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!currentWorkspace) {
+        throw AppError.notFound("Workspace not found");
+      }
 
       if (
         !this._ensureWorkspacePermission(
@@ -455,26 +430,25 @@ class WorkspacesController extends WorkspacesBaseController {
         true
       );
 
-      if (!deletedWorkspace)
-        return res.status(403).json({
-          code: "WORKSPACE_FORBIDDEN",
-          error: "Insufficient permissions to delete workspace",
-          success: false,
-        });
+      if (!deletedWorkspace) {
+        throw AppError.forbidden(
+          "Insufficient permissions to delete workspace",
+          "WORKSPACE_FORBIDDEN"
+        );
+      }
 
       res.status(200).json({
         data: deletedWorkspace,
         message: "Workspace deleted successfully",
-        status: "OK",
         success: true,
       });
     } catch (error) {
       console.error("Error deleting workspace:", error);
-      res.status(500).json({ error: "Error deleting workspace", success: false });
+      return next(fromUnknown(error));
     }
   }
 
-  async restoreWorkspace(req, res) {
+  async restoreWorkspace(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -482,8 +456,9 @@ class WorkspacesController extends WorkspacesBaseController {
       const workspaces = await this.workspacesRepository.getWorkspacesByUserId(userId);
       const workspace = workspaces.find((workspace) => workspace.deleted);
 
-      if (!workspace)
-        return res.status(404).json({ error: "No deleted workspace found", success: false });
+      if (!workspace) {
+        throw AppError.notFound("No deleted workspace found");
+      }
 
       const memberRole = await this.workspacesRepository.getMembershipRole(workspace.id, userId);
       const workspaceWithRole = {
@@ -512,36 +487,33 @@ class WorkspacesController extends WorkspacesBaseController {
         false
       );
 
-      if (!restoredWorkspace)
-        return res.status(403).json({
-          code: "WORKSPACE_FORBIDDEN",
-          error: "Insufficient permissions to restore workspace",
-          success: false,
-        });
+      if (!restoredWorkspace) {
+        throw AppError.forbidden(
+          "Insufficient permissions to restore workspace",
+          "WORKSPACE_FORBIDDEN"
+        );
+      }
 
       res.status(200).json({
         data: restoredWorkspace,
         message: "Workspace restored successfully",
-        status: "OK",
         success: true,
       });
     } catch (error) {
       console.error("Error restoring workspace:", error);
-      res.status(500).json({ error: "Error restoring workspace", success: false });
+      return next(fromUnknown(error));
     }
   }
 
   // ─── Branding ─────────────────────────────────────────────────────────────
 
-  async uploadLogo(req, res) {
+  async uploadLogo(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      if (!req.file) return res.status(400).json({ error: "No file was uploaded", success: false });
-
+      if (!req.file) throw AppError.badRequest("No file was uploaded");
       const currentWorkspace = await this._getUserWorkspace(userId);
-      if (!currentWorkspace)
-        return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!currentWorkspace) throw AppError.notFound("Workspace not found");
       if (
         !this._ensureWorkspacePermission(
           currentWorkspace,
@@ -556,20 +528,16 @@ class WorkspacesController extends WorkspacesBaseController {
         req.file.mimetype,
         currentWorkspace.id
       );
-      if (!result.success)
-        return res.status(500).json({ error: "Error saving logo", success: false });
+      if (!result.success) throw AppError.internal("Error saving logo");
 
       const updatedWorkspace = await this.workspacesRepository.updateWorkspaceLogo(
         currentWorkspace.id,
         result.key,
         userId
       );
-      if (!updatedWorkspace)
-        return res.status(403).json({
-          code: "WORKSPACE_FORBIDDEN",
-          error: "Insufficient permissions to update logo",
-          success: false,
-        });
+      if (!updatedWorkspace) {
+        throw AppError.forbidden("Insufficient permissions to update logo", "WORKSPACE_FORBIDDEN");
+      }
 
       res.status(200).json({
         data: {
@@ -577,24 +545,21 @@ class WorkspacesController extends WorkspacesBaseController {
           workspace: workspaceDataResponse(updatedWorkspace),
         },
         message: "Logo updated successfully",
-        status: "OK",
         success: true,
       });
     } catch (error) {
       console.error("Error uploading logo:", error);
-      res.status(500).json({ error: "Error uploading logo", success: false });
+      return next(fromUnknown(error));
     }
   }
 
-  async uploadBanner(req, res) {
+  async uploadBanner(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      if (!req.file) return res.status(400).json({ error: "No file was uploaded", success: false });
-
+      if (!req.file) throw AppError.badRequest("No file was uploaded");
       const currentWorkspace = await this._getUserWorkspace(userId);
-      if (!currentWorkspace)
-        return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!currentWorkspace) throw AppError.notFound("Workspace not found");
       if (
         !this._ensureWorkspacePermission(
           currentWorkspace,
@@ -609,20 +574,19 @@ class WorkspacesController extends WorkspacesBaseController {
         req.file.mimetype,
         currentWorkspace.id
       );
-      if (!result.success)
-        return res.status(500).json({ error: "Error saving banner", success: false });
+      if (!result.success) throw AppError.internal("Error saving banner");
 
       const updatedWorkspace = await this.workspacesRepository.updateWorkspaceBanner(
         currentWorkspace.id,
         result.key,
         userId
       );
-      if (!updatedWorkspace)
-        return res.status(403).json({
-          code: "WORKSPACE_FORBIDDEN",
-          error: "Insufficient permissions to update banner",
-          success: false,
-        });
+      if (!updatedWorkspace) {
+        throw AppError.forbidden(
+          "Insufficient permissions to update banner",
+          "WORKSPACE_FORBIDDEN"
+        );
+      }
 
       res.status(200).json({
         data: {
@@ -630,31 +594,29 @@ class WorkspacesController extends WorkspacesBaseController {
           workspace: workspaceDataResponse(updatedWorkspace),
         },
         message: "Banner updated successfully",
-        status: "OK",
         success: true,
       });
-    } catch {
-      res.status(500).json({ error: "Error uploading banner", success: false });
+    } catch (error) {
+      return next(fromUnknown(error));
     }
   }
 
   // ─── Projects ─────────────────────────────────────────────────────────────
 
-  async workspaceProjects(req, res) {
+  async workspaceProjects(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const currentWorkspace = await this._getUserWorkspace(userId);
-      if (!currentWorkspace)
-        return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!currentWorkspace) throw AppError.notFound("Workspace not found");
 
       const projects = await this.workspacesRepository.getWorkspaceProjects(currentWorkspace.id);
 
-      res.status(200).json({ projects, status: "OK", workspace_id: currentWorkspace.id });
+      res.status(200).json({ data: projects, success: true, workspace_id: currentWorkspace.id });
     } catch (error) {
       console.error("Error getting workspace projects:", error);
-      res.status(500).json({ error: "Error getting workspace projects", status: "ERROR" });
+      return next(fromUnknown(error));
     }
   }
 }

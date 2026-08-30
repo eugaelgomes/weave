@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const { enqueueDomainVerificationJob } = require("@theweave/database");
-const { fromUnknown } = require("@/errors");
+const { AppError, fromUnknown } = require("@/errors");
 const WorkspacesBaseController = require("./base-controller");
 const settingsRepository = require("@/modules/workspaces/repositories/settings.repository");
 const {
@@ -22,7 +22,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
   async getSystemSettings(req, res, next) {
     try {
       const settings = await this.settingsRepository.getSystemSettings();
-      res.status(200).json({ data: settings, status: "OK" });
+      res.status(200).json({ data: settings, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -34,14 +34,14 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       // For now, we trust the route middleware
       const updates = req.body;
       const updated = await this.settingsRepository.updateSystemSettings(updates);
-      res.status(200).json({ data: updated, message: "System settings updated", status: "OK" });
+      res.status(200).json({ data: updated, message: "System settings updated", success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
   }
 
   // --- CREATION STEPS ---
-  async getStepOne(req, res) {
+  async getStepOne(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -51,14 +51,10 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
           ...this.creationStepsService.getStepOneMetadata(),
           workspace: workspace || null,
         },
-        status: "OK",
         success: true,
       });
-    } catch {
-      return res.status(500).json({
-        error: "Error loading workspace creation step 1",
-        success: false,
-      });
+    } catch (error) {
+      return next(fromUnknown(error));
     }
   }
 
@@ -118,7 +114,6 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
           workspace,
         },
         message: "Workspace creation step 1 saved",
-        status: "OK",
         success: true,
       });
     } catch (error) {
@@ -132,15 +127,12 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       if (!userId) return;
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
-        return res.status(404).json({ error: "Workspace not found", success: false });
+        throw AppError.notFound("Workspace not found");
       }
 
       const role = workspace?.settings?.workspace_role || null;
       if (!role) {
-        return res.status(400).json({
-          error: "workspace_role must be defined before completing step 1",
-          success: false,
-        });
+        throw AppError.badRequest("workspace_role must be defined before completing step 1");
       }
 
       const currentStepData = {
@@ -182,7 +174,6 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
           workspace: updated,
         },
         message: "Workspace creation step 1 completed",
-        status: "OK",
         success: true,
       });
     } catch (error) {
@@ -196,36 +187,35 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
     return `weave-domain-verification=${randomSeed}`;
   }
 
-  async listDomains(req, res) {
+  async listDomains(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const workspace = await this._getUserWorkspace(userId);
-      if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!workspace) throw AppError.notFound("Workspace not found");
 
       const settings = await this.settingsRepository.getSettings(workspace.id);
       const domains = settings?.domains || [];
 
       res.status(200).json({
-        domains: domains.map((domain) =>
+        data: domains.map((domain) =>
           domainResponseSchema.parse({ domain, workspaceSettings: settings })
         ),
-        status: "OK",
+        success: true,
       });
     } catch (error) {
-      console.error("Error listing workspace domains:", error);
-      res.status(500).json({ error: "Error listing workspace domains", success: false });
+      return next(fromUnknown(error));
     }
   }
 
-  async createDomain(req, res) {
+  async createDomain(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const workspace = await this._getUserWorkspace(userId);
-      if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!workspace) throw AppError.notFound("Workspace not found");
 
       // TODO: replace with workspaceRoleHasPermission when RBAC is active
       if (
@@ -240,16 +230,11 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const domains = settings?.domains || [];
 
       if (domains.find((d) => d.domain_name === normalizedDomain)) {
-        return res
-          .status(400)
-          .json({ error: "Domain already registered for this workspace", success: false });
+        throw AppError.badRequest("Domain already registered for this workspace");
       }
 
-      const existingWorkspace = await this.settingsRepository.findByDomain(normalizedDomain);
       if (existingWorkspace && existingWorkspace.workspace_id !== workspace.id) {
-        return res
-          .status(409)
-          .json({ error: "Domain is already in use by another workspace", success: false });
+        throw AppError.conflict("Domain is already in use by another workspace");
       }
 
       const verificationToken = this._generateVerificationToken();
@@ -266,21 +251,20 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       res.status(201).json({
         data: domainResponseSchema.parse({ domain: newDomain, workspaceSettings: settings }),
         message: "Domain registered. Configure the TXT record and click verify.",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
-      console.error("Error registering domain:", error);
-      res.status(500).json({ error: "Error registering domain", success: false });
+      return next(fromUnknown(error));
     }
   }
 
-  async verifyDomain(req, res) {
+  async verifyDomain(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const workspace = await this._getUserWorkspace(userId);
-      if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!workspace) throw AppError.notFound("Workspace not found");
 
       if (
         !this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res)
@@ -293,7 +277,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const domain = domains.find((d) => d.domain_name === domainName);
 
       if (!domain) {
-        return res.status(404).json({ error: "Domain not found", success: false });
+        throw AppError.notFound("Domain not found");
       }
 
       await enqueueDomainVerificationJob({
@@ -306,21 +290,20 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
         data: domainResponseSchema.parse({ domain, workspaceSettings: settings }),
         message:
           "Domain verification queued. Worker will retry DNS every 30 minutes until verified.",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
-      console.error("Error verifying domain:", error);
-      res.status(500).json({ error: "Error verifying domain", success: false });
+      return next(fromUnknown(error));
     }
   }
 
-  async deleteDomain(req, res) {
+  async deleteDomain(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const workspace = await this._getUserWorkspace(userId);
-      if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!workspace) throw AppError.notFound("Workspace not found");
 
       if (
         !this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res)
@@ -333,33 +316,29 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const domainIndex = domains.findIndex((d) => d.domain_name === domainName);
 
       if (domainIndex === -1) {
-        return res.status(404).json({ error: "Domain not found", success: false });
+        throw AppError.notFound("Domain not found");
       }
 
       if (settings.saml?.enabled) {
-        return res.status(400).json({
-          error: "Disable SSO for the workspace before removing its domains",
-          success: false,
-        });
+        throw AppError.badRequest("Disable SSO for the workspace before removing its domains");
       }
 
       domains.splice(domainIndex, 1);
       await this.settingsRepository.updateDomains(workspace.id, domains);
 
-      res.status(200).json({ message: "Domain removed successfully", status: "OK" });
+      res.status(200).json({ message: "Domain removed successfully", success: true });
     } catch (error) {
-      console.error("Error deleting domain:", error);
-      res.status(500).json({ error: "Error deleting domain", success: false });
+      return next(fromUnknown(error));
     }
   }
 
-  async updateSsoSettings(req, res) {
+  async updateSsoSettings(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
       const workspace = await this._getUserWorkspace(userId);
-      if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
+      if (!workspace) throw AppError.notFound("Workspace not found");
 
       if (
         !this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res)
@@ -372,9 +351,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const domain = domains.find((d) => d.domain_name === domainName);
 
       if (!domain || domain.status !== "VERIFIED") {
-        return res
-          .status(400)
-          .json({ error: "Enable SSO only after domain is verified", success: false });
+        throw AppError.badRequest("Enable SSO only after domain is verified");
       }
 
       const { provider, metadata, enabled } = req.body;
@@ -402,11 +379,10 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
         message: shouldEnable
           ? "SAML settings saved. Users of this domain will be redirected to the IdP."
           : "SSO disabled for this domain",
-        status: "OK",
+        success: true,
       });
     } catch (error) {
-      console.error("Error updating SSO settings for domain:", error);
-      res.status(500).json({ error: "Error updating SSO settings for domain", success: false });
+      return next(fromUnknown(error));
     }
   }
 }
