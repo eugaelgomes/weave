@@ -1,10 +1,5 @@
 const membersRepository = require("@/modules/workspaces/repositories/members.repository");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-// Import repositories
-
-const ProjectsCollaboratorsRepository = require("@/modules/projects/repositories/projects-collaborators.repository");
-const NoteCollaboratorsRepository = require("@/modules/notes/repositories/note-collaborators.repository");
-const NotesCommentsRepository = require("@/modules/notes/repositories/notes-comments.repository");
 
 class UsersService {
   /**
@@ -63,38 +58,6 @@ class UsersService {
         members.forEach((m) => {
           map[m.user_id] = { is_member: true, role: m.role, status: m.status };
         });
-      } else if (contextType === "project") {
-        const collabs = await ProjectsCollaboratorsRepository.getCollaboratorsByUserIds(
-          userIds,
-          contextId
-        );
-        collabs.forEach((c) => {
-          map[c.user_id] = { is_member: true, role: c.role, status: "ACTIVE" };
-        });
-      } else if (contextType === "note" || contextType === "task") {
-        const collabs = await NoteCollaboratorsRepository.getCollaboratorsByUserIds(
-          userIds,
-          contextId
-        );
-        collabs.forEach((c) => {
-          map[c.user_id] = { is_member: true, role: c.role, status: "ACTIVE" };
-        });
-      } else if (contextType === "comment") {
-        // Resolve comment note_id to check access
-        const comment = await NotesCommentsRepository.getById(contextId);
-        if (comment && comment.note_id) {
-          const collabs = await NoteCollaboratorsRepository.getCollaboratorsByUserIds(
-            userIds,
-            comment.note_id
-          );
-          collabs.forEach((c) => {
-            map[c.user_id] = {
-              is_member: true,
-              role: c.role,
-              status: "ACTIVE",
-            };
-          });
-        }
       }
     } catch (err) {
       console.error(`[UsersService] Error fetching context ${contextType}:`, err);

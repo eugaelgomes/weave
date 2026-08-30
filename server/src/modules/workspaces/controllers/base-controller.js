@@ -8,6 +8,16 @@ const {
 } = require("../utils/normalizer");
 const { workspaceResponseSchema } = require("../schemas/base.schema");
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
+
+const WORKSPACE_PERMISSIONS = Object.freeze({
+  MANAGE_AREAS: "manage_areas",
+  MANAGE_BRAND: "manage_brand",
+  MANAGE_DOMAINS: "manage_domains",
+  MANAGE_MEMBERS: "manage_members",
+  MANAGE_ORG_LIFECYCLE: "manage_org_lifecycle",
+  MANAGE_WEAVE_AI: "manage_weave_ai",
+  VIEW_MEMBER_DIRECTORY: "view_member_directory",
+});
 /**
  * @typedef {import('express').Request} Request
  * @typedef {import('express').Response} Response

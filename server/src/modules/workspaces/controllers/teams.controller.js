@@ -3,7 +3,7 @@ const { AppError, fromUnknown } = require("@/errors");
 const WorkspacesBaseController = require("./base-controller");
 
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-const { normalizeWorkspaceName } = require("../normalizer");
+const { normalizeWorkspaceName } = require("../utils/normalizer");
 const { teamResponseSchema } = require("../schemas/teams.schema");
 const { z } = require("zod");
 
@@ -73,7 +73,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
     return properties;
   }
 
-  async _getParentArea(workspaceId, parentTeamId) {
+  async _getParentTeam(workspaceId, parentTeamId) {
     if (!parentTeamId) return null;
     const parent = await this.teamsRepository.getTeamById(parentTeamId, workspaceId);
     if (!parent) {
@@ -108,7 +108,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
     }
   }
 
-  async getArea(req, res, next) {
+  async getTeam(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -132,7 +132,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
     }
   }
 
-  async createArea(req, res, next) {
+  async createTeam(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -152,7 +152,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       }
 
       if (isSubArea) {
-        await this._getParentArea(workspace.id, parent_team_id);
+        await this._getParentTeam(workspace.id, parent_team_id);
 
         if (!canWorkspaceStructure) {
           const member = await this.teamsRepository.getTeamMember(
@@ -197,7 +197,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
     }
   }
 
-  async updateArea(req, res, next) {
+  async updateTeam(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -248,7 +248,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
           throw AppError.badRequest("An team cannot be its own parent");
         }
         if (parent_team_id) {
-          await this._getParentArea(workspace.id, parent_team_id);
+          await this._getParentTeam(workspace.id, parent_team_id);
         }
         updates.parent_team_id = parent_team_id || null;
       }
@@ -276,7 +276,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
     }
   }
 
-  async deleteArea(req, res, next) {
+  async deleteTeam(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;

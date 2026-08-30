@@ -1,7 +1,4 @@
-const {
-  getAvailableWorkspaceNames,
-} = require("@/modules/workspaces/repositories/workspaces.repository");
-
+const workspacesRepository = require("@/modules/workspaces/repositories/base.repository");
 const PREDEFINED_PROPERTIES = Object.freeze({
   allowPublicNotes: {
     default: false,
@@ -101,7 +98,7 @@ const suggestUniqueWorkspaceName = (baseName, existingNames) => {
 
 const generateUniqueWorkspaceName = async (baseName) => {
   const normalizedBase = normalizeWorkspaceName(baseName);
-  const existingNames = await getAvailableWorkspaceNames(normalizedBase);
+  const existingNames = await workspacesRepository.getAvailableWorkspaceNames(normalizedBase);
   return suggestUniqueWorkspaceName(normalizedBase, existingNames);
 };
 

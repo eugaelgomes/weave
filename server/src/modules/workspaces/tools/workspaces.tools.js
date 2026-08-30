@@ -4,8 +4,6 @@ const baseRepository = require("@/modules/workspaces/repositories/base.repositor
 const membersRepository = require("@/modules/workspaces/repositories/members.repository");
 const { z } = require("zod");
 
-const { validRoles } = require("@/modules/workspaces/normalizer");
-
 const manageWorkspacesSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("update"),
@@ -87,12 +85,12 @@ const manageWorkspaceMembersSchema = z.discriminatedUnion("action", [
     action: z.literal("invite"),
     email: z.string().email().describe("Email to invite"),
     name: z.string().describe("Name of the invited user"),
-    role: z.enum(validRoles).describe("Role for the member"),
+    role: z.string().describe("Role for the member"),
     username: z.string().optional().describe("Chosen username for the invitee"),
   }),
   z.object({
     action: z.literal("update_role"),
-    role: z.enum(validRoles).describe("New role for the member"),
+    role: z.string().describe("New role for the member"),
     user_id: z.string().uuid().describe("User ID to modify"),
   }),
   z.object({

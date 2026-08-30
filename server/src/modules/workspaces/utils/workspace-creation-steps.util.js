@@ -1,4 +1,4 @@
-const { normalizeWorkspaceName } = require("@/modules/workspaces/normalizer");
+const { normalizeWorkspaceName } = require("@/modules/workspaces/utils/normalizer");
 
 const STEP_ONE = "step_1";
 const WORKSPACE_BUSINESS_ROLES = Object.freeze([

@@ -1,4 +1,5 @@
-const chatRepository = require("../../repositories/chat.repository");
+const chatMessagesRepository = require("../../repositories/chat/chat-messages.repository");
+const chatSessionsRepository = require("../../repositories/chat/chat-sessions.repository");
 const chatFormatterUtil = require("../../utils/chat-formatter.util");
 const { getI18n, getLangFromReq } = require("../../utils/agent-house-i18n.util");
 const BaseController = require("../base.controller");
@@ -21,7 +22,7 @@ class ChatSessionsController extends BaseController {
         });
       }
 
-      const sessions = await chatRepository.getUserSessions(userId, 200);
+      const sessions = await chatSessionsRepository.getUserSessions(userId, 200);
       const hasSessionAccess = sessions.some((session) => String(session.id) === String(sessionId));
 
       if (!hasSessionAccess) {
@@ -31,7 +32,7 @@ class ChatSessionsController extends BaseController {
         });
       }
 
-      await chatRepository.deleteSession(sessionId, userId);
+      await chatSessionsRepository.deleteSession(sessionId, userId);
 
       return res.json({ deleted: true, sessionId, success: true });
     } catch (error) {
@@ -58,11 +59,11 @@ class ChatSessionsController extends BaseController {
       const { sessionId, limit, offset } = req.query;
 
       if (sessionId) {
-        const messages = await chatRepository.getSessionMessages(sessionId, userId);
+        const messages = await chatMessagesRepository.getSessionMessages(sessionId, userId);
         return res.json({ messages, success: true });
       }
 
-      const sessions = await chatRepository.getUserSessions(userId, limit, offset);
+      const sessions = await chatSessionsRepository.getUserSessions(userId, limit, offset);
       return res.json({ sessions, success: true });
     } catch (error) {
       const normalizedError = chatFormatterUtil.normalizeApiError(error, {
@@ -96,7 +97,7 @@ class ChatSessionsController extends BaseController {
         });
       }
 
-      const updated = await chatRepository.updateMessageFeedback(
+      const updated = await chatMessagesRepository.updateMessageFeedback(
         messageId,
         userId,
         rating,

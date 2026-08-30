@@ -7,7 +7,6 @@ const {
   resolveAuthorizedFunctions,
 } = require("@/modules/agent-house/utils/authorized-functions.util");
 
-const { resolveProjectIdsToUuids } = require("@/modules/projects/utils/project-id-lookup.util");
 const chatFormatterUtil = require("../../utils/chat-formatter.util");
 const chatEngineService = require("./chat-engine.service");
 const { getI18n } = require("../../utils/agent-house-i18n.util");
@@ -266,17 +265,12 @@ class ChatContextService {
         });
     }
 
-    const resolvedProjectIds = await resolveProjectIdsToUuids(
-      Array.isArray(payload.projectIds) ? payload.projectIds : []
-    );
-
     try {
       const authorization = await resolveAuthorizedFunctions({
         allowEdit: payload.allowEdit,
         context: {
           isSubAgent: Boolean(payload.isSubAgent),
           planUsageContext,
-          projectId: resolvedProjectIds.length > 0 ? resolvedProjectIds[0] : null,
           workspaceId,
         },
         userId,

@@ -13,7 +13,7 @@
  * - `agent-house/services/chat-orchestrator.service.js`: For truncating history, extracting engine tokens, and payload mapping.
  * - `agent-house/services/chat-engine.service.js`: To format payloads for the LLM engine request.
  */
-const { ALLOWED_BLOCK_TYPES } = require("@/modules/notes/block-normalizer");
+
 const { fromUnknown } = require("@/errors");
 const { getI18n } = require("./agent-house-i18n.util");
 
@@ -226,19 +226,6 @@ class ChatFormatterUtil {
       inputTokens: Number.isFinite(Number(inputTokens)) ? Number(inputTokens) : null,
       outputTokens: Number.isFinite(Number(outputTokens)) ? Number(outputTokens) : null,
       totalTokens: Number.isFinite(Number(totalTokens)) ? Number(totalTokens) : null,
-    };
-  }
-
-  /**
-   * Generates a note blocks contract configuration payload to restrict blocks to valid ProseMirror formats.
-   * Enforced on engine's creations/modifications.
-   *
-   * @returns {{ allowedBlockTypes: string[], version: number }} Note blocks contract.
-   */
-  buildNoteBlocksContract() {
-    return {
-      allowedBlockTypes: [...ALLOWED_BLOCK_TYPES],
-      version: 1,
     };
   }
 

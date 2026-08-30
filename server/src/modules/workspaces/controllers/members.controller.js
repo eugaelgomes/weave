@@ -11,6 +11,7 @@ const { memberListResponseSchema } = require("../schemas/members.schema");
 
 const { send_workspace_invite } = require("@/services/email/templates/invite-member");
 const { getUserEmailLocale } = require("@/services/email/i18n");
+const teamsRepository = require("../repositories/teams.repository");
 
 class WorkspaceMembersController extends WorkspacesBaseController {
   constructor() {

@@ -1,4 +1,3 @@
-const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const {
   FunctionCategory,
   getAvailableFunctionNames,
@@ -13,7 +12,7 @@ const { getOwnershipRules, isFunctionForbidden } = require("./ai-security-polici
  * @param {object} [params.context]
  * @returns {Promise<object>}
  */
-async function loadResourceAccessContext({ userId, context = {} }) {
+async function loadResourceAccessContext({ _userId, context = {} }) {
   const result = {
     project: {
       accessible: true,
@@ -25,24 +24,10 @@ async function loadResourceAccessContext({ userId, context = {} }) {
   };
 
   if (context.projectId) {
-    const projectResult = await projectsRepository.getProjectByIdWithAccess(
-      context.projectId,
-      userId
-    );
-    const project = Array.isArray(projectResult) ? projectResult[0] : projectResult;
-    result.project.exists = Boolean(project);
-    if (!project) {
-      result.project.accessible = false;
-    } else {
-      const ownerId = String(project.user_id || "");
-      const collaborators = Array.isArray(project.collaborators) ? project.collaborators : [];
-      const isCollaborator = collaborators.some(
-        (item) => String(item.user_id || item.id || "") === String(userId)
-      );
-      result.project.isOwner = ownerId === String(userId);
-      result.project.isCollaborator = isCollaborator;
-      result.project.accessible = result.project.isOwner || result.project.isCollaborator;
-    }
+    result.project.exists = false;
+    result.project.accessible = false;
+    result.project.isOwner = false;
+    result.project.isCollaborator = false;
   }
 
   return result;

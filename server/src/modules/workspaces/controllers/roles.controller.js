@@ -1,7 +1,7 @@
 const { AppError, fromUnknown } = require("@/errors");
 const WorkspacesBaseController = require("./base-controller");
 const rolesRepository = require("@/modules/workspaces/repositories/roles.repository");
-const { workspace_permissions_catalog } = require("@/modules/workspaces/permissions-catalog");
+
 const { roleResponseSchema } = require("../schemas/roles.schema");
 const { z } = require("zod");
 
@@ -141,7 +141,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
 
   async getPermissionsCatalog(req, res, next) {
     try {
-      res.status(200).json({ data: workspace_permissions_catalog, success: true });
+      res.status(200).json({ data: Object.values(this._workspacePermissions), success: true });
     } catch (error) {
       next(fromUnknown(error));
     }

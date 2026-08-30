@@ -6,7 +6,7 @@ const AuthBaseController = require("../base.controller");
 const GithubOauthRepository = require("../../repositories/oauth/github.repository");
 const AuthRepository = require("../../repositories/auth.repository");
 
-const OrganizationsRepository = require("@/modules/workspaces/repositories/workspaces.repository");
+const OrganizationsRepository = require("@/modules/workspaces/repositories/base.repository");
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
 const systemSettings = require("@/modules/workspaces/services/system-settings.cache");

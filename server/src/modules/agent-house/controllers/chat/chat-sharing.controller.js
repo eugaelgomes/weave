@@ -1,4 +1,4 @@
-const chatRepository = require("../../repositories/chat.repository");
+const chatSharingRepository = require("../../repositories/chat/chat-sharing.repository");
 const BaseController = require("../base.controller");
 
 class ChatSharingController extends BaseController {
@@ -11,7 +11,7 @@ class ChatSharingController extends BaseController {
         return res.status(400).json({ error: "Token required", success: false });
       }
 
-      const newSession = await chatRepository.forkSession(token, userId);
+      const newSession = await chatSharingRepository.forkSession(token, userId);
 
       return res.json({ newSessionId: newSession.id, success: true });
     } catch (error) {
@@ -30,7 +30,7 @@ class ChatSharingController extends BaseController {
         return res.status(400).json({ error: "Token required", success: false });
       }
 
-      const session = await chatRepository.getSharedSessionByToken(token);
+      const session = await chatSharingRepository.getSharedSessionByToken(token);
       if (!session) {
         return res.status(404).json({
           error: "Shared session not found or link expired",
@@ -54,7 +54,7 @@ class ChatSharingController extends BaseController {
         return res.status(400).json({ error: "Session ID required", success: false });
       }
 
-      const shareToken = await chatRepository.generateShareToken(sessionId, userId);
+      const shareToken = await chatSharingRepository.generateShareToken(sessionId, userId);
       if (!shareToken) {
         return res.status(404).json({ error: "Session not found", success: false });
       }

@@ -1,5 +1,4 @@
 const { rowCount } = require("@/database/connection");
-const { buildNoteIdWhereClause } = require("@/modules/notes/utils/note-id-lookup.util");
 
 class StorageAccessError extends Error {
   constructor(message = "Você não tem permissão para acessar este arquivo.", statusCode = 403) {
@@ -10,10 +9,6 @@ class StorageAccessError extends Error {
 }
 
 const USER_ID_PREFIX = "userId_";
-const NOTE_ID_PREFIX = "noteId_";
-const PROJECT_ID_PREFIX = "projectId_";
-const NOTE_COLLAB_TABLE = "note_collaborators";
-const PROJECTS_MEMBERS_TABLE = "project_members";
 const WORKSPACES_MEMBERS_TABLE = "workspace_members";
 const PATH_NAMESPACE_PREFIX = "weave-notes/";
 
@@ -56,28 +51,7 @@ const parseResourceDescriptor = (key) => {
       }
       return null;
     }
-    case "notes": {
-      const ownerId = extractPrefixedValue(segments[1] || "", USER_ID_PREFIX);
-      const noteId = extractPrefixedValue(segments[2] || "", NOTE_ID_PREFIX);
-      if (!noteId) return null;
-      return {
-        key: normalized,
-        noteId,
-        ownerId: sanitizeId(ownerId),
-        type: "note",
-      };
-    }
-    case "notes-comments-files": {
-      const ownerId = extractPrefixedValue(segments[1] || "", USER_ID_PREFIX);
-      const noteId = extractPrefixedValue(segments[2] || "", NOTE_ID_PREFIX);
-      if (!noteId) return null;
-      return {
-        key: normalized,
-        noteId,
-        ownerId: sanitizeId(ownerId),
-        type: "note",
-      };
-    }
+
     case "projects": {
       const ownerId = extractPrefixedValue(segments[1] || "", USER_ID_PREFIX);
       const projectId = extractPrefixedValue(segments[2] || "", PROJECT_ID_PREFIX);
@@ -101,30 +75,6 @@ const parseResourceDescriptor = (key) => {
     default:
       return null;
   }
-};
-
-const hasNoteAccess = async (userId, noteId) => {
-  if (!userId || !noteId) return false;
-
-  const noteIdWhere = buildNoteIdWhereClause("n", 1, String(noteId));
-
-  const query = `
-    SELECT 1
-    FROM notes n
-    WHERE ${noteIdWhere}
-      AND (
-        n.user_id = $2::uuid OR EXISTS (
-          SELECT 1 FROM ${NOTE_COLLAB_TABLE} nc
-          WHERE nc.note_id = n.id
-            AND nc.user_id = $2::uuid
-            AND (nc.removed IS NULL OR nc.removed = false)
-        )
-      )
-    LIMIT 1;
-  `;
-
-  const count = await rowCount(query, [noteId, userId]);
-  return count > 0;
 };
 
 const hasProjectAccess = async (userId, projectId) => {
@@ -192,9 +142,7 @@ const assertFileAccess = async (userId, key) => {
     case "user-owned":
       hasAccess = descriptor.ownerId === normalizedUserId;
       break;
-    case "note":
-      hasAccess = await hasNoteAccess(normalizedUserId, descriptor.noteId);
-      break;
+
     case "project":
       hasAccess = await hasProjectAccess(normalizedUserId, descriptor.projectId);
       break;

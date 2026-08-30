@@ -10,23 +10,12 @@ const {
 
 // Import all active module tool factories
 const { createPlansTools } = require("@/modules/plans/tools/plans.tools");
-const { createTaskPriorityTools } = require("@/modules/projects/tools/task-priorities.tools");
-const { createWebhooksTools } = require("@/modules/webhooks/tools/webhooks.tools");
 
 const { createApiTokensTools } = require("@/modules/api-tokens/tools/api-tokens.tools");
-const { createProjectsTools } = require("@/modules/projects/tools/projects.tools");
-const { createNotificationsTools } = require("@/modules/notifications/tools/notifications.tools");
 const { createArtifactsTools } = require("@/modules/agent-house/tools/artifacts.tools");
 const { createBackupTools } = require("@/modules/backup/tools/backup.tools");
-const { createCalendarTools } = require("@/modules/calendar/tools/calendar.tools");
-const { createTagsTools } = require("@/modules/projects/tools/tags.tools");
-const { createNotesTools } = require("@/modules/notes/tools/notes.tools");
-const { createNoteBlocksTools } = require("@/modules/notes/tools/blocks.tools");
-const { createNoteCollaboratorsTools } = require("@/modules/notes/tools/collaborators.tools");
-const { createCommentsTools } = require("@/modules/notes/tools/comments.tools");
 
 const { createUsersTools } = require("@/modules/users/tools/users.tools");
-const { createSlackTools } = require("@/modules/slack/tools/slack.tools");
 
 const { createAgentHouseTools } = require("@/modules/agent-house/tools/agent-house.tools");
 const { createOrganizationsTools } = require("@/modules/workspaces/tools/workspaces.tools");
@@ -41,23 +30,12 @@ const { createOrganizationsTools } = require("@/modules/workspaces/tools/workspa
 function buildRegistry(user) {
   const allTools = {
     ...createPlansTools(user),
-    ...createTaskPriorityTools(user),
-    ...createWebhooksTools(user),
 
     ...createApiTokensTools(user),
-    ...createProjectsTools(user),
-    ...createNotificationsTools(user),
     ...createArtifactsTools(user),
     ...createBackupTools(user),
-    ...createCalendarTools(user),
-    ...createTagsTools(user),
-    ...createNotesTools(user),
-    ...createNoteBlocksTools(user),
-    ...createNoteCollaboratorsTools(user),
-    ...createCommentsTools(user),
 
     ...createUsersTools(user),
-    ...createSlackTools(user),
 
     ...createAgentHouseTools(user),
     ...createOrganizationsTools(user),
