@@ -52,10 +52,10 @@ class CredentialsController extends AuthBaseController {
         return res.status(200).json({ message: "Credentials verified.", status: "OK" });
       }
 
-      const workspace = this._normalizeOrganization(user.workspace);
-      const defaultArea = this._normalizeDefaultArea(user.default_area);
+      const workspace = this._normalizeWorkspace(user.workspace);
+      const defaultTeam = this._normalizeDefaultTeam(user.default_team);
 
-      const payload = buildJwtPayload(user, workspace, defaultArea);
+      const payload = buildJwtPayload(user, workspace, defaultTeam);
 
       req.session.user = payload;
       req.session.userId = user.user_id;

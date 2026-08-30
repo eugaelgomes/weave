@@ -47,14 +47,14 @@ class ChatEngineService {
    * Builds compact plan usage context for Weave Engine prompts.
    *
    * @param {string} userId - Authenticated user's ID.
-   * @param {string|null} [organizationId=null] - User's current workspace ID.
+   * @param {string|null} [workspaceId=null] - User's current workspace ID.
    * @returns {Promise<Record<string, unknown>|null>} Plan usage context object or null.
    */
-  async buildPlanUsageContext(userId, organizationId = null) {
+  async buildPlanUsageContext(userId, workspaceId = null) {
     try {
       const [effectivePlan, usageRecord] = await Promise.all([
         PlansRepository.getEffectivePlanByUserId(userId),
-        PlansRepository.getPlanUsage(userId, organizationId),
+        PlansRepository.getPlanUsage(userId, workspaceId),
       ]);
 
       if (!effectivePlan && !usageRecord) {

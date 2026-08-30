@@ -138,7 +138,7 @@ class WorkspaceCreationStepsService {
     if (!normalized) {
       throw new Error("unique_name is invalid after normalization");
     }
-    const existingNames = await this.workspacesRepository.getAvailableOrgNames(normalized);
+    const existingNames = await this.workspacesRepository.getAvailableWorkspaceNames(normalized);
     const normalizedCurrent = currentUniqueName ? normalizeWorkspaceName(currentUniqueName) : null;
     if (existingNames.includes(normalized) && normalizedCurrent !== normalized) {
       throw new Error("Unique name is already in use");
@@ -159,12 +159,13 @@ class WorkspaceCreationStepsService {
    * }>}
    */
   async validateStepOnePayload(payload, currentWorkspace = null) {
-    const orgName = typeof payload.workspace_name === "string" ? payload.workspace_name.trim() : "";
+    const workspaceName =
+      typeof payload.workspace_name === "string" ? payload.workspace_name.trim() : "";
     const uniqueNameSource =
       typeof payload.unique_name === "string" ? payload.unique_name.trim() : "";
     const normalizedRole = this._normalizeRole(payload.workspace_role);
 
-    if (!orgName) throw new Error("workspace_name is required");
+    if (!workspaceName) throw new Error("workspace_name is required");
     if (!uniqueNameSource) throw new Error("unique_name is required");
     if (!normalizedRole) throw new Error("workspace_role is required");
     if (!WORKSPACE_BUSINESS_ROLES.includes(normalizedRole)) {
@@ -191,7 +192,7 @@ class WorkspaceCreationStepsService {
       language,
       logo_url: payload.logo_url !== undefined ? payload.logo_url : null,
       unique_name: uniqueName,
-      workspace_name: orgName,
+      workspace_name: workspaceName,
       workspace_role: normalizedRole,
     };
   }

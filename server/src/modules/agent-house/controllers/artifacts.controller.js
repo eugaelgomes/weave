@@ -9,15 +9,15 @@ class ArtifactsController {
     try {
       const { title, type, content, sessionId } = req.body;
       const userId = req.user.userId;
-      const organizationId = req.headers["x-workspace-id"] || null;
+      const workspaceId = req.headers["x-workspace-id"] || null;
 
       const artifact = await ArtifactsRepository.createArtifact({
         content,
-        organizationId,
         sessionId,
         title,
         type,
         userId,
+        workspaceId,
       });
 
       return res.status(201).json(artifact);

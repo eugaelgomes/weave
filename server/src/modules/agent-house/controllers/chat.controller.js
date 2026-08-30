@@ -13,12 +13,12 @@ async function chat(req, res) {
   let payload = null;
   let requestId = null;
   let keepAliveInterval = null;
-  let organizationId = null;
+  let workspaceId = null;
 
   try {
     userId = chatParserUtil.validateAuthentication(req);
     payload = req.body;
-    organizationId = req.user?.organizationId || req.user?.org_id || null;
+    workspaceId = req.user?.workspaceId || req.user?.workspace_id || null;
     requestId = payload.requestId || randomUUID();
 
     res.writeHead(200, {
@@ -39,11 +39,11 @@ async function chat(req, res) {
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
         if (typeof res.flush === "function") res.flush();
       },
-      organizationId,
       payload,
       requestId,
       userId,
       userLanguage,
+      workspaceId,
     });
 
     res.write(`data: ${JSON.stringify({ success: true, ...result })}\n\n`);
@@ -106,12 +106,12 @@ async function chat(req, res) {
           errorCode: normalizedError.code,
           errorMessage: normalizedError.message,
           model: `${payload.model?.name || "unknown"}:${payload.model?.version || "unknown"}`,
-          organizationId,
           requestId,
           role: "assistant",
           sessionId: payload.sessionId,
           status: "error",
           userId,
+          workspaceId,
         })
         .catch((err) => {
           console.error("[agent-house/chat] failed to save error message", err);

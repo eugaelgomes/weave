@@ -93,9 +93,9 @@ const updateSsoSettingsSchema = z.object({
 const domainResponseSchema = z
   .object({
     domain: z.any(),
-    orgSettings: z.any(),
+    workspaceSettings: z.any(),
   })
-  .transform(({ domain, orgSettings }) => {
+  .transform(({ domain, workspaceSettings }) => {
     if (!domain) return null;
     return {
       created_at: domain.created_at,
@@ -109,14 +109,14 @@ const domainResponseSchema = z
         type: "TXT",
         value: domain.verification_token,
       },
-      sso_enabled: orgSettings.saml?.enabled || false,
-      sso_metadata: orgSettings.saml?.metadata || null,
-      sso_provider: orgSettings.saml?.provider || null,
+      sso_enabled: workspaceSettings.saml?.enabled || false,
+      sso_metadata: workspaceSettings.saml?.metadata || null,
+      sso_provider: workspaceSettings.saml?.provider || null,
       status: domain.status,
       updated_at: domain.updated_at || domain.created_at,
       verification_token: domain.verification_token,
       verified_at: domain.verified_at,
-      workspace_id: orgSettings.workspace_id,
+      workspace_id: workspaceSettings.workspace_id,
     };
   });
 

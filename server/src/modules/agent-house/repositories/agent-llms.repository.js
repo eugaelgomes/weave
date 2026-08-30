@@ -7,13 +7,13 @@ class AgentLlmsRepository {
   async create(userId, data) {
     const query = `
       INSERT INTO ai_llms (
-        user_id, organization_id, title, provider, model, api_key, temperature, max_tokens, reasoning_effort, created_at, updated_at
+        user_id, workspace_id, title, provider, model, api_key, temperature, max_tokens, reasoning_effort, created_at, updated_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
       RETURNING *
     `;
     const values = [
       userId,
-      data.organizationId || null,
+      data.workspaceId || null,
       data.title,
       data.provider,
       data.model,
@@ -31,7 +31,7 @@ class AgentLlmsRepository {
    */
   async findByUserId(userId) {
     const query = `
-      SELECT id, user_id, organization_id, title, provider, model, temperature, max_tokens, reasoning_effort, created_at, updated_at
+      SELECT id, user_id, workspace_id, title, provider, model, temperature, max_tokens, reasoning_effort, created_at, updated_at
       FROM ai_llms 
       WHERE user_id = $1 AND (deleted = false OR deleted IS NULL)
       ORDER BY created_at DESC
@@ -85,7 +85,7 @@ class AgentLlmsRepository {
       UPDATE ai_llms
       SET ${fields.join(", ")}, updated_at = NOW()
       WHERE id = $1 AND user_id = $2 AND (deleted = false OR deleted IS NULL)
-      RETURNING id, user_id, organization_id, title, provider, model, temperature, max_tokens, reasoning_effort, updated_at
+      RETURNING id, user_id, workspace_id, title, provider, model, temperature, max_tokens, reasoning_effort, updated_at
     `;
 
     const result = await pool.query(query, values);

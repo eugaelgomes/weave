@@ -11,14 +11,6 @@ const createArtifactSchema = z.object({
   content: z
     .union([z.record(z.any()), z.array(z.any())])
     .describe("O conteúdo real do artefato, que pode ser um objeto JSON ou uma lista/array."),
-  organizationId: z
-    .string()
-    .uuid("Invalid workspace ID")
-    .optional()
-    .nullable()
-    .describe(
-      "Opcional: o identificador único da organização (UUID) à qual este artefato pertence."
-    ),
   sessionId: z
     .string()
     .uuid("Invalid session ID")
@@ -35,6 +27,14 @@ const createArtifactSchema = z.object({
     .string()
     .min(1)
     .describe("O tipo ou categoria do artefato (por exemplo, document, code, text)."),
+  workspaceId: z
+    .string()
+    .uuid("Invalid workspace ID")
+    .optional()
+    .nullable()
+    .describe(
+      "Opcional: o identificador único da organização (UUID) à qual este artefato pertence."
+    ),
 });
 
 const updateArtifactSchema = z.object({

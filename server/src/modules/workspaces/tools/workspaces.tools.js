@@ -54,28 +54,28 @@ const manageWorkspaceDomainsSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-const manageWorkspaceAreasSchema = z.discriminatedUnion("action", [
+const manageWorkspaceTeamsSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
-    area_name: z.string().describe("Team name"),
     description: z.string().optional().nullable().describe("Team description"),
-    parent_area_id: z.string().uuid().optional().nullable().describe("Parent team ID"),
+    parent_team_id: z.string().uuid().optional().nullable().describe("Parent team ID"),
     properties: z.record(z.any()).optional().nullable().describe("Custom team properties"),
     slug: z.string().describe("URL-friendly identifier string"),
+    team_name: z.string().describe("Team name"),
   }),
   z.object({
     action: z.literal("update"),
     active: z.boolean().optional().describe("Whether the team is active"),
-    area_id: z.string().uuid().describe("Team ID"),
-    area_name: z.string().optional().describe("Team name"),
     description: z.string().optional().nullable().describe("Team description"),
-    parent_area_id: z.string().uuid().optional().nullable().describe("Parent team ID"),
+    parent_team_id: z.string().uuid().optional().nullable().describe("Parent team ID"),
     properties: z.record(z.any()).optional().nullable().describe("Custom team properties"),
     slug: z.string().optional().describe("URL-friendly identifier string"),
+    team_id: z.string().uuid().describe("Team ID"),
+    team_name: z.string().optional().describe("Team name"),
   }),
   z.object({
     action: z.literal("delete"),
-    area_id: z.string().uuid().describe("Team ID"),
+    team_id: z.string().uuid().describe("Team ID"),
   }),
   z.object({
     action: z.literal("list"),
@@ -105,103 +105,19 @@ const manageWorkspaceMembersSchema = z.discriminatedUnion("action", [
 ]);
 
 const createWorkspacesTools = (user) => {
-  const getActiveOrgId = async () => {
+  const getActiveWorkspaceId = async () => {
     const workspace = await baseRepository.getActiveWorkspaceWithMembership(user.userId);
     if (!workspace) throw new Error("No active workspace found for user.");
     return workspace.id;
   };
 
   return {
-    manage_workspace_areas: {
-      description: "Manage workspace teams (create, update, delete, list).",
-      handler: async (args) => {
-        try {
-          const {
-            action,
-            area_id,
-            area_name,
-            description,
-            parent_area_id,
-            properties,
-            slug,
-            active,
-          } = args;
-
-          if (action === "list") {
-            const workspaceId = await getActiveOrgId();
-            const result = await teamsRepository.listWorkspaceAreas(workspaceId);
-            return {
-              content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-            };
-          }
-
-          if (action === "create") {
-            if (!area_name || !slug)
-              throw new Error("area_name and slug are required for create action");
-            const workspaceId = await getActiveOrgId();
-            const result = await teamsRepository.createArea({
-              areaName: area_name,
-              createdBy: user.userId,
-              description,
-              parentAreaId: parent_area_id,
-              properties,
-              slug,
-              workspaceId,
-            });
-            return {
-              content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-            };
-          }
-
-          if (action === "update") {
-            if (!area_id) throw new Error("area_id is required for update action");
-            const workspaceId = await getActiveOrgId();
-            const result = await teamsRepository.updateArea(area_id, workspaceId, {
-              active,
-              areaName: area_name,
-              description,
-              properties,
-              slug,
-            });
-            if (!result) throw new Error("Team not found or access denied.");
-            return {
-              content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
-            };
-          }
-
-          if (action === "delete") {
-            if (!area_id) throw new Error("area_id is required for delete action");
-            const workspaceId = await getActiveOrgId();
-            const result = await teamsRepository.softDeleteArea(area_id, workspaceId);
-            if (!result) throw new Error("Team not found or access denied.");
-            return {
-              content: [
-                {
-                  text: JSON.stringify({ success: true }, null, 2),
-                  type: "text",
-                },
-              ],
-            };
-          }
-
-          throw new Error(`Invalid action: ${action}`);
-        } catch (error) {
-          return {
-            content: [{ text: `Error: ${error.message}`, type: "text" }],
-            isError: true,
-          };
-        }
-      },
-      name: "manage_workspace_areas",
-      schema: manageWorkspaceAreasSchema,
-    },
-
     manage_workspace_domains: {
       description: "Manage workspace domains and SSO (add, update_sso, delete, list).",
       handler: async (args) => {
         try {
           const { action, domain_name, enabled, metadata, provider } = args;
-          const workspaceId = await getActiveOrgId();
+          const workspaceId = await getActiveWorkspaceId();
           const settings = await settingsRepository.getSettings(workspaceId);
           const domains = settings?.domains || [];
 
@@ -278,7 +194,7 @@ const createWorkspacesTools = (user) => {
           const { action, email, name, role, username, user_id } = args;
 
           if (action === "list") {
-            const workspaceId = await getActiveOrgId();
+            const workspaceId = await getActiveWorkspaceId();
             const result = await membersRepository.getWorkspaceMembers(workspaceId);
             return {
               content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
@@ -287,8 +203,8 @@ const createWorkspacesTools = (user) => {
 
           if (action === "invite") {
             if (!email || !name) throw new Error("email and name are required for invite action");
-            const workspaceId = await getActiveOrgId();
-            const result = await membersRepository.createOrgInvite(
+            const workspaceId = await getActiveWorkspaceId();
+            const result = await membersRepository.createWorkspaceInvite(
               workspaceId,
               email,
               role,
@@ -303,7 +219,7 @@ const createWorkspacesTools = (user) => {
 
           if (action === "update_role") {
             if (!user_id || !role) throw new Error("user_id and role are required for update_role");
-            const workspaceId = await getActiveOrgId();
+            const workspaceId = await getActiveWorkspaceId();
             const result = await workspacesRepository.updateWorkspaceMemberRole(
               workspaceId,
               user_id,
@@ -318,7 +234,7 @@ const createWorkspacesTools = (user) => {
 
           if (action === "remove") {
             if (!user_id) throw new Error("user_id is required for remove action");
-            const workspaceId = await getActiveOrgId();
+            const workspaceId = await getActiveWorkspaceId();
             const result = await membersRepository.removeWorkspaceMember(workspaceId, user_id);
             if (!result)
               throw new Error("Member not found, could not be removed, or access denied.");
@@ -342,6 +258,90 @@ const createWorkspacesTools = (user) => {
       },
       name: "manage_workspace_members",
       schema: manageWorkspaceMembersSchema,
+    },
+
+    manage_workspace_teams: {
+      description: "Manage workspace teams (create, update, delete, list).",
+      handler: async (args) => {
+        try {
+          const {
+            action,
+            team_id,
+            team_name,
+            description,
+            parent_team_id,
+            properties,
+            slug,
+            active,
+          } = args;
+
+          if (action === "list") {
+            const workspaceId = await getActiveWorkspaceId();
+            const result = await teamsRepository.listWorkspaceTeams(workspaceId);
+            return {
+              content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+            };
+          }
+
+          if (action === "create") {
+            if (!team_name || !slug)
+              throw new Error("team_name and slug are required for create action");
+            const workspaceId = await getActiveWorkspaceId();
+            const result = await teamsRepository.createArea({
+              createdBy: user.userId,
+              description,
+              parentTeamId: parent_team_id,
+              properties,
+              slug,
+              teamName: team_name,
+              workspaceId,
+            });
+            return {
+              content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+            };
+          }
+
+          if (action === "update") {
+            if (!team_id) throw new Error("team_id is required for update action");
+            const workspaceId = await getActiveWorkspaceId();
+            const result = await teamsRepository.updateArea(team_id, workspaceId, {
+              active,
+              description,
+              properties,
+              slug,
+              teamName: team_name,
+            });
+            if (!result) throw new Error("Team not found or access denied.");
+            return {
+              content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
+            };
+          }
+
+          if (action === "delete") {
+            if (!team_id) throw new Error("team_id is required for delete action");
+            const workspaceId = await getActiveWorkspaceId();
+            const result = await teamsRepository.softDeleteArea(team_id, workspaceId);
+            if (!result) throw new Error("Team not found or access denied.");
+            return {
+              content: [
+                {
+                  text: JSON.stringify({ success: true }, null, 2),
+                  type: "text",
+                },
+              ],
+            };
+          }
+
+          throw new Error(`Invalid action: ${action}`);
+        } catch (error) {
+          return {
+            content: [{ text: `Error: ${error.message}`, type: "text" }],
+            isError: true,
+          };
+        }
+      },
+      name: "manage_workspace_teams",
+      schema: manageWorkspaceTeamsSchema,
     },
 
     manage_workspaces: {
@@ -370,7 +370,7 @@ const createWorkspacesTools = (user) => {
           }
 
           if (action === "update") {
-            const workspaceId = await getActiveOrgId();
+            const workspaceId = await getActiveWorkspaceId();
             const result = await workspacesRepository.updateWorkspace(workspaceId, {
               banner_url,
               description,

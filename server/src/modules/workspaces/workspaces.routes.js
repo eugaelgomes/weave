@@ -29,10 +29,10 @@ const {
   updateMemberRoleSchema,
 } = require("./schemas/members.schema");
 const {
-  createAreaSchema,
-  updateAreaSchema,
-  addAreaMemberSchema,
-  updateAreaMemberSchema,
+  createTeamSchema,
+  updateTeamSchema,
+  addTeamMemberSchema,
+  updateTeamMemberSchema,
 } = require("./schemas/teams.schema");
 const {
   createDomainSchema,
@@ -101,7 +101,7 @@ router.get(
 router.post(
   "/teams",
   structuralLimiter,
-  validate(createAreaSchema, "body"), // TODO rename schema validations to team
+  validate(createTeamSchema, "body"), // TODO rename schema validations to team
   workspaceTeamsController.createTeam.bind(workspaceTeamsController)
 );
 
@@ -114,7 +114,7 @@ router.get(
 router.put(
   "/teams/:teamId",
   structuralLimiter,
-  validate(updateAreaSchema, "body"),
+  validate(updateTeamSchema, "body"),
   workspaceTeamsController.updateTeam.bind(workspaceTeamsController)
 );
 
@@ -133,14 +133,14 @@ router.get(
 router.post(
   "/teams/:teamId/members",
   structuralLimiter,
-  validate(addAreaMemberSchema, "body"),
+  validate(addTeamMemberSchema, "body"),
   workspaceTeamsController.addTeamMember.bind(workspaceTeamsController)
 );
 
 router.patch(
   "/teams/:teamId/members/:memberId",
   structuralLimiter,
-  validate(updateAreaMemberSchema, "body"),
+  validate(updateTeamMemberSchema, "body"),
   workspaceTeamsController.updateTeamMember.bind(workspaceTeamsController)
 );
 

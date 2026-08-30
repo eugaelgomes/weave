@@ -209,7 +209,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
 
       res.status(200).json({
         domains: domains.map((domain) =>
-          domainResponseSchema.parse({ domain, orgSettings: settings })
+          domainResponseSchema.parse({ domain, workspaceSettings: settings })
         ),
         status: "OK",
       });
@@ -228,7 +228,9 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
       // TODO: replace with workspaceRoleHasPermission when RBAC is active
-      if (!this._ensureOrgPermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res))
+      if (
+        !this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res)
+      )
         return;
 
       const { domain_name: domainName } = req.body;
@@ -262,7 +264,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       await this.settingsRepository.updateDomains(workspace.id, domains);
 
       res.status(201).json({
-        data: domainResponseSchema.parse({ domain: newDomain, orgSettings: settings }),
+        data: domainResponseSchema.parse({ domain: newDomain, workspaceSettings: settings }),
         message: "Domain registered. Configure the TXT record and click verify.",
         status: "OK",
       });
@@ -280,7 +282,9 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
-      if (!this._ensureOrgPermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res))
+      if (
+        !this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res)
+      )
         return;
 
       const { domainId: domainName } = req.params;
@@ -299,7 +303,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       });
 
       res.status(200).json({
-        data: domainResponseSchema.parse({ domain, orgSettings: settings }),
+        data: domainResponseSchema.parse({ domain, workspaceSettings: settings }),
         message:
           "Domain verification queued. Worker will retry DNS every 30 minutes until verified.",
         status: "OK",
@@ -318,7 +322,9 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
-      if (!this._ensureOrgPermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res))
+      if (
+        !this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res)
+      )
         return;
 
       const { domainId: domainName } = req.params;
@@ -355,7 +361,9 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const workspace = await this._getUserWorkspace(userId);
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
-      if (!this._ensureOrgPermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res))
+      if (
+        !this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res)
+      )
         return;
 
       const { domainId: domainName } = req.params;
@@ -390,7 +398,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const updatedSettings = await this.settingsRepository.getSettings(workspace.id);
 
       res.status(200).json({
-        data: domainResponseSchema.parse({ domain, orgSettings: updatedSettings }),
+        data: domainResponseSchema.parse({ domain, workspaceSettings: updatedSettings }),
         message: shouldEnable
           ? "SAML settings saved. Users of this domain will be redirected to the IdP."
           : "SSO disabled for this domain",

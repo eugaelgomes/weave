@@ -3,7 +3,7 @@ const { z } = require("zod");
 /**
  * Validates the request body for adding an team member.
  */
-const addAreaMemberSchema = z.object({
+const addTeamMemberSchema = z.object({
   role: z
     .enum(["ADMIN", "MEMBER", "GUEST"])
     .optional()
@@ -18,7 +18,7 @@ const addAreaMemberSchema = z.object({
 /**
  * Validates the request body for updating an team member.
  */
-const updateAreaMemberSchema = z.object({
+const updateTeamMemberSchema = z.object({
   role: z
     .enum(["ADMIN", "MEMBER", "GUEST"], {
       errorMap: () => ({
@@ -31,19 +31,14 @@ const updateAreaMemberSchema = z.object({
 /**
  * Validates the request body for creating a new team.
  */
-const createAreaSchema = z.object({
-  area_name: z
-    .string()
-    .trim()
-    .min(1, "area_name is required")
-    .describe("The display name of the team."),
+const createTeamSchema = z.object({
   description: z
     .string()
     .trim()
     .optional()
     .nullable()
     .describe("A detailed description of the team."),
-  parent_area_id: z
+  parent_team_id: z
     .string()
     .uuid("Invalid parent team ID")
     .optional()
@@ -60,26 +55,25 @@ const createAreaSchema = z.object({
     .optional()
     .nullable()
     .describe("A URL-friendly identifier string for the team."),
+  team_name: z
+    .string()
+    .trim()
+    .min(1, "team_name is required")
+    .describe("The display name of the team."),
 });
 
 /**
  * Validates the request body for updating an team.
  */
-const updateAreaSchema = z.object({
+const updateTeamSchema = z.object({
   active: z.boolean().optional().describe("Indicates whether the team is active."),
-  area_name: z
-    .string()
-    .trim()
-    .min(1, "area_name cannot be empty")
-    .optional()
-    .describe("The display name of the team."),
   description: z
     .string()
     .trim()
     .optional()
     .nullable()
     .describe("A detailed description of the team."),
-  parent_area_id: z
+  parent_team_id: z
     .string()
     .uuid("Invalid parent team ID")
     .optional()
@@ -90,6 +84,12 @@ const updateAreaSchema = z.object({
     .optional()
     .describe("A configuration object for custom team properties."),
   slug: z.string().trim().optional().describe("A URL-friendly identifier string for the team."),
+  team_name: z
+    .string()
+    .trim()
+    .min(1, "team_name cannot be empty")
+    .optional()
+    .describe("The display name of the team."),
 });
 
 /**
@@ -98,35 +98,35 @@ const updateAreaSchema = z.object({
 const teamResponseSchema = z
   .object({
     active: z.boolean().optional(),
-    area_name: z.string(),
     created_at: z.union([z.string(), z.date()]).optional(),
     created_by: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
     id: z.string(),
-    parent_area_id: z.string().nullable().optional(),
+    parent_team_id: z.string().nullable().optional(),
     properties: z.any().optional(),
     slug: z.string().nullable().optional(),
+    team_name: z.string(),
     updated_at: z.union([z.string(), z.date()]).optional(),
     workspace_id: z.string(),
   })
   .transform((team) => ({
     active: team.active,
-    area_name: team.area_name,
     created_at: team.created_at,
     created_by: team.created_by,
     description: team.description,
     id: team.id,
-    parent_area_id: team.parent_area_id,
+    parent_team_id: team.parent_team_id,
     properties: team.properties || {},
     slug: team.slug,
+    team_name: team.team_name,
     updated_at: team.updated_at,
     workspace_id: team.workspace_id,
   }));
 
 module.exports = {
-  addAreaMemberSchema,
-  createAreaSchema,
+  addTeamMemberSchema,
+  createTeamSchema,
   teamResponseSchema,
-  updateAreaMemberSchema,
-  updateAreaSchema,
+  updateTeamMemberSchema,
+  updateTeamSchema,
 };

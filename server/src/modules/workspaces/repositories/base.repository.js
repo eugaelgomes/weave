@@ -113,7 +113,7 @@ class WorkspaceBaseRepository {
     return await executeQuery(query, [user_id]);
   }
 
-  async getAvailableOrgNames(baseName) {
+  async getAvailableWorkspaceNames(baseName) {
     const query = `
       SELECT unique_name FROM workspaces
       WHERE unique_name LIKE $1;
@@ -169,9 +169,9 @@ class WorkspaceBaseRepository {
       const defaultPlanId = defaultPlan?.plan_id || null;
 
       const publicId = generatePublicId();
-      const publicWorkspaceId = `org_${publicId}`;
+      const publicWorkspaceId = `workspace_${publicId}`;
 
-      const insertOrgQuery = `
+      const insertWorkspaceQuery = `
       INSERT INTO workspaces (
         user_id,
         workspace_name,
@@ -203,7 +203,7 @@ class WorkspaceBaseRepository {
         deleted;
     `;
 
-      const orgResult = await client.query(insertOrgQuery, [
+      const workspaceResult = await client.query(insertWorkspaceQuery, [
         user_id,
         workspace_name,
         unique_name,
@@ -216,7 +216,7 @@ class WorkspaceBaseRepository {
         publicWorkspaceId,
       ]);
 
-      const workspace = orgResult.rows[0];
+      const workspace = workspaceResult.rows[0];
 
       const updateUserQuery = `
       UPDATE users
@@ -238,12 +238,12 @@ class WorkspaceBaseRepository {
 
       await settingsRepository.createDefaultSettings(workspace.id, client);
 
-      const rootAreaSlug = unique_name || "central";
+      const rootTeamSlug = unique_name || "central";
       await client.query(
-        `INSERT INTO workspace_areas (
-           workspace_id, area_name, slug, description, properties, created_by, is_root_area
-         ) VALUES ($1, 'Central', $2, 'Central team of the workspace', '{}'::jsonb, $3, true)`,
-        [workspace.id, rootAreaSlug, user_id]
+        `INSERT INTO teams (
+           workspace_id, name, slug, description, properties, created_by, parent_team_id
+         ) VALUES ($1, 'Central', $2, 'Central team of the workspace', '{}'::jsonb, $3, null)`,
+        [workspace.id, rootTeamSlug, user_id]
       );
 
       if (defaultPlanId) {
@@ -274,12 +274,12 @@ class WorkspaceBaseRepository {
 
   async autoProvisionPersonalWorkspace(userId, displayName, locale = "en", timezone = "UTC") {
     const crypto = require("crypto");
-    const orgName = `Workspace de ${displayName}`;
+    const workspaceName = `Workspace de ${displayName}`;
     const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
 
     return await this.createWorkspaces(
       userId,
-      orgName,
+      workspaceName,
       uniqueName,
       null,
       null,

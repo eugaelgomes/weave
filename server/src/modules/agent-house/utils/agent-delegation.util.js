@@ -13,7 +13,7 @@ class AgentDelegationService {
    * Executes the delegation to a specialized agent.
    *
    * @param {string} userId - The user ID.
-   * @param {string|null} organizationId - The workspace ID.
+   * @param {string|null} workspaceId - The workspace ID.
    * @param {string} userLanguage - The user's language.
    * @param {string} agentId - The target agent ID to invoke.
    * @param {string} taskDescription - The description of the task.
@@ -23,7 +23,7 @@ class AgentDelegationService {
    */
   async executeDelegateToAgent(
     userId,
-    organizationId,
+    workspaceId,
     userLanguage,
     agentId,
     taskDescription,
@@ -42,7 +42,6 @@ class AgentDelegationService {
       const result = await chatOrchestratorService.orchestrateChat({
         files: [],
         onChunk: null,
-        organizationId,
         // Do not forward raw file buffers by default to save bandwidth, unless requested. We can pass files if needed.
         payload: {
           agentId: agentId,
@@ -69,7 +68,9 @@ class AgentDelegationService {
 
         userId,
 
-        userLanguage, // We do not stream the sub-agent's inner monologue directly to the UI
+        userLanguage,
+
+        workspaceId, // We do not stream the sub-agent's inner monologue directly to the UI
       });
 
       return {

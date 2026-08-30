@@ -17,24 +17,16 @@ class ChatOrchestratorService {
   /**
    * Orchestrates the chat flow by preparing the context and running the ReAct loop.
    */
-  async orchestrateChat({
-    userId,
-    payload,
-    organizationId,
-    requestId,
-    files,
-    userLanguage,
-    onChunk,
-  }) {
+  async orchestrateChat({ userId, payload, workspaceId, requestId, files, userLanguage, onChunk }) {
     // 1. Setup Context and Authorizations
     const contextData = await chatContextService.prepareContext({
       files,
       onChunk,
-      organizationId,
       payload,
       requestId,
       userId,
       userLanguage,
+      workspaceId,
     });
 
     // Se houve hit de idempotency, retorna imediatamente.
@@ -47,11 +39,11 @@ class ChatOrchestratorService {
       contextData,
       files,
       onChunk,
-      organizationId,
       payload,
       requestId,
       userId,
       userLanguage,
+      workspaceId,
     });
   }
 }

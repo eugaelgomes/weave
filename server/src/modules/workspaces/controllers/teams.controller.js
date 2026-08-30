@@ -7,19 +7,19 @@ const { normalizeWorkspaceName } = require("../normalizer");
 const { teamResponseSchema } = require("../schemas/teams.schema");
 const { z } = require("zod");
 
-class WorkspaceAreasController extends WorkspacesBaseController {
+class WorkspaceTeamsController extends WorkspacesBaseController {
   constructor() {
     super();
     this.teamsRepository = teamsRepository;
   }
 
   /** Role in `workspace_members` (aligned with permission engine). */
-  _canManageOrgStructure(workspace) {
+  _canManageWorkspaceStructure(workspace) {
     return this._workspaceRoleHasPermission(workspace, this._workspacePermissions.MANAGE_AREAS);
   }
 
-  async _userIsAreaManager(workspace, areaId, userId) {
-    const member = await this.teamsRepository.getAreaMember(areaId, workspace.id, userId);
+  async _userIsTeamManager(workspace, teamId, userId) {
+    const member = await this.teamsRepository.getTeamMember(teamId, workspace.id, userId);
     return member?.workspace_roles?.name === "admin";
   }
 
@@ -27,9 +27,9 @@ class WorkspaceAreasController extends WorkspacesBaseController {
    * Admin/super_admin with MANAGE_AREAS or team manager.
    * @returns {Promise<boolean>}
    */
-  async _requireAreaWriteAccess(res, workspace, areaId, userId) {
-    if (this._canManageOrgStructure(workspace)) return true;
-    if (await this._userIsAreaManager(workspace, areaId, userId)) {
+  async _requireTeamWriteAccess(res, workspace, teamId, userId) {
+    if (this._canManageWorkspaceStructure(workspace)) return true;
+    if (await this._userIsTeamManager(workspace, teamId, userId)) {
       return true;
     }
     res.status(403).json({
@@ -39,8 +39,8 @@ class WorkspaceAreasController extends WorkspacesBaseController {
     return false;
   }
 
-  _normalizeSlug(areaName, providedSlug) {
-    const baseValue = providedSlug?.trim() || areaName?.trim();
+  _normalizeSlug(teamName, providedSlug) {
+    const baseValue = providedSlug?.trim() || teamName?.trim();
     if (!baseValue) {
       return null;
     }
@@ -75,16 +75,16 @@ class WorkspaceAreasController extends WorkspacesBaseController {
     return properties;
   }
 
-  async _getParentArea(workspaceId, parentAreaId) {
-    if (!parentAreaId) return null;
-    const parent = await this.teamsRepository.getAreaById(parentAreaId, workspaceId);
+  async _getParentArea(workspaceId, parentTeamId) {
+    if (!parentTeamId) return null;
+    const parent = await this.teamsRepository.getTeamById(parentTeamId, workspaceId);
     if (!parent) {
       throw new Error("Parent team not found");
     }
     return parent;
   }
 
-  async listAreas(req, res, next) {
+  async listTeams(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -94,7 +94,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const teams = await this.teamsRepository.listWorkspaceAreas(workspace.id);
+      const teams = await this.teamsRepository.listWorkspaceTeams(workspace.id);
 
       res.status(200).json({
         count: teams.length,
@@ -118,8 +118,8 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const { areaId } = req.params;
-      const team = await this.teamsRepository.getAreaById(areaId, workspace.id);
+      const { teamId } = req.params;
+      const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
 
       if (!team) {
         return res.status(404).json({ error: "Team not found", success: false });
@@ -142,12 +142,12 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const { area_name, parent_area_id = null, slug, description, properties } = req.body;
+      const { team_name, parent_team_id = null, slug, description, properties } = req.body;
 
-      const isSubArea = parent_area_id !== null && parent_area_id !== undefined;
-      const canOrgStructure = this._canManageOrgStructure(workspace);
+      const isSubArea = parent_team_id !== null && parent_team_id !== undefined;
+      const canWorkspaceStructure = this._canManageWorkspaceStructure(workspace);
 
-      if (!isSubArea && !canOrgStructure) {
+      if (!isSubArea && !canWorkspaceStructure) {
         return res.status(403).json({
           error: "Only workspace administrators can create root teams",
           success: false,
@@ -155,11 +155,11 @@ class WorkspaceAreasController extends WorkspacesBaseController {
       }
 
       if (isSubArea) {
-        await this._getParentArea(workspace.id, parent_area_id);
+        await this._getParentArea(workspace.id, parent_team_id);
 
-        if (!canOrgStructure) {
-          const member = await this.teamsRepository.getAreaMember(
-            parent_area_id,
+        if (!canWorkspaceStructure) {
+          const member = await this.teamsRepository.getTeamMember(
+            parent_team_id,
             workspace.id,
             userId
           );
@@ -173,7 +173,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         }
       }
 
-      const normalizedSlug = this._normalizeSlug(area_name, slug);
+      const normalizedSlug = this._normalizeSlug(team_name, slug);
       if (!normalizedSlug) {
         return res.status(400).json({ error: "Invalid team slug", success: false });
       }
@@ -182,18 +182,18 @@ class WorkspaceAreasController extends WorkspacesBaseController {
 
       const normalizedProperties = this._ensurePropertiesShape(properties) || {};
 
-      const newArea = await this.teamsRepository.createArea({
-        areaName: area_name.trim(),
+      const newTeam = await this.teamsRepository.createTeam({
         createdBy: userId,
         description: description?.trim() || "Team description here",
-        parentAreaId: parent_area_id || null,
+        name: team_name.trim(),
+        parentTeamId: parent_team_id || null,
         properties: normalizedProperties,
         slug: uniqueSlug,
         workspaceId: workspace.id,
       });
 
       res.status(201).json({
-        data: teamResponseSchema.parse(newArea),
+        data: teamResponseSchema.parse(newTeam),
         message: "Team created successfully",
         status: "OK",
       });
@@ -213,31 +213,31 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const { areaId } = req.params;
-      const existingArea = await this.teamsRepository.getAreaById(areaId, workspace.id);
+      const { teamId } = req.params;
+      const existingTeam = await this.teamsRepository.getTeamById(teamId, workspace.id);
 
-      if (!existingArea) {
+      if (!existingTeam) {
         return res.status(404).json({ error: "Team not found", success: false });
       }
 
       // Block structural changes in root team
-      if (existingArea.is_root_area && req.body.parent_area_id !== undefined) {
+      if (existingTeam.parent_team_id === null && req.body.parent_team_id !== undefined) {
         return res.status(400).json({
           error: "The root team cannot be moved to another parent team.",
           success: false,
         });
       }
 
-      if (!(await this._requireAreaWriteAccess(res, workspace, areaId, userId))) {
+      if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
         return;
       }
 
-      const { area_name, slug, description, properties, active, parent_area_id } = req.body;
+      const { team_name, slug, description, properties, active, parent_team_id } = req.body;
 
       const updates = {};
 
-      if (area_name !== undefined) {
-        updates.area_name = area_name.trim();
+      if (team_name !== undefined) {
+        updates.team_name = team_name.trim();
       }
 
       if (description !== undefined) {
@@ -252,33 +252,33 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         updates.active = active;
       }
 
-      if (parent_area_id !== undefined) {
-        if (parent_area_id === existingArea.id) {
+      if (parent_team_id !== undefined) {
+        if (parent_team_id === existingTeam.id) {
           return res.status(400).json({
             error: "An team cannot be its own parent",
             success: false,
           });
         }
-        if (parent_area_id) {
-          await this._getParentArea(workspace.id, parent_area_id);
+        if (parent_team_id) {
+          await this._getParentArea(workspace.id, parent_team_id);
         }
-        updates.parent_area_id = parent_area_id || null;
+        updates.parent_team_id = parent_team_id || null;
       }
 
-      if (slug !== undefined || updates.area_name) {
-        const baseSlug = this._normalizeSlug(updates.area_name || existingArea.area_name, slug);
+      if (slug !== undefined || updates.team_name) {
+        const baseSlug = this._normalizeSlug(updates.team_name || existingTeam.team_name, slug);
         if (!baseSlug) {
           return res.status(400).json({ error: "Invalid slug", success: false });
         }
 
-        const finalSlug = await this._ensureUniqueSlug(workspace.id, baseSlug, existingArea.slug);
+        const finalSlug = await this._ensureUniqueSlug(workspace.id, baseSlug, existingTeam.slug);
         updates.slug = finalSlug;
       }
 
-      const updatedArea = await this.teamsRepository.updateArea(areaId, workspace.id, updates);
+      const updatedTeam = await this.teamsRepository.updateTeam(teamId, workspace.id, updates);
 
       res.status(200).json({
-        data: teamResponseSchema.parse(updatedArea),
+        data: teamResponseSchema.parse(updatedTeam),
         message: "Team updated successfully",
         status: "OK",
       });
@@ -298,27 +298,27 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const { areaId } = req.params;
-      const team = await this.teamsRepository.getAreaById(areaId, workspace.id);
+      const { teamId } = req.params;
+      const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
         return res.status(404).json({ error: "Team not found", success: false });
       }
 
-      if (team.is_root_area) {
+      if (team.parent_team_id === null) {
         return res.status(400).json({
           error: "The root team cannot be removed.",
           success: false,
         });
       }
 
-      if (!(await this._requireAreaWriteAccess(res, workspace, areaId, userId))) {
+      if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
         return;
       }
 
-      const deletedArea = await this.teamsRepository.softDeleteArea(areaId, workspace.id);
+      const deletedTeam = await this.teamsRepository.softDeleteTeam(teamId, workspace.id);
 
       res.status(200).json({
-        data: teamResponseSchema.parse(deletedArea),
+        data: teamResponseSchema.parse(deletedTeam),
         message: "Team removed successfully",
         status: "OK",
       });
@@ -328,7 +328,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
     }
   }
 
-  async listAreaMembers(req, res, next) {
+  async listTeamMembers(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -338,19 +338,19 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const { areaId } = req.params;
-      const team = await this.teamsRepository.getAreaById(areaId, workspace.id);
+      const { teamId } = req.params;
+      const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
         return res.status(404).json({ error: "Team not found", success: false });
       }
 
-      const members = await this.teamsRepository.listAreaMembers(areaId, workspace.id);
+      const members = await this.teamsRepository.listTeamMembers(teamId, workspace.id);
 
       res.status(200).json({
-        area_id: areaId,
         members,
         members_count: members.length,
         status: "OK",
+        team_id: teamId,
       });
     } catch (error) {
       console.error("Error listing team members:", error);
@@ -358,7 +358,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
     }
   }
 
-  async addAreaMember(req, res, next) {
+  async addTeamMember(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -368,13 +368,13 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const { areaId } = req.params;
-      const team = await this.teamsRepository.getAreaById(areaId, workspace.id);
+      const { teamId } = req.params;
+      const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
         return res.status(404).json({ error: "Team not found", success: false });
       }
 
-      if (!(await this._requireAreaWriteAccess(res, workspace, areaId, userId))) {
+      if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
         return;
       }
 
@@ -394,8 +394,8 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         });
       }
 
-      const existingMember = await this.teamsRepository.getAreaMember(
-        areaId,
+      const existingMember = await this.teamsRepository.getTeamMember(
+        teamId,
         workspace.id,
         user_id
       );
@@ -406,8 +406,8 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         });
       }
 
-      const member = await this.teamsRepository.addAreaMember(
-        areaId,
+      const member = await this.teamsRepository.addTeamMember(
+        teamId,
         workspace.id,
         user_id,
         normalizedRole,
@@ -425,7 +425,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
     }
   }
 
-  async updateAreaMember(req, res, next) {
+  async updateTeamMember(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -435,21 +435,21 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const { areaId, memberId } = req.params;
+      const { teamId, memberId } = req.params;
       const { role } = req.body;
       const normalizedRole = role.trim().toUpperCase();
 
-      const team = await this.teamsRepository.getAreaById(areaId, workspace.id);
+      const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
         return res.status(404).json({ error: "Team not found", success: false });
       }
 
-      if (!(await this._requireAreaWriteAccess(res, workspace, areaId, userId))) {
+      if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
         return;
       }
 
-      const existingMember = await this.teamsRepository.getAreaMember(
-        areaId,
+      const existingMember = await this.teamsRepository.getTeamMember(
+        teamId,
         workspace.id,
         memberId
       );
@@ -457,8 +457,8 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Team member not found", success: false });
       }
 
-      const updated = await this.teamsRepository.updateAreaMemberRole(
-        areaId,
+      const updated = await this.teamsRepository.updateTeamMemberRole(
+        teamId,
         workspace.id,
         memberId,
         normalizedRole,
@@ -476,7 +476,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
     }
   }
 
-  async removeAreaMember(req, res, next) {
+  async removeTeamMember(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
@@ -486,19 +486,19 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const { areaId, memberId } = req.params;
+      const { teamId, memberId } = req.params;
 
-      const team = await this.teamsRepository.getAreaById(areaId, workspace.id);
+      const team = await this.teamsRepository.getTeamById(teamId, workspace.id);
       if (!team) {
         return res.status(404).json({ error: "Team not found", success: false });
       }
 
-      if (!(await this._requireAreaWriteAccess(res, workspace, areaId, userId))) {
+      if (!(await this._requireTeamWriteAccess(res, workspace, teamId, userId))) {
         return;
       }
 
-      const existingMember = await this.teamsRepository.getAreaMember(
-        areaId,
+      const existingMember = await this.teamsRepository.getTeamMember(
+        teamId,
         workspace.id,
         memberId
       );
@@ -506,8 +506,8 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Member not found", success: false });
       }
 
-      const removed = await this.teamsRepository.removeAreaMember(
-        areaId,
+      const removed = await this.teamsRepository.removeTeamMember(
+        teamId,
         workspace.id,
         memberId,
         userId
@@ -525,4 +525,4 @@ class WorkspaceAreasController extends WorkspacesBaseController {
   }
 }
 
-module.exports = new WorkspaceAreasController();
+module.exports = new WorkspaceTeamsController();

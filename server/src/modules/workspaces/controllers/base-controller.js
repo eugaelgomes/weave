@@ -64,7 +64,7 @@ class WorkspacesBaseController {
    * @param {Response} res
    * @returns {boolean} true if authorized
    */
-  _ensureOrgPermission(workspace, permission, res) {
+  _ensureWorkspacePermission(workspace, permission, res) {
     if (!workspace) {
       res.status(404).json({
         error: "Workspace not found",
@@ -90,7 +90,7 @@ class WorkspacesBaseController {
    * @param {string[]} permissions
    * @param {Response} res
    */
-  _ensureOrgPermissionAny(workspace, permissions, res) {
+  _ensureWorkspacePermissionAny(workspace, permissions, res) {
     if (!workspace) {
       res.status(404).json({
         error: "Workspace not found",
@@ -223,15 +223,15 @@ class WorkspacesController extends WorkspacesBaseController {
     try {
       const uniqueSlug = await this._generateUniqueTeamSlug(workspace.id, slugBase);
       const newTeam = await this.teamsRepository.createArea({
-        areaName: defaultName,
         createdBy,
         description: `Main team for workspace ${workspace.workspace_name}`,
-        parentAreaId: null,
+        parentTeamId: null,
         properties: { system: true },
         slug: uniqueSlug || `${slugBase}-${workspace.id}`,
+        teamName: defaultName,
         workspaceId: workspace.id,
       });
-      await this.teamsRepository.addAreaMember(
+      await this.teamsRepository.addTeamMember(
         newTeam.id,
         workspace.id,
         createdBy,
@@ -272,7 +272,8 @@ class WorkspacesController extends WorkspacesBaseController {
       if (providedUniqueName) {
         unique_name = normalizeWorkspaceName(providedUniqueName);
         if (!unique_name) throw new Error("Provided unique name is invalid after normalization");
-        const existingNames = await this.workspacesRepository.getAvailableOrgNames(unique_name);
+        const existingNames =
+          await this.workspacesRepository.getAvailableWorkspaceNames(unique_name);
         if (existingNames.includes(unique_name))
           throw new Error(`Unique name '${unique_name}' is already in use`);
       } else {
@@ -352,7 +353,11 @@ class WorkspacesController extends WorkspacesBaseController {
 
       if (
         touchesBrand &&
-        !this._ensureOrgPermission(currentWorkspace, this._workspacePermissions.MANAGE_BRAND, res)
+        !this._ensureWorkspacePermission(
+          currentWorkspace,
+          this._workspacePermissions.MANAGE_BRAND,
+          res
+        )
       )
         return;
 
@@ -364,7 +369,8 @@ class WorkspacesController extends WorkspacesBaseController {
 
       if (unique_name && unique_name !== currentWorkspace.unique_name) {
         const normalizedName = normalizeWorkspaceName(unique_name);
-        const existingNames = await this.workspacesRepository.getAvailableOrgNames(normalizedName);
+        const existingNames =
+          await this.workspacesRepository.getAvailableWorkspaceNames(normalizedName);
         if (existingNames.includes(normalizedName))
           throw new Error("Unique name is already in use");
         updatedUniqueName = normalizedName;
@@ -426,7 +432,7 @@ class WorkspacesController extends WorkspacesBaseController {
         return res.status(404).json({ error: "Workspace not found", success: false });
 
       if (
-        !this._ensureOrgPermission(
+        !this._ensureWorkspacePermission(
           currentWorkspace,
           this._workspacePermissions.MANAGE_ORG_LIFECYCLE,
           res
@@ -483,7 +489,7 @@ class WorkspacesController extends WorkspacesBaseController {
       };
 
       if (
-        !this._ensureOrgPermission(
+        !this._ensureWorkspacePermission(
           workspaceWithRole,
           this._workspacePermissions.MANAGE_ORG_LIFECYCLE,
           res
@@ -534,7 +540,11 @@ class WorkspacesController extends WorkspacesBaseController {
       if (!currentWorkspace)
         return res.status(404).json({ error: "Workspace not found", success: false });
       if (
-        !this._ensureOrgPermission(currentWorkspace, this._workspacePermissions.MANAGE_BRAND, res)
+        !this._ensureWorkspacePermission(
+          currentWorkspace,
+          this._workspacePermissions.MANAGE_BRAND,
+          res
+        )
       )
         return;
 
@@ -583,7 +593,11 @@ class WorkspacesController extends WorkspacesBaseController {
       if (!currentWorkspace)
         return res.status(404).json({ error: "Workspace not found", success: false });
       if (
-        !this._ensureOrgPermission(currentWorkspace, this._workspacePermissions.MANAGE_BRAND, res)
+        !this._ensureWorkspacePermission(
+          currentWorkspace,
+          this._workspacePermissions.MANAGE_BRAND,
+          res
+        )
       )
         return;
 

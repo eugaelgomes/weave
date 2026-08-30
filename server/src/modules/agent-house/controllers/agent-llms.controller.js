@@ -3,12 +3,9 @@ const agentLlmsService = require("../services/agent-llms.service");
 async function createLlmConfig(req, res, next) {
   try {
     const userId = req.user.userId || req.user.id;
-    const organizationId =
-      req.user.organizationId ||
-      req.user.current_organization_id ||
-      req.body.organizationId ||
-      null;
-    const payload = { ...req.body, organizationId };
+    const workspaceId =
+      req.user.workspaceId || req.user.current_workspace_id || req.body.workspaceId || null;
+    const payload = { ...req.body, workspaceId };
 
     const config = await agentLlmsService.createLlmConfig(userId, payload);
     res.status(201).json(config);

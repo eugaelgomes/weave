@@ -4,12 +4,7 @@ const { validRoles } = require("@/modules/workspaces/normalizer");
 
 const PROJECT_MEMBER_ROLES = ["PROJECT_MANAGER", "CONTRIBUTOR", "COMMENTER", "VIEWER"];
 
-const targetAreaSchema = z.object({
-  area_id: z
-    .string()
-    .uuid("Invalid team ID format")
-    .optional()
-    .describe("The universally unique identifier of the target team."),
+const targetTeamSchema = z.object({
   role: z
     .enum(PROJECT_MEMBER_ROLES)
     .optional()
@@ -17,6 +12,11 @@ const targetAreaSchema = z.object({
     .describe(
       "The role of the member in the target team. Valid roles: PROJECT_MANAGER, CONTRIBUTOR, COMMENTER, VIEWER."
     ),
+  team_id: z
+    .string()
+    .uuid("Invalid team ID format")
+    .optional()
+    .describe("The universally unique identifier of the target team."),
 });
 
 /**
@@ -47,8 +47,8 @@ const inviteMemberSchema = z.object({
     .describe(
       "The role of the member in the workspace. Valid roles: SUPER_ADMIN, ADMIN, BILLING_MANAGER, MEMBER, GUEST."
     ),
-  target_areas: z
-    .array(targetAreaSchema)
+  target_teams: z
+    .array(targetTeamSchema)
     .optional()
     .default([])
     .describe("An array of target teams and roles to assign to the invited user."),

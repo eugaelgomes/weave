@@ -27,7 +27,7 @@ const { buildJwtPayload } = require("@/modules/authentication/schemas/session.sc
  */
 
 /**
- * @param {Record<string, unknown>|null|undefined} defaultAreaData
+ * @param {Record<string, unknown>|null|undefined} defaultTeamData
  * @returns {null|{
  *   id: unknown,
  *   name: unknown,
@@ -36,14 +36,14 @@ const { buildJwtPayload } = require("@/modules/authentication/schemas/session.sc
  *   properties: Record<string, unknown>
  * }}
  */
-const mapDefaultAreaInfo = (defaultAreaData) => {
-  if (!defaultAreaData) return null;
+const mapDefaultTeamInfo = (defaultTeamData) => {
+  if (!defaultTeamData) return null;
   return {
-    description: defaultAreaData.org_default_area_description,
-    id: defaultAreaData.org_default_area_id,
-    name: defaultAreaData.org_default_area_name,
-    properties: defaultAreaData.org_default_area_properties || {},
-    slug: defaultAreaData.org_default_area_slug,
+    description: defaultTeamData.workspace_default_team_description,
+    id: defaultTeamData.workspace_default_team_id,
+    name: defaultTeamData.workspace_default_team_name,
+    properties: defaultTeamData.workspace_default_team_properties || {},
+    slug: defaultTeamData.workspace_default_team_slug,
   };
 };
 
@@ -62,13 +62,13 @@ const mapWorkspaceInfo = (workspaceData) => {
   if (!workspaceData) return null;
   return {
     active_modules: workspaceData.active_modules,
-    id: workspaceData.org_id,
-    logo_url: workspaceData.org_logo_url,
-    member_role: workspaceData.org_member_role,
-    member_since: workspaceData.org_member_since,
+    id: workspaceData.workspace_id,
+    logo_url: workspaceData.workspace_logo_url,
+    member_role: workspaceData.workspace_member_role,
+    member_since: workspaceData.workspace_member_since,
     name: workspaceData.workspace_name,
-    public_id: workspaceData.org_public_id,
-    unique_name: workspaceData.org_unique_name,
+    public_id: workspaceData.workspace_public_id,
+    unique_name: workspaceData.workspace_unique_name,
   };
 };
 
@@ -182,7 +182,7 @@ class UserDataController extends BaseController {
       }
 
       const workspace = mapWorkspaceInfo(user.workspace);
-      const defaultArea = mapDefaultAreaInfo(user.default_area);
+      const defaultArea = mapDefaultTeamInfo(user.default_area);
       const planUsage = mapPlanUsageInfo(user.current_usage);
 
       // Generate pre-signed URLs to prevent unauthorized and direct access to S3

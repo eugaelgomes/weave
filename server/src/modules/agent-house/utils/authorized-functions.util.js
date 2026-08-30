@@ -94,12 +94,12 @@ function isFunctionAuthorized({ access, functionName, schema, context }) {
 
   const noteScoped = category === FunctionCategory.NOTES || category === FunctionCategory.BLOCKS;
   const projectScoped = category === FunctionCategory.PROJECTS;
-  const orgScoped =
+  const workspaceScoped =
     category === FunctionCategory.WORKSPACES ||
-    functionName.includes("org_") ||
+    functionName.includes("workspace_") ||
     functionName.includes("workspace");
 
-  if (orgScoped && !context?.organizationId) {
+  if (workspaceScoped && !context?.workspaceId) {
     return false;
   }
 

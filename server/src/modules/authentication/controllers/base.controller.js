@@ -3,7 +3,7 @@
  */
 class AuthBaseController {
   /**
-   * @param {object | null | undefined} defaultAreaData
+   * @param {object | null | undefined} defaultTeamData
    * @returns {{
    *   id: string | null,
    *   name: string | null,
@@ -12,45 +12,45 @@ class AuthBaseController {
    *   properties: Record<string, unknown>
    * } | null}
    */
-  _normalizeDefaultArea(defaultAreaData) {
-    if (!defaultAreaData) {
+  _normalizeDefaultTeam(defaultTeamData) {
+    if (!defaultTeamData) {
       return null;
     }
 
     return {
-      description: defaultAreaData.org_default_area_description,
-      id: defaultAreaData.org_default_area_id,
-      name: defaultAreaData.org_default_area_name,
-      properties: defaultAreaData.org_default_area_properties || {},
-      slug: defaultAreaData.org_default_area_slug,
+      description: defaultTeamData.workspace_default_team_description,
+      id: defaultTeamData.workspace_default_team_id,
+      name: defaultTeamData.workspace_default_team_name,
+      properties: defaultTeamData.workspace_default_team_properties || {},
+      slug: defaultTeamData.workspace_default_team_slug,
     };
   }
 
   /**
-   * @param {object | null | undefined} organizationData
+   * @param {object | null | undefined} workspaceData
    * @returns {{
    *   id: string | null,
    *   public_id: string | null,
    *   unique_name: string | null,
    *   name: string | null,
    *   logo_url: string | null,
-   *   member_role: string | null,
+   *   member_role_id: string | null,
    *   member_since: string | Date | null
    * } | null}
    */
-  _normalizeOrganization(organizationData) {
-    if (!organizationData) {
+  _normalizeWorkspace(workspaceData) {
+    if (!workspaceData) {
       return null;
     }
 
     return {
-      id: organizationData.org_id,
-      logo_url: organizationData.org_logo_url,
-      member_role: organizationData.org_member_role,
-      member_since: organizationData.org_member_since,
-      name: organizationData.org_name,
-      public_id: organizationData.org_public_id,
-      unique_name: organizationData.org_unique_name,
+      id: workspaceData.workspace_id,
+      logo_url: workspaceData.workspace_logo_url,
+      member_role_id: workspaceData.workspace_member_role_id,
+      member_since: workspaceData.workspace_member_since,
+      name: workspaceData.workspace_name,
+      public_id: workspaceData.workspace_public_id,
+      unique_name: workspaceData.workspace_unique_name,
     };
   }
 }

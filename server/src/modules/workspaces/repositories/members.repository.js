@@ -53,12 +53,12 @@ class WorkspaceMembersRepository {
            AND pm.deleted = false 
            AND p.deleted = false) as projects,
         (SELECT COALESCE(json_agg(json_build_object(
-           'area_id', a.id::text,
-           'area_name', a.area_name,
+           'team_id', a.id::text,
+           'team_name', a.team_name,
            'role', am.role
          )), '[]'::json)
-         FROM workspace_area_members am
-         JOIN workspace_areas a ON a.id = am.area_id
+         FROM workspace_team_members am
+         JOIN workspace_teams a ON a.id = am.team_id
          WHERE am.user_id = u1.user_id
            AND am.deleted = false 
            AND a.deleted = false
@@ -165,7 +165,7 @@ class WorkspaceMembersRepository {
         UNION ALL
 
         SELECT om.user_id, 'PROJECT_MANAGER' AS project_role, 2 AS priority
-        FROM workspace_area_members om
+        FROM workspace_team_members om
         WHERE om.workspace_id = $1
           AND om.role = 'ADMIN'
           AND om.deleted = false
@@ -174,7 +174,7 @@ class WorkspaceMembersRepository {
         UNION ALL
 
         SELECT om.user_id, 'CONTRIBUTOR' AS project_role, 3 AS priority
-        FROM workspace_area_members om
+        FROM workspace_team_members om
         WHERE om.workspace_id = $1
           AND om.role = 'MEMBER'
           AND om.deleted = false
@@ -195,8 +195,8 @@ class WorkspaceMembersRepository {
           AND role NOT IN ('ADMIN', 'SUPER_ADMIN')
         RETURNING *
       ),
-      deleted_area_members AS (
-        UPDATE workspace_area_members
+      deleted_team_members AS (
+        UPDATE workspace_team_members
         SET deleted = true, updated_at = now()
         WHERE workspace_id = $1 AND user_id = $2
           AND EXISTS (SELECT 1 FROM deleted_workspace_member)
@@ -273,14 +273,14 @@ class WorkspaceMembersRepository {
     return results[0] || null;
   }
 
-  async createOrgInvite(
+  async createWorkspaceInvite(
     workspace_id,
     email,
     role,
     invited_by,
     name = null,
     username = null,
-    _target_areas = []
+    _target_teams = []
   ) {
     const client = await getConnection();
     try {

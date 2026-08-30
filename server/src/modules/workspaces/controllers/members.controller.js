@@ -15,12 +15,16 @@ const { getUserEmailLocale } = require("@/services/email/i18n");
 class WorkspaceMembersController extends WorkspacesBaseController {
   constructor() {
     super();
-    this.areasRepository = areasRepository;
+    this.teamsRepository = teamsRepository;
   }
 
   async _ensureCanManageMembers(currentWorkspace, res) {
     if (
-      !this._ensureOrgPermission(currentWorkspace, this._workspacePermissions.MANAGE_MEMBERS, res)
+      !this._ensureWorkspacePermission(
+        currentWorkspace,
+        this._workspacePermissions.MANAGE_MEMBERS,
+        res
+      )
     ) {
       return false;
     }
@@ -145,7 +149,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       }
 
       if (
-        !this._ensureOrgPermission(
+        !this._ensureWorkspacePermission(
           currentWorkspace,
           this._workspacePermissions.VIEW_MEMBER_DIRECTORY,
           res
@@ -188,7 +192,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
 
-      const { email, role, name, username, target_areas = [] } = req.body;
+      const { email, role, name, username, target_teams = [] } = req.body;
 
       const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
 
@@ -201,15 +205,15 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         return;
       }
 
-      const validTargetAreas = [];
-      for (const tArea of target_areas) {
-        if (!tArea.area_id) continue;
-        const team = await this.teamsRepository.getAreaById(tArea.area_id, currentWorkspace.id);
-        if (!team) return res.status(404).json({ error: `Team not found: ${tArea.area_id}` });
+      const validTargetTeams = [];
+      for (const tArea of target_teams) {
+        if (!tArea.team_id) continue;
+        const team = await this.teamsRepository.getTeamById(tArea.team_id, currentWorkspace.id);
+        if (!team) return res.status(404).json({ error: `Team not found: ${tArea.team_id}` });
 
-        validTargetAreas.push({
-          area_id: tArea.area_id,
+        validTargetTeams.push({
           role: tArea.role,
+          team_id: tArea.team_id,
         });
       }
 
@@ -229,14 +233,14 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       }
 
       const usedName = name.trim();
-      const invite = await this.workspacesRepository.createOrgInvite(
+      const invite = await this.workspacesRepository.createWorkspaceInvite(
         currentWorkspace.id,
         email,
         normalizedRole,
         authUserId,
         usedName,
         username || null,
-        validTargetAreas
+        validTargetTeams
       );
 
       const inviter = await SearchUsersRepository.findById(authUserId);
@@ -262,7 +266,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
           expires_at: invite.expires_at,
           invite_id: invite.invite_id,
           role: invite.role,
-          target_areas: invite.target_areas,
+          target_teams: invite.target_teams,
         },
         message: "Invite sent successfully.",
         status: "OK",
@@ -303,7 +307,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       };
 
       for (const inviteData of invites) {
-        const { email, role, name, username, target_areas = [] } = inviteData;
+        const { email, role, name, username, target_teams = [] } = inviteData;
 
         try {
           const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
@@ -321,26 +325,26 @@ class WorkspaceMembersController extends WorkspacesBaseController {
           }
 
           // Validate teams
-          const validTargetAreas = [];
-          for (const tArea of target_areas) {
-            if (!tArea.area_id) continue;
-            const team = await this.teamsRepository.getAreaById(tArea.area_id, currentWorkspace.id);
+          const validTargetTeams = [];
+          for (const tArea of target_teams) {
+            if (!tArea.team_id) continue;
+            const team = await this.teamsRepository.getTeamById(tArea.team_id, currentWorkspace.id);
             if (team) {
-              validTargetAreas.push({
-                area_id: tArea.area_id,
+              validTargetTeams.push({
                 role: tArea.role,
+                team_id: tArea.team_id,
               });
             }
           }
 
-          const invite = await this.workspacesRepository.createOrgInvite(
+          const invite = await this.workspacesRepository.createWorkspaceInvite(
             currentWorkspace.id,
             email,
             normalizedRole,
             authUserId,
             name?.trim() || null,
             username || null,
-            validTargetAreas
+            validTargetTeams
           );
 
           await send_workspace_invite(

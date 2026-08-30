@@ -10,7 +10,7 @@ class ChatLoopService {
   async executeReActLoop({
     userId,
     payload,
-    organizationId,
+    workspaceId,
     requestId,
     files,
     userLanguage,
@@ -65,10 +65,10 @@ class ChatLoopService {
             isSubAgent: Boolean(payload.isSubAgent),
             noteBlocksContract: chatFormatterUtil.buildNoteBlocksContract(),
             noteDocumentContract: chatFormatterUtil.buildNoteBlocksContract(),
-            organizationId,
             resourceAccess,
             useCase: payload.useCase,
             userLanguage,
+            workspaceId,
           },
           conversationHistory: currentConversationHistory,
           files: currentLoop === 0 ? chatFormatterUtil.buildEngineFilesPayload(files) : [],
@@ -77,12 +77,12 @@ class ChatLoopService {
           message: currentMessage,
           model: chatFormatterUtil.resolveModelForEngine(payload.model),
           noteIds: resolvedNoteIds,
-          organizationId,
           projectIds: resolvedProjectIds,
           sessionId,
           user_id: userId,
           userId,
-          ...(organizationId ? { org_id: organizationId } : {}),
+          workspaceId,
+          ...(workspaceId ? { workspace_id: workspaceId } : {}),
           userLanguage,
         },
         requestId,
@@ -123,7 +123,7 @@ class ChatLoopService {
         const currentExecutions = await chatFunctionsService.executeFunctionCalls(
           userId,
           currentFunctions,
-          organizationId,
+          workspaceId,
           userLanguage,
           onChunk,
           files
@@ -146,7 +146,6 @@ class ChatLoopService {
             providerUsed,
           },
           model: `${payload.model.name}:${payload.model.version}`,
-          organizationId,
           outputTokens: currentTokenUsage.outputTokens,
           provider: providerUsed,
           requestId: uuidv5(`call_${currentLoop}`, requestId),
@@ -156,6 +155,7 @@ class ChatLoopService {
           toolCalls: currentFunctions,
           totalTokens: currentTokenUsage.totalTokens,
           userId,
+          workspaceId,
         });
 
         for (let i = 0; i < currentExecutions.length; i++) {
@@ -174,7 +174,6 @@ class ChatLoopService {
             errorCode: exec.success ? null : "TOOL_EXECUTION_FAILED",
             errorMessage: exec.success ? null : String(exec.error),
             model: `${payload.model.name}:${payload.model.version}`,
-            organizationId,
             provider: providerUsed,
             requestId: uuidv5(`tool_${currentLoop}_${i}`, requestId),
             role: "tool",
@@ -182,6 +181,7 @@ class ChatLoopService {
             status: exec.success ? "ok" : "error",
             toolCallId: tId,
             userId,
+            workspaceId,
           });
         }
 
@@ -235,7 +235,6 @@ class ChatLoopService {
       latencyMs: totalLatencyMs || null,
       metadata: messageMetadata,
       model: `${payload.model.name}:${payload.model.version}`,
-      organizationId,
       outputTokens: tokenUsage.outputTokens,
       provider: providerUsed,
       requestId,
@@ -244,6 +243,7 @@ class ChatLoopService {
       status: messageStatus,
       totalTokens: tokenUsage.totalTokens,
       userId,
+      workspaceId,
     });
 
     if (usageRecord?.id) {

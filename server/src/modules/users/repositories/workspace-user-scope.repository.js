@@ -2,7 +2,7 @@ const { executeQuery } = require("@/database/connection");
 
 /**
  * Workspace isolation: active membership is any `workspace_members` row with
- * `deleted = false` and `status = ACTIVE` (any `area_id`).
+ * `deleted = false` and `status = ACTIVE` (any `team_id`).
  */
 class WorkspaceUserScopeRepository {
   /**

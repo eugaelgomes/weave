@@ -6,7 +6,7 @@ class ArtifactsRepository {
    *
    * @param {Object} data
    * @param {string} data.userId
-   * @param {string|null} data.organizationId
+   * @param {string|null} data.workspaceId
    * @param {string|null} data.sessionId
    * @param {string} data.title
    * @param {string} data.type
@@ -16,7 +16,7 @@ class ArtifactsRepository {
   async createArtifact(data) {
     const {
       userId,
-      organizationId = null,
+      workspaceId = null,
       sessionId = null,
       title = "Untitled Artifact",
       type = "document",
@@ -26,7 +26,7 @@ class ArtifactsRepository {
     const query = `
       INSERT INTO ai_artifacts (
         user_id,
-        organization_id,
+        workspace_id,
         session_id,
         title,
         type,
@@ -40,7 +40,7 @@ class ArtifactsRepository {
 
     const result = await pool.query(query, [
       userId,
-      organizationId,
+      workspaceId,
       sessionId,
       title,
       type,

@@ -29,12 +29,12 @@ class ChatAccessUtil {
    *
    * @param {string} userId - The ID of the user requesting access.
    * @param {string} noteId - The internal UUID or public note ID to verify.
-   * @param {string|null} [organizationId=null] - Optional workspace ID for scope verification.
+   * @param {string|null} [workspaceId=null] - Optional workspace ID for scope verification.
    * @param {string} [lang="pt"] - The language code for error translation.
    * @returns {Promise<string>} The resolved internal note UUID.
    * @throws {Error} If note is not found or access is denied.
    */
-  async assertNoteMutationAccess(userId, noteId, organizationId = null, lang = "pt") {
+  async assertNoteMutationAccess(userId, noteId, workspaceId = null, lang = "pt") {
     const t = getI18n(lang);
 
     // 1. Enforce presence of note identifier.
@@ -77,10 +77,10 @@ class ChatAccessUtil {
     // Policy C: Organizational project-level workspace access.
     // If the note belongs to a project, and the project is bound to the user's current
     // workspace workspace, the user is authorized.
-    if (organizationId && summary.project_id) {
+    if (workspaceId && summary.project_id) {
       const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
         summary.project_id,
-        organizationId
+        workspaceId
       );
       if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
         return internalNoteId;
@@ -100,12 +100,12 @@ class ChatAccessUtil {
    *
    * @param {string} userId - The ID of the user requesting access.
    * @param {string} projectId - The project ID to verify.
-   * @param {string|null} [organizationId=null] - Optional workspace ID for scope verification.
+   * @param {string|null} [workspaceId=null] - Optional workspace ID for scope verification.
    * @param {string} [lang="pt"] - The language code for error translation.
    * @returns {Promise<void>} Resolves if access is authorized.
    * @throws {Error} If project ID is missing or access is denied.
    */
-  async assertProjectMutationAccess(userId, projectId, organizationId = null, lang = "pt") {
+  async assertProjectMutationAccess(userId, projectId, workspaceId = null, lang = "pt") {
     const t = getI18n(lang);
 
     // 1. Enforce presence of project identifier.
@@ -118,10 +118,10 @@ class ChatAccessUtil {
 
     // Policy A: Workspace scoping check.
     // If the project is linked to the active workspace workspace, verify existence/membership.
-    if (organizationId) {
+    if (workspaceId) {
       const scopedProjectRows = await projectsReadRepository.getProjectByIdWithOrgScope(
         projectId,
-        organizationId
+        workspaceId
       );
       if (Array.isArray(scopedProjectRows) && scopedProjectRows.length > 0) {
         return;

@@ -7,13 +7,13 @@ class AgentCustomToolsRepository {
   async create(userId, data) {
     const query = `
       INSERT INTO ai_custom_tools (
-        user_id, organization_id, name, description, webhook_url, method, headers, payload_schema, created_at, updated_at
+        user_id, workspace_id, name, description, webhook_url, method, headers, payload_schema, created_at, updated_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
       RETURNING *
     `;
     const values = [
       userId,
-      data.organizationId || null,
+      data.workspaceId || null,
       data.name,
       data.description || null,
       data.webhookUrl,

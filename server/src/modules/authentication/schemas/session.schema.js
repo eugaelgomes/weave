@@ -13,34 +13,6 @@ const jwtPayloadSchema = z.object({
     .string()
     .email()
     .describe("The email address associated with the authenticated user's account."),
-  org_default_area_id: z
-    .string()
-    .uuid()
-    .nullable()
-    .describe(
-      "The unique identifier (UUID) of the user's default workspace team in the workspace, if any."
-    ),
-  org_default_area_slug: z
-    .string()
-    .nullable()
-    .describe("The human-readable identifier (slug) of the user's default workspace team."),
-  org_id: z
-    .string()
-    .uuid()
-    .nullable()
-    .describe(
-      "The unique identifier (UUID) of the primary workspace linked to the user's session."
-    ),
-  org_member_role: z
-    .string()
-    .nullable()
-    .describe(
-      "The user's role within the workspace, determining their organizational permissions."
-    ),
-  org_unique_name: z
-    .string()
-    .nullable()
-    .describe("The unique name (slug) of the workspace associated with the session."),
   plan_id: z
     .string()
     .uuid()
@@ -53,6 +25,34 @@ const jwtPayloadSchema = z.object({
     .uuid("Invalid userId in JWT payload.")
     .describe("The unique identifier (UUID) of the authenticated user in the system."),
   username: z.string().min(1).describe("The unique username of the authenticated user."),
+  workspace_default_team_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .describe(
+      "The unique identifier (UUID) of the user's default workspace team in the workspace, if any."
+    ),
+  workspace_default_team_slug: z
+    .string()
+    .nullable()
+    .describe("The human-readable identifier (slug) of the user's default workspace team."),
+  workspace_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .describe(
+      "The unique identifier (UUID) of the primary workspace linked to the user's session."
+    ),
+  workspace_member_role_id: z
+    .string()
+    .nullable()
+    .describe(
+      "The user's role ID within the workspace, determining their organizational permissions."
+    ),
+  workspace_unique_name: z
+    .string()
+    .nullable()
+    .describe("The unique name (slug) of the workspace associated with the session."),
 });
 
 /**
@@ -65,21 +65,21 @@ const jwtPayloadSchema = z.object({
  *   email: string,
  *   plan_id: string | null,
  * }} user
- * @param {ReturnType<import('./controllers/base.controller')['_normalizeOrganization']>} workspace
- * @param {ReturnType<import('./controllers/base.controller')['_normalizeDefaultArea']>} defaultArea
+ * @param {ReturnType<import('./controllers/base.controller')['_normalizeWorkspace']>} workspace
+ * @param {ReturnType<import('./controllers/base.controller')['_normalizeDefaultTeam']>} defaultTeam
  * @returns {z.infer<typeof jwtPayloadSchema>}
  */
-function buildJwtPayload(user, workspace, defaultArea) {
+function buildJwtPayload(user, workspace, defaultTeam) {
   return jwtPayloadSchema.parse({
     email: user.email,
-    org_default_area_id: defaultArea?.id ?? null,
-    org_default_area_slug: defaultArea?.slug ?? null,
-    org_id: workspace?.id ?? null,
-    org_member_role: workspace?.member_role ?? null,
-    org_unique_name: workspace?.unique_name ?? null,
     plan_id: user.plan_id ?? null,
     userId: user.user_id,
     username: user.username,
+    workspace_default_team_id: defaultTeam?.id ?? null,
+    workspace_default_team_slug: defaultTeam?.slug ?? null,
+    workspace_id: workspace?.id ?? null,
+    workspace_member_role_id: workspace?.member_role_id ?? null,
+    workspace_unique_name: workspace?.unique_name ?? null,
   });
 }
 

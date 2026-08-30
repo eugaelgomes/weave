@@ -18,26 +18,16 @@ const CHAT_CONTEXT_MAX_MESSAGES = Number.parseInt(
 );
 
 class ChatContextService {
-  async prepareContext({
-    userId,
-    payload,
-    organizationId,
-    requestId,
-    files,
-    userLanguage,
-    onChunk,
-  }) {
+  async prepareContext({ userId, payload, workspaceId, requestId, files, userLanguage, onChunk }) {
     const t = getI18n(userLanguage);
     let selectedAgent = null;
     let authorizedFunctions = [];
     let capabilityRules = {};
     let resourceAccess = {};
 
-    const planUsageContext = await chatEngineService.buildPlanUsageContext(userId, organizationId);
+    const planUsageContext = await chatEngineService.buildPlanUsageContext(userId, workspaceId);
 
-    const usageRecord = await PlansService.managePlanUsage(userId, organizationId).catch(
-      () => null
-    );
+    const usageRecord = await PlansService.managePlanUsage(userId, workspaceId).catch(() => null);
 
     if (usageRecord && planUsageContext) {
       const effectivePlan = await PlansRepository.getEffectivePlanByUserId(userId);
@@ -236,12 +226,12 @@ class ChatContextService {
           useCase: payload.useCase,
         },
         model: `${payload.model.name}:${payload.model.version}`,
-        organizationId,
         requestId,
         role: "user",
         sessionId,
         status: "ok",
         userId,
+        workspaceId,
       });
     }
 
@@ -255,11 +245,11 @@ class ChatContextService {
         .requestEngineChat({
           message: `Generate a short title (maximum 5 words) for this conversation based on the user's first message: "${payload.message}". Return ONLY the title text, without quotes or additional commentary.`,
           model: payload.model,
-          organizationId,
           systemMessage:
             "You are a helpful assistant that generates extremely concise chat titles.",
           userId,
           userLanguage,
+          workspaceId,
         })
         .then(async (result) => {
           const generatedTitle =
@@ -290,9 +280,9 @@ class ChatContextService {
         context: {
           isSubAgent: Boolean(payload.isSubAgent),
           noteId: resolvedNoteIds.length > 0 ? resolvedNoteIds[0] : null,
-          organizationId,
           planUsageContext,
           projectId: resolvedProjectIds.length > 0 ? resolvedProjectIds[0] : null,
+          workspaceId,
         },
         userId,
       });

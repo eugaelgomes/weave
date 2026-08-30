@@ -17,17 +17,11 @@ class ChatFunctionsService {
    *
    * @param {string} userId - The ID of the authenticated user.
    * @param {{name: string, arguments?: Record<string, unknown>}} functionCall - The tool execution details.
-   * @param {string|null} [organizationId=null] - Optional workspace ID scope for the call.
+   * @param {string|null} [workspaceId=null] - Optional workspace ID scope for the call.
    * @param {string} [lang="pt"] - User language for error translations.
    * @returns {Promise<{name: string, success: boolean, result?: object}>} Result of the tool execution.
    */
-  async executeFunctionCall(
-    userId,
-    functionCall,
-    organizationId = null,
-    lang = "en-US",
-    files = []
-  ) {
+  async executeFunctionCall(userId, functionCall, workspaceId = null, lang = "en-US", files = []) {
     const t = getI18n(lang);
     const name = String(functionCall?.name || "");
     const args =
@@ -54,10 +48,10 @@ class ChatFunctionsService {
       files,
       lang,
       name,
-      organizationId,
       t,
       toolCallId: functionCall?.id,
       userId,
+      workspaceId,
     });
   }
 
@@ -66,7 +60,7 @@ class ChatFunctionsService {
    *
    * @param {string} userId - The ID of the authenticated user.
    * @param {Array<{name: string, arguments?: Record<string, unknown>}>} functionCalls - Array of tool execution details.
-   * @param {string|null} [organizationId=null] - Optional workspace ID scope for the calls.
+   * @param {string|null} [workspaceId=null] - Optional workspace ID scope for the calls.
    * @param {string} [lang="pt"] - User language for error translations.
    * @param {Function} [onChunk=null] - Callback to stream real-time execution state.
    * @returns {Promise<Array<object>>} Results of all tool executions.
@@ -74,7 +68,7 @@ class ChatFunctionsService {
   async executeFunctionCalls(
     userId,
     functionCalls = [],
-    organizationId = null,
+    workspaceId = null,
     lang = "en-US",
     onChunk = null,
     files = []
@@ -93,7 +87,7 @@ class ChatFunctionsService {
         const execution = await this.executeFunctionCall(
           userId,
           functionCall,
-          organizationId,
+          workspaceId,
           lang,
           files
         );

@@ -56,7 +56,7 @@ class WeaveAIRepository {
    * @typedef {Object} ChatMessageData
    * @property {string} sessionId - UUID of the chat session.
    * @property {string} userId - UUID of the user.
-   * @property {string|null} [organizationId=null] - UUID of the workspace.
+   * @property {string|null} [workspaceId=null] - UUID of the workspace.
    * @property {string} role - The role of the message sender (user, assistant, tool).
    * @property {string|null} [content] - The text content of the message.
    * @property {string} [model] - The name and version of the LLM model used.
@@ -86,7 +86,7 @@ class WeaveAIRepository {
     const {
       sessionId,
       userId,
-      organizationId = null,
+      workspaceId = null,
       role,
       content,
       model,
@@ -110,7 +110,7 @@ class WeaveAIRepository {
     INSERT INTO ai_chat_messages (
       session_id,
       user_id,
-      organization_id,
+      workspace_id,
       role,
       content,
       model,
@@ -140,7 +140,7 @@ class WeaveAIRepository {
     const result = await pool.query(query, [
       sessionId,
       userId,
-      organizationId,
+      workspaceId,
       role,
       content,
       model,
@@ -480,7 +480,7 @@ class WeaveAIRepository {
       // 3. Copy all messages
       const copyMessagesQuery = `
         INSERT INTO ai_chat_messages (
-          session_id, user_id, organization_id, role, content, model, metadata, 
+          session_id, user_id, workspace_id, role, content, model, metadata, 
           request_id, provider, status, error_code, error_message, latency_ms, 
           input_tokens, output_tokens, total_tokens, agent_id, allow_edit, 
           tool_calls, tool_call_id, created_at
@@ -494,12 +494,12 @@ class WeaveAIRepository {
         WHERE session_id = $4
         ORDER BY created_at ASC
       `;
-      // For organizationId, we don't have it strictly tied to the fork unless we fetch it from the new user.
-      // But the schema allows organization_id to be null. Let's keep it null for the fork, or we'd need to pass it.
+      // For workspaceId, we don't have it strictly tied to the fork unless we fetch it from the new user.
+      // But the schema allows workspace_id to be null. Let's keep it null for the fork, or we'd need to pass it.
       await client.query(copyMessagesQuery, [
         newSession.id,
         newUserId,
-        null, // organization_id
+        null, // workspace_id
         originalSession.id,
       ]);
 
