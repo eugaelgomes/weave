@@ -9,6 +9,7 @@ const chatSharingController = require("./controllers/chat/chat-sharing.controlle
 const agentLlmsController = require("./controllers/agents/agents-llms.controller");
 const agentCustomToolsController = require("./controllers/agents/agents-tools.controller");
 const agentsController = require("./controllers/agents/agents-management.controller");
+const artifactsController = require("./controllers/artifacts/artifacts.controller");
 
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
@@ -142,6 +143,13 @@ router.put(
 );
 router.delete("/agents/tools/:id", requireManageWeaveAi, (req, res, next) =>
   agentCustomToolsController.deleteCustomTool(req, res, next)
+);
+
+// Agent House - Artifacts
+router.post("/artifacts", (req, res, next) => artifactsController.createArtifact(req, res, next));
+router.get("/artifacts/:id", (req, res, next) => artifactsController.getArtifact(req, res, next));
+router.patch("/artifacts/:id", (req, res, next) =>
+  artifactsController.updateArtifact(req, res, next)
 );
 
 module.exports = router;

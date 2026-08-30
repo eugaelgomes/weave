@@ -16,7 +16,6 @@ const plansRoutes = require("@/modules/plans/plans.routes");
 const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
 
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
-const artifactsRoutes = require("@/modules/agent-house/artifacts.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -125,7 +124,6 @@ const routeRegistry = [
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/users", handler: userRoutes },
   { basePath: "/weave-ai", handler: agentHouseRoutes },
-  { basePath: "/artifacts", handler: artifactsRoutes },
 ];
 
 /**
