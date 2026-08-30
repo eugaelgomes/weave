@@ -1,65 +1,51 @@
-const { prisma } = require("@theweave/shared");
+const { executeQuery } = require("@/database/connection");
 
 class TeamsRepository {
   async listWorkspaceTeams(workspaceId) {
-    return await prisma.teams.findMany({
-      orderBy: {
-        name: "asc",
-      },
-      where: {
-        deleted: false,
-        workspace_id: workspaceId,
-      },
-    });
+    const query = `
+      SELECT * FROM teams
+      WHERE workspace_id = $1 AND deleted = false
+      ORDER BY name ASC;
+    `;
+    return await executeQuery(query, [workspaceId]);
   }
 
   async getRootTeams(workspaceId) {
-    return await prisma.teams.findMany({
-      orderBy: {
-        name: "asc",
-      },
-      where: {
-        deleted: false,
-        parent_team_id: null,
-        workspace_id: workspaceId,
-      },
-    });
+    const query = `
+      SELECT * FROM teams
+      WHERE workspace_id = $1 AND parent_team_id IS NULL AND deleted = false
+      ORDER BY name ASC;
+    `;
+    return await executeQuery(query, [workspaceId]);
   }
 
   async getTeamById(teamId, workspaceId) {
-    return await prisma.teams.findFirst({
-      where: {
-        deleted: false,
-        id: teamId,
-        workspace_id: workspaceId,
-      },
-    });
+    const query = `
+      SELECT * FROM teams
+      WHERE id = $1 AND workspace_id = $2 AND deleted = false
+      LIMIT 1;
+    `;
+    const rows = await executeQuery(query, [teamId, workspaceId]);
+    return rows[0] || null;
   }
 
   async getTeamBySlug(workspaceId, slug) {
-    return await prisma.teams.findFirst({
-      where: {
-        deleted: false,
-        slug: slug,
-        workspace_id: workspaceId,
-      },
-    });
+    const query = `
+      SELECT * FROM teams
+      WHERE slug = $1 AND workspace_id = $2 AND deleted = false
+      LIMIT 1;
+    `;
+    const rows = await executeQuery(query, [slug, workspaceId]);
+    return rows[0] || null;
   }
 
   async getMatchingSlugs(workspaceId, slugBase) {
-    const teams = await prisma.teams.findMany({
-      select: {
-        slug: true,
-      },
-      where: {
-        deleted: false,
-        slug: {
-          startsWith: slugBase,
-        },
-        workspace_id: workspaceId,
-      },
-    });
-    return teams.map((t) => t.slug);
+    const query = `
+      SELECT slug FROM teams
+      WHERE slug LIKE $1 || '%' AND workspace_id = $2 AND deleted = false;
+    `;
+    const rows = await executeQuery(query, [slugBase, workspaceId]);
+    return rows.map((row) => row.slug);
   }
 
   async createTeam({
@@ -74,24 +60,35 @@ class TeamsRepository {
     visibility,
     createdBy,
   }) {
-    return await prisma.teams.create({
-      data: {
-        color,
-        created_by: createdBy,
-        description,
-        icon: icon || {},
-        name,
-        parent_team_id: parentTeamId || null,
-        properties: properties || {},
-        slug,
-        visibility: visibility || "PRIVATE",
-        workspace_id: workspaceId,
-      },
-    });
+    const query = `
+      INSERT INTO teams (
+        workspace_id, parent_team_id, name, slug, description, properties,
+        color, icon, visibility, created_by, updated_at
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6::jsonb,
+        $7, $8::jsonb, $9::public.visibility_enum, $10, NOW()
+      )
+      RETURNING *;
+    `;
+    const values = [
+      workspaceId,
+      parentTeamId || null,
+      name,
+      slug,
+      description || null,
+      JSON.stringify(properties || {}),
+      color || null,
+      JSON.stringify(icon || {}),
+      visibility || "PRIVATE",
+      createdBy || null,
+    ];
+
+    const rows = await executeQuery(query, values);
+    return rows[0];
   }
 
   async updateTeam(teamId, workspaceId, fields = {}, updatedBy) {
-    const dataToUpdate = {};
     const allowedFields = [
       "name",
       "slug",
@@ -104,155 +101,185 @@ class TeamsRepository {
       "visibility",
     ];
 
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
     for (const key of allowedFields) {
       if (fields[key] !== undefined) {
-        dataToUpdate[key] = fields[key];
+        updates.push(`${key} = $${paramIndex}`);
+
+        let value = fields[key];
+        if (key === "properties" || key === "icon") {
+          value = JSON.stringify(value);
+        }
+
+        values.push(value);
+        paramIndex++;
       }
     }
 
-    if (Object.keys(dataToUpdate).length === 0) {
+    if (updates.length === 0) {
       return this.getTeamById(teamId, workspaceId);
     }
 
     if (updatedBy) {
-      dataToUpdate.updated_by = updatedBy;
+      updates.push(`updated_by = $${paramIndex}`);
+      values.push(updatedBy);
+      paramIndex++;
     }
-    dataToUpdate.updated_at = new Date();
 
-    return await prisma.teams
-      .updateMany({
-        data: dataToUpdate,
-        where: {
-          deleted: false,
-          id: teamId,
-          workspace_id: workspaceId,
-        },
-      })
-      .then(() => this.getTeamById(teamId, workspaceId));
+    updates.push(`updated_at = NOW()`);
+
+    values.push(teamId, workspaceId);
+
+    const query = `
+      UPDATE teams
+      SET ${updates.join(", ")}
+      WHERE id = $${paramIndex} AND workspace_id = $${paramIndex + 1} AND deleted = false
+      RETURNING *;
+    `;
+
+    const rows = await executeQuery(query, values);
+    return rows[0] || null;
   }
 
   async softDeleteTeam(teamId, workspaceId, deletedBy) {
-    return await prisma.teams
-      .updateMany({
-        data: {
-          active: false,
-          deleted: true,
-          deleted_at: new Date(),
-          deleted_by: deletedBy,
-        },
-        where: {
-          deleted: false,
-          id: teamId,
-          workspace_id: workspaceId,
-        },
-      })
-      .then(() => this.getTeamById(teamId, workspaceId)); // Return null since it's deleted now, or the soft-deleted object? In Prisma updateMany returns count.
+    const query = `
+      UPDATE teams
+      SET active = false, deleted = true, deleted_at = NOW(), deleted_by = $1, updated_at = NOW()
+      WHERE id = $2 AND workspace_id = $3 AND deleted = false
+      RETURNING *;
+    `;
+    const rows = await executeQuery(query, [deletedBy, teamId, workspaceId]);
+    return rows[0] || null;
   }
 
   async listTeamMembers(teamId, workspaceId) {
-    return await prisma.team_members.findMany({
-      include: {
+    const query = `
+      SELECT 
+        tm.*,
+        u.avatar_url,
+        u.email,
+        u.name,
+        u.username,
+        wr.id as "workspace_roles.id",
+        wr.name as "workspace_roles.name",
+        wr.description as "workspace_roles.description",
+        wr.permissions as "workspace_roles.permissions"
+      FROM team_members tm
+      JOIN teams t ON t.id = tm.team_id
+      JOIN users u ON u.user_id = tm.user_id
+      LEFT JOIN workspaces_roles wr ON wr.id = tm.role_id
+      WHERE tm.team_id = $1 AND t.workspace_id = $2 AND tm.deleted = false
+      ORDER BY u.name ASC;
+    `;
+    const rows = await executeQuery(query, [teamId, workspaceId]);
+
+    return rows.map((row) => {
+      return {
+        ...row,
         users_team_members_user_idTousers: {
-          select: {
-            avatar_url: true,
-            email: true,
-            name: true,
-            username: true,
-          },
+          avatar_url: row.avatar_url,
+          email: row.email,
+          name: row.name,
+          username: row.username,
         },
-        workspace_roles: true,
-      },
-      orderBy: {
-        users_team_members_user_idTousers: {
-          name: "asc",
-        },
-      },
-      where: {
-        deleted: false,
-        team_id: teamId,
-        teams: {
-          workspace_id: workspaceId,
-        },
-      },
+        workspace_roles: row["workspace_roles.id"]
+          ? {
+              description: row["workspace_roles.description"],
+              id: row["workspace_roles.id"],
+              name: row["workspace_roles.name"],
+              permissions: row["workspace_roles.permissions"],
+            }
+          : null,
+      };
     });
   }
 
   async getTeamMember(teamId, workspaceId, userId) {
-    return await prisma.team_members.findFirst({
-      include: {
-        workspace_roles: true,
-      },
-      where: {
-        deleted: false,
-        team_id: teamId,
-        teams: {
-          workspace_id: workspaceId,
-        },
-        user_id: userId,
-      },
-    });
+    const query = `
+      SELECT 
+        tm.*,
+        wr.id as "workspace_roles.id",
+        wr.name as "workspace_roles.name",
+        wr.description as "workspace_roles.description",
+        wr.permissions as "workspace_roles.permissions"
+      FROM team_members tm
+      JOIN teams t ON t.id = tm.team_id
+      LEFT JOIN workspaces_roles wr ON wr.id = tm.role_id
+      WHERE tm.team_id = $1 AND t.workspace_id = $2 AND tm.user_id = $3 AND tm.deleted = false
+      LIMIT 1;
+    `;
+    const rows = await executeQuery(query, [teamId, workspaceId, userId]);
+    if (!rows || rows.length === 0) return null;
+
+    const row = rows[0];
+    return {
+      ...row,
+      workspace_roles: row["workspace_roles.id"]
+        ? {
+            description: row["workspace_roles.description"],
+            id: row["workspace_roles.id"],
+            name: row["workspace_roles.name"],
+            permissions: row["workspace_roles.permissions"],
+          }
+        : null,
+    };
   }
 
   async addTeamMember(teamId, workspaceId, userId, roleId, addedBy) {
-    // Check if team belongs to workspace first
     const team = await this.getTeamById(teamId, workspaceId);
     if (!team) return null;
 
-    // Use upsert to handle reactivations
-    const existing = await prisma.team_members.findFirst({
-      where: { team_id: teamId, user_id: userId },
-    });
+    const query = `
+      INSERT INTO team_members (
+        team_id, user_id, role_id, added_by, updated_at
+      )
+      VALUES (
+        $1, $2, $3, $4, NOW()
+      )
+      ON CONFLICT (team_id, user_id) 
+      DO UPDATE SET 
+        role_id = EXCLUDED.role_id,
+        added_by = EXCLUDED.added_by,
+        deleted = false,
+        deleted_at = null,
+        suspended = false,
+        updated_at = NOW()
+      RETURNING *;
+    `;
 
-    if (existing) {
-      return await prisma.team_members.update({
-        data: {
-          added_by: addedBy,
-          deleted: false,
-          deleted_at: null,
-          role_id: roleId,
-          suspended: false,
-          updated_at: new Date(),
-        },
-        where: { id: existing.id },
-      });
-    }
-
-    return await prisma.team_members.create({
-      data: {
-        added_by: addedBy,
-        role_id: roleId,
-        team_id: teamId,
-        user_id: userId,
-      },
-    });
+    const rows = await executeQuery(query, [teamId, userId, roleId, addedBy]);
+    return rows[0];
   }
 
   async updateTeamMemberRole(teamId, workspaceId, userId, roleId) {
     const existing = await this.getTeamMember(teamId, workspaceId, userId);
     if (!existing) return null;
 
-    return await prisma.team_members.update({
-      data: {
-        role_id: roleId,
-        updated_at: new Date(),
-      },
-      where: { id: existing.id },
-    });
+    const query = `
+      UPDATE team_members
+      SET role_id = $1, updated_at = NOW()
+      WHERE id = $2
+      RETURNING *;
+    `;
+    const rows = await executeQuery(query, [roleId, existing.id]);
+    return rows[0] || null;
   }
 
   async removeTeamMember(teamId, workspaceId, userId, _removedBy) {
     const existing = await this.getTeamMember(teamId, workspaceId, userId);
     if (!existing) return null;
 
-    return await prisma.team_members.update({
-      data: {
-        deleted: true,
-        deleted_at: new Date(),
-        updated_at: new Date(),
-        // removed_by doesn't exist on team_members schema yet, so skipping or add it to schema later
-      },
-      where: { id: existing.id },
-    });
+    const query = `
+      UPDATE team_members
+      SET deleted = true, deleted_at = NOW(), updated_at = NOW()
+      WHERE id = $1
+      RETURNING *;
+    `;
+    const rows = await executeQuery(query, [existing.id]);
+    return rows[0] || null;
   }
 }
 
