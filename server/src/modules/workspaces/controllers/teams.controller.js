@@ -4,7 +4,6 @@ const WorkspacesBaseController = require("./base-controller");
 
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const { normalizeWorkspaceName } = require("../normalizer");
-const { WORKSPACE_ROLES } = require("@/modules/workspaces/workspace-role-policy");
 const { teamResponseSchema } = require("../schemas/teams.schema");
 const { z } = require("zod");
 
@@ -21,7 +20,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
 
   async _userIsAreaManager(workspace, areaId, userId) {
     const member = await this.teamsRepository.getAreaMember(areaId, workspace.id, userId);
-    return member?.role === WORKSPACE_ROLES.ADMIN;
+    return member?.workspace_roles?.name === "admin";
   }
 
   /**
@@ -165,7 +164,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
             userId
           );
 
-          if (!member || member.role !== WORKSPACE_ROLES.ADMIN) {
+          if (!member || member.workspace_roles?.name !== "admin") {
             return res.status(403).json({
               error: "Only team admins of the parent team can create sub-teams",
               success: false,
@@ -379,7 +378,7 @@ class WorkspaceAreasController extends WorkspacesBaseController {
         return;
       }
 
-      const { user_id, role = WORKSPACE_ROLES.MEMBER } = req.body;
+      const { user_id, role } = req.body;
       const normalizedRole = role.trim().toUpperCase();
 
       const targetUser = await SearchUsersRepository.findById(user_id);

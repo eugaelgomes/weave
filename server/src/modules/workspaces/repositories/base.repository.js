@@ -1,5 +1,4 @@
 const { executeQuery, getConnection } = require("@/database/connection");
-const { WORKSPACE_ROLES } = require("@/modules/workspaces/workspace-role-policy");
 const { generatePublicId } = require("@/utils/formatters.util");
 
 const settingsRepository = require("./settings.repository");
@@ -51,7 +50,7 @@ class WorkspaceBaseRepository {
     const role = await membersRepository.getMembershipRole(owned.id, user_id);
     return {
       ...owned,
-      member_role: role || WORKSPACE_ROLES.SUPER_ADMIN,
+      member_role: role || "super_admin",
     };
   }
 

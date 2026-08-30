@@ -12,10 +12,6 @@ const { memberListResponseSchema } = require("../schemas/members.schema");
 const { send_workspace_invite } = require("@/services/email/templates/invite-member");
 const { getUserEmailLocale } = require("@/services/email/i18n");
 
-const { WORKSPACE_ROLES } = require("@/modules/workspaces/workspace-role-policy");
-
-const MAX_SUPER_ADMINS = 3;
-
 class WorkspaceMembersController extends WorkspacesBaseController {
   constructor() {
     super();
@@ -29,35 +25,6 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       return false;
     }
     return true;
-  }
-
-  async _ensureSuperAdminLimit(workspaceId, nextRole, res) {
-    if (nextRole !== WORKSPACE_ROLES.SUPER_ADMIN) return true;
-    const total = await this.workspacesRepository.countActiveMembersByRole(
-      workspaceId,
-      WORKSPACE_ROLES.SUPER_ADMIN
-    );
-    if (total >= MAX_SUPER_ADMINS) {
-      res.status(400).json({
-        error: `Limit of ${MAX_SUPER_ADMINS} super admins per workspace reached`,
-      });
-      return false;
-    }
-    return true;
-  }
-
-  _resolveProjectMemberRole(rawRole) {
-    if (!rawRole || typeof rawRole !== "string") {
-      return "CONTRIBUTOR";
-    }
-    return rawRole.trim().toUpperCase();
-  }
-
-  _mapProjectRoleToAreaRole(projectRole) {
-    const normalizedRole = this._resolveProjectMemberRole(projectRole);
-    if (normalizedRole === "PROJECT_MANAGER") return WORKSPACE_ROLES.ADMIN;
-    if (normalizedRole === "CONTRIBUTOR") return WORKSPACE_ROLES.MEMBER;
-    return WORKSPACE_ROLES.GUEST;
   }
 
   /**
@@ -80,10 +47,6 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       }
 
       if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
-        return;
-      }
-
-      if (!(await this._ensureSuperAdminLimit(currentWorkspace.id, role, res))) {
         return;
       }
 
@@ -225,7 +188,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
 
-      const { email, role = WORKSPACE_ROLES.MEMBER, name, username, target_areas = [] } = req.body;
+      const { email, role, name, username, target_areas = [] } = req.body;
 
       const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
 
@@ -238,20 +201,15 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         return;
       }
 
-      if (!(await this._ensureSuperAdminLimit(currentWorkspace.id, normalizedRole, res))) {
-        return;
-      }
-
       const validTargetAreas = [];
       for (const tArea of target_areas) {
         if (!tArea.area_id) continue;
         const team = await this.teamsRepository.getAreaById(tArea.area_id, currentWorkspace.id);
         if (!team) return res.status(404).json({ error: `Team not found: ${tArea.area_id}` });
 
-        const resolvedProjectRole = this._resolveProjectMemberRole(tArea.role);
         validTargetAreas.push({
           area_id: tArea.area_id,
-          role: resolvedProjectRole,
+          role: tArea.role,
         });
       }
 
@@ -345,13 +303,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       };
 
       for (const inviteData of invites) {
-        const {
-          email,
-          role = WORKSPACE_ROLES.MEMBER,
-          name,
-          username,
-          target_areas = [],
-        } = inviteData;
+        const { email, role, name, username, target_areas = [] } = inviteData;
 
         try {
           const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
@@ -374,10 +326,9 @@ class WorkspaceMembersController extends WorkspacesBaseController {
             if (!tArea.area_id) continue;
             const team = await this.teamsRepository.getAreaById(tArea.area_id, currentWorkspace.id);
             if (team) {
-              const resolvedRole = this._resolveProjectMemberRole(tArea.role);
               validTargetAreas.push({
                 area_id: tArea.area_id,
-                role: resolvedRole,
+                role: tArea.role,
               });
             }
           }

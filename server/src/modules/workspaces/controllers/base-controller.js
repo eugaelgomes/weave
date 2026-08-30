@@ -235,7 +235,7 @@ class WorkspacesController extends WorkspacesBaseController {
         newTeam.id,
         workspace.id,
         createdBy,
-        WORKSPACE_ROLES.ADMIN,
+        "admin",
         createdBy
       );
     } catch (error) {

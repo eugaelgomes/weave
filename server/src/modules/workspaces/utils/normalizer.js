@@ -1,5 +1,4 @@
 const { getAvailableOrgNames } = require("@/modules/workspaces/repositories/workspaces.repository");
-const { WORKSPACE_ROLES } = require("@/modules/workspaces/workspace-role-policy");
 
 const PREDEFINED_PROPERTIES = Object.freeze({
   allowPublicNotes: {
@@ -163,8 +162,6 @@ const getPropertiesSchema = () => {
   return JSON.parse(JSON.stringify(PREDEFINED_PROPERTIES));
 };
 
-const validRoles = Object.freeze(Object.values(WORKSPACE_ROLES));
-
 const workspaceDataResponse = (workspace) => {
   return {
     banner_url: workspace.banner_url,
@@ -193,8 +190,6 @@ module.exports = {
   suggestUniqueWorkspaceName,
 
   updateWorkspaceProperties,
-
-  validRoles,
 
   // Workspace data formatter
   workspaceDataResponse,
