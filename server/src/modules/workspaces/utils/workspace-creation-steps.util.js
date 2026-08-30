@@ -1,7 +1,7 @@
-const { normalizeOrganizationName } = require("@/modules/workspaces/normalizer");
+const { normalizeWorkspaceName } = require("@/modules/workspaces/normalizer");
 
 const STEP_ONE = "step_1";
-const ORGANIZATION_BUSINESS_ROLES = Object.freeze([
+const WORKSPACE_BUSINESS_ROLES = Object.freeze([
   "TECHNOLOGY",
   "MARKETING",
   "BUSINESS",
@@ -17,22 +17,22 @@ const COUNTRY_PATTERN = /^[A-Z]{2}$/;
 
 /**
  * @typedef {Object} StepOnePayload
- * @property {string} org_name
+ * @property {string} workspace_name
  * @property {string} unique_name
  * @property {string} [description]
  * @property {string|null} [logo_url]
- * @property {string} organization_role
+ * @property {string} workspace_role
  * @property {string|null} [default_locale]
  * @property {string|null} [country]
  * @property {string|null} [language]
  */
 
-class OrganizationCreationStepsService {
+class WorkspaceCreationStepsService {
   /**
-   * @param {{ organizationsRepository: any }} dependencies
+   * @param {{ workspacesRepository: any }} dependencies
    */
-  constructor({ organizationsRepository }) {
-    this.organizationsRepository = organizationsRepository;
+  constructor({ workspacesRepository }) {
+    this.workspacesRepository = workspacesRepository;
   }
 
   /**
@@ -40,18 +40,18 @@ class OrganizationCreationStepsService {
    */
   getStepOneMetadata() {
     return {
-      available_roles: [...ORGANIZATION_BUSINESS_ROLES],
+      available_roles: [...WORKSPACE_BUSINESS_ROLES],
       optional_fields: ["description", "logo_url"],
       planned_optional_steps: ["branding_properties", "users", "integrations", "domains"],
       required_fields: [
-        "org_name",
+        "workspace_name",
         "unique_name",
-        "organization_role",
+        "workspace_role",
         "default_locale",
         "country",
         "language",
       ],
-      role_options: [...ORGANIZATION_BUSINESS_ROLES],
+      role_options: [...WORKSPACE_BUSINESS_ROLES],
       step: STEP_ONE,
     };
   }
@@ -134,14 +134,12 @@ class OrganizationCreationStepsService {
    * @returns {Promise<string>}
    */
   async _assertUniqueNameAvailable(uniqueName, currentUniqueName = null) {
-    const normalized = normalizeOrganizationName(uniqueName);
+    const normalized = normalizeWorkspaceName(uniqueName);
     if (!normalized) {
       throw new Error("unique_name is invalid after normalization");
     }
-    const existingNames = await this.organizationsRepository.getAvailableOrgNames(normalized);
-    const normalizedCurrent = currentUniqueName
-      ? normalizeOrganizationName(currentUniqueName)
-      : null;
+    const existingNames = await this.workspacesRepository.getAvailableOrgNames(normalized);
+    const normalizedCurrent = currentUniqueName ? normalizeWorkspaceName(currentUniqueName) : null;
     if (existingNames.includes(normalized) && normalizedCurrent !== normalized) {
       throw new Error("Unique name is already in use");
     }
@@ -150,34 +148,32 @@ class OrganizationCreationStepsService {
 
   /**
    * @param {StepOnePayload} payload
-   * @param {{ unique_name?: string }|null} [currentOrganization]
+   * @param {{ unique_name?: string }|null} [currentWorkspace]
    * @returns {Promise<{
-   *  org_name: string,
+   *  workspace_name: string,
    *  unique_name: string,
    *  logo_url: string|null,
    *  banner_url: string|null,
    *  description: string,
-   *  organization_role: string
+   *  workspace_role: string
    * }>}
    */
-  async validateStepOnePayload(payload, currentOrganization = null) {
-    const orgName = typeof payload.org_name === "string" ? payload.org_name.trim() : "";
+  async validateStepOnePayload(payload, currentWorkspace = null) {
+    const orgName = typeof payload.workspace_name === "string" ? payload.workspace_name.trim() : "";
     const uniqueNameSource =
       typeof payload.unique_name === "string" ? payload.unique_name.trim() : "";
-    const normalizedRole = this._normalizeRole(payload.organization_role);
+    const normalizedRole = this._normalizeRole(payload.workspace_role);
 
-    if (!orgName) throw new Error("org_name is required");
+    if (!orgName) throw new Error("workspace_name is required");
     if (!uniqueNameSource) throw new Error("unique_name is required");
-    if (!normalizedRole) throw new Error("organization_role is required");
-    if (!ORGANIZATION_BUSINESS_ROLES.includes(normalizedRole)) {
-      throw new Error(
-        `organization_role must be one of: ${ORGANIZATION_BUSINESS_ROLES.join(", ")}`
-      );
+    if (!normalizedRole) throw new Error("workspace_role is required");
+    if (!WORKSPACE_BUSINESS_ROLES.includes(normalizedRole)) {
+      throw new Error(`workspace_role must be one of: ${WORKSPACE_BUSINESS_ROLES.join(", ")}`);
     }
 
     const uniqueName = await this._assertUniqueNameAvailable(
       uniqueNameSource,
-      currentOrganization?.unique_name || null
+      currentWorkspace?.unique_name || null
     );
     const defaultLocale = this._normalizeLocale(payload.default_locale);
     const country = this._normalizeCountry(payload.country);
@@ -194,15 +190,15 @@ class OrganizationCreationStepsService {
       description: normalizedDescription || "Type description here...",
       language,
       logo_url: payload.logo_url !== undefined ? payload.logo_url : null,
-      org_name: orgName,
-      organization_role: normalizedRole,
       unique_name: uniqueName,
+      workspace_name: orgName,
+      workspace_role: normalizedRole,
     };
   }
 
   /**
    * @param {Record<string, any>} currentProperties
-   * @param {{org_name: string, unique_name: string, description: string, logo_url: string|null, banner_url: string|null, organization_role: string}} stepData
+   * @param {{workspace_name: string, unique_name: string, description: string, logo_url: string|null, banner_url: string|null, workspace_role: string}} stepData
    * @param {boolean} completed
    * @returns {Record<string, any>}
    */
@@ -216,19 +212,19 @@ class OrganizationCreationStepsService {
         description: stepData.description,
         language: stepData.language,
         logo_url: stepData.logo_url,
-        org_name: stepData.org_name,
-        organization_role: stepData.organization_role,
         unique_name: stepData.unique_name,
+        workspace_name: stepData.workspace_name,
+        workspace_role: stepData.workspace_role,
       },
       creation_steps: this._buildCreationStepState(completed),
       language: stepData.language,
-      organization_role: stepData.organization_role,
+      workspace_role: stepData.workspace_role,
     };
   }
 }
 
 module.exports = {
-  ORGANIZATION_BUSINESS_ROLES,
-  OrganizationCreationStepsService,
   STEP_ONE,
+  WORKSPACE_BUSINESS_ROLES,
+  WorkspaceCreationStepsService,
 };

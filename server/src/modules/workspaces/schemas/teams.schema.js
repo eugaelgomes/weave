@@ -103,11 +103,11 @@ const teamResponseSchema = z
     created_by: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
     id: z.string(),
-    organization_id: z.string(),
     parent_area_id: z.string().nullable().optional(),
     properties: z.any().optional(),
     slug: z.string().nullable().optional(),
     updated_at: z.union([z.string(), z.date()]).optional(),
+    workspace_id: z.string(),
   })
   .transform((team) => ({
     active: team.active,
@@ -116,11 +116,11 @@ const teamResponseSchema = z
     created_by: team.created_by,
     description: team.description,
     id: team.id,
-    organization_id: team.organization_id,
     parent_area_id: team.parent_area_id,
     properties: team.properties || {},
     slug: team.slug,
     updated_at: team.updated_at,
+    workspace_id: team.workspace_id,
   }));
 
 module.exports = {

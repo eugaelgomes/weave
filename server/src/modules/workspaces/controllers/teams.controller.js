@@ -1,27 +1,27 @@
 const teamsRepository = require("@/modules/workspaces/repositories/teams.repository");
 const { fromUnknown } = require("@/errors");
-const OrganizationsBaseController = require("./base-controller");
+const WorkspacesBaseController = require("./base-controller");
 
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-const { normalizeOrganizationName } = require("../normalizer");
-const { ORG_ROLES } = require("@/modules/workspaces/workspace-role-policy");
+const { normalizeWorkspaceName } = require("../normalizer");
+const { WORKSPACE_ROLES } = require("@/modules/workspaces/workspace-role-policy");
 const { teamResponseSchema } = require("../schemas/teams.schema");
 const { z } = require("zod");
 
-class OrganizationAreasController extends OrganizationsBaseController {
+class WorkspaceAreasController extends WorkspacesBaseController {
   constructor() {
     super();
     this.teamsRepository = teamsRepository;
   }
 
-  /** Role in `organization_members` (aligned with permission engine). */
+  /** Role in `workspace_members` (aligned with permission engine). */
   _canManageOrgStructure(workspace) {
-    return this._orgRoleHasPermission(workspace, this._orgPermissions.MANAGE_AREAS);
+    return this._workspaceRoleHasPermission(workspace, this._workspacePermissions.MANAGE_AREAS);
   }
 
   async _userIsAreaManager(workspace, areaId, userId) {
     const member = await this.teamsRepository.getAreaMember(areaId, workspace.id, userId);
-    return member?.role === ORG_ROLES.ADMIN;
+    return member?.role === WORKSPACE_ROLES.ADMIN;
   }
 
   /**
@@ -46,11 +46,11 @@ class OrganizationAreasController extends OrganizationsBaseController {
       return null;
     }
 
-    return normalizeOrganizationName(baseValue);
+    return normalizeWorkspaceName(baseValue);
   }
 
-  async _ensureUniqueSlug(organizationId, slug, currentSlug = null) {
-    const existing = await this.teamsRepository.getMatchingSlugs(organizationId, slug);
+  async _ensureUniqueSlug(workspaceId, slug, currentSlug = null) {
+    const existing = await this.teamsRepository.getMatchingSlugs(workspaceId, slug);
 
     const filtered = currentSlug ? existing.filter((value) => value !== currentSlug) : existing;
 
@@ -76,9 +76,9 @@ class OrganizationAreasController extends OrganizationsBaseController {
     return properties;
   }
 
-  async _getParentArea(organizationId, parentAreaId) {
+  async _getParentArea(workspaceId, parentAreaId) {
     if (!parentAreaId) return null;
-    const parent = await this.teamsRepository.getAreaById(parentAreaId, organizationId);
+    const parent = await this.teamsRepository.getAreaById(parentAreaId, workspaceId);
     if (!parent) {
       throw new Error("Parent team not found");
     }
@@ -90,18 +90,18 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const teams = await this.teamsRepository.listOrganizationAreas(workspace.id);
+      const teams = await this.teamsRepository.listWorkspaceAreas(workspace.id);
 
       res.status(200).json({
         count: teams.length,
         data: z.array(teamResponseSchema).parse(teams),
-        organization_id: workspace.id,
         status: "OK",
+        workspace_id: workspace.id,
       });
     } catch (error) {
       console.error("Error listing teams:", error);
@@ -114,7 +114,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -138,7 +138,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -165,7 +165,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
             userId
           );
 
-          if (!member || member.role !== ORG_ROLES.ADMIN) {
+          if (!member || member.role !== WORKSPACE_ROLES.ADMIN) {
             return res.status(403).json({
               error: "Only team admins of the parent team can create sub-teams",
               success: false,
@@ -187,10 +187,10 @@ class OrganizationAreasController extends OrganizationsBaseController {
         areaName: area_name.trim(),
         createdBy: userId,
         description: description?.trim() || "Team description here",
-        organizationId: workspace.id,
         parentAreaId: parent_area_id || null,
         properties: normalizedProperties,
         slug: uniqueSlug,
+        workspaceId: workspace.id,
       });
 
       res.status(201).json({
@@ -209,7 +209,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -294,7 +294,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -334,7 +334,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -364,7 +364,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -379,7 +379,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         return;
       }
 
-      const { user_id, role = ORG_ROLES.MEMBER } = req.body;
+      const { user_id, role = WORKSPACE_ROLES.MEMBER } = req.body;
       const normalizedRole = role.trim().toUpperCase();
 
       const targetUser = await SearchUsersRepository.findById(user_id);
@@ -387,7 +387,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         return res.status(404).json({ error: "User not found", success: false });
       }
 
-      const isMember = await this.organizationsRepository.isMember(workspace.id, user_id);
+      const isMember = await this.workspacesRepository.isMember(workspace.id, user_id);
       if (!isMember) {
         return res.status(400).json({
           error: "User must be an workspace member",
@@ -431,7 +431,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -482,7 +482,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -526,4 +526,4 @@ class OrganizationAreasController extends OrganizationsBaseController {
   }
 }
 
-module.exports = new OrganizationAreasController();
+module.exports = new WorkspaceAreasController();

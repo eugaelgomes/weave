@@ -22,7 +22,7 @@ const { validateImageMimeAndSize } = require("@/utils/middlewares.util");
 const { validate } = require("@/middlewares/validation/validate");
 
 // Schemas
-const { createOrganizationSchema, updateOrganizationSchema } = require("./schemas/base.schema");
+const { createWorkspaceSchema, updateWorkspaceSchema } = require("./schemas/base.schema");
 const {
   inviteMemberSchema,
   inviteMembersBulkSchema,
@@ -48,20 +48,16 @@ router.use(verifyToken);
 router.get(
   "/my-workspaces",
   highTrafficLimiter,
-  userDataController.listMyOrganizations.bind(userDataController)
+  userDataController.listMyWorkspaces.bind(userDataController)
 );
 
 router.post(
   "/switch",
   standardTrafficLimiter,
-  userDataController.switchOrganization.bind(userDataController)
+  userDataController.switchWorkspace.bind(userDataController)
 );
 
-router.get(
-  "/",
-  highTrafficLimiter,
-  workspacesController.getOrganization.bind(workspacesController)
-);
+router.get("/", highTrafficLimiter, workspacesController.getWorkspace.bind(workspacesController));
 
 router.get(
   "/domains",
@@ -157,7 +153,7 @@ router.delete(
 router.post(
   "/",
   structuralLimiter,
-  validate(createOrganizationSchema, "body"),
+  validate(createWorkspaceSchema, "body"),
   workspaceSettingsController.saveStepOne.bind(workspaceSettingsController)
 );
 
@@ -183,18 +179,18 @@ router.post(
 router.put(
   "/",
   structuralLimiter,
-  validate(updateOrganizationSchema, "body"),
-  workspacesController.updateOrganization.bind(workspacesController)
+  validate(updateWorkspaceSchema, "body"),
+  workspacesController.updateWorkspace.bind(workspacesController)
 );
 
 router.patch(
   "/properties",
-  workspacesController.updateOrganizationProperties.bind(workspacesController)
+  workspacesController.updateWorkspaceProperties.bind(workspacesController)
 );
 
-router.delete("/", workspacesController.deleteOrganization.bind(workspacesController));
+router.delete("/", workspacesController.deleteWorkspace.bind(workspacesController));
 
-router.post("/restore", workspacesController.restoreOrganization.bind(workspacesController));
+router.post("/restore", workspacesController.restoreWorkspace.bind(workspacesController));
 
 // ------ Roles Routes (RBAC) ------
 router.get(
@@ -270,7 +266,7 @@ router.put(
 
 router.get(
   "/workspace-projects",
-  workspacesController.organizationProjects.bind(workspacesController)
+  workspacesController.workspaceProjects.bind(workspacesController)
 );
 
 module.exports = router;

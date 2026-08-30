@@ -6,7 +6,7 @@ const CreateUsersRepository = require("@/modules/users/repositories/create-users
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 
-const OrganizationsRepository = require("@/modules/workspaces/repositories/workspaces.repository");
+const WorkspacesRepository = require("@/modules/workspaces/repositories/workspaces.repository");
 const queueController = require("@theweave/database");
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
@@ -24,8 +24,8 @@ class CreateUsersService {
           throw new Error("CORPORATE_DOMAIN_INVITE_REQUIRED");
         }
 
-        const isMember = await OrganizationsRepository.getMembershipRole(
-          domainInfo.organization_id,
+        const isMember = await WorkspacesRepository.getMembershipRole(
+          domainInfo.workspace_id,
           existingPendingUser.user_id
         );
         if (!isMember) {
@@ -145,7 +145,7 @@ class CreateUsersService {
     });
 
     // Auto-provision personal workspace
-    await OrganizationsRepository.autoProvisionPersonalWorkspace(
+    await WorkspacesRepository.autoProvisionPersonalWorkspace(
       result.userId,
       result.userName,
       locale,

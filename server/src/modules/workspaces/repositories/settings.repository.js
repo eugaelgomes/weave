@@ -1,52 +1,52 @@
 const { executeQuery } = require("@/database/connection");
 
-class OrganizationSettingsRepository {
-  async getSettings(organizationId) {
+class WorkspaceSettingsRepository {
+  async getSettings(workspaceId) {
     const query = `
       SELECT *
-      FROM organization_settings
-      WHERE organization_id = $1 AND deleted = false
+      FROM workspace_settings
+      WHERE workspace_id = $1 AND deleted = false
     `;
-    const rows = await executeQuery(query, [organizationId]);
+    const rows = await executeQuery(query, [workspaceId]);
     return rows[0] || null;
   }
 
-  async createDefaultSettings(organizationId, client = null) {
+  async createDefaultSettings(workspaceId, client = null) {
     const query = `
-      INSERT INTO organization_settings (organization_id)
+      INSERT INTO workspace_settings (workspace_id)
       VALUES ($1)
       RETURNING *
     `;
     const exec = client ? client.query.bind(client) : executeQuery;
-    const res = await exec(query, [organizationId]);
-    return res.rows ? res.rows[0] : (Array.isArray(res) ? res[0] : res);
+    const res = await exec(query, [workspaceId]);
+    return res.rows ? res.rows[0] : Array.isArray(res) ? res[0] : res;
   }
 
-  async updateSAML(organizationId, samlData) {
+  async updateSAML(workspaceId, samlData) {
     const query = `
-      UPDATE organization_settings
+      UPDATE workspace_settings
       SET saml = $2::jsonb, updated_at = NOW()
-      WHERE organization_id = $1 AND deleted = false
+      WHERE workspace_id = $1 AND deleted = false
       RETURNING *
     `;
-    const rows = await executeQuery(query, [organizationId, JSON.stringify(samlData)]);
+    const rows = await executeQuery(query, [workspaceId, JSON.stringify(samlData)]);
     return rows[0];
   }
 
-  async updateDomains(organizationId, domainsData) {
+  async updateDomains(workspaceId, domainsData) {
     const query = `
-      UPDATE organization_settings
+      UPDATE workspace_settings
       SET domains = $2::jsonb, updated_at = NOW()
-      WHERE organization_id = $1 AND deleted = false
+      WHERE workspace_id = $1 AND deleted = false
       RETURNING *
     `;
-    const rows = await executeQuery(query, [organizationId, JSON.stringify(domainsData)]);
+    const rows = await executeQuery(query, [workspaceId, JSON.stringify(domainsData)]);
     return rows[0];
   }
 
-  async updateSettings(organizationId, settingsData) {
+  async updateSettings(workspaceId, settingsData) {
     const keys = [];
-    const values = [organizationId];
+    const values = [workspaceId];
     let i = 2;
 
     const allowedFields = ["saml", "domains", "tracing", "branding", "preferences", "integrations"];
@@ -59,12 +59,12 @@ class OrganizationSettingsRepository {
       }
     }
 
-    if (keys.length === 0) return this.getSettings(organizationId);
+    if (keys.length === 0) return this.getSettings(workspaceId);
 
     const query = `
-      UPDATE organization_settings
+      UPDATE workspace_settings
       SET ${keys.join(", ")}, updated_at = NOW()
-      WHERE organization_id = $1 AND deleted = false
+      WHERE workspace_id = $1 AND deleted = false
       RETURNING *
     `;
 
@@ -75,7 +75,7 @@ class OrganizationSettingsRepository {
   async findByDomain(domainName) {
     const query = `
       SELECT *
-      FROM organization_settings
+      FROM workspace_settings
       WHERE deleted = false
         AND EXISTS (
           SELECT 1
@@ -97,7 +97,7 @@ class OrganizationSettingsRepository {
   async isDomainRestricted(domainName) {
     const query = `
       SELECT 1
-      FROM organization_settings
+      FROM workspace_settings
       WHERE deleted = false
         AND EXISTS (
           SELECT 1
@@ -117,20 +117,13 @@ class OrganizationSettingsRepository {
   }
 
   async updateCreationIdentityStep(
-    organization_id,
+    workspace_id,
     user_id,
-    {
-      org_name,
-      unique_name,
-      logo_url,
-      banner_url,
-      description,
-      country,
-    }
+    { workspace_name, unique_name, logo_url, banner_url, description, country }
   ) {
     const query = `
       UPDATE workspaces o
-      SET org_name = $3,
+      SET workspace_name = $3,
           unique_name = $4,
           logo_url = $5,
           banner_url = $6,
@@ -144,8 +137,8 @@ class OrganizationSettingsRepository {
         AND (
           o.user_id = $2
           OR EXISTS (
-            SELECT 1 FROM organization_members om
-            WHERE om.organization_id = o.id
+            SELECT 1 FROM workspace_members om
+            WHERE om.workspace_id = o.id
               AND om.user_id = $2
               
               AND om.deleted = false
@@ -155,7 +148,7 @@ class OrganizationSettingsRepository {
       RETURNING
         id,
         user_id,
-        org_name,
+        workspace_name,
         unique_name,
         logo_url,
         banner_url,
@@ -169,9 +162,9 @@ class OrganizationSettingsRepository {
     `;
 
     const results = await executeQuery(query, [
-      organization_id,
+      workspace_id,
       user_id,
-      org_name,
+      workspace_name,
       unique_name,
       logo_url,
       banner_url,
@@ -181,11 +174,7 @@ class OrganizationSettingsRepository {
     return results[0] || null;
   }
 
-  async updateCreationConfigurationStep(
-    organization_id,
-    user_id,
-    { plan_id }
-  ) {
+  async updateCreationConfigurationStep(workspace_id, user_id, { plan_id }) {
     const query = `
       UPDATE workspaces o
       SET plan_id = $3,
@@ -194,8 +183,8 @@ class OrganizationSettingsRepository {
         AND (
           o.user_id = $2
           OR EXISTS (
-            SELECT 1 FROM organization_members om
-            WHERE om.organization_id = o.id
+            SELECT 1 FROM workspace_members om
+            WHERE om.workspace_id = o.id
               AND om.user_id = $2
               
               AND om.deleted = false
@@ -205,7 +194,7 @@ class OrganizationSettingsRepository {
       RETURNING
         id,
         user_id,
-        org_name,
+        workspace_name,
         unique_name,
         logo_url,
         banner_url,
@@ -218,11 +207,7 @@ class OrganizationSettingsRepository {
         deleted;
     `;
 
-    const results = await executeQuery(query, [
-      organization_id,
-      user_id,
-      plan_id,
-    ]);
+    const results = await executeQuery(query, [workspace_id, user_id, plan_id]);
     return results[0] || null;
   }
 
@@ -286,5 +271,4 @@ class OrganizationSettingsRepository {
   }
 }
 
-module.exports = new OrganizationSettingsRepository();
-
+module.exports = new WorkspaceSettingsRepository();

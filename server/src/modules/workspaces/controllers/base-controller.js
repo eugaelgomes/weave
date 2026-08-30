@@ -2,11 +2,11 @@ const { AppError, fromUnknown, ERROR_CODES } = require("@/errors");
 const spacesService = require("@/services/storage.service");
 const teamsRepository = require("@/modules/workspaces/repositories/teams.repository");
 const {
-  normalizeOrganizationName,
-  generateUniqueOrganizationName,
-  orgDataResponse,
+  normalizeWorkspaceName,
+  generateUniqueWorkspaceName,
+  workspaceDataResponse,
 } = require("../utils/normalizer");
-const { organizationResponseSchema } = require("../schemas/base.schema");
+const { workspaceResponseSchema } = require("../schemas/base.schema");
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 /**
  * @typedef {import('express').Request} Request
@@ -16,21 +16,21 @@ const baseRepository = require("@/modules/workspaces/repositories/base.repositor
  * @property {Object} [user]
  * @property {string} user.userId
  *
- * @typedef {Object} OrganizationData
- * @property {string} org_name
+ * @typedef {Object} WorkspaceData
+ * @property {string} workspace_name
  */
 
 const {
-  orgRoleHasPermission,
-  ORG_PERMISSIONS,
+  workspaceRoleHasPermission,
+  WORKSPACE_PERMISSIONS,
 } = require("@/modules/workspaces/workspace-role-policy");
 
 const DOMAIN_REGEX =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
 
-class OrganizationsBaseController {
+class WorkspacesBaseController {
   constructor() {
-    this.organizationsRepository = baseRepository;
+    this.workspacesRepository = baseRepository;
     this.baseRepository = baseRepository;
   }
 
@@ -54,13 +54,13 @@ class OrganizationsBaseController {
    * @param {string} userId - User ID
    * @returns {Promise<Object|null>} Workspace data with injected `member_role` or null if not found
    */
-  async _getUserOrganization(userId) {
-    return this.baseRepository.getActiveOrganizationWithMembership(userId);
+  async _getUserWorkspace(userId) {
+    return this.baseRepository.getActiveWorkspaceWithMembership(userId);
   }
 
   /**
-   * @param {Object|null} workspace — result of `_getUserOrganization` (includes `member_role`)
-   * @param {string} permission — `ORG_PERMISSIONS.*`
+   * @param {Object|null} workspace — result of `_getUserWorkspace` (includes `member_role`)
+   * @param {string} permission — `WORKSPACE_PERMISSIONS.*`
    * @param {Response} res
    * @returns {boolean} true if authorized
    */
@@ -73,9 +73,9 @@ class OrganizationsBaseController {
       return false;
     }
     const role = workspace.member_role;
-    if (!role || !orgRoleHasPermission(role, permission)) {
+    if (!role || !workspaceRoleHasPermission(role, permission)) {
       res.status(403).json({
-        code: "ORG_FORBIDDEN",
+        code: "WORKSPACE_FORBIDDEN",
         error: "Insufficient workspace permissions",
         success: false,
       });
@@ -99,9 +99,9 @@ class OrganizationsBaseController {
       return false;
     }
     const role = workspace.member_role;
-    if (!role || !permissions.some((p) => orgRoleHasPermission(role, p))) {
+    if (!role || !permissions.some((p) => workspaceRoleHasPermission(role, p))) {
       res.status(403).json({
-        code: "ORG_FORBIDDEN",
+        code: "WORKSPACE_FORBIDDEN",
         error: "Insufficient workspace permissions",
         success: false,
       });
@@ -111,36 +111,36 @@ class OrganizationsBaseController {
   }
 
   /** Exposes constants for controllers that need compound checks. */
-  get _orgPermissions() {
-    return ORG_PERMISSIONS;
+  get _workspacePermissions() {
+    return WORKSPACE_PERMISSIONS;
   }
 
   /**
-   * Role in `organization_members` (via getActiveOrganizationWithMembership).
+   * Role in `workspace_members` (via getActiveWorkspaceWithMembership).
    * @param {Object} workspace - Workspace object
    * @param {string} permissionKey - Key of the permission (e.g. MANAGE_MEMBERS)
    * @param {Response} [res] - Optional Express response object for automatic 403
    * @returns {boolean} True if permitted, false otherwise
    */
-  _orgRoleHasPermission(workspace, permission) {
+  _workspaceRoleHasPermission(workspace, permission) {
     const role = workspace?.member_role;
     if (!role || !permission) return false;
-    return orgRoleHasPermission(role, permission);
+    return workspaceRoleHasPermission(role, permission);
   }
 
   /**
    * Validates the workspace's required fields.
-   * @param {Partial<OrganizationData>} data
+   * @param {Partial<WorkspaceData>} data
    * @throws {Error} Throws an error if validation fails.
    */
   _validateRequiredFields(data) {
-    if (!data.org_name || typeof data.org_name !== "string") {
+    if (!data.workspace_name || typeof data.workspace_name !== "string") {
       throw new Error("Workspace name is required");
     }
-    if (data.org_name.trim().length < 2) {
+    if (data.workspace_name.trim().length < 2) {
       throw new Error("Workspace name must be at least 2 characters long");
     }
-    if (data.org_name.length > 100) {
+    if (data.workspace_name.length > 100) {
       throw new Error("Workspace name must be at most 100 characters long");
     }
   }
@@ -180,13 +180,13 @@ class OrganizationsBaseController {
     return normalized;
   }
 }
-module.exports = OrganizationsBaseController;
+module.exports = WorkspacesBaseController;
 
 /**
  * Controller for workspace management.
  * Handles workspace lifecycle, branding assets, and workspace projects.
  */
-class WorkspacesController extends OrganizationsBaseController {
+class WorkspacesController extends WorkspacesBaseController {
   constructor() {
     super();
     this.teamsRepository = teamsRepository;
@@ -219,23 +219,23 @@ class WorkspacesController extends OrganizationsBaseController {
    */
   async _createDefaultTeam(workspace, createdBy) {
     const defaultName = "Team Central";
-    const slugBase = workspace.unique_name || normalizeOrganizationName(defaultName);
+    const slugBase = workspace.unique_name || normalizeWorkspaceName(defaultName);
     try {
       const uniqueSlug = await this._generateUniqueTeamSlug(workspace.id, slugBase);
       const newTeam = await this.teamsRepository.createArea({
         areaName: defaultName,
         createdBy,
-        description: `Main team for workspace ${workspace.org_name}`,
-        organizationId: workspace.id,
+        description: `Main team for workspace ${workspace.workspace_name}`,
         parentAreaId: null,
         properties: { system: true },
         slug: uniqueSlug || `${slugBase}-${workspace.id}`,
+        workspaceId: workspace.id,
       });
       await this.teamsRepository.addAreaMember(
         newTeam.id,
         workspace.id,
         createdBy,
-        ORG_ROLES.ADMIN,
+        WORKSPACE_ROLES.ADMIN,
         createdBy
       );
     } catch (error) {
@@ -246,13 +246,13 @@ class WorkspacesController extends OrganizationsBaseController {
 
   // ─── Workspace Lifecycle ───────────────────────────────────────────────────
 
-  async createOrganization(req, res, next) {
+  async createWorkspace(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const existingOrg = await this._getUserOrganization(userId);
-      if (existingOrg) {
+      const existingWorkspace = await this._getUserWorkspace(userId);
+      if (existingWorkspace) {
         return res.status(400).json({
           error: "User already has a workspace. Use PUT to update it.",
           success: false,
@@ -260,7 +260,7 @@ class WorkspacesController extends OrganizationsBaseController {
       }
 
       const {
-        org_name,
+        workspace_name,
         unique_name: providedUniqueName,
         logo_url,
         banner_url,
@@ -270,18 +270,18 @@ class WorkspacesController extends OrganizationsBaseController {
 
       let unique_name;
       if (providedUniqueName) {
-        unique_name = normalizeOrganizationName(providedUniqueName);
+        unique_name = normalizeWorkspaceName(providedUniqueName);
         if (!unique_name) throw new Error("Provided unique name is invalid after normalization");
-        const existingNames = await this.organizationsRepository.getAvailableOrgNames(unique_name);
+        const existingNames = await this.workspacesRepository.getAvailableOrgNames(unique_name);
         if (existingNames.includes(unique_name))
           throw new Error(`Unique name '${unique_name}' is already in use`);
       } else {
-        unique_name = await generateUniqueOrganizationName(org_name);
+        unique_name = await generateUniqueWorkspaceName(workspace_name);
       }
 
-      const newOrganization = await this.organizationsRepository.createOrgs(
+      const newWorkspace = await this.workspacesRepository.createWorkspaces(
         userId,
-        org_name.trim(),
+        workspace_name.trim(),
         unique_name,
         logo_url || null,
         banner_url || null,
@@ -292,10 +292,10 @@ class WorkspacesController extends OrganizationsBaseController {
         settings || {}
       );
 
-      await this._createDefaultTeam(newOrganization, userId);
+      await this._createDefaultTeam(newWorkspace, userId);
 
       res.status(201).json({
-        data: newOrganization,
+        data: newWorkspace,
         message: "Workspace created successfully",
         status: "OK",
         success: true,
@@ -306,12 +306,12 @@ class WorkspacesController extends OrganizationsBaseController {
     }
   }
 
-  async getOrganization(req, res) {
+  async getWorkspace(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({
           error: "Workspace not found",
@@ -320,29 +320,29 @@ class WorkspacesController extends OrganizationsBaseController {
         });
       }
 
-      const formatted = organizationResponseSchema.parse(workspace);
+      const formatted = workspaceResponseSchema.parse(workspace);
 
-      res.status(200).json({ organization_data: formatted, status: "OK" });
+      res.status(200).json({ status: "OK", workspace_data: formatted });
     } catch (error) {
       console.error("Error getting workspace:", error);
       res.status(500).json({ error: "Error getting workspace", success: false });
     }
   }
 
-  async updateOrganization(req, res, next) {
+  async updateWorkspace(req, res, next) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const { org_name, unique_name, logo_url, banner_url, description, settings } = req.body;
+      const { workspace_name, unique_name, logo_url, banner_url, description, settings } = req.body;
 
-      const currentOrg = await this._getUserOrganization(userId);
-      if (!currentOrg)
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace)
         return res.status(404).json({ error: "Workspace not found", success: false });
 
       const body = req.body || {};
       const touchesBrand = [
-        "org_name",
+        "workspace_name",
         "unique_name",
         "logo_url",
         "banner_url",
@@ -352,51 +352,50 @@ class WorkspacesController extends OrganizationsBaseController {
 
       if (
         touchesBrand &&
-        !this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_BRAND, res)
+        !this._ensureOrgPermission(currentWorkspace, this._workspacePermissions.MANAGE_BRAND, res)
       )
         return;
 
-      let updatedUniqueName = currentOrg.unique_name;
+      let updatedUniqueName = currentWorkspace.unique_name;
 
-      if (org_name && org_name !== currentOrg.org_name) {
-        updatedUniqueName = await generateUniqueOrganizationName(org_name);
+      if (workspace_name && workspace_name !== currentWorkspace.workspace_name) {
+        updatedUniqueName = await generateUniqueWorkspaceName(workspace_name);
       }
 
-      if (unique_name && unique_name !== currentOrg.unique_name) {
-        const normalizedName = normalizeOrganizationName(unique_name);
-        const existingNames =
-          await this.organizationsRepository.getAvailableOrgNames(normalizedName);
+      if (unique_name && unique_name !== currentWorkspace.unique_name) {
+        const normalizedName = normalizeWorkspaceName(unique_name);
+        const existingNames = await this.workspacesRepository.getAvailableOrgNames(normalizedName);
         if (existingNames.includes(normalizedName))
           throw new Error("Unique name is already in use");
         updatedUniqueName = normalizedName;
       }
 
       const updatedSettings = settings
-        ? { ...currentOrg.settings, ...settings }
-        : currentOrg.settings;
+        ? { ...currentWorkspace.settings, ...settings }
+        : currentWorkspace.settings;
 
-      const updatedOrg = await this.organizationsRepository.updateOrg(
-        currentOrg.id,
+      const updatedWorkspace = await this.workspacesRepository.updateWorkspace(
+        currentWorkspace.id,
         userId,
-        org_name?.trim() || currentOrg.org_name,
+        workspace_name?.trim() || currentWorkspace.workspace_name,
         updatedUniqueName,
-        logo_url !== undefined ? logo_url : currentOrg.logo_url,
-        banner_url !== undefined ? banner_url : currentOrg.banner_url,
-        description !== undefined ? description?.trim() : currentOrg.description,
+        logo_url !== undefined ? logo_url : currentWorkspace.logo_url,
+        banner_url !== undefined ? banner_url : currentWorkspace.banner_url,
+        description !== undefined ? description?.trim() : currentWorkspace.description,
         updatedSettings,
-        currentOrg.deleted
+        currentWorkspace.deleted
       );
 
-      if (!updatedOrg) {
+      if (!updatedWorkspace) {
         return res.status(403).json({
-          code: "ORG_FORBIDDEN",
+          code: "WORKSPACE_FORBIDDEN",
           error: "Insufficient permissions to update workspace",
           success: false,
         });
       }
 
       res.status(200).json({
-        data: updatedOrg,
+        data: updatedWorkspace,
         message: "Workspace updated successfully",
         status: "OK",
         success: true,
@@ -410,46 +409,52 @@ class WorkspacesController extends OrganizationsBaseController {
     }
   }
 
-  async updateOrganizationProperties(req, res) {
+  async updateWorkspaceProperties(req, res) {
     return res.status(410).json({
       error: "Workspace properties column has been removed. Use workspace settings fields instead.",
       success: false,
     });
   }
 
-  async deleteOrganization(req, res) {
+  async deleteWorkspace(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const currentOrg = await this._getUserOrganization(userId);
-      if (!currentOrg)
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace)
         return res.status(404).json({ error: "Workspace not found", success: false });
 
-      if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_ORG_LIFECYCLE, res))
+      if (
+        !this._ensureOrgPermission(
+          currentWorkspace,
+          this._workspacePermissions.MANAGE_ORG_LIFECYCLE,
+          res
+        )
+      )
         return;
 
-      const deletedOrg = await this.organizationsRepository.updateOrg(
-        currentOrg.id,
+      const deletedWorkspace = await this.workspacesRepository.updateWorkspace(
+        currentWorkspace.id,
         userId,
-        currentOrg.org_name,
-        currentOrg.unique_name,
-        currentOrg.logo_url,
-        currentOrg.banner_url,
-        currentOrg.description,
-        currentOrg.settings,
+        currentWorkspace.workspace_name,
+        currentWorkspace.unique_name,
+        currentWorkspace.logo_url,
+        currentWorkspace.banner_url,
+        currentWorkspace.description,
+        currentWorkspace.settings,
         true
       );
 
-      if (!deletedOrg)
+      if (!deletedWorkspace)
         return res.status(403).json({
-          code: "ORG_FORBIDDEN",
+          code: "WORKSPACE_FORBIDDEN",
           error: "Insufficient permissions to delete workspace",
           success: false,
         });
 
       res.status(200).json({
-        data: deletedOrg,
+        data: deletedWorkspace,
         message: "Workspace deleted successfully",
         status: "OK",
         success: true,
@@ -460,27 +465,36 @@ class WorkspacesController extends OrganizationsBaseController {
     }
   }
 
-  async restoreOrganization(req, res) {
+  async restoreWorkspace(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspaces = await this.organizationsRepository.getOrgsByUserId(userId);
-      const workspace = workspaces.find((org) => org.deleted);
+      const workspaces = await this.workspacesRepository.getWorkspacesByUserId(userId);
+      const workspace = workspaces.find((workspace) => workspace.deleted);
 
       if (!workspace)
         return res.status(404).json({ error: "No deleted workspace found", success: false });
 
-      const memberRole = await this.organizationsRepository.getMembershipRole(workspace.id, userId);
-      const orgWithRole = { ...workspace, member_role: memberRole || ORG_ROLES.SUPER_ADMIN };
+      const memberRole = await this.workspacesRepository.getMembershipRole(workspace.id, userId);
+      const workspaceWithRole = {
+        ...workspace,
+        member_role: memberRole || WORKSPACE_ROLES.SUPER_ADMIN,
+      };
 
-      if (!this._ensureOrgPermission(orgWithRole, this._orgPermissions.MANAGE_ORG_LIFECYCLE, res))
+      if (
+        !this._ensureOrgPermission(
+          workspaceWithRole,
+          this._workspacePermissions.MANAGE_ORG_LIFECYCLE,
+          res
+        )
+      )
         return;
 
-      const restoredOrg = await this.organizationsRepository.updateOrg(
+      const restoredWorkspace = await this.workspacesRepository.updateWorkspace(
         workspace.id,
         userId,
-        workspace.org_name,
+        workspace.workspace_name,
         workspace.unique_name,
         workspace.logo_url,
         workspace.banner_url,
@@ -489,15 +503,15 @@ class WorkspacesController extends OrganizationsBaseController {
         false
       );
 
-      if (!restoredOrg)
+      if (!restoredWorkspace)
         return res.status(403).json({
-          code: "ORG_FORBIDDEN",
+          code: "WORKSPACE_FORBIDDEN",
           error: "Insufficient permissions to restore workspace",
           success: false,
         });
 
       res.status(200).json({
-        data: restoredOrg,
+        data: restoredWorkspace,
         message: "Workspace restored successfully",
         status: "OK",
         success: true,
@@ -516,27 +530,30 @@ class WorkspacesController extends OrganizationsBaseController {
       if (!userId) return;
       if (!req.file) return res.status(400).json({ error: "No file was uploaded", success: false });
 
-      const currentOrg = await this._getUserOrganization(userId);
-      if (!currentOrg)
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace)
         return res.status(404).json({ error: "Workspace not found", success: false });
-      if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_BRAND, res)) return;
+      if (
+        !this._ensureOrgPermission(currentWorkspace, this._workspacePermissions.MANAGE_BRAND, res)
+      )
+        return;
 
-      const result = await spacesService.uploadOrganizationLogo(
+      const result = await spacesService.uploadWorkspaceLogo(
         req.file.buffer,
         req.file.mimetype,
-        currentOrg.id
+        currentWorkspace.id
       );
       if (!result.success)
         return res.status(500).json({ error: "Error saving logo", success: false });
 
-      const updatedOrg = await this.organizationsRepository.updateOrgLogo(
-        currentOrg.id,
+      const updatedWorkspace = await this.workspacesRepository.updateWorkspaceLogo(
+        currentWorkspace.id,
         result.key,
         userId
       );
-      if (!updatedOrg)
+      if (!updatedWorkspace)
         return res.status(403).json({
-          code: "ORG_FORBIDDEN",
+          code: "WORKSPACE_FORBIDDEN",
           error: "Insufficient permissions to update logo",
           success: false,
         });
@@ -544,7 +561,7 @@ class WorkspacesController extends OrganizationsBaseController {
       res.status(200).json({
         data: {
           upload: { filename: result.fileName, path: result.key, size: result.size },
-          workspace: orgDataResponse(updatedOrg),
+          workspace: workspaceDataResponse(updatedWorkspace),
         },
         message: "Logo updated successfully",
         status: "OK",
@@ -562,27 +579,30 @@ class WorkspacesController extends OrganizationsBaseController {
       if (!userId) return;
       if (!req.file) return res.status(400).json({ error: "No file was uploaded", success: false });
 
-      const currentOrg = await this._getUserOrganization(userId);
-      if (!currentOrg)
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace)
         return res.status(404).json({ error: "Workspace not found", success: false });
-      if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_BRAND, res)) return;
+      if (
+        !this._ensureOrgPermission(currentWorkspace, this._workspacePermissions.MANAGE_BRAND, res)
+      )
+        return;
 
-      const result = await spacesService.uploadOrganizationBanner(
+      const result = await spacesService.uploadWorkspaceBanner(
         req.file.buffer,
         req.file.mimetype,
-        currentOrg.id
+        currentWorkspace.id
       );
       if (!result.success)
         return res.status(500).json({ error: "Error saving banner", success: false });
 
-      const updatedOrg = await this.organizationsRepository.updateOrgBanner(
-        currentOrg.id,
+      const updatedWorkspace = await this.workspacesRepository.updateWorkspaceBanner(
+        currentWorkspace.id,
         result.key,
         userId
       );
-      if (!updatedOrg)
+      if (!updatedWorkspace)
         return res.status(403).json({
-          code: "ORG_FORBIDDEN",
+          code: "WORKSPACE_FORBIDDEN",
           error: "Insufficient permissions to update banner",
           success: false,
         });
@@ -590,7 +610,7 @@ class WorkspacesController extends OrganizationsBaseController {
       res.status(200).json({
         data: {
           upload: { filename: result.fileName, path: result.key, size: result.size },
-          workspace: orgDataResponse(updatedOrg),
+          workspace: workspaceDataResponse(updatedWorkspace),
         },
         message: "Banner updated successfully",
         status: "OK",
@@ -603,18 +623,18 @@ class WorkspacesController extends OrganizationsBaseController {
 
   // ─── Projects ─────────────────────────────────────────────────────────────
 
-  async organizationProjects(req, res) {
+  async workspaceProjects(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const currentOrg = await this._getUserOrganization(userId);
-      if (!currentOrg)
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace)
         return res.status(404).json({ error: "Workspace not found", success: false });
 
-      const projects = await this.organizationsRepository.getOrganizationProjects(currentOrg.id);
+      const projects = await this.workspacesRepository.getWorkspaceProjects(currentWorkspace.id);
 
-      res.status(200).json({ organization_id: currentOrg.id, projects, status: "OK" });
+      res.status(200).json({ projects, status: "OK", workspace_id: currentWorkspace.id });
     } catch (error) {
       console.error("Error getting workspace projects:", error);
       res.status(500).json({ error: "Error getting workspace projects", status: "ERROR" });

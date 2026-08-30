@@ -14,7 +14,7 @@ const NOTE_ID_PREFIX = "noteId_";
 const PROJECT_ID_PREFIX = "projectId_";
 const NOTE_COLLAB_TABLE = "note_collaborators";
 const PROJECTS_MEMBERS_TABLE = "project_members";
-const ORGANIZATIONS_MEMBERS_TABLE = "organization_members";
+const WORKSPACES_MEMBERS_TABLE = "workspace_members";
 const PATH_NAMESPACE_PREFIX = "weave-notes/";
 
 const normalizeKey = (key = "") => key.replace(/\/+/g, "/").replace(/^\/+/, "");
@@ -90,12 +90,12 @@ const parseResourceDescriptor = (key) => {
       };
     }
     case "workspaces": {
-      const organizationId = sanitizeId(segments[1]);
-      if (!organizationId) return null;
+      const workspaceId = sanitizeId(segments[1]);
+      if (!workspaceId) return null;
       return {
         key: normalized,
-        organizationId,
         type: "workspace",
+        workspaceId,
       };
     }
     default:
@@ -149,8 +149,8 @@ const hasProjectAccess = async (userId, projectId) => {
   return count > 0;
 };
 
-const hasOrganizationAccess = async (userId, organizationId) => {
-  if (!userId || !organizationId) return false;
+const hasWorkspaceAccess = async (userId, workspaceId) => {
+  if (!userId || !workspaceId) return false;
 
   const query = `
     SELECT 1
@@ -158,8 +158,8 @@ const hasOrganizationAccess = async (userId, organizationId) => {
     WHERE o.id = $1
       AND (
         o.user_id = $2 OR EXISTS (
-          SELECT 1 FROM ${ORGANIZATIONS_MEMBERS_TABLE} om
-          WHERE om.organization_id = o.id
+          SELECT 1 FROM ${WORKSPACES_MEMBERS_TABLE} om
+          WHERE om.workspace_id = o.id
             AND om.user_id = $2
             AND om.deleted = false
         )
@@ -167,7 +167,7 @@ const hasOrganizationAccess = async (userId, organizationId) => {
     LIMIT 1;
   `;
 
-  const count = await rowCount(query, [organizationId, userId]);
+  const count = await rowCount(query, [workspaceId, userId]);
   return count > 0;
 };
 
@@ -199,7 +199,7 @@ const assertFileAccess = async (userId, key) => {
       hasAccess = await hasProjectAccess(normalizedUserId, descriptor.projectId);
       break;
     case "workspace":
-      hasAccess = await hasOrganizationAccess(normalizedUserId, descriptor.organizationId);
+      hasAccess = await hasWorkspaceAccess(normalizedUserId, descriptor.workspaceId);
       break;
     default:
       hasAccess = false;

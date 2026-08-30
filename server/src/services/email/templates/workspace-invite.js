@@ -1,14 +1,14 @@
 const { MailService } = require("@/services/email/config");
 const { buildMailTemplate } = require("@/services/email/mail-template");
 
-async function welcome_message(email, organization_name) {
+async function welcome_message(email, workspace_name) {
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
   try {
     const { html, text } = buildMailTemplate({
       ctaText: "Acessar plataforma",
       ctaUrl: frontendUrl,
-      introLines: [`A organizacao ${organization_name} convidou voce para usar o Weave.`],
+      introLines: [`A organizacao ${workspace_name} convidou voce para usar o Weave.`],
       preheader: "Voce foi convidado(a) para o Weave.",
       subtitle: "Organizacao",
       title: "Convite para o Weave",
@@ -17,7 +17,7 @@ async function welcome_message(email, organization_name) {
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
       html,
-      subject: `Ola, voce foi convidado para o Weave pela ${organization_name}`,
+      subject: `Ola, voce foi convidado para o Weave pela ${workspace_name}`,
       text,
       to: email,
     });

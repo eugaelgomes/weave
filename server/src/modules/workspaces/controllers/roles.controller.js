@@ -1,11 +1,11 @@
 const { fromUnknown } = require("@/errors");
-const OrganizationsBaseController = require("./base-controller");
+const WorkspacesBaseController = require("./base-controller");
 const rolesRepository = require("@/modules/workspaces/repositories/roles.repository");
 const { workspace_permissions_catalog } = require("@/modules/workspaces/permissions-catalog");
 const { roleResponseSchema } = require("../schemas/roles.schema");
 const { z } = require("zod");
 
-class WorkspaceRolesController extends OrganizationsBaseController {
+class WorkspaceRolesController extends WorkspacesBaseController {
   constructor() {
     super();
     this.rolesRepository = rolesRepository;
@@ -16,7 +16,7 @@ class WorkspaceRolesController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -33,7 +33,7 @@ class WorkspaceRolesController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -74,7 +74,7 @@ class WorkspaceRolesController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
@@ -114,7 +114,7 @@ class WorkspaceRolesController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }

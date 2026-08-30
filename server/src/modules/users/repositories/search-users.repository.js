@@ -128,16 +128,16 @@ class SearchUsersRepository extends BaseRepository {
    */
   async searchUsers(searchTerm, searcherUserId) {
     // 1. Identify searcher's active workspaces
-    const orgsQuery = `
-      SELECT DISTINCT organization_id
-      FROM organization_members
+    const workspacesQuery = `
+      SELECT DISTINCT workspace_id
+      FROM workspace_members
       WHERE user_id = $1::uuid
         AND deleted = false
-        AND status = 'ACTIVE'::public.organization_member_status_enum
+        AND status = 'ACTIVE'::public.workspace_member_status_enum
     `;
-    const searcherOrgs = await executeQuery(orgsQuery, [searcherUserId]);
-    const orgIds = searcherOrgs.map((org) => org.organization_id);
-    const hasOrgs = orgIds.length > 0;
+    const searcherWorkspaces = await executeQuery(workspacesQuery, [searcherUserId]);
+    const workspaceIds = searcherWorkspaces.map((workspace) => workspace.workspace_id);
+    const hasWorkspaces = workspaceIds.length > 0;
 
     let usersQuery = `
       SELECT u.user_id, u.username, u.name, u.email, u.avatar_url
@@ -147,26 +147,26 @@ class SearchUsersRepository extends BaseRepository {
         AND u.private_profile = false
     `;
 
-    // 2. Isolate results: if no orgs, return org-less users
-    // If has orgs, return users within the same orgs
-    if (!hasOrgs) {
+    // 2. Isolate results: if no workspaces, return workspace-less users
+    // If has workspaces, return users within the same workspaces
+    if (!hasWorkspaces) {
       usersQuery += `
         AND NOT EXISTS (
-          SELECT 1 FROM organization_members om
+          SELECT 1 FROM workspace_members om
           WHERE om.user_id = u.user_id
             AND om.deleted = false
-            AND om.status = 'ACTIVE'::public.organization_member_status_enum
+            AND om.status = 'ACTIVE'::public.workspace_member_status_enum
         )
       `;
     } else {
-      const orgIdsList = orgIds.map((id) => `'${id}'`).join(",");
+      const workspaceIdsList = workspaceIds.map((id) => `'${id}'`).join(",");
       usersQuery += `
         AND EXISTS (
-          SELECT 1 FROM organization_members om
+          SELECT 1 FROM workspace_members om
           WHERE om.user_id = u.user_id
             AND om.deleted = false
-            AND om.status = 'ACTIVE'::public.organization_member_status_enum
-            AND om.organization_id IN (${orgIdsList})
+            AND om.status = 'ACTIVE'::public.workspace_member_status_enum
+            AND om.workspace_id IN (${workspaceIdsList})
         )
       `;
     }

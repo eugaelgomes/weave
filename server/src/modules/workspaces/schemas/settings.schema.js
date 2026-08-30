@@ -1,6 +1,6 @@
 const { z } = require("zod");
 const {
-  ORGANIZATION_BUSINESS_ROLES,
+  WORKSPACE_BUSINESS_ROLES,
 } = require("@/modules/workspaces/utils/workspace-creation-steps.util");
 
 /**
@@ -20,13 +20,13 @@ const saveStepOneSchema = z.object({
   description: z.string().trim().optional().nullable(),
   language: z.string().trim().optional().nullable(),
   logo_url: z.string().url("Invalid logo URL").optional().nullable(),
-  org_name: z.string().trim().min(1, "org_name is required"),
-  organization_role: z.enum(ORGANIZATION_BUSINESS_ROLES, {
+  unique_name: z.string().trim().min(1, "unique_name is required"),
+  workspace_name: z.string().trim().min(1, "workspace_name is required"),
+  workspace_role: z.enum(WORKSPACE_BUSINESS_ROLES, {
     errorMap: () => ({
-      message: `organization_role must be one of: ${ORGANIZATION_BUSINESS_ROLES.join(", ")}`,
+      message: `workspace_role must be one of: ${WORKSPACE_BUSINESS_ROLES.join(", ")}`,
     }),
   }),
-  unique_name: z.string().trim().min(1, "unique_name is required"),
 });
 
 /**
@@ -109,7 +109,6 @@ const domainResponseSchema = z
         type: "TXT",
         value: domain.verification_token,
       },
-      organization_id: orgSettings.organization_id,
       sso_enabled: orgSettings.saml?.enabled || false,
       sso_metadata: orgSettings.saml?.metadata || null,
       sso_provider: orgSettings.saml?.provider || null,
@@ -117,6 +116,7 @@ const domainResponseSchema = z
       updated_at: domain.updated_at || domain.created_at,
       verification_token: domain.verification_token,
       verified_at: domain.verified_at,
+      workspace_id: orgSettings.workspace_id,
     };
   });
 

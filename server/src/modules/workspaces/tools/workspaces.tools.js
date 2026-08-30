@@ -6,26 +6,26 @@ const { z } = require("zod");
 
 const { validRoles } = require("@/modules/workspaces/normalizer");
 
-const manageOrganizationsSchema = z.discriminatedUnion("action", [
+const manageWorkspacesSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("update"),
     banner_url: z.string().url().optional().nullable().describe("Workspace banner image URL"),
     description: z.string().optional().nullable().describe("Workspace description"),
     logo_url: z.string().url().optional().nullable().describe("Workspace logo image URL"),
-    org_name: z.string().optional().describe("Workspace name"),
     settings: z.record(z.any()).optional().nullable().describe("Workspace settings"),
     unique_name: z
       .string()
       .optional()
       .nullable()
-      .describe("Globally unique identifier string for the org"),
+      .describe("Globally unique identifier string for the workspace"),
+    workspace_name: z.string().optional().describe("Workspace name"),
   }),
   z.object({
     action: z.literal("get_active"),
   }),
 ]);
 
-const manageOrganizationDomainsSchema = z.discriminatedUnion("action", [
+const manageWorkspaceDomainsSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("add"),
     domain_name: z.string().describe("Domain name"),
@@ -54,7 +54,7 @@ const manageOrganizationDomainsSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-const manageOrganizationAreasSchema = z.discriminatedUnion("action", [
+const manageWorkspaceAreasSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
     area_name: z.string().describe("Team name"),
@@ -82,7 +82,7 @@ const manageOrganizationAreasSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-const manageOrganizationMembersSchema = z.discriminatedUnion("action", [
+const manageWorkspaceMembersSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("invite"),
     email: z.string().email().describe("Email to invite"),
@@ -104,15 +104,15 @@ const manageOrganizationMembersSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-const createOrganizationsTools = (user) => {
+const createWorkspacesTools = (user) => {
   const getActiveOrgId = async () => {
-    const org = await baseRepository.getActiveOrganizationWithMembership(user.userId);
-    if (!org) throw new Error("No active workspace found for user.");
-    return org.id;
+    const workspace = await baseRepository.getActiveWorkspaceWithMembership(user.userId);
+    if (!workspace) throw new Error("No active workspace found for user.");
+    return workspace.id;
   };
 
   return {
-    manage_organization_areas: {
+    manage_workspace_areas: {
       description: "Manage workspace teams (create, update, delete, list).",
       handler: async (args) => {
         try {
@@ -128,8 +128,8 @@ const createOrganizationsTools = (user) => {
           } = args;
 
           if (action === "list") {
-            const organizationId = await getActiveOrgId();
-            const result = await teamsRepository.listOrganizationAreas(organizationId);
+            const workspaceId = await getActiveOrgId();
+            const result = await teamsRepository.listWorkspaceAreas(workspaceId);
             return {
               content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
             };
@@ -138,15 +138,15 @@ const createOrganizationsTools = (user) => {
           if (action === "create") {
             if (!area_name || !slug)
               throw new Error("area_name and slug are required for create action");
-            const organizationId = await getActiveOrgId();
+            const workspaceId = await getActiveOrgId();
             const result = await teamsRepository.createArea({
               areaName: area_name,
               createdBy: user.userId,
               description,
-              organizationId,
               parentAreaId: parent_area_id,
               properties,
               slug,
+              workspaceId,
             });
             return {
               content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
@@ -155,8 +155,8 @@ const createOrganizationsTools = (user) => {
 
           if (action === "update") {
             if (!area_id) throw new Error("area_id is required for update action");
-            const organizationId = await getActiveOrgId();
-            const result = await teamsRepository.updateArea(area_id, organizationId, {
+            const workspaceId = await getActiveOrgId();
+            const result = await teamsRepository.updateArea(area_id, workspaceId, {
               active,
               areaName: area_name,
               description,
@@ -171,8 +171,8 @@ const createOrganizationsTools = (user) => {
 
           if (action === "delete") {
             if (!area_id) throw new Error("area_id is required for delete action");
-            const organizationId = await getActiveOrgId();
-            const result = await teamsRepository.softDeleteArea(area_id, organizationId);
+            const workspaceId = await getActiveOrgId();
+            const result = await teamsRepository.softDeleteArea(area_id, workspaceId);
             if (!result) throw new Error("Team not found or access denied.");
             return {
               content: [
@@ -192,17 +192,17 @@ const createOrganizationsTools = (user) => {
           };
         }
       },
-      name: "manage_organization_areas",
-      schema: manageOrganizationAreasSchema,
+      name: "manage_workspace_areas",
+      schema: manageWorkspaceAreasSchema,
     },
 
-    manage_organization_domains: {
+    manage_workspace_domains: {
       description: "Manage workspace domains and SSO (add, update_sso, delete, list).",
       handler: async (args) => {
         try {
           const { action, domain_name, enabled, metadata, provider } = args;
-          const organizationId = await getActiveOrgId();
-          const settings = await settingsRepository.getSettings(organizationId);
+          const workspaceId = await getActiveOrgId();
+          const settings = await settingsRepository.getSettings(workspaceId);
           const domains = settings?.domains || [];
 
           if (action === "list") {
@@ -224,7 +224,7 @@ const createOrganizationsTools = (user) => {
               verification_token: `weave-domain-verification=${verificationToken}`,
             };
             domains.push(newDomain);
-            await settingsRepository.updateDomains(organizationId, domains);
+            await settingsRepository.updateDomains(workspaceId, domains);
             return {
               content: [{ text: JSON.stringify(newDomain, null, 2), type: "text" }],
             };
@@ -237,7 +237,7 @@ const createOrganizationsTools = (user) => {
             const domain = domains.find((d) => d.domain_name === domain_name);
             if (!domain) throw new Error("Domain not found.");
 
-            await settingsRepository.updateSAML(organizationId, {
+            await settingsRepository.updateSAML(workspaceId, {
               enabled,
               metadata,
               provider,
@@ -253,7 +253,7 @@ const createOrganizationsTools = (user) => {
             if (domainIndex === -1) throw new Error("Domain not found.");
 
             domains.splice(domainIndex, 1);
-            await settingsRepository.updateDomains(organizationId, domains);
+            await settingsRepository.updateDomains(workspaceId, domains);
             return {
               content: [{ text: "Domain deleted successfully.", type: "text" }],
             };
@@ -267,19 +267,19 @@ const createOrganizationsTools = (user) => {
           };
         }
       },
-      name: "manage_organization_domains",
-      schema: manageOrganizationDomainsSchema,
+      name: "manage_workspace_domains",
+      schema: manageWorkspaceDomainsSchema,
     },
 
-    manage_organization_members: {
+    manage_workspace_members: {
       description: "Manage workspace members (invite, update_role, remove, list).",
       handler: async (args) => {
         try {
           const { action, email, name, role, username, user_id } = args;
 
           if (action === "list") {
-            const organizationId = await getActiveOrgId();
-            const result = await membersRepository.getOrganizationMembers(organizationId);
+            const workspaceId = await getActiveOrgId();
+            const result = await membersRepository.getWorkspaceMembers(workspaceId);
             return {
               content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
             };
@@ -287,9 +287,9 @@ const createOrganizationsTools = (user) => {
 
           if (action === "invite") {
             if (!email || !name) throw new Error("email and name are required for invite action");
-            const organizationId = await getActiveOrgId();
+            const workspaceId = await getActiveOrgId();
             const result = await membersRepository.createOrgInvite(
-              organizationId,
+              workspaceId,
               email,
               role,
               user.userId,
@@ -303,9 +303,9 @@ const createOrganizationsTools = (user) => {
 
           if (action === "update_role") {
             if (!user_id || !role) throw new Error("user_id and role are required for update_role");
-            const organizationId = await getActiveOrgId();
-            const result = await organizationsRepository.updateOrganizationMemberRole(
-              organizationId,
+            const workspaceId = await getActiveOrgId();
+            const result = await workspacesRepository.updateWorkspaceMemberRole(
+              workspaceId,
               user_id,
               role
             );
@@ -318,11 +318,8 @@ const createOrganizationsTools = (user) => {
 
           if (action === "remove") {
             if (!user_id) throw new Error("user_id is required for remove action");
-            const organizationId = await getActiveOrgId();
-            const result = await membersRepository.removeOrganizationMember(
-              organizationId,
-              user_id
-            );
+            const workspaceId = await getActiveOrgId();
+            const result = await membersRepository.removeWorkspaceMember(workspaceId, user_id);
             if (!result)
               throw new Error("Member not found, could not be removed, or access denied.");
             return {
@@ -343,37 +340,44 @@ const createOrganizationsTools = (user) => {
           };
         }
       },
-      name: "manage_organization_members",
-      schema: manageOrganizationMembersSchema,
+      name: "manage_workspace_members",
+      schema: manageWorkspaceMembersSchema,
     },
 
-    manage_organizations: {
+    manage_workspaces: {
       description: "Manage the active workspace (get_active, update).",
       handler: async (args) => {
         try {
-          const { action, banner_url, description, logo_url, org_name, settings, unique_name } =
-            args;
+          const {
+            action,
+            banner_url,
+            description,
+            logo_url,
+            workspace_name,
+            settings,
+            unique_name,
+          } = args;
 
           if (action === "get_active") {
-            const org = await baseRepository.getActiveOrganizationWithMembership(user.userId);
-            if (!org)
+            const workspace = await baseRepository.getActiveWorkspaceWithMembership(user.userId);
+            if (!workspace)
               return {
                 content: [{ text: "No active workspace found.", type: "text" }],
               };
             return {
-              content: [{ text: JSON.stringify(org, null, 2), type: "text" }],
+              content: [{ text: JSON.stringify(workspace, null, 2), type: "text" }],
             };
           }
 
           if (action === "update") {
-            const organizationId = await getActiveOrgId();
-            const result = await organizationsRepository.updateOrganization(organizationId, {
+            const workspaceId = await getActiveOrgId();
+            const result = await workspacesRepository.updateWorkspace(workspaceId, {
               banner_url,
               description,
               logo_url,
-              org_name,
               settings,
               unique_name,
+              workspace_name,
             });
             return {
               content: [{ text: JSON.stringify(result, null, 2), type: "text" }],
@@ -388,12 +392,12 @@ const createOrganizationsTools = (user) => {
           };
         }
       },
-      name: "manage_organizations",
-      schema: manageOrganizationsSchema,
+      name: "manage_workspaces",
+      schema: manageWorkspacesSchema,
     },
   };
 };
 
 module.exports = {
-  createOrganizationsTools,
+  createWorkspacesTools,
 };

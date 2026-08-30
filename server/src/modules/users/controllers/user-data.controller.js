@@ -48,7 +48,7 @@ const mapDefaultAreaInfo = (defaultAreaData) => {
 };
 
 /**
- * @param {Record<string, unknown>|null|undefined} organizationData
+ * @param {Record<string, unknown>|null|undefined} workspaceData
  * @returns {null|{
  *   id: unknown,
  *   unique_name: unknown,
@@ -58,17 +58,17 @@ const mapDefaultAreaInfo = (defaultAreaData) => {
  *   member_since: unknown
  * }}
  */
-const mapOrganizationInfo = (organizationData) => {
-  if (!organizationData) return null;
+const mapWorkspaceInfo = (workspaceData) => {
+  if (!workspaceData) return null;
   return {
-    active_modules: organizationData.active_modules,
-    id: organizationData.org_id,
-    logo_url: organizationData.org_logo_url,
-    member_role: organizationData.org_member_role,
-    member_since: organizationData.org_member_since,
-    name: organizationData.org_name,
-    public_id: organizationData.org_public_id,
-    unique_name: organizationData.org_unique_name,
+    active_modules: workspaceData.active_modules,
+    id: workspaceData.org_id,
+    logo_url: workspaceData.org_logo_url,
+    member_role: workspaceData.org_member_role,
+    member_since: workspaceData.org_member_since,
+    name: workspaceData.workspace_name,
+    public_id: workspaceData.org_public_id,
+    unique_name: workspaceData.org_unique_name,
   };
 };
 
@@ -181,7 +181,7 @@ class UserDataController extends BaseController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const workspace = mapOrganizationInfo(user.workspace);
+      const workspace = mapWorkspaceInfo(user.workspace);
       const defaultArea = mapDefaultAreaInfo(user.default_area);
       const planUsage = mapPlanUsageInfo(user.current_usage);
 
@@ -208,23 +208,6 @@ class UserDataController extends BaseController {
           },
           current_plan_usage: planUsage,
           usage_preference: normalizeAppPreferences(user.user_preference || {}),
-          user_organization: {
-            active_modules: protectedOrg?.active_modules || {
-              agent_house: true,
-              calendar: true,
-              notes: true,
-              projects: true,
-              weave_flow: true,
-            },
-            default_area: defaultArea,
-            id: protectedOrg?.id || null,
-            logo_url: protectedOrg?.logo_url || null,
-            member_role: protectedOrg?.member_role || null,
-            member_since: protectedOrg?.member_since || null,
-            name: protectedOrg?.name || null,
-            public_id: protectedOrg?.public_id || null,
-            unique_name: protectedOrg?.unique_name || null,
-          },
           user_profile: {
             avatar_url: protectedUser.avatar_url,
             birth_date: protectedUser.birth_date,
@@ -241,6 +224,23 @@ class UserDataController extends BaseController {
             auth_with_google: protectedUser.auth_with_google,
             private_profile: protectedUser.private_profile,
             theme_mode: protectedUser.theme_mode,
+          },
+          user_workspace: {
+            active_modules: protectedOrg?.active_modules || {
+              agent_house: true,
+              calendar: true,
+              notes: true,
+              projects: true,
+              weave_flow: true,
+            },
+            default_area: defaultArea,
+            id: protectedOrg?.id || null,
+            logo_url: protectedOrg?.logo_url || null,
+            member_role: protectedOrg?.member_role || null,
+            member_since: protectedOrg?.member_since || null,
+            name: protectedOrg?.name || null,
+            public_id: protectedOrg?.public_id || null,
+            unique_name: protectedOrg?.unique_name || null,
           },
         },
       });
@@ -392,31 +392,31 @@ class UserDataController extends BaseController {
   /**
    * List all active workspaces where the logged-in user is a member.
    */
-  async listMyOrganizations(req, res, next) {
+  async listMyWorkspaces(req, res, next) {
     try {
       const userId = this._validateAuthentication(req);
 
-      const orgs = await workspacesBaseRepository.getUserOrganizationsWithMembership(userId);
+      const workspaces = await workspacesBaseRepository.getUserWorkspacesWithMembership(userId);
 
-      const protectedOrgs = await Promise.all(
-        orgs.map(async (org) => {
-          const presigned = await presignObjectFields(org, ["logo_url"], {
+      const protectedWorkspaces = await Promise.all(
+        workspaces.map(async (workspace) => {
+          const presigned = await presignObjectFields(workspace, ["logo_url"], {
             expiresIn: 12 * 60 * 60,
             userId,
           });
           return {
-            id: org.id,
-            joined_at: org.joined_at,
+            id: workspace.id,
+            joined_at: workspace.joined_at,
             logo_url: presigned.logo_url || null,
-            member_role: org.member_role,
-            org_name: org.org_name,
-            unique_name: org.unique_name,
+            member_role: workspace.member_role,
+            unique_name: workspace.unique_name,
+            workspace_name: workspace.workspace_name,
           };
         })
       );
 
       res.status(200).json({
-        data: protectedOrgs,
+        data: protectedWorkspaces,
         success: true,
       });
     } catch (error) {
@@ -428,17 +428,17 @@ class UserDataController extends BaseController {
   /**
    * Switch the active workspace context in the user's session.
    */
-  async switchOrganization(req, res, next) {
+  async switchWorkspace(req, res, next) {
     try {
       const userId = this._validateAuthentication(req);
 
-      const { organizationId } = req.body;
-      if (!organizationId) {
-        return res.status(400).json({ error: "organizationId is required", success: false });
+      const { workspaceId } = req.body;
+      if (!workspaceId) {
+        return res.status(400).json({ error: "workspaceId is required", success: false });
       }
 
       // Check membership
-      const role = await workspacesMembersRepository.getMembershipRole(organizationId, userId);
+      const role = await workspacesMembersRepository.getMembershipRole(workspaceId, userId);
       if (!role) {
         return res.status(403).json({
           error: "You are not an active member of this workspace",
@@ -453,8 +453,8 @@ class UserDataController extends BaseController {
       }
 
       // Fetch workspace details
-      const userOrgs = await workspacesBaseRepository.getUserOrganizationsWithMembership(userId);
-      const targetOrg = userOrgs.find((o) => o.id === organizationId);
+      const userWorkspaces = await workspacesBaseRepository.getUserWorkspacesWithMembership(userId);
+      const targetOrg = userWorkspaces.find((o) => o.id === workspaceId);
 
       if (!targetOrg) {
         return res.status(404).json({ error: "Workspace not found", success: false });
@@ -464,14 +464,14 @@ class UserDataController extends BaseController {
         id: targetOrg.id,
         logo_url: targetOrg.logo_url,
         member_role: targetOrg.member_role,
-        org_name: targetOrg.org_name,
         unique_name: targetOrg.unique_name,
+        workspace_name: targetOrg.workspace_name,
       };
 
       // Get default team for this workspace if any
       let defaultArea = null;
       try {
-        defaultArea = await workspacesTeamsRepository.getDefaultArea(organizationId);
+        defaultArea = await workspacesTeamsRepository.getDefaultArea(workspaceId);
       } catch {
         // Team optional fallback
       }
@@ -484,10 +484,10 @@ class UserDataController extends BaseController {
       res.status(200).json({
         message: "Switched workspace successfully",
         success: true,
-        user_organization: {
+        user_workspace: {
           id: workspace.id,
           member_role: role,
-          name: workspace.org_name,
+          name: workspace.workspace_name,
           unique_name: workspace.unique_name,
         },
       });

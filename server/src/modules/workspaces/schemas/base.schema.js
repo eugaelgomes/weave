@@ -3,7 +3,7 @@ const { z } = require("zod");
 /**
  * Validates the request body for creating an workspace.
  */
-const createOrganizationSchema = z.object({
+const createWorkspaceSchema = z.object({
   banner_url: z
     .string()
     .url("Invalid banner URL")
@@ -22,11 +22,6 @@ const createOrganizationSchema = z.object({
     .optional()
     .nullable()
     .describe("The URL of the workspace's logo image. Must be a valid URL."),
-  org_name: z
-    .string()
-    .trim()
-    .min(1, "org_name is required")
-    .describe("The display name of the workspace."),
   settings: z
     .object({
       country: z.string().optional().describe("The 2-letter ISO country code of the workspace."),
@@ -46,12 +41,17 @@ const createOrganizationSchema = z.object({
     .optional()
     .nullable()
     .describe("A globally unique identifier string for the workspace."),
+  workspace_name: z
+    .string()
+    .trim()
+    .min(1, "workspace_name is required")
+    .describe("The display name of the workspace."),
 });
 
 /**
  * Validates the request body for updating an workspace.
  */
-const updateOrganizationSchema = z.object({
+const updateWorkspaceSchema = z.object({
   banner_url: z
     .string()
     .url("Invalid banner URL")
@@ -70,12 +70,6 @@ const updateOrganizationSchema = z.object({
     .optional()
     .nullable()
     .describe("The URL of the workspace's logo image. Must be a valid URL."),
-  org_name: z
-    .string()
-    .trim()
-    .min(1, "org_name cannot be empty")
-    .optional()
-    .describe("The display name of the workspace."),
   settings: z
     .record(z.any())
     .optional()
@@ -87,12 +81,18 @@ const updateOrganizationSchema = z.object({
     .optional()
     .nullable()
     .describe("A globally unique identifier string for the workspace."),
+  workspace_name: z
+    .string()
+    .trim()
+    .min(1, "workspace_name cannot be empty")
+    .optional()
+    .describe("The display name of the workspace."),
 });
 
 /**
- * Standardizes the organization data response.
+ * Standardizes the workspace data response.
  */
-const organizationResponseSchema = z
+const workspaceResponseSchema = z
   .object({
     avatar_url: z.string().nullable().optional(),
     banner_url: z.string().nullable().optional(),
@@ -104,12 +104,12 @@ const organizationResponseSchema = z
     logo_url: z.string().nullable().optional(),
     member_role: z.string().nullable().optional(),
     name: z.string().nullable().optional(),
-    org_name: z.string(),
     settings: z.any().optional().nullable(),
     unique_name: z.string().nullable().optional(),
     updated_at: z.union([z.string(), z.date()]).optional(),
     user_id: z.string(),
     username: z.string().nullable().optional(),
+    workspace_name: z.string(),
   })
   .transform((data) => ({
     created_at: data.created_at,
@@ -120,9 +120,9 @@ const organizationResponseSchema = z
       id: data.id,
       logo_url: data.logo_url || null,
       member_role: data.member_role ?? null,
-      org_name: data.org_name,
       unique_name: data.unique_name || null,
       user_id: data.user_id,
+      workspace_name: data.workspace_name,
     },
     owners: [
       {
@@ -138,7 +138,7 @@ const organizationResponseSchema = z
   }));
 
 module.exports = {
-  createOrganizationSchema,
-  organizationResponseSchema,
-  updateOrganizationSchema,
+  createWorkspaceSchema,
+  updateWorkspaceSchema,
+  workspaceResponseSchema,
 };

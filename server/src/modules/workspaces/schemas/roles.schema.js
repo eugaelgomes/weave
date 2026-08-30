@@ -50,9 +50,9 @@ const roleResponseSchema = z
     id: z.string(),
     is_system: z.boolean().optional(),
     name: z.string(),
-    organization_id: z.string(),
     permissions: z.array(z.string()).optional(),
     updated_at: z.union([z.string(), z.date()]).optional(),
+    workspace_id: z.string(),
   })
   .transform((role) => ({
     created_at: role.created_at,
@@ -61,9 +61,9 @@ const roleResponseSchema = z
     id: role.id,
     is_system: role.is_system,
     name: role.name,
-    organization_id: role.organization_id,
     permissions: role.permissions || [],
     updated_at: role.updated_at,
+    workspace_id: role.workspace_id,
   }));
 
 module.exports = {

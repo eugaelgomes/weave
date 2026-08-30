@@ -4,12 +4,12 @@ const { getUserEmailLocale, t } = require("@/services/email/i18n");
 
 /**
  * @param {string} toEmail
- * @param {string} organizationName
+ * @param {string} workspaceName
  * @param {string} homeUrl
  */
-async function send_organization_invite_accepted(toEmail, organizationName, homeUrl) {
+async function send_workspace_invite_accepted(toEmail, workspaceName, homeUrl) {
   const locale = await getUserEmailLocale({ email: toEmail });
-  const safeOrg = organizationName || t(locale, "common.workspace");
+  const safeOrg = workspaceName || t(locale, "common.workspace");
 
   try {
     const { html, text } = buildMailTemplate({
@@ -31,14 +31,14 @@ async function send_organization_invite_accepted(toEmail, organizationName, home
       locale,
       preheader: t(locale, "inviteAccepted.preheader"),
       subtitle: t(locale, "inviteAccepted.subtitle"),
-      title: t(locale, "inviteAccepted.title", { organizationName: safeOrg }),
+      title: t(locale, "inviteAccepted.title", { workspaceName: safeOrg }),
     });
 
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
       html,
       subject: t(locale, "inviteAccepted.subject", {
-        organizationName: safeOrg,
+        workspaceName: safeOrg,
       }),
       text,
       to: toEmail,
@@ -51,4 +51,4 @@ async function send_organization_invite_accepted(toEmail, organizationName, home
   }
 }
 
-module.exports = { send_organization_invite_accepted };
+module.exports = { send_workspace_invite_accepted };

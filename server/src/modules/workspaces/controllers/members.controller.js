@@ -5,35 +5,37 @@
  */
 
 const { fromUnknown } = require("@/errors");
-const OrganizationsBaseController = require("./base-controller");
+const WorkspacesBaseController = require("./base-controller");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const { memberListResponseSchema } = require("../schemas/members.schema");
 
-const { send_organization_invite } = require("@/services/email/templates/invite-member");
+const { send_workspace_invite } = require("@/services/email/templates/invite-member");
 const { getUserEmailLocale } = require("@/services/email/i18n");
 
-const { ORG_ROLES } = require("@/modules/workspaces/workspace-role-policy");
+const { WORKSPACE_ROLES } = require("@/modules/workspaces/workspace-role-policy");
 
 const MAX_SUPER_ADMINS = 3;
 
-class OrganizationMembersController extends OrganizationsBaseController {
+class WorkspaceMembersController extends WorkspacesBaseController {
   constructor() {
     super();
     this.areasRepository = areasRepository;
   }
 
-  async _ensureCanManageMembers(currentOrg, res) {
-    if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.MANAGE_MEMBERS, res)) {
+  async _ensureCanManageMembers(currentWorkspace, res) {
+    if (
+      !this._ensureOrgPermission(currentWorkspace, this._workspacePermissions.MANAGE_MEMBERS, res)
+    ) {
       return false;
     }
     return true;
   }
 
-  async _ensureSuperAdminLimit(orgId, nextRole, res) {
-    if (nextRole !== ORG_ROLES.SUPER_ADMIN) return true;
-    const total = await this.organizationsRepository.countActiveMembersByRole(
-      orgId,
-      ORG_ROLES.SUPER_ADMIN
+  async _ensureSuperAdminLimit(workspaceId, nextRole, res) {
+    if (nextRole !== WORKSPACE_ROLES.SUPER_ADMIN) return true;
+    const total = await this.workspacesRepository.countActiveMembersByRole(
+      workspaceId,
+      WORKSPACE_ROLES.SUPER_ADMIN
     );
     if (total >= MAX_SUPER_ADMINS) {
       res.status(400).json({
@@ -53,9 +55,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
   _mapProjectRoleToAreaRole(projectRole) {
     const normalizedRole = this._resolveProjectMemberRole(projectRole);
-    if (normalizedRole === "PROJECT_MANAGER") return ORG_ROLES.ADMIN;
-    if (normalizedRole === "CONTRIBUTOR") return ORG_ROLES.MEMBER;
-    return ORG_ROLES.GUEST;
+    if (normalizedRole === "PROJECT_MANAGER") return WORKSPACE_ROLES.ADMIN;
+    if (normalizedRole === "CONTRIBUTOR") return WORKSPACE_ROLES.MEMBER;
+    return WORKSPACE_ROLES.GUEST;
   }
 
   /**
@@ -72,24 +74,24 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const { memberId } = req.params;
       const { role } = req.body;
 
-      const currentOrg = await this._getUserOrganization(authUserId);
-      if (!currentOrg) {
+      const currentWorkspace = await this._getUserWorkspace(authUserId);
+      if (!currentWorkspace) {
         return res.status(404).json({ error: "Workspace not found" });
       }
 
-      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+      if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
         return;
       }
 
-      if (!(await this._ensureSuperAdminLimit(currentOrg.id, role, res))) {
+      if (!(await this._ensureSuperAdminLimit(currentWorkspace.id, role, res))) {
         return;
       }
 
-      if (currentOrg.user_id === memberId) {
+      if (currentWorkspace.user_id === memberId) {
         return res.status(400).json({ error: "Cannot change the workspace owner's role" });
       }
 
-      await this.organizationsRepository.updateMemberRole(currentOrg.id, memberId, role);
+      await this.workspacesRepository.updateMemberRole(currentWorkspace.id, memberId, role);
 
       res.status(200).json({
         data: { role },
@@ -115,26 +117,26 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const { memberId } = req.params;
 
-      const currentOrg = await this._getUserOrganization(userId);
-      if (!currentOrg) {
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+      if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
         return;
       }
 
-      if (String(currentOrg.user_id) === String(memberId)) {
+      if (String(currentWorkspace.user_id) === String(memberId)) {
         return res.status(400).json({
           error: "Cannot remove the workspace owner",
           success: false,
         });
       }
 
-      // ADMIN/SUPER_ADMIN must always keep their org-level record.
+      // ADMIN/SUPER_ADMIN must always keep their workspace-level record.
       // They need to be demoted first before removal.
-      const targetMember = await this.organizationsRepository.getOrganizationMember(
-        currentOrg.id,
+      const targetMember = await this.workspacesRepository.getWorkspaceMember(
+        currentWorkspace.id,
         memberId
       );
       if (targetMember && ["ADMIN", "SUPER_ADMIN"].includes(targetMember.role)) {
@@ -144,8 +146,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
         });
       }
 
-      const removed = await this.organizationsRepository.removeOrganizationMember(
-        currentOrg.id,
+      const removed = await this.workspacesRepository.removeWorkspaceMember(
+        currentWorkspace.id,
         memberId
       );
       if (!removed) {
@@ -174,16 +176,22 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const currentOrg = await this._getUserOrganization(userId);
-      if (!currentOrg) {
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      if (!this._ensureOrgPermission(currentOrg, this._orgPermissions.VIEW_MEMBER_DIRECTORY, res)) {
+      if (
+        !this._ensureOrgPermission(
+          currentWorkspace,
+          this._workspacePermissions.VIEW_MEMBER_DIRECTORY,
+          res
+        )
+      ) {
         return;
       }
 
-      const members = await this.organizationsRepository.getOrganizationMembers(currentOrg.id);
+      const members = await this.workspacesRepository.getWorkspaceMembers(currentWorkspace.id);
 
       res.status(200).json({
         count: members.length,
@@ -195,10 +203,10 @@ class OrganizationMembersController extends OrganizationsBaseController {
           acc[member.status] = (acc[member.status] || 0) + 1;
           return acc;
         }, {}),
-        list_org_members: memberListResponseSchema.parse(members),
-        organization_id: currentOrg.id,
-
+        list_workspace_members: memberListResponseSchema.parse(members),
         status: "OK",
+
+        workspace_id: currentWorkspace.id,
       });
     } catch (error) {
       console.error("Error fetching members:", error);
@@ -217,27 +225,27 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
 
-      const { email, role = ORG_ROLES.MEMBER, name, username, target_areas = [] } = req.body;
+      const { email, role = WORKSPACE_ROLES.MEMBER, name, username, target_areas = [] } = req.body;
 
       const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
 
-      const currentOrg = await this._getUserOrganization(authUserId);
-      if (!currentOrg) {
+      const currentWorkspace = await this._getUserWorkspace(authUserId);
+      if (!currentWorkspace) {
         return res.status(404).json({ error: "Workspace not found" });
       }
 
-      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+      if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
         return;
       }
 
-      if (!(await this._ensureSuperAdminLimit(currentOrg.id, normalizedRole, res))) {
+      if (!(await this._ensureSuperAdminLimit(currentWorkspace.id, normalizedRole, res))) {
         return;
       }
 
       const validTargetAreas = [];
       for (const tArea of target_areas) {
         if (!tArea.area_id) continue;
-        const team = await this.teamsRepository.getAreaById(tArea.area_id, currentOrg.id);
+        const team = await this.teamsRepository.getAreaById(tArea.area_id, currentWorkspace.id);
         if (!team) return res.status(404).json({ error: `Team not found: ${tArea.area_id}` });
 
         const resolvedProjectRole = this._resolveProjectMemberRole(tArea.role);
@@ -251,8 +259,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const targetUser = existingUsers.find((u) => u.email === email);
 
       if (targetUser) {
-        const isMember = await this.organizationsRepository.isMember(
-          currentOrg.id,
+        const isMember = await this.workspacesRepository.isMember(
+          currentWorkspace.id,
           targetUser.user_id
         );
         if (isMember) {
@@ -263,8 +271,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
       }
 
       const usedName = name.trim();
-      const invite = await this.organizationsRepository.createOrgInvite(
-        currentOrg.id,
+      const invite = await this.workspacesRepository.createOrgInvite(
+        currentWorkspace.id,
         email,
         normalizedRole,
         authUserId,
@@ -277,9 +285,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
       const inviterLocale = await getUserEmailLocale({ userId: authUserId });
 
       // Send the invite email
-      const emailResult = await send_organization_invite(
+      const emailResult = await send_workspace_invite(
         email,
-        currentOrg.org_name,
+        currentWorkspace.workspace_name,
         inviter.name || inviter.username,
         invite.invite_id,
         normalizedRole,
@@ -319,12 +327,12 @@ class OrganizationMembersController extends OrganizationsBaseController {
 
       const { invites } = req.body;
 
-      const currentOrg = await this._getUserOrganization(authUserId);
-      if (!currentOrg) {
+      const currentWorkspace = await this._getUserWorkspace(authUserId);
+      if (!currentWorkspace) {
         return res.status(404).json({ error: "Workspace not found" });
       }
 
-      if (!(await this._ensureCanManageMembers(currentOrg, res))) {
+      if (!(await this._ensureCanManageMembers(currentWorkspace, res))) {
         return;
       }
 
@@ -337,7 +345,13 @@ class OrganizationMembersController extends OrganizationsBaseController {
       };
 
       for (const inviteData of invites) {
-        const { email, role = ORG_ROLES.MEMBER, name, username, target_areas = [] } = inviteData;
+        const {
+          email,
+          role = WORKSPACE_ROLES.MEMBER,
+          name,
+          username,
+          target_areas = [],
+        } = inviteData;
 
         try {
           const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
@@ -345,8 +359,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
           const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", email);
           const targetUser = existingUsers.find((u) => u.email === email);
           if (targetUser) {
-            const isMember = await this.organizationsRepository.isMember(
-              currentOrg.id,
+            const isMember = await this.workspacesRepository.isMember(
+              currentWorkspace.id,
               targetUser.user_id
             );
             if (isMember) {
@@ -358,7 +372,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           const validTargetAreas = [];
           for (const tArea of target_areas) {
             if (!tArea.area_id) continue;
-            const team = await this.teamsRepository.getAreaById(tArea.area_id, currentOrg.id);
+            const team = await this.teamsRepository.getAreaById(tArea.area_id, currentWorkspace.id);
             if (team) {
               const resolvedRole = this._resolveProjectMemberRole(tArea.role);
               validTargetAreas.push({
@@ -368,8 +382,8 @@ class OrganizationMembersController extends OrganizationsBaseController {
             }
           }
 
-          const invite = await this.organizationsRepository.createOrgInvite(
-            currentOrg.id,
+          const invite = await this.workspacesRepository.createOrgInvite(
+            currentWorkspace.id,
             email,
             normalizedRole,
             authUserId,
@@ -378,9 +392,9 @@ class OrganizationMembersController extends OrganizationsBaseController {
             validTargetAreas
           );
 
-          await send_organization_invite(
+          await send_workspace_invite(
             email,
-            currentOrg.org_name,
+            currentWorkspace.workspace_name,
             inviter.name || inviter.username,
             invite.invite_id,
             normalizedRole,
@@ -405,4 +419,4 @@ class OrganizationMembersController extends OrganizationsBaseController {
   }
 }
 
-module.exports = new OrganizationMembersController();
+module.exports = new WorkspaceMembersController();

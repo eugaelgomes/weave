@@ -1,7 +1,5 @@
-const {
-  getAvailableOrgNames,
-} = require("@/modules/workspaces/repositories/workspaces.repository");
-const { ORG_ROLES } = require("@/modules/workspaces/workspace-role-policy");
+const { getAvailableOrgNames } = require("@/modules/workspaces/repositories/workspaces.repository");
+const { WORKSPACE_ROLES } = require("@/modules/workspaces/workspace-role-policy");
 
 const PREDEFINED_PROPERTIES = Object.freeze({
   allowPublicNotes: {
@@ -70,7 +68,7 @@ const PREDEFINED_PROPERTIES = Object.freeze({
   },
 });
 
-const normalizeOrganizationName = (name) => {
+const normalizeWorkspaceName = (name) => {
   if (typeof name !== "string" || !name) throw new Error("Nome inválido para normalização");
 
   return name
@@ -84,10 +82,10 @@ const normalizeOrganizationName = (name) => {
     .replace(/^-+|-+$/g, ""); // Trim hífens
 };
 
-const suggestUniqueOrganizationName = (baseName, existingNames) => {
+const suggestUniqueWorkspaceName = (baseName, existingNames) => {
   if (!Array.isArray(existingNames)) throw new Error("Lista de nomes existentes inválida");
 
-  const normalized = normalizeOrganizationName(baseName);
+  const normalized = normalizeWorkspaceName(baseName);
   if (!normalized) throw new Error("Nome base inválido após normalização");
 
   let uniqueName = normalized;
@@ -100,10 +98,10 @@ const suggestUniqueOrganizationName = (baseName, existingNames) => {
   return uniqueName;
 };
 
-const generateUniqueOrganizationName = async (baseName) => {
-  const normalizedBase = normalizeOrganizationName(baseName);
+const generateUniqueWorkspaceName = async (baseName) => {
+  const normalizedBase = normalizeWorkspaceName(baseName);
   const existingNames = await getAvailableOrgNames(normalizedBase);
-  return suggestUniqueOrganizationName(normalizedBase, existingNames);
+  return suggestUniqueWorkspaceName(normalizedBase, existingNames);
 };
 
 const isValidValue = (value, def) => {
@@ -123,7 +121,7 @@ const isValidValue = (value, def) => {
   return true;
 };
 
-const normalizeOrganizationProperties = (properties = {}) => {
+const normalizeWorkspaceProperties = (properties = {}) => {
   if (typeof properties !== "object" || properties === null)
     throw new Error("Properties deve ser um objeto");
 
@@ -135,7 +133,7 @@ const normalizeOrganizationProperties = (properties = {}) => {
   }, {});
 };
 
-const updateOrganizationProperties = (currentProperties = {}, updates = {}) => {
+const updateWorkspaceProperties = (currentProperties = {}, updates = {}) => {
   if (!currentProperties || !updates) throw new Error("Parâmetros inválidos para atualização");
 
   const nextProps = { ...currentProperties };
@@ -156,7 +154,7 @@ const updateOrganizationProperties = (currentProperties = {}, updates = {}) => {
 };
 
 // Getters utilitários
-const getDefaultOrganizationProperties = () => {
+const getDefaultWorkspaceProperties = () => {
   return Object.fromEntries(Object.entries(PREDEFINED_PROPERTIES).map(([k, v]) => [k, v.default]));
 };
 
@@ -165,9 +163,9 @@ const getPropertiesSchema = () => {
   return JSON.parse(JSON.stringify(PREDEFINED_PROPERTIES));
 };
 
-const validRoles = Object.freeze(Object.values(ORG_ROLES));
+const validRoles = Object.freeze(Object.values(WORKSPACE_ROLES));
 
-const orgDataResponse = (workspace) => {
+const workspaceDataResponse = (workspace) => {
   return {
     banner_url: workspace.banner_url,
     created_at: workspace.created_at,
@@ -175,28 +173,29 @@ const orgDataResponse = (workspace) => {
     description: workspace.description,
     id: workspace.id,
     logo_url: workspace.logo_url,
-    org_name: workspace.org_name,
     public_id: workspace.public_id || null,
     settings: workspace.settings || {},
     unique_name: workspace.unique_name,
     updated_at: workspace.updated_at,
+    workspace_name: workspace.workspace_name,
   };
 };
 
 module.exports = {
-  generateUniqueOrganizationName,
-  getDefaultOrganizationProperties,
+  generateUniqueWorkspaceName,
+  getDefaultWorkspaceProperties,
   getPropertiesSchema,
-  normalizeOrganizationName,
-  normalizeOrganizationProperties,
-  // Org data formatter
-  orgDataResponse,
+  normalizeWorkspaceName,
+  normalizeWorkspaceProperties,
 
   predefinedProperties: PREDEFINED_PROPERTIES,
 
-  suggestUniqueOrganizationName,
+  suggestUniqueWorkspaceName,
 
-  updateOrganizationProperties,
+  updateWorkspaceProperties,
 
   validRoles,
+
+  // Workspace data formatter
+  workspaceDataResponse,
 };

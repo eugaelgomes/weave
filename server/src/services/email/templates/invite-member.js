@@ -5,15 +5,15 @@ const { buildAuthInviteUrl } = require("../utils/frontend-url");
 
 /**
  * @param {string} invitedEmail
- * @param {string} organizationName
+ * @param {string} workspaceName
  * @param {string} inviterName
  * @param {string} inviteToken
  * @param {string} role
  * @param {string} [inviterLocale]
  */
-async function send_organization_invite(
+async function send_workspace_invite(
   invitedEmail,
-  organizationName,
+  workspaceName,
   inviterName,
   inviteToken,
   role,
@@ -27,14 +27,14 @@ async function send_organization_invite(
     const { html, text } = buildMailTemplate({
       contentHtml: `
         <div style="margin: 16px 0; padding: 14px; border: 1px solid #E5E7EB; border-radius: 8px; background: #F9FAFB;">
-          <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.workspace"))}:</strong> ${escapeHtml(organizationName)}</p>
+          <p style="margin: 0 0 6px; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.workspace"))}:</strong> ${escapeHtml(workspaceName)}</p>
           <p style="margin: 0; font-size: 14px; color: #111827;"><strong>${escapeHtml(t(locale, "common.role"))}:</strong> ${escapeHtml(translatedRole)}</p>
         </div>
       `,
       ctaText: t(locale, "invite.cta"),
       ctaUrl: acceptInviteLink,
       infoText: t(locale, "invite.info"),
-      introLines: [t(locale, "invite.intro", { inviterName, organizationName })],
+      introLines: [t(locale, "invite.intro", { inviterName, workspaceName })],
       locale,
       preheader: t(locale, "invite.preheader"),
       subtitle: t(locale, "invite.subtitle"),
@@ -44,7 +44,7 @@ async function send_organization_invite(
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
       html,
-      subject: t(locale, "invite.subject", { organizationName }),
+      subject: t(locale, "invite.subject", { workspaceName }),
       text,
       to: invitedEmail,
     });
@@ -56,4 +56,4 @@ async function send_organization_invite(
   }
 }
 
-module.exports = { send_organization_invite };
+module.exports = { send_workspace_invite };

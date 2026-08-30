@@ -1,20 +1,20 @@
 const crypto = require("crypto");
 const { enqueueDomainVerificationJob } = require("@theweave/database");
 const { fromUnknown } = require("@/errors");
-const OrganizationsBaseController = require("./base-controller");
+const WorkspacesBaseController = require("./base-controller");
 const settingsRepository = require("@/modules/workspaces/repositories/settings.repository");
 const {
-  OrganizationCreationStepsService,
+  WorkspaceCreationStepsService,
 } = require("@/modules/workspaces/utils/workspace-creation-steps.util");
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 const { domainResponseSchema } = require("../schemas/settings.schema");
 
-class WorkspaceSettingsController extends OrganizationsBaseController {
+class WorkspaceSettingsController extends WorkspacesBaseController {
   constructor() {
     super();
     this.settingsRepository = settingsRepository;
-    this.creationStepsService = new OrganizationCreationStepsService({
-      organizationsRepository: baseRepository, // Need to make sure this matches what creationStepsService expects
+    this.creationStepsService = new WorkspaceCreationStepsService({
+      workspacesRepository: baseRepository, // Need to make sure this matches what creationStepsService expects
     });
   }
 
@@ -30,7 +30,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
 
   async updateSystemSettings(req, res, next) {
     try {
-      // Typically, you'd verify if the user is a SUPER_ADMIN of the system, not just an org
+      // Typically, you'd verify if the user is a SUPER_ADMIN of the system, not just an workspace
       // For now, we trust the route middleware
       const updates = req.body;
       const updated = await this.settingsRepository.updateSystemSettings(updates);
@@ -45,7 +45,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       return res.status(200).json({
         data: {
           ...this.creationStepsService.getStepOneMetadata(),
@@ -66,7 +66,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      let workspace = await this._getUserOrganization(userId);
+      let workspace = await this._getUserWorkspace(userId);
       const validated = await this.creationStepsService.validateStepOnePayload(
         req.body || {},
         workspace
@@ -78,9 +78,9 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
           validated,
           false
         );
-        await baseRepository.createOrgs(
+        await baseRepository.createWorkspaces(
           userId,
-          validated.org_name,
+          validated.workspace_name,
           validated.unique_name,
           validated.logo_url,
           workspace?.banner_url || null,
@@ -92,7 +92,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
           null
         );
 
-        workspace = await this._getUserOrganization(userId);
+        workspace = await this._getUserWorkspace(userId);
       } else {
         const settingsWithStep = this.creationStepsService.buildStepOneSettings(
           workspace.settings,
@@ -106,9 +106,9 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
           default_timezone: workspace.default_timezone || "America/Sao_Paulo",
           description: validated.description,
           logo_url: validated.logo_url !== null ? validated.logo_url : workspace.logo_url,
-          org_name: validated.org_name,
           settings: settingsWithStep,
           unique_name: validated.unique_name,
+          workspace_name: validated.workspace_name,
         });
       }
 
@@ -130,15 +130,15 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
-      const role = workspace?.settings?.organization_role || null;
+      const role = workspace?.settings?.workspace_role || null;
       if (!role) {
         return res.status(400).json({
-          error: "organization_role must be defined before completing step 1",
+          error: "workspace_role must be defined before completing step 1",
           success: false,
         });
       }
@@ -149,9 +149,9 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
         description: workspace.description,
         language: workspace?.settings?.language || "en",
         logo_url: workspace.logo_url,
-        org_name: workspace.org_name,
-        organization_role: role,
         unique_name: workspace.unique_name,
+        workspace_name: workspace.workspace_name,
+        workspace_role: role,
       };
 
       const settingsWithStep = this.creationStepsService.buildStepOneSettings(
@@ -170,9 +170,9 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
           default_timezone: workspace.default_timezone,
           description: workspace.description,
           logo_url: workspace.logo_url,
-          org_name: workspace.org_name,
           settings: settingsWithStep,
           unique_name: workspace.unique_name,
+          workspace_name: workspace.workspace_name,
         }
       );
 
@@ -201,7 +201,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
       const settings = await this.settingsRepository.getSettings(workspace.id);
@@ -224,11 +224,12 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
-      // TODO: replace with orgRoleHasPermission when RBAC is active
-      if (!this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_DOMAINS, res)) return;
+      // TODO: replace with workspaceRoleHasPermission when RBAC is active
+      if (!this._ensureOrgPermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res))
+        return;
 
       const { domain_name: domainName } = req.body;
       const normalizedDomain = this._validateDomainName(domainName);
@@ -242,8 +243,8 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
           .json({ error: "Domain already registered for this workspace", success: false });
       }
 
-      const existingOrg = await this.settingsRepository.findByDomain(normalizedDomain);
-      if (existingOrg && existingOrg.organization_id !== workspace.id) {
+      const existingWorkspace = await this.settingsRepository.findByDomain(normalizedDomain);
+      if (existingWorkspace && existingWorkspace.workspace_id !== workspace.id) {
         return res
           .status(409)
           .json({ error: "Domain is already in use by another workspace", success: false });
@@ -276,10 +277,11 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
-      if (!this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_DOMAINS, res)) return;
+      if (!this._ensureOrgPermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res))
+        return;
 
       const { domainId: domainName } = req.params;
       const settings = await this.settingsRepository.getSettings(workspace.id);
@@ -292,8 +294,8 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
 
       await enqueueDomainVerificationJob({
         domainName: domain.domain_name,
-        organizationId: workspace.id,
         requestedByUserId: userId,
+        workspaceId: workspace.id,
       });
 
       res.status(200).json({
@@ -313,10 +315,11 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
-      if (!this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_DOMAINS, res)) return;
+      if (!this._ensureOrgPermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res))
+        return;
 
       const { domainId: domainName } = req.params;
       const settings = await this.settingsRepository.getSettings(workspace.id);
@@ -349,10 +352,11 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace) return res.status(404).json({ error: "Workspace not found", success: false });
 
-      if (!this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_DOMAINS, res)) return;
+      if (!this._ensureOrgPermission(workspace, this._workspacePermissions.MANAGE_DOMAINS, res))
+        return;
 
       const { domainId: domainName } = req.params;
       const settings = await this.settingsRepository.getSettings(workspace.id);

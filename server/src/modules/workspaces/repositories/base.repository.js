@@ -1,17 +1,17 @@
 const { executeQuery, getConnection } = require("@/database/connection");
-const { ORG_ROLES } = require("@/modules/workspaces/workspace-role-policy");
+const { WORKSPACE_ROLES } = require("@/modules/workspaces/workspace-role-policy");
 const { generatePublicId } = require("@/utils/formatters.util");
 
 const settingsRepository = require("./settings.repository");
 const membersRepository = require("./members.repository");
 
-class OrganizationBaseRepository {
-  async getActiveOrganizationWithMembership(user_id) {
+class WorkspaceBaseRepository {
+  async getActiveWorkspaceWithMembership(user_id) {
     const query = `
     SELECT
       o.id,
       o.user_id,
-      o.org_name,
+      o.workspace_name,
       o.unique_name,
       o.logo_url,
       o.banner_url,
@@ -34,8 +34,8 @@ class OrganizationBaseRepository {
       u.username,
       u.email,
       om.role AS member_role
-    FROM organization_members om
-    INNER JOIN workspaces o ON o.id = om.organization_id AND o.deleted = false
+    FROM workspace_members om
+    INNER JOIN workspaces o ON o.id = om.workspace_id AND o.deleted = false
     LEFT JOIN plans p ON p.plan_id = o.plan_id
     LEFT JOIN users u ON u.user_id = o.user_id
     WHERE om.user_id = $1 AND om.deleted = false
@@ -46,21 +46,21 @@ class OrganizationBaseRepository {
     const rows = await executeQuery(query, [user_id]);
     if (rows[0]) return rows[0];
 
-    const owned = (await this.getOrgsByUserId(user_id)).find((o) => !o.deleted);
+    const owned = (await this.getWorkspacesByUserId(user_id)).find((o) => !o.deleted);
     if (!owned) return null;
     const role = await membersRepository.getMembershipRole(owned.id, user_id);
     return {
       ...owned,
-      member_role: role || ORG_ROLES.SUPER_ADMIN,
+      member_role: role || WORKSPACE_ROLES.SUPER_ADMIN,
     };
   }
 
-  async getOrgsByUserId(user_id) {
+  async getWorkspacesByUserId(user_id) {
     const query = `
     SELECT
       o.id,
       o.user_id,
-      o.org_name,
+      o.workspace_name,
       o.unique_name,
       o.logo_url,
       o.banner_url,
@@ -91,12 +91,12 @@ class OrganizationBaseRepository {
     return results;
   }
 
-  async getUserOrganizationsWithMembership(user_id) {
+  async getUserWorkspacesWithMembership(user_id) {
     const query = `
       SELECT
         o.id,
         o.user_id,
-        o.org_name,
+        o.workspace_name,
         o.unique_name,
         o.logo_url,
         o.banner_url,
@@ -104,8 +104,8 @@ class OrganizationBaseRepository {
         om.role AS member_role,
         om.status AS member_status,
         om.created_at AS joined_at
-      FROM organization_members om
-      INNER JOIN workspaces o ON o.id = om.organization_id AND o.deleted = false
+      FROM workspace_members om
+      INNER JOIN workspaces o ON o.id = om.workspace_id AND o.deleted = false
       WHERE om.user_id = $1
         AND om.deleted = false
         AND om.status = 'ACTIVE'
@@ -123,9 +123,9 @@ class OrganizationBaseRepository {
     return results.map((row) => row.unique_name);
   }
 
-  async createOrgs(
+  async createWorkspaces(
     user_id,
-    org_name,
+    workspace_name,
     unique_name,
     logo_url,
     banner_url,
@@ -170,12 +170,12 @@ class OrganizationBaseRepository {
       const defaultPlanId = defaultPlan?.plan_id || null;
 
       const publicId = generatePublicId();
-      const publicOrganizationId = `org_${publicId}`;
+      const publicWorkspaceId = `org_${publicId}`;
 
       const insertOrgQuery = `
       INSERT INTO workspaces (
         user_id,
-        org_name,
+        workspace_name,
         unique_name,
         logo_url,
         banner_url,
@@ -183,15 +183,15 @@ class OrganizationBaseRepository {
     country,
         plan_id,
         public_id,
-        public_organization_id
+        public_workspace_id
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING
         id,
         public_id,
-        public_organization_id,
+        public_workspace_id,
         user_id,
-        org_name,
+        workspace_name,
         unique_name,
         logo_url,
         banner_url,
@@ -206,36 +206,43 @@ class OrganizationBaseRepository {
 
       const orgResult = await client.query(insertOrgQuery, [
         user_id,
-        org_name,
+        workspace_name,
         unique_name,
         logo_url,
         banner_url,
         description,
-    country,
+        country,
         defaultPlanId,
         publicId,
-        publicOrganizationId,
+        publicWorkspaceId,
       ]);
 
       const workspace = orgResult.rows[0];
 
       const updateUserQuery = `
       UPDATE users
-      SET organization_id = $1,
+      SET workspace_id = $1,
           plan_id = COALESCE(plan_id, $3)
       WHERE user_id = $2;
     `;
 
       await client.query(updateUserQuery, [workspace.id, user_id, defaultPlanId]);
 
-      await membersRepository.addOrganizationMember(workspace.id, user_id, "ADMIN", "ACTIVE", null, client);
+      await membersRepository.addWorkspaceMember(
+        workspace.id,
+        user_id,
+        "ADMIN",
+        "ACTIVE",
+        null,
+        client
+      );
 
       await settingsRepository.createDefaultSettings(workspace.id, client);
 
       const rootAreaSlug = unique_name || "central";
       await client.query(
-        `INSERT INTO organization_areas (
-           organization_id, area_name, slug, description, properties, created_by, is_root_area
+        `INSERT INTO workspace_areas (
+           workspace_id, area_name, slug, description, properties, created_by, is_root_area
          ) VALUES ($1, 'Central', $2, 'Central team of the workspace', '{}'::jsonb, $3, true)`,
         [workspace.id, rootAreaSlug, user_id]
       );
@@ -271,7 +278,7 @@ class OrganizationBaseRepository {
     const orgName = `Workspace de ${displayName}`;
     const uniqueName = `workspace-${crypto.randomBytes(4).toString("hex")}`;
 
-    return await this.createOrgs(
+    return await this.createWorkspaces(
       userId,
       orgName,
       uniqueName,
@@ -285,10 +292,10 @@ class OrganizationBaseRepository {
     );
   }
 
-  async updateOrg(
-    organization_id,
+  async updateWorkspace(
+    workspace_id,
     user_id,
-    org_name,
+    workspace_name,
     unique_name,
     logo_url,
     banner_url,
@@ -297,7 +304,7 @@ class OrganizationBaseRepository {
   ) {
     const query = `
       UPDATE workspaces o
-      SET org_name = $3,
+      SET workspace_name = $3,
           unique_name = $4,
           logo_url = $5,
           banner_url = $6,
@@ -308,8 +315,8 @@ class OrganizationBaseRepository {
         AND (
           o.user_id = $2
           OR EXISTS (
-            SELECT 1 FROM organization_members om
-            WHERE om.organization_id = o.id
+            SELECT 1 FROM workspace_members om
+            WHERE om.workspace_id = o.id
               AND om.user_id = $2
               
               AND om.deleted = false
@@ -319,7 +326,7 @@ class OrganizationBaseRepository {
       RETURNING
         id,
         user_id,
-        org_name,
+        workspace_name,
         unique_name,
         logo_url,
         banner_url,
@@ -329,9 +336,9 @@ class OrganizationBaseRepository {
         deleted;
     `;
     const results = await executeQuery(query, [
-      organization_id,
+      workspace_id,
       user_id,
-      org_name,
+      workspace_name,
       unique_name,
       logo_url,
       banner_url,
@@ -341,35 +348,35 @@ class OrganizationBaseRepository {
     return results[0];
   }
 
-  async updateOrgLogo(organization_id, logo_url, user_id) {
+  async updateWorkspaceLogo(workspace_id, logo_url, user_id) {
     const query = `
 WITH user_check AS (
-    SELECT 1 FROM organization_members 
-    WHERE organization_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
+    SELECT 1 FROM workspace_members 
+    WHERE workspace_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
 )
 UPDATE workspaces
 SET logo_url = $2, updated_at = NOW()
 WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
 RETURNING *;
     `;
-    const results = await executeQuery(query, [organization_id, logo_url, user_id]);
+    const results = await executeQuery(query, [workspace_id, logo_url, user_id]);
     return results[0];
   }
 
-  async updateOrgBanner(organization_id, banner_url, user_id) {
+  async updateWorkspaceBanner(workspace_id, banner_url, user_id) {
     const query = `
 WITH user_check AS (
-    SELECT 1 FROM organization_members 
-    WHERE organization_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
+    SELECT 1 FROM workspace_members 
+    WHERE workspace_id = $1 AND user_id = $3  AND role IN ('SUPER_ADMIN', 'ADMIN') AND deleted = false
 )
 UPDATE workspaces
 SET banner_url = $2, updated_at = NOW()
 WHERE id = $1 AND EXISTS (SELECT 1 FROM user_check)
 RETURNING *;
     `;
-    const results = await executeQuery(query, [organization_id, banner_url, user_id]);
+    const results = await executeQuery(query, [workspace_id, banner_url, user_id]);
     return results[0];
   }
 }
 
-module.exports = new OrganizationBaseRepository();
+module.exports = new WorkspaceBaseRepository();
