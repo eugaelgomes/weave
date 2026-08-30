@@ -6,7 +6,6 @@ const AuthBaseController = require("../base.controller");
 const GoogleOauthRepository = require("../../repositories/oauth/google.repository");
 const AuthRepository = require("../../repositories/auth.repository");
 
-const OrganizationsRepository = require("@/modules/workspaces/repositories/base.repository");
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
 const systemSettings = require("@/modules/workspaces/services/system-settings.cache");
@@ -144,14 +143,6 @@ class GoogleOauthController extends AuthBaseController {
 
         if (!user) {
           throw new Error("Failed to create or retrieve user.");
-        }
-
-        if (!user.workspace) {
-          await OrganizationsRepository.autoProvisionPersonalWorkspace(
-            user.user_id,
-            googleUser.name || googleUser.email.split("@")[0]
-          );
-          user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
         }
       }
 

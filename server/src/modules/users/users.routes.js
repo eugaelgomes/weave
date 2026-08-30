@@ -5,6 +5,7 @@ const CreateUsersController = require("@/modules/users/controllers/create-users.
 const DeleteUsersController = require("@/modules/users/controllers/delete-users.controller");
 const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
 const UserDataController = require("@/modules/users/controllers/user-data.controller");
+const OnboardingController = require("@/modules/users/controllers/onboarding.controller");
 
 // Middlewares
 const {
@@ -24,6 +25,11 @@ const {
   searchUsersSchema,
   confirmDeleteAccountSchema,
 } = require("./schemas/users.schema");
+const {
+  submitStepZeroSchema,
+  submitStepOneSchema,
+  submitStepTwoSchema,
+} = require("./schemas/onboarding.schema");
 
 // Utils
 const { multipartImageUpload } = require("@/utils/middlewares.util");
@@ -59,6 +65,38 @@ router.get(
   verifyToken,
   highTrafficLimiter,
   UserDataController.getProfile.bind(UserDataController)
+);
+
+// Onboarding Routes
+router.post(
+  "/me/onboarding/step-0",
+  verifyToken,
+  standardTrafficLimiter,
+  validate(submitStepZeroSchema, "body"),
+  OnboardingController.submitStepZeroTerms.bind(OnboardingController)
+);
+
+router.post(
+  "/me/onboarding/step-1",
+  verifyToken,
+  standardTrafficLimiter,
+  validate(submitStepOneSchema, "body"),
+  OnboardingController.submitStepOneProfile.bind(OnboardingController)
+);
+
+router.post(
+  "/me/onboarding/step-2",
+  verifyToken,
+  standardTrafficLimiter,
+  validate(submitStepTwoSchema, "body"),
+  OnboardingController.submitStepTwoWorkspace.bind(OnboardingController)
+);
+
+router.post(
+  "/me/onboarding/step-3-complete",
+  verifyToken,
+  standardTrafficLimiter,
+  OnboardingController.completeOnboarding.bind(OnboardingController)
 );
 
 // Check Username Availability (Authenticated)

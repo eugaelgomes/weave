@@ -1,4 +1,3 @@
-const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 const settingsRepository = require("@/modules/workspaces/repositories/settings.repository");
 const AuthBaseController = require("../base.controller");
 
@@ -122,12 +121,6 @@ class SamlController extends AuthBaseController {
 
       if (!user) {
         throw new Error("Failed to provision SSO user.");
-      }
-
-      if (!user.workspace) {
-        const displayName = profile?.displayName || profile?.firstName || userEmail.split("@")[0];
-        await baseRepository.autoProvisionPersonalWorkspace(user.user_id, displayName);
-        user = await AuthRepository.findUserByEmail(userEmail);
       }
 
       const workspace = this._normalizeWorkspace(user.workspace);

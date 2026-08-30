@@ -6,7 +6,6 @@ const AuthBaseController = require("../base.controller");
 const MicrosoftOauthRepository = require("../../repositories/oauth/microsoft.repository");
 const AuthRepository = require("../../repositories/auth.repository");
 
-const OrganizationsRepository = require("@/modules/workspaces/repositories/base.repository");
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
 const systemSettings = require("@/modules/workspaces/services/system-settings.cache");
@@ -151,14 +150,6 @@ class MicrosoftOauthController extends AuthBaseController {
 
         if (!user) {
           throw new Error("Failed to create or retrieve user.");
-        }
-
-        if (!user.workspace) {
-          await OrganizationsRepository.autoProvisionPersonalWorkspace(
-            user.user_id,
-            microsoftUser.displayName || userEmail.split("@")[0]
-          );
-          user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
         }
       }
 

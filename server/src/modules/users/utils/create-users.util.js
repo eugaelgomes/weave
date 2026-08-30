@@ -6,9 +6,6 @@ const CreateUsersRepository = require("@/modules/users/repositories/create-users
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
 
-const WorkspacesRepository = require("@/modules/workspaces/repositories/base.repository");
-const queueController = require("@theweave/database");
-
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 
 class CreateUsersService {
@@ -39,7 +36,7 @@ class CreateUsersService {
    * Create user within an ACID transaction.
    * Delegates S3 and emails to external handlers.
    */
-  async createUser(userData, locale = "en") {
+  async createUser(userData) {
     const {
       email,
       username,
@@ -143,28 +140,6 @@ class CreateUsersService {
         username,
       };
     });
-
-    // Auto-provision personal workspace
-    await WorkspacesRepository.autoProvisionPersonalWorkspace(
-      result.userId,
-      result.userName,
-      locale,
-      timezone
-    );
-
-    // Dispatch async welcome email to Redis queue
-    try {
-      await queueController.addJob("emails_queue", {
-        activationToken,
-        email: result.email,
-        locale,
-        type: "welcome_message",
-        userName: result.userName,
-        username: result.username,
-      });
-    } catch (queueError) {
-      console.error("Failed to enqueue welcome email, but user was created:", queueError);
-    }
 
     return { success: true, user: result };
   }
