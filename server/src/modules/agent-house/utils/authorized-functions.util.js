@@ -1,4 +1,3 @@
-const notesRepository = require("@/modules/notes/notes.repository");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const {
   FunctionCategory,
@@ -16,13 +15,6 @@ const { getOwnershipRules, isFunctionForbidden } = require("./ai-security-polici
  */
 async function loadResourceAccessContext({ userId, context = {} }) {
   const result = {
-    note: {
-      accessible: true,
-      exists: false,
-      isCollaborator: false,
-      isOwner: false,
-      noteId: context.noteId || null,
-    },
     project: {
       accessible: true,
       exists: false,
@@ -31,23 +23,6 @@ async function loadResourceAccessContext({ userId, context = {} }) {
       projectId: context.projectId || null,
     },
   };
-
-  if (context.noteId) {
-    const note = await notesRepository.getNoteById(context.noteId);
-    result.note.exists = Boolean(note);
-    if (!note) {
-      result.note.accessible = false;
-    } else {
-      const ownerId = String(note.user_id || "");
-      const collaborators = Array.isArray(note.collaborators) ? note.collaborators : [];
-      const isCollaborator = collaborators.some(
-        (item) => String(item.id || item.user_id || "") === String(userId)
-      );
-      result.note.isOwner = ownerId === String(userId);
-      result.note.isCollaborator = isCollaborator;
-      result.note.accessible = result.note.isOwner || result.note.isCollaborator;
-    }
-  }
 
   if (context.projectId) {
     const projectResult = await projectsRepository.getProjectByIdWithAccess(
@@ -92,7 +67,6 @@ function isFunctionAuthorized({ access, functionName, schema, context }) {
     return false;
   }
 
-  const noteScoped = category === FunctionCategory.NOTES || category === FunctionCategory.BLOCKS;
   const projectScoped = category === FunctionCategory.PROJECTS;
   const workspaceScoped =
     category === FunctionCategory.WORKSPACES ||
@@ -100,10 +74,6 @@ function isFunctionAuthorized({ access, functionName, schema, context }) {
     functionName.includes("workspace");
 
   if (workspaceScoped && !context?.workspaceId) {
-    return false;
-  }
-
-  if (noteScoped && !access.note.accessible) {
     return false;
   }
 
@@ -116,18 +86,12 @@ function isFunctionAuthorized({ access, functionName, schema, context }) {
   }
 
   if (ownershipRules.requiresOwnership) {
-    if (noteScoped && access.note.noteId) {
-      return access.note.isOwner;
-    }
     if (projectScoped && access.project.projectId) {
       return access.project.isOwner;
     }
   }
 
   if (!ownershipRules.allowCollaborator) {
-    if (noteScoped && access.note.noteId && !access.note.isOwner) {
-      return false;
-    }
     if (projectScoped && access.project.projectId && !access.project.isOwner) {
       return false;
     }
@@ -173,10 +137,6 @@ async function resolveAuthorizedFunctions({ allowEdit, context = {}, userId }) {
   return {
     access,
     capabilityRules: {
-      note: {
-        allowCollaborator: access.note.isCollaborator,
-        allowOwner: access.note.isOwner,
-      },
       project: {
         allowCollaborator: access.project.isCollaborator,
         allowOwner: access.project.isOwner,

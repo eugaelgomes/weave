@@ -10,7 +10,6 @@ const {
 const authRoutes = require("@/modules/authentication/auth.routes");
 const userRoutes = require("@/modules/users/users.routes");
 
-const notesRoutes = require("@/modules/notes/notes.routes");
 const backupRoutes = require("@/modules/backup/backup.routes");
 const organizationsRoutes = require("@/modules/workspaces/workspaces.routes");
 const plansRoutes = require("@/modules/plans/plans.routes");
@@ -87,9 +86,7 @@ let missingOriginConfigLogged = false;
  * @returns {boolean} True if the path should bypass origin checks
  */
 const shouldSkipOriginGuard = (path) =>
-  path.startsWith("/webhooks") ||
-  path.startsWith("/auth/oauth") ||
-  path.startsWith("/auth/sso");
+  path.startsWith("/webhooks") || path.startsWith("/auth/oauth") || path.startsWith("/auth/sso");
 
 /**
  * Checks if a given origin is allowed to access the API
@@ -131,7 +128,6 @@ const routeRegistry = [
   { basePath: "/auth", handler: authRoutes },
   { basePath: "/backup", handler: backupRoutes },
   { basePath: "/calendar", handler: calendarRoutes },
-  { basePath: "/notes", handler: notesRoutes },
   { basePath: "/workspaces", handler: organizationsRoutes },
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/notifications", handler: notificationsRoutes },

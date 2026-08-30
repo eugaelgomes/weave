@@ -6,7 +6,7 @@ const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.ut
 const {
   resolveAuthorizedFunctions,
 } = require("@/modules/agent-house/utils/authorized-functions.util");
-const { resolveNoteIdsToUuids } = require("@/modules/notes/utils/note-id-lookup.util");
+
 const { resolveProjectIdsToUuids } = require("@/modules/projects/utils/project-id-lookup.util");
 const chatFormatterUtil = require("./chat-formatter.util");
 const chatEngineService = require("./chat-engine.util");
@@ -220,7 +220,6 @@ class ChatContextService {
           allowEdit: payload.allowEdit,
           context: payload.context,
           files: filesMetadata,
-          noteIds: payload.noteIds,
           parentToolCallId: payload.parentToolCallId,
           projectIds: payload.projectIds,
           useCase: payload.useCase,
@@ -267,9 +266,6 @@ class ChatContextService {
         });
     }
 
-    const resolvedNoteIds = await resolveNoteIdsToUuids(
-      Array.isArray(payload.noteIds) ? payload.noteIds : []
-    );
     const resolvedProjectIds = await resolveProjectIdsToUuids(
       Array.isArray(payload.projectIds) ? payload.projectIds : []
     );
@@ -279,7 +275,6 @@ class ChatContextService {
         allowEdit: payload.allowEdit,
         context: {
           isSubAgent: Boolean(payload.isSubAgent),
-          noteId: resolvedNoteIds.length > 0 ? resolvedNoteIds[0] : null,
           planUsageContext,
           projectId: resolvedProjectIds.length > 0 ? resolvedProjectIds[0] : null,
           workspaceId,
@@ -297,7 +292,6 @@ class ChatContextService {
       authorizedFunctions,
       capabilityRules,
       conversationHistory,
-      resolvedNoteIds,
       resolvedProjectIds,
       resourceAccess,
       selectedAgent,

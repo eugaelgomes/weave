@@ -24,13 +24,7 @@ const {
   updateCustomTool,
   deleteCustomTool,
 } = require("./controllers/agent-custom-tools.controller");
-const {
-  createAgent,
-  getAgents,
-  getAgentById,
-  updateAgent,
-  deleteAgent,
-} = require("./controllers/agents.controller");
+const agentsController = require("./controllers/agents.controller");
 
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
@@ -86,12 +80,33 @@ router.post("/chat/share/:token/fork", forkSharedChat);
 router.get("/models", getAvailableModels);
 
 // Agent House - Agents
-router.post("/agents", requireManageWeaveAi, validate(createUserAgentSchema, "body"), createAgent);
-router.get("/agents", getAgents);
+router.post(
+  "/agents",
+  requireManageWeaveAi,
+  validate(createUserAgentSchema, "body"),
+  (req, res, next) => agentsController.createAgent(req, res, next)
+);
+router.get("/agents", (req, res, next) => agentsController.getAgents(req, res, next));
 router.get("/agents/providers", getAvailableModels);
-router.get("/agents/:id", getAgentById);
-router.put("/agents/:id", requireManageWeaveAi, validate(updateAgentSchema, "body"), updateAgent);
-router.delete("/agents/:id", requireManageWeaveAi, deleteAgent);
+router.get("/agents/:id", (req, res, next) => agentsController.getAgentById(req, res, next));
+router.put(
+  "/agents/:id",
+  requireManageWeaveAi,
+  validate(updateAgentSchema, "body"),
+  (req, res, next) => agentsController.updateAgent(req, res, next)
+);
+router.delete("/agents/:id", requireManageWeaveAi, (req, res, next) =>
+  agentsController.deleteAgent(req, res, next)
+);
+router.post("/agents/:id/duplicate", requireManageWeaveAi, (req, res, next) =>
+  agentsController.duplicateAgent(req, res, next)
+);
+router.put("/agents/:id/share", requireManageWeaveAi, (req, res, next) =>
+  agentsController.shareAgent(req, res, next)
+);
+router.patch("/agents/:id/toggle", requireManageWeaveAi, (req, res, next) =>
+  agentsController.toggleActive(req, res, next)
+);
 
 // Agent House - LLMs
 router.post(

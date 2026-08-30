@@ -20,7 +20,7 @@ class AgentsRepository {
    * @param {object} data
    * @param {string} data.name
    * @param {string} [data.description]
-   * @param {string|null} [data.projectId]
+   * @param {string|null} [data.teamId]
    * @param {boolean} [data.isActive]
    * @param {object} [data.personality]
    * @returns {Promise<object>}
@@ -28,7 +28,7 @@ class AgentsRepository {
   async createAgent(userId, data) {
     const query = `
       INSERT INTO ai_user_agent (
-        user_id, name, description, project_id, is_active, personality,
+        user_id, name, description, team_id, is_active, personality,
         created_at, updated_at
       )
       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
@@ -39,7 +39,7 @@ class AgentsRepository {
       userId,
       data.name || "Unnamed Agent",
       data.description || null,
-      data.projectId || null,
+      data.teamId || null,
       data.isActive !== false,
       data.personality || {},
     ]);
@@ -51,7 +51,7 @@ class AgentsRepository {
    *
    * @param {string} userId
    * @param {object} [filters]
-   * @param {string} [filters.projectId]
+   * @param {string} [filters.teamId]
    * @param {boolean} [filters.isActive]
    * @param {string} [filters.search]
    * @returns {Promise<object[]>}
@@ -61,9 +61,9 @@ class AgentsRepository {
     const values = [userId];
     let paramIndex = 2;
 
-    if (filters.projectId) {
-      conditions.push(`a.project_id = $${paramIndex}`);
-      values.push(filters.projectId);
+    if (filters.teamId) {
+      conditions.push(`a.team_id = $${paramIndex}`);
+      values.push(filters.teamId);
       paramIndex++;
     }
 
@@ -81,12 +81,12 @@ class AgentsRepository {
 
     const query = `
       SELECT
-        a.id, a.user_id, a.name, a.description, a.project_id, a.is_active,
+        a.id, a.user_id, a.name, a.description, a.team_id, a.is_active,
         a.personality, a.knowledge_files, a.shared_with,
         a.created_at, a.updated_at,
-        p.title AS project_title
+        t.name AS team_name
       FROM ai_user_agent a
-      LEFT JOIN projects p ON p.id = a.project_id AND p.deleted = false
+      LEFT JOIN teams t ON t.id = a.team_id AND t.deleted = false
       WHERE ${conditions.join(" AND ")}
       ORDER BY a.updated_at DESC
     `;
@@ -105,12 +105,12 @@ class AgentsRepository {
   async getAgentById(agentId, userId) {
     const query = `
       SELECT
-        a.id, a.user_id, a.name, a.description, a.project_id, a.is_active,
+        a.id, a.user_id, a.name, a.description, a.team_id, a.is_active,
         a.personality, a.knowledge_files, a.shared_with,
         a.created_at, a.updated_at,
-        p.title AS project_title
+        t.name AS team_name
       FROM ai_user_agent a
-      LEFT JOIN projects p ON p.id = a.project_id AND p.deleted = false
+      LEFT JOIN teams t ON t.id = a.team_id AND t.deleted = false
       WHERE a.id = $1 AND a.user_id = $2 AND (a.deleted = false OR a.deleted IS NULL)
       LIMIT 1
     `;
@@ -129,12 +129,12 @@ class AgentsRepository {
   async getAgentByIdWithAccess(agentId, userId) {
     const query = `
       SELECT
-        a.id, a.user_id, a.name, a.description, a.project_id, a.is_active,
+        a.id, a.user_id, a.name, a.description, a.team_id, a.is_active,
         a.personality, a.knowledge_files, a.shared_with,
         a.created_at, a.updated_at,
-        p.title AS project_title
+        t.name AS team_name
       FROM ai_user_agent a
-      LEFT JOIN projects p ON p.id = a.project_id AND p.deleted = false
+      LEFT JOIN teams t ON t.id = a.team_id AND t.deleted = false
       WHERE a.id = $1
         AND (a.deleted = false OR a.deleted IS NULL)
         AND (
@@ -153,30 +153,6 @@ class AgentsRepository {
   }
 
   /**
-   * Gets all agents bound to a specific project.
-   *
-   * @param {string} projectId
-   * @param {string} userId
-   * @returns {Promise<object[]>}
-   */
-  async getAgentsByProject(projectId, userId) {
-    const query = `
-      SELECT
-        a.id, a.user_id, a.name, a.description, a.project_id, a.is_active,
-        a.personality, a.knowledge_files, a.shared_with,
-        a.created_at, a.updated_at
-      FROM ai_user_agent a
-      WHERE a.project_id = $1
-        AND a.user_id = $2
-        AND (a.deleted = false OR a.deleted IS NULL)
-      ORDER BY a.updated_at DESC
-    `;
-
-    const result = await pool.query(query, [projectId, userId]);
-    return result.rows;
-  }
-
-  /**
    * Updates an agent with partial data.
    *
    * @param {string} agentId
@@ -188,7 +164,7 @@ class AgentsRepository {
     const allowedColumns = [
       "name",
       "description",
-      "project_id",
+      "team_id",
       "is_active",
       "personality",
       "knowledge_files",
@@ -217,45 +193,6 @@ class AgentsRepository {
     `;
 
     const result = await pool.query(query, values);
-    return result.rows[0];
-  }
-
-  /**
-   * Assigns an agent to a project.
-   *
-   * @param {string} agentId
-   * @param {string} userId
-   * @param {string} projectId
-   * @returns {Promise<object|undefined>}
-   */
-  async assignToProject(agentId, userId, projectId) {
-    const query = `
-      UPDATE ai_user_agent
-      SET project_id = $3, updated_at = NOW()
-      WHERE id = $1 AND user_id = $2 AND (deleted = false OR deleted IS NULL)
-      RETURNING *
-    `;
-
-    const result = await pool.query(query, [agentId, userId, projectId]);
-    return result.rows[0];
-  }
-
-  /**
-   * Removes an agent from its project.
-   *
-   * @param {string} agentId
-   * @param {string} userId
-   * @returns {Promise<object|undefined>}
-   */
-  async unassignFromProject(agentId, userId) {
-    const query = `
-      UPDATE ai_user_agent
-      SET project_id = NULL, updated_at = NOW()
-      WHERE id = $1 AND user_id = $2 AND (deleted = false OR deleted IS NULL)
-      RETURNING *
-    `;
-
-    const result = await pool.query(query, [agentId, userId]);
     return result.rows[0];
   }
 
@@ -289,7 +226,7 @@ class AgentsRepository {
   async duplicateAgent(agentId, userId) {
     const query = `
       INSERT INTO ai_user_agent (
-        user_id, name, description, project_id, is_active,
+        user_id, name, description, team_id, is_active,
         personality, knowledge_files, shared_with,
         created_at, updated_at
       )
@@ -297,7 +234,7 @@ class AgentsRepository {
         user_id,
         name || ' (Copy)',
         description,
-        project_id,
+        team_id,
         is_active,
         personality,
         knowledge_files,

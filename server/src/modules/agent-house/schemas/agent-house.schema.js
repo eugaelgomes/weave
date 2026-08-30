@@ -2,12 +2,12 @@ const { z } = require("zod");
 
 const listUserAgentsSchema = z
   .object({
-    project_id: z
+    team_id: z
       .string()
-      .uuid("Invalid project ID")
+      .uuid("Invalid team ID")
       .optional()
       .describe(
-        "The unique identifier of the project to filter the AI agents. This must be a valid UUID. If omitted, the list will include agents across all projects."
+        "The unique identifier of the team/workspace to filter the AI agents. This must be a valid UUID. If omitted, the list will include agents across all teams."
       ),
   })
   .describe("Schema configuration for listing AI agents available to the user.");
@@ -53,13 +53,6 @@ const createUserAgentSchema = z
       .string()
       .min(1, "Agent name is required")
       .describe("The human-readable name of the custom AI agent."),
-    project_id: z
-      .string()
-      .uuid("Invalid project ID")
-      .optional()
-      .describe(
-        "The unique identifier of the project to which this agent is assigned. Must be a valid UUID."
-      ),
     role: z
       .string()
       .optional()
@@ -77,6 +70,13 @@ const createUserAgentSchema = z
       .optional()
       .describe(
         "Metadata tags used to organize, filter, and search for the AI agent. Can be a single string or an array of strings."
+      ),
+    team_id: z
+      .string()
+      .uuid("Invalid team ID")
+      .optional()
+      .describe(
+        "The unique identifier of the team/workspace to which this agent is assigned. Must be a valid UUID."
       ),
     tone: z
       .string()
@@ -128,14 +128,6 @@ const updateAgentSchema = z
       .describe("The updated name of the AI model that powers this agent."),
     model_provider: z.string().optional().describe("The updated provider of the AI model."),
     name: z.string().optional().describe("The updated human-readable name of the custom AI agent."),
-    project_id: z
-      .string()
-      .uuid("Invalid project ID")
-      .nullable()
-      .optional()
-      .describe(
-        "The updated unique identifier of the project to which this agent is assigned. Can be set to null to unassign the agent from any project."
-      ),
     role: z.string().optional().describe("The updated defined role or persona of the AI agent."),
     rules: z
       .union([z.string(), z.array(z.string())])
@@ -148,6 +140,14 @@ const updateAgentSchema = z
       .optional()
       .describe(
         "The updated metadata tags for the AI agent. Can be a single string or an array of strings."
+      ),
+    team_id: z
+      .string()
+      .uuid("Invalid team ID")
+      .nullable()
+      .optional()
+      .describe(
+        "The updated unique identifier of the team/workspace to which this agent is assigned."
       ),
     tone: z
       .string()
@@ -173,16 +173,16 @@ const shareAgentSchema = z
   })
   .describe("Schema configuration for sharing an AI agent with other users in the platform.");
 
-const assignToProjectSchema = z
+const assignToTeamSchema = z
   .object({
-    projectId: z
+    teamId: z
       .string()
-      .uuid("Invalid project ID")
+      .uuid("Invalid team ID")
       .describe(
-        "The unique identifier of the project to which the agent is being assigned. Must be a valid UUID."
+        "The unique identifier of the team to which the agent is being assigned. Must be a valid UUID."
       ),
   })
-  .describe("Schema configuration for assigning an AI agent to a specific project.");
+  .describe("Schema configuration for assigning an AI agent to a specific team.");
 
 const toggleActiveSchema = z
   .object({
@@ -274,36 +274,7 @@ const chatPayloadSchema = z
       .describe(
         "An object containing the configuration details of the model to be used, including its name and version."
       ),
-    noteIds: z
-      .preprocess((val) => {
-        if (val === "null" || val === "") return null;
-        if (typeof val === "string") {
-          try {
-            return JSON.parse(val);
-          } catch {
-            return val;
-          }
-        }
-        return val;
-      }, z.array(z.string()).nullable().optional())
-      .describe(
-        "An optional array of unique note identifiers to supply as relevant context for the AI agent during the chat session."
-      ),
-    projectIds: z
-      .preprocess((val) => {
-        if (val === "null" || val === "") return null;
-        if (typeof val === "string") {
-          try {
-            return JSON.parse(val);
-          } catch {
-            return val;
-          }
-        }
-        return val;
-      }, z.array(z.string()).nullable().optional())
-      .describe(
-        "An optional array of unique project identifiers to supply as relevant context for the AI agent during the chat session."
-      ),
+
     requestId: z
       .string()
       .uuid("Invalid requestId")
@@ -374,7 +345,7 @@ const getChatHistorySchema = z
   .describe("Schema configuration for retrieving the chat history for a session.");
 
 module.exports = {
-  assignToProjectSchema,
+  assignToTeamSchema,
   chatPayloadSchema,
   createUserAgentSchema,
   getChatHistorySchema,
