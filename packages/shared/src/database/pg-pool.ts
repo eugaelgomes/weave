@@ -18,8 +18,13 @@ export function initPgPool(config: PoolConfig) {
 
 export async function executeQuery<T extends QueryResultRow = any>(
   text: string,
-  params?: any[]
+  params?: any[],
+  client?: any
 ) {
+  if (client) {
+    const result = await client.query(text, params);
+    return result.rows;
+  }
   if (!pool) throw new Error('Database pool not initialized');
   const result = await pool.query<T>(text, params);
   return result.rows;
@@ -27,8 +32,13 @@ export async function executeQuery<T extends QueryResultRow = any>(
 
 export async function rowCount(
   text: string,
-  params?: any[]
+  params?: any[],
+  client?: any
 ): Promise<number> {
+  if (client) {
+    const result = await client.query(text, params);
+    return result.rowCount || 0;
+  }
   if (!pool) throw new Error('Database pool not initialized');
   const result = await pool.query(text, params);
   return result.rowCount || 0;
