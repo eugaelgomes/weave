@@ -4,11 +4,12 @@ const { generatePublicId } = require("@/utils/formatters.util");
 class WorkspaceMembersRepository {
   async getMembershipRole(workspace_id, user_id) {
     const query = `
-      SELECT role FROM workspace_members
-      WHERE workspace_id = $1
-        AND user_id = $2
-        
-        AND deleted = false
+      SELECT r.name as role 
+      FROM workspace_members om
+      JOIN workspaces_roles r ON r.id = om.role_id
+      WHERE om.workspace_id = $1
+        AND om.user_id = $2
+        AND om.deleted = false
       LIMIT 1;
     `;
     const rows = await executeQuery(query, [workspace_id, user_id]);
@@ -19,11 +20,12 @@ class WorkspaceMembersRepository {
     if (!userIds || userIds.length === 0) return [];
 
     const query = `
-      SELECT user_id::text, role, status
-      FROM workspace_members
-      WHERE workspace_id = $1
-        AND user_id = ANY($2::uuid[])
-        AND deleted = false
+      SELECT om.user_id::text, r.name as role, om.status
+      FROM workspace_members om
+      JOIN workspaces_roles r ON r.id = om.role_id
+      WHERE om.workspace_id = $1
+        AND om.user_id = ANY($2::uuid[])
+        AND om.deleted = false
     `;
     return await executeQuery(query, [workspaceId, userIds]);
   }
@@ -32,6 +34,7 @@ class WorkspaceMembersRepository {
     const query = `
       SELECT 
         om.*,
+        r.name as role,
         u1.name,
         u1.username,
         u1.email,
@@ -54,15 +57,15 @@ class WorkspaceMembersRepository {
            AND p.deleted = false) as projects,
         (SELECT COALESCE(json_agg(json_build_object(
            'team_id', a.id::text,
-           'team_name', a.team_name,
-           'role', am.role
+           'team_name', a.name,
+           'role', am.role_id
          )), '[]'::json)
-         FROM workspace_team_members am
-         JOIN workspace_teams a ON a.id = am.team_id
+         FROM team_members am
+         JOIN teams a ON a.id = am.team_id
          WHERE am.user_id = u1.user_id
            AND am.deleted = false 
            AND a.deleted = false
-           AND am.workspace_id = $1) as teams,
+           AND a.workspace_id = $1) as teams,
         (SELECT ul.created_at as last_login_at
          FROM user_logs ul
          WHERE ul.user_id = u1.user_id 
@@ -70,19 +73,18 @@ class WorkspaceMembersRepository {
          ORDER BY ul.created_at DESC
          LIMIT 1) as last_login
       FROM workspace_members om
+      JOIN workspaces_roles r ON r.id = om.role_id
       LEFT JOIN users u1 ON om.user_id = u1.user_id
       LEFT JOIN users u2 ON om.invited_by = u2.user_id
       WHERE om.workspace_id = $1
-        
         AND om.deleted = false
       ORDER BY 
-        CASE om.role 
+        CASE r.name 
           WHEN 'SUPER_ADMIN' THEN 1
           WHEN 'ADMIN' THEN 2
-          WHEN 'BILLING_MANAGER' THEN 3
-          WHEN 'MEMBER' THEN 4
-          WHEN 'GUEST' THEN 5
-          ELSE 6
+          WHEN 'MEMBER' THEN 3
+          WHEN 'GUEST' THEN 4
+          ELSE 5
         END,
         om.created_at ASC;
     `;
@@ -93,17 +95,17 @@ class WorkspaceMembersRepository {
   async countActiveMembersByRole(workspace_id, role) {
     const query = `
       SELECT COUNT(*)::int AS total
-      FROM workspace_members
-      WHERE workspace_id = $1
-        
-        AND role = UPPER($2)
-        AND deleted = false;
+      FROM workspace_members om
+      JOIN workspaces_roles r ON r.id = om.role_id
+      WHERE om.workspace_id = $1
+        AND r.name = UPPER($2)
+        AND om.deleted = false;
     `;
     const results = await executeQuery(query, [workspace_id, role]);
     return results[0]?.total || 0;
   }
 
-  async addWorkspaceMember(workspace_id, user_id, role, status, invited_by, txClient = null) {
+  async addWorkspaceMember(workspace_id, user_id, role_id, status, invited_by, txClient = null) {
     const inviterId = invited_by || user_id;
     const query = `
       WITH existing AS (
@@ -111,13 +113,12 @@ class WorkspaceMembersRepository {
         FROM workspace_members
         WHERE workspace_id = $1
           AND user_id = $2
-          
         LIMIT 1
       ),
       reactivated AS (
         UPDATE workspace_members
         SET deleted = false,
-            role = UPPER($3)::public.workspace_workspace_role_enum,
+            role_id = $3,
             status = UPPER($4)::public.workspace_member_status_enum,
             invited_by = $5,
             updated_at = now(),
@@ -127,11 +128,8 @@ class WorkspaceMembersRepository {
         RETURNING *
       ),
       inserted AS (
-        INSERT INTO workspace_members (workspace_id, user_id, role, status, invited_by)
-        SELECT $1, $2,
-          UPPER($3)::public.workspace_workspace_role_enum,
-          UPPER($4)::public.workspace_member_status_enum,
-          $5
+        INSERT INTO workspace_members (workspace_id, user_id, role_id, status, invited_by)
+        SELECT $1, $2, $3, UPPER($4)::public.workspace_member_status_enum, $5
         WHERE NOT EXISTS (SELECT 1 FROM existing)
         RETURNING *
       )
@@ -139,7 +137,7 @@ class WorkspaceMembersRepository {
       UNION ALL
       SELECT * FROM inserted;
     `;
-    const params = [workspace_id, user_id, role, status, inviterId];
+    const params = [workspace_id, user_id, role_id, status, inviterId];
 
     if (txClient) {
       const { rows } = await txClient.query(query, params);
@@ -156,29 +154,20 @@ class WorkspaceMembersRepository {
       FROM (
         SELECT om.user_id, 'PROJECT_MANAGER' AS project_role, 1 AS priority
         FROM workspace_members om
+        JOIN workspaces_roles r ON r.id = om.role_id
         WHERE om.workspace_id = $1
-          
-          AND om.role IN ('ADMIN', 'SUPER_ADMIN')
+          AND r.name IN ('ADMIN', 'SUPER_ADMIN')
           AND om.deleted = false
           AND om.user_id != $2::uuid
 
         UNION ALL
 
-        SELECT om.user_id, 'PROJECT_MANAGER' AS project_role, 2 AS priority
-        FROM workspace_team_members om
-        WHERE om.workspace_id = $1
-          AND om.role = 'ADMIN'
-          AND om.deleted = false
-          AND om.user_id != $2::uuid
-
-        UNION ALL
-
-        SELECT om.user_id, 'CONTRIBUTOR' AS project_role, 3 AS priority
-        FROM workspace_team_members om
-        WHERE om.workspace_id = $1
-          AND om.role = 'MEMBER'
-          AND om.deleted = false
-          AND om.user_id != $2::uuid
+        SELECT am.user_id, 'CONTRIBUTOR' AS project_role, 2 AS priority
+        FROM team_members am
+        JOIN teams a ON a.id = am.team_id
+        WHERE a.workspace_id = $1
+          AND am.deleted = false
+          AND am.user_id != $2::uuid
       ) sub
       ORDER BY user_id, priority ASC;
     `;
@@ -189,18 +178,24 @@ class WorkspaceMembersRepository {
   async removeWorkspaceMember(workspace_id, user_id) {
     const query = `
       WITH deleted_workspace_member AS (
-        UPDATE workspace_members
+        UPDATE workspace_members om
         SET deleted = true, updated_at = now()
-        WHERE workspace_id = $1 AND user_id = $2 
-          AND role NOT IN ('ADMIN', 'SUPER_ADMIN')
-        RETURNING *
+        FROM workspaces_roles r
+        WHERE om.role_id = r.id 
+          AND om.workspace_id = $1 
+          AND om.user_id = $2 
+          AND r.name NOT IN ('ADMIN', 'SUPER_ADMIN')
+        RETURNING om.*
       ),
       deleted_team_members AS (
-        UPDATE workspace_team_members
+        UPDATE team_members am
         SET deleted = true, updated_at = now()
-        WHERE workspace_id = $1 AND user_id = $2
+        FROM teams a
+        WHERE a.id = am.team_id
+          AND a.workspace_id = $1 
+          AND am.user_id = $2
           AND EXISTS (SELECT 1 FROM deleted_workspace_member)
-        RETURNING *
+        RETURNING am.*
       )
       SELECT * FROM deleted_workspace_member;
     `;
@@ -208,15 +203,31 @@ class WorkspaceMembersRepository {
     return results[0];
   }
 
-  async updateMemberRole(workspace_id, user_id, role) {
-    const query = `
-      UPDATE workspace_members
-      SET role = UPPER($3)::public.workspace_workspace_role_enum,
-          updated_at = now()
-      WHERE workspace_id = $1 AND user_id = $2 
-      RETURNING *;
-    `;
-    const results = await executeQuery(query, [workspace_id, user_id, role]);
+  async updateMemberRole(workspace_id, user_id, role_name_or_id) {
+    // Determine if we were given a name (like 'ADMIN') or an id (UUID)
+    const isUUID =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        role_name_or_id
+      );
+
+    let query;
+    if (isUUID) {
+      query = `
+        UPDATE workspace_members
+        SET role_id = $3, updated_at = now()
+        WHERE workspace_id = $1 AND user_id = $2 
+        RETURNING *;
+      `;
+    } else {
+      query = `
+        UPDATE workspace_members
+        SET role_id = (SELECT id FROM workspaces_roles WHERE workspace_id = $1 AND name = UPPER($3) LIMIT 1),
+            updated_at = now()
+        WHERE workspace_id = $1 AND user_id = $2 
+        RETURNING *;
+      `;
+    }
+    const results = await executeQuery(query, [workspace_id, user_id, role_name_or_id]);
     return results[0];
   }
 
@@ -234,11 +245,12 @@ class WorkspaceMembersRepository {
 
   async getWorkspaceMember(workspace_id, user_id) {
     const query = `
-      SELECT * FROM workspace_members
-      WHERE workspace_id = $1
-        AND user_id = $2
-        
-        AND deleted = false
+      SELECT om.*, r.name as role 
+      FROM workspace_members om
+      JOIN workspaces_roles r ON r.id = om.role_id
+      WHERE om.workspace_id = $1
+        AND om.user_id = $2
+        AND om.deleted = false
       LIMIT 1;
     `;
     const results = await executeQuery(query, [workspace_id, user_id]);
@@ -250,7 +262,6 @@ class WorkspaceMembersRepository {
       SELECT 1 FROM workspace_members
       WHERE workspace_id = $1
         AND user_id = $2
-        
         AND deleted = false
       LIMIT 1;
     `;
@@ -260,12 +271,12 @@ class WorkspaceMembersRepository {
 
   async getWorkspaceOwner(workspace_id) {
     const query = `
-      SELECT om.*, u.name, u.username, u.email, u.avatar_url
+      SELECT om.*, r.name as role, u.name, u.username, u.email, u.avatar_url
       FROM workspace_members om
+      JOIN workspaces_roles r ON r.id = om.role_id
       LEFT JOIN users u ON om.user_id = u.user_id
       INNER JOIN workspaces o ON o.id = om.workspace_id
       WHERE om.workspace_id = $1 AND om.user_id = o.user_id
-        
         AND om.deleted = false
       LIMIT 1;
     `;
@@ -285,6 +296,16 @@ class WorkspaceMembersRepository {
     const client = await getConnection();
     try {
       await client.query("BEGIN");
+
+      const findRoleQuery =
+        "SELECT id FROM workspaces_roles WHERE workspace_id = $1 AND name = $2 LIMIT 1";
+      const roleRow = await client.query(findRoleQuery, [workspace_id, role]);
+
+      if (roleRow.rows.length === 0) {
+        throw new Error("Role not found");
+      }
+
+      const roleId = roleRow.rows[0].id;
 
       const findUserQuery = `SELECT user_id, status FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`;
       const findUserRes = await client.query(findUserQuery, [email]);
@@ -316,7 +337,7 @@ class WorkspaceMembersRepository {
         userStatus = insertRes.rows[0].status;
       }
 
-      await this.addWorkspaceMember(workspace_id, userId, role, "ACTIVE", invited_by, client);
+      await this.addWorkspaceMember(workspace_id, userId, roleId, "ACTIVE", invited_by, client);
 
       await client.query("COMMIT");
       return {

@@ -3,6 +3,7 @@ const { generatePublicId } = require("@/utils/formatters.util");
 
 const settingsRepository = require("./settings.repository");
 const membersRepository = require("./members.repository");
+const rolesRepository = require("./roles.repository");
 
 class WorkspaceBaseRepository {
   async getActiveWorkspaceWithMembership(user_id) {
@@ -227,10 +228,12 @@ class WorkspaceBaseRepository {
 
       await client.query(updateUserQuery, [workspace.id, user_id, defaultPlanId]);
 
+      const rolesMap = await rolesRepository.createDefaultRoles(workspace.id, user_id, client);
+
       await membersRepository.addWorkspaceMember(
         workspace.id,
         user_id,
-        "ADMIN",
+        rolesMap["ADMIN"],
         "ACTIVE",
         null,
         client
