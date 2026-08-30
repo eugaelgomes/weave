@@ -20,11 +20,6 @@ const baseRepository = require("@/modules/workspaces/repositories/base.repositor
  * @property {string} workspace_name
  */
 
-const {
-  workspaceRoleHasPermission,
-  WORKSPACE_PERMISSIONS,
-} = require("@/modules/workspaces/workspace-role-policy");
-
 const { DOMAIN_REGEX } = require("@/utils/patterns.util");
 
 class WorkspacesBaseController {
@@ -68,8 +63,8 @@ class WorkspacesBaseController {
     if (!workspace) {
       throw AppError.notFound("Workspace not found");
     }
-    const role = workspace.member_role;
-    if (!role || !workspaceRoleHasPermission(role, permission)) {
+    const userPermissions = workspace.permissions || [];
+    if (!userPermissions.includes(permission)) {
       throw AppError.forbidden("Insufficient workspace permissions", "WORKSPACE_FORBIDDEN");
     }
     return true;
@@ -85,8 +80,8 @@ class WorkspacesBaseController {
     if (!workspace) {
       throw AppError.notFound("Workspace not found");
     }
-    const role = workspace.member_role;
-    if (!role || !permissions.some((p) => workspaceRoleHasPermission(role, p))) {
+    const userPermissions = workspace.permissions || [];
+    if (!permissions.some((p) => userPermissions.includes(p))) {
       throw AppError.forbidden("Insufficient workspace permissions", "WORKSPACE_FORBIDDEN");
     }
     return true;
@@ -105,9 +100,9 @@ class WorkspacesBaseController {
    * @returns {boolean} True if permitted, false otherwise
    */
   _workspaceRoleHasPermission(workspace, permission) {
-    const role = workspace?.member_role;
-    if (!role || !permission) return false;
-    return workspaceRoleHasPermission(role, permission);
+    const userPermissions = workspace?.permissions || [];
+    if (!permission) return false;
+    return userPermissions.includes(permission);
   }
 
   /**

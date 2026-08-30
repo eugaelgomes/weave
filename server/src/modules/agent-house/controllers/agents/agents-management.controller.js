@@ -6,17 +6,20 @@ const BaseController = require("../base.controller");
 class AgentsManagementController extends BaseController {
   async createAgent(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const agent = await agentsService.createAgent(userId, req.body);
       res.status(201).json({ data: agent, success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
   async getAgents(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
       const filters = {};
       if (req.query.teamId) filters.teamId = req.query.teamId;
       if (req.query.isActive !== undefined) filters.isActive = req.query.isActive === "true";
@@ -25,13 +28,13 @@ class AgentsManagementController extends BaseController {
       const agents = await agentsService.listUserAgents(userId, filters);
       res.json({ data: agents, success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
   async getAgentById(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
       const { id } = req.params;
       const agent = await agentsService.getAgentById(id, userId);
       if (!agent) {
@@ -39,13 +42,16 @@ class AgentsManagementController extends BaseController {
       }
       res.json({ data: agent, success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
   async updateAgent(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const { id } = req.params;
       const agent = await agentsService.updateAgent(id, userId, req.body);
       if (!agent) {
@@ -53,24 +59,30 @@ class AgentsManagementController extends BaseController {
       }
       res.json({ data: agent, success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
   async deleteAgent(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const { id } = req.params;
       await agentsService.deleteAgent(id, userId);
       res.json({ message: "Agent deleted successfully", success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
   async duplicateAgent(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const { id } = req.params;
       const agent = await agentsRepository.duplicateAgent(id, userId);
       if (!agent) {
@@ -78,13 +90,16 @@ class AgentsManagementController extends BaseController {
       }
       res.json({ data: agent, success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
   async shareAgent(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const { id } = req.params;
       const { sharedWith } = req.body;
       const agent = await agentsRepository.shareAgent(id, userId, sharedWith);
@@ -93,13 +108,16 @@ class AgentsManagementController extends BaseController {
       }
       res.json({ data: agent, success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 
   async toggleActive(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const { id } = req.params;
       const { isActive } = req.body;
       const agent = await agentsRepository.toggleActive(id, userId, isActive);
@@ -108,7 +126,7 @@ class AgentsManagementController extends BaseController {
       }
       res.json({ data: agent, success: true });
     } catch (error) {
-      next(error);
+      next(fromUnknown(error));
     }
   }
 }

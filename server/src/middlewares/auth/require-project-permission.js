@@ -1,9 +1,5 @@
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 
-const {
-  orgRoleHasPermission,
-  ORG_PERMISSIONS,
-} = require("@/modules/workspaces/workspace-role-policy");
 const projectsRepository = require("@/modules/projects/repositories/projects.repository");
 const {
   projectRoleHasPermission,
@@ -51,12 +47,8 @@ function requireProjectPermission(permission) {
       if (memberRows?.length) {
         project = memberRows[0];
       } else {
-        const membership =
-          await baseRepository.getActiveOrganizationWithMembership(userId);
-        if (
-          membership?.id &&
-          orgRoleHasPermission(membership.member_role, ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS)
-        ) {
+        const membership = await baseRepository.getActiveOrganizationWithMembership(userId);
+        if (membership?.id && membership.permissions?.includes("access_all_org_projects")) {
           const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
             projectId,
             membership.id
@@ -85,10 +77,7 @@ function requireProjectPermission(permission) {
       }
 
       const membership = await baseRepository.getActiveOrganizationWithMembership(userId);
-      if (
-        membership?.id &&
-        orgRoleHasPermission(membership.member_role, ORG_PERMISSIONS.ACCESS_ALL_ORG_PROJECTS)
-      ) {
+      if (membership?.id && membership.permissions?.includes("access_all_org_projects")) {
         const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
           projectId,
           membership.id

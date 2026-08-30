@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const { fromUnknown } = require("@/errors");
 const CreateApiTokensRepository = require("@/modules/api-tokens/repositories/create-api-tokens.repository");
 const ApiTokensNormalizer = require("@/modules/api-tokens/normalizer");
-const { ORG_ROLES } = require("@/modules/workspaces/workspace-role-policy");
+const rolesRepository = require("@/modules/workspaces/repositories/roles.repository");
 
 const TOKEN_PREFIX = "wn_";
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS, 10) || 12;
@@ -39,8 +39,7 @@ class CreateApiTokensController {
       }
 
       const isOrgScope = cleanScopes.some(
-        (s) =>
-          s.startsWith("workspaces:") || s.startsWith("projects:") || s.startsWith("calendar:")
+        (s) => s.startsWith("workspaces:") || s.startsWith("projects:") || s.startsWith("calendar:")
       );
 
       if (organizationId || isOrgScope) {
@@ -51,11 +50,15 @@ class CreateApiTokensController {
           });
         }
 
-        const role = await CreateApiTokensRepository.getUserOrgRole(userId, organizationId);
+        const permissions = await rolesRepository.getUserEffectivePermissions(
+          organizationId,
+          userId
+        );
 
-        if (role !== ORG_ROLES.SUPER_ADMIN && role !== ORG_ROLES.ADMIN) {
+        if (!permissions.includes("manage_workspace")) {
           return res.status(403).json({
-            error: "Only administrators can create API tokens with workspace-level permissions.",
+            error:
+              "Only administrators with manage_workspace permission can create API tokens with workspace-level permissions.",
           });
         }
       }

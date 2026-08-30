@@ -7,8 +7,11 @@ const BaseController = require("../base.controller");
 class AgentsLLMsController extends BaseController {
   async createLlmConfig(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
       const workspaceId = this._extractWorkspaceId(req);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const payload = { ...req.body, workspaceId };
 
       const config = await agentLlmsService.createLlmConfig(userId, payload);
@@ -20,7 +23,7 @@ class AgentsLLMsController extends BaseController {
 
   async getLlmConfigs(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
       const configs = await agentLlmsService.listUserLlmConfigs(userId);
       res.json({ data: configs, success: true });
     } catch (error) {
@@ -30,7 +33,10 @@ class AgentsLLMsController extends BaseController {
 
   async updateLlmConfig(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const { id } = req.params;
       const config = await agentLlmsService.updateLlmConfig(id, userId, req.body);
       res.json({ data: config, success: true });
@@ -41,7 +47,10 @@ class AgentsLLMsController extends BaseController {
 
   async deleteLlmConfig(req, res, next) {
     try {
-      const userId = this._validateAuthentication(req);
+      const userId = this._validateAuthentication(req, res);
+      const workspace = await this._getUserWorkspace(userId);
+      this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
+
       const { id } = req.params;
       await agentLlmsService.deleteLlmConfig(id, userId);
       res.json({ message: "LLM configuration deleted successfully", success: true });

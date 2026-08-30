@@ -1,12 +1,12 @@
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 
-const { orgRoleHasPermission } = require("@/modules/workspaces/workspace-role-policy");
+const rolesRepository = require("@/modules/workspaces/repositories/roles.repository");
 
 /**
- * Exige organização ativa com papel que tenha a permissão indicada (ex.: super_admin).
+ * Exige organização ativa com papel que tenha a permissão indicada (ex.: "manage_weave_ai").
  * Usar depois de `verifyToken`.
  *
- * @param {string} permission — valor de ORG_PERMISSIONS.*
+ * @param {string} permission
  * @returns {import('express').RequestHandler}
  */
 function requireOrgPermission(permission) {
@@ -20,8 +20,7 @@ function requireOrgPermission(permission) {
         });
       }
 
-      const workspace =
-        await baseRepository.getActiveOrganizationWithMembership(userId);
+      const workspace = await baseRepository.getActiveOrganizationWithMembership(userId);
 
       if (!workspace) {
         return res.status(404).json({
@@ -30,8 +29,9 @@ function requireOrgPermission(permission) {
         });
       }
 
-      const role = workspace.member_role;
-      if (!role || !orgRoleHasPermission(role, permission)) {
+      const permissions = await rolesRepository.getUserEffectivePermissions(workspace.id, userId);
+
+      if (!permissions || !permissions.includes(permission)) {
         return res.status(403).json({
           code: "ORG_FORBIDDEN",
           error: "Insufficient workspace permissions",

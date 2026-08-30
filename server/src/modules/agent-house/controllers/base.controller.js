@@ -3,8 +3,9 @@
  * @description Classe abstrata e utilitários compartilhados para os controllers do Agent House.
  */
 const { AppError } = require("@/errors");
+const WorkspacesBaseController = require("@/modules/workspaces/controllers/base-controller");
 
-class BaseController {
+class AgentHouseBaseController extends WorkspacesBaseController {
   /**
    * Validates if a user is authenticated and returns the user ID.
    *
@@ -31,4 +32,4 @@ class BaseController {
   }
 }
 
-module.exports = BaseController;
+module.exports = AgentHouseBaseController;

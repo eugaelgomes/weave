@@ -115,17 +115,18 @@ class WorkspaceRolesRepository {
 
   async getUserEffectivePermissions(workspaceId, userId) {
     const query = `
-      SELECT r.permissions
-      FROM workspace_members m
-      JOIN workspaces_roles r ON r.id = m.role_id
-      WHERE m.workspace_id = $1 
-        AND m.user_id = $2 
-        AND m.deleted = false
+      SELECT DISTINCT perm
+      FROM workspace_members om
+      JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
+      JOIN workspaces_roles r ON r.id = wmr.role_id
+      CROSS JOIN jsonb_array_elements_text(r.permissions) as perm
+      WHERE om.workspace_id = $1
+        AND om.user_id = $2
+        AND om.deleted = false
         AND r.deleted = false
-      LIMIT 1
     `;
     const results = await executeQuery(query, [workspaceId, userId]);
-    return results[0]?.permissions || [];
+    return results.map((row) => row.perm);
   }
 }
 

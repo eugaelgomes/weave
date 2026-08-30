@@ -1,10 +1,6 @@
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 const WebhooksBaseController = require("@/modules/webhooks/controllers/base.controller");
 
-const {
-  ORG_PERMISSIONS,
-  orgRoleHasPermission,
-} = require("@/modules/workspaces/workspace-role-policy");
 const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/mutate-slack-integrations.repository");
 const {
   issueSlackInstallState,
@@ -30,14 +26,13 @@ class SlackOauthController extends WebhooksBaseController {
       const userId = this._requireAuthenticatedUser(req, res);
       if (userId === null || userId === undefined) return;
 
-      const workspace =
-        await baseRepository.getActiveOrganizationWithMembership(userId);
+      const workspace = await baseRepository.getActiveOrganizationWithMembership(userId);
       if (!workspace?.id) {
         return res.status(404).json({ error: "Workspace not found" });
       }
 
       const role = workspace.member_role;
-      if (!role || !orgRoleHasPermission(role, ORG_PERMISSIONS.MANAGE_GLOBAL_INTEGRATIONS)) {
+      if (!role || !role.permissions?.includes("manage_global_integrations")) {
         return res.status(403).json({
           code: "ORG_FORBIDDEN",
           error: "Insufficient workspace permissions",

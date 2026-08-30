@@ -3,6 +3,7 @@ const { generatePublicId } = require("@/utils/formatters.util");
 
 const settingsRepository = require("./settings.repository");
 const membersRepository = require("./members.repository");
+const rolesRepository = require("./roles.repository");
 
 class WorkspaceBaseRepository {
   async getActiveWorkspaceWithMembership(user_id) {
@@ -43,15 +44,23 @@ class WorkspaceBaseRepository {
     LIMIT 1;
     `;
     const rows = await executeQuery(query, [user_id]);
-    if (rows[0]) return rows[0];
+    let workspace = rows[0] || null;
 
-    const owned = (await this.getWorkspacesByUserId(user_id)).find((o) => !o.deleted);
-    if (!owned) return null;
-    const role = await membersRepository.getMembershipRole(owned.id, user_id);
+    if (!workspace) {
+      const owned = (await this.getWorkspacesByUserId(user_id)).find((o) => !o.deleted);
+      if (!owned) return null;
+      workspace = owned;
+    }
+
+    const permissions = await rolesRepository.getUserEffectivePermissions(workspace.id, user_id);
     return {
-      ...owned,
-      member_role: role || "super_admin",
+      ...workspace,
+      permissions,
     };
+  }
+
+  async getActiveOrganizationWithMembership(user_id) {
+    return this.getActiveWorkspaceWithMembership(user_id);
   }
 
   async getWorkspacesByUserId(user_id) {
