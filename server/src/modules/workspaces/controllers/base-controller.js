@@ -32,6 +32,8 @@ class WorkspacesBaseController {
   constructor() {
     this.workspacesRepository = baseRepository;
     this.baseRepository = baseRepository;
+    this.teamsRepository = teamsRepository;
+    this.rolesRepository = require("@/modules/workspaces/repositories/roles.repository");
   }
 
   /**
@@ -231,11 +233,13 @@ class WorkspacesController extends WorkspacesBaseController {
         teamName: defaultName,
         workspaceId: workspace.id,
       });
+      const adminRole = await this.rolesRepository.getRoleByName("ADMIN", workspace.id);
+
       await this.teamsRepository.addTeamMember(
         newTeam.id,
         workspace.id,
         createdBy,
-        "admin",
+        adminRole.id,
         createdBy
       );
     } catch (error) {

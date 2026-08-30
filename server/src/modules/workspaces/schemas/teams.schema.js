@@ -5,10 +5,9 @@ const { z } = require("zod");
  */
 const addTeamMemberSchema = z.object({
   role: z
-    .enum(["ADMIN", "MEMBER", "GUEST"])
-    .optional()
-    .default("MEMBER")
-    .describe("The role of the member in the team. Valid roles: ADMIN, MEMBER, GUEST."),
+    .string()
+    .uuid("Invalid role ID format")
+    .describe("The role UUID for the member in the team."),
   user_id: z
     .string()
     .uuid("Invalid user ID format")
@@ -20,12 +19,9 @@ const addTeamMemberSchema = z.object({
  */
 const updateTeamMemberSchema = z.object({
   role: z
-    .enum(["ADMIN", "MEMBER", "GUEST"], {
-      errorMap: () => ({
-        message: "Invalid team member role. Use ADMIN, MEMBER or GUEST",
-      }),
-    })
-    .describe("The role of the member in the team. Valid roles: ADMIN, MEMBER, GUEST."),
+    .string()
+    .uuid("Invalid role ID format")
+    .describe("The role UUID for the member in the team."),
 });
 
 /**

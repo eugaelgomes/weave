@@ -20,7 +20,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
   async _userIsTeamManager(workspace, teamId, userId) {
     const member = await this.teamsRepository.getTeamMember(teamId, workspace.id, userId);
-    return member?.workspace_roles?.name === "admin";
+    return member?.workspace_roles?.permissions?.includes("manage_teams") ?? false;
   }
 
   /**
@@ -164,7 +164,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
             userId
           );
 
-          if (!member || member.workspace_roles?.name !== "admin") {
+          if (!member || !member.workspace_roles?.permissions?.includes("manage_teams")) {
             return res.status(403).json({
               error: "Only team admins of the parent team can create sub-teams",
               success: false,
