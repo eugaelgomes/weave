@@ -25,8 +25,7 @@ const {
   WORKSPACE_PERMISSIONS,
 } = require("@/modules/workspaces/workspace-role-policy");
 
-const DOMAIN_REGEX =
-  /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
+const { DOMAIN_REGEX } = require("@/utils/patterns.util");
 
 class WorkspacesBaseController {
   constructor() {

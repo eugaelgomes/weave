@@ -100,6 +100,10 @@ function normalizeProjectStatus(input) {
   return ALLOWED_PROJECT_STATUSES.includes(s) ? s : null;
 }
 
+// --- DOMAINS ---
+const DOMAIN_REGEX =
+  /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/i;
+
 module.exports = {
   ALLOWED_BLOCK_TYPES,
   ALLOWED_COLOR_TYPES,
@@ -107,6 +111,7 @@ module.exports = {
   ALLOWED_PROJECT_STATUSES,
   BLOCK_CONFIG,
   BLOCK_TYPES,
+  DOMAIN_REGEX,
   HEX_COLOR_REGEX,
   normalizeNoteStatus,
   normalizeProjectStatus,
