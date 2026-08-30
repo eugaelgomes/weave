@@ -1,10 +1,10 @@
 const { v5: uuidv5 } = require("uuid");
-const chatRepository = require("@/modules/agent-house/repositories/chat.repository");
+const chatRepository = require("@/modules/agent-house/repositories/chat/chat-messages.repository");
 const PlansService = require("@/modules/plans/services/plans.service");
-const chatFormatterUtil = require("./chat-formatter.util");
-const chatEngineService = require("./chat-engine.util");
-const chatFunctionsService = require("./chat-functions.util");
-const { getLocalChatI18n } = require("./agent-house-i18n.util");
+const chatFormatterUtil = require("../../utils/chat-formatter.util");
+const chatEngineService = require("./chat-engine.service");
+const chatFunctionsService = require("./chat-functions.service");
+const { getLocalChatI18n } = require("../../utils/agent-house-i18n.util");
 
 class ChatLoopService {
   async executeReActLoop({

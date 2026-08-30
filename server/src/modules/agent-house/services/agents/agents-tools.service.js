@@ -1,6 +1,6 @@
-const agentCustomToolsRepository = require("../repositories/agent-custom-tools.repository");
+const agentCustomToolsRepository = require("../../repositories/agents/agents-tools.repository");
 
-class AgentCustomToolsService {
+class AgentsToolsService {
   async createCustomTool(userId, data) {
     if (!data.name || !data.webhookUrl) {
       throw new Error("Missing required fields (name, webhookUrl).");
@@ -52,4 +52,4 @@ class AgentCustomToolsService {
   }
 }
 
-module.exports = new AgentCustomToolsService();
+module.exports = new AgentsToolsService();

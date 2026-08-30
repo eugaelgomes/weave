@@ -1,5 +1,5 @@
 const { z } = require("zod");
-const artifactsRepository = require("@/modules/agent-house/repositories/artifacts.repository");
+const artifactsRepository = require("@/modules/agent-house/repositories/artifacts/artifacts.repository");
 
 const manageArtifactsSchema = z.discriminatedUnion("action", [
   z.object({

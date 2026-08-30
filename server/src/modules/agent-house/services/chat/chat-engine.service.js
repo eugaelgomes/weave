@@ -17,8 +17,8 @@ const {
   getEngineLlmRequestQueueRedisKey,
   getEngineLlmResponsePrefixRedisKey,
 } = require("@theweave/database");
-const chatFormatterUtil = require("./chat-formatter.util");
-const { getI18n } = require("./agent-house-i18n.util");
+const chatFormatterUtil = require("../../utils/chat-formatter.util");
+const { getI18n } = require("../../utils/agent-house-i18n.util");
 
 const Redis = require("ioredis");
 const { getBlockingRedisOptions } = require("@theweave/database");

@@ -1,24 +1,14 @@
-/**
- * @module artifacts/controllers/artifacts.controller
- * @description Handles HTTP requests for AI Artifacts.
- */
-const ArtifactsRepository = require("../repositories/artifacts.repository");
+const artifactsService = require("../../services/artifacts/artifacts.service");
+const BaseController = require("../base.controller");
 
-class ArtifactsController {
+class ArtifactsController extends BaseController {
   async createArtifact(req, res) {
     try {
-      const { title, type, content, sessionId } = req.body;
-      const userId = req.user.userId;
-      const workspaceId = req.headers["x-workspace-id"] || null;
+      const userId = this._validateAuthentication(req);
 
-      const artifact = await ArtifactsRepository.createArtifact({
-        content,
-        sessionId,
-        title,
-        type,
-        userId,
-        workspaceId,
-      });
+      const workspaceId = this._extractWorkspaceId(req);
+
+      const artifact = await artifactsService.createArtifact(userId, workspaceId, req.body);
 
       return res.status(201).json(artifact);
     } catch (error) {
@@ -29,10 +19,10 @@ class ArtifactsController {
 
   async getArtifact(req, res) {
     try {
+      const userId = this._validateAuthentication(req);
       const { id } = req.params;
-      const userId = req.user.userId;
 
-      const artifact = await ArtifactsRepository.getArtifactById(id, userId);
+      const artifact = await artifactsService.getArtifact(id, userId);
 
       if (!artifact) {
         return res.status(404).json({ message: "Artifact not found." });
@@ -47,14 +37,10 @@ class ArtifactsController {
 
   async updateArtifact(req, res) {
     try {
+      const userId = this._validateAuthentication(req);
       const { id } = req.params;
-      const userId = req.user.userId;
-      const { title, content } = req.body;
 
-      const artifact = await ArtifactsRepository.updateArtifact(id, userId, {
-        content,
-        title,
-      });
+      const artifact = await artifactsService.updateArtifact(id, userId, req.body);
 
       if (!artifact) {
         return res.status(404).json({ message: "Artifact not found." });

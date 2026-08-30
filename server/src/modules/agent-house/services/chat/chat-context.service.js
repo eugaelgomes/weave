@@ -1,5 +1,5 @@
-const chatRepository = require("@/modules/agent-house/repositories/chat.repository");
-const agentsRepository = require("@/modules/agent-house/repositories/agents.repository");
+const chatRepository = require("@/modules/agent-house/repositories/chat/chat-messages.repository");
+const agentsRepository = require("@/modules/agent-house/repositories/agents/agents-management.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlansService = require("@/modules/plans/services/plans.service");
 const { PLAN_PATHS, USAGE_PATHS } = require("@/modules/plans/utils/plan-paths.util");
@@ -8,9 +8,9 @@ const {
 } = require("@/modules/agent-house/utils/authorized-functions.util");
 
 const { resolveProjectIdsToUuids } = require("@/modules/projects/utils/project-id-lookup.util");
-const chatFormatterUtil = require("./chat-formatter.util");
-const chatEngineService = require("./chat-engine.util");
-const { getI18n } = require("./agent-house-i18n.util");
+const chatFormatterUtil = require("../../utils/chat-formatter.util");
+const chatEngineService = require("./chat-engine.service");
+const { getI18n } = require("../../utils/agent-house-i18n.util");
 
 const CHAT_CONTEXT_MAX_MESSAGES = Number.parseInt(
   process.env.WEAVE_CHAT_CONTEXT_MAX_MESSAGES || "20",

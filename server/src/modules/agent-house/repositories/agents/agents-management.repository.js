@@ -12,7 +12,7 @@
  */
 const { pool } = require("@/database/connection");
 
-class AgentsRepository {
+class AgentsManagementRepository {
   /**
    * Creates a new user agent.
    *
@@ -289,4 +289,4 @@ class AgentsRepository {
   }
 }
 
-module.exports = new AgentsRepository();
+module.exports = new AgentsManagementRepository();

@@ -1,6 +1,6 @@
-const agentsRepository = require("../repositories/agents.repository");
+const agentsRepository = require("../../repositories/agents/agents-management.repository");
 
-class AgentsService {
+class AgentsManagementService {
   _buildPersonality({ instructions, role, tone, rules, language, tags, avatar_url }) {
     return {
       avatar_url: avatar_url || null,
@@ -64,4 +64,4 @@ class AgentsService {
   }
 }
 
-module.exports = new AgentsService();
+module.exports = new AgentsManagementService();

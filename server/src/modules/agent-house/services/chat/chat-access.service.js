@@ -16,13 +16,13 @@ const notesRepository = require("@/modules/notes/notes.repository");
 const projectsReadRepository = require("@/modules/projects/repositories/projects-read.repository");
 const { PROJECT_WRITE_CAPABLE_ROLES } = require("@/modules/projects/project-role-policy");
 const { resolveNoteIdToUuid } = require("@/modules/notes/utils/note-id-lookup.util");
-const { getI18n } = require("./agent-house-i18n.util");
+const { getI18n } = require("../../utils/agent-house-i18n.util");
 
 /**
  * Access control utility for Weave AI resources.
  * Enforces security boundaries for notes, tasks, and projects.
  */
-class ChatAccessUtil {
+class ChatAccessService {
   /**
    * Asserts that a user has mutation access to a note, checking ownership, collaboration,
    * or organizational scoping. Returns the resolved internal note UUID.
@@ -152,4 +152,4 @@ class ChatAccessUtil {
   }
 }
 
-module.exports = new ChatAccessUtil();
+module.exports = new ChatAccessService();

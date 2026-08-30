@@ -1,5 +1,5 @@
 const { z } = require("zod");
-const agentsRepository = require("../repositories/agents.repository");
+const agentsRepository = require("../repositories/agents/agents-management.repository");
 const manageAgentHouseSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create_agent"),

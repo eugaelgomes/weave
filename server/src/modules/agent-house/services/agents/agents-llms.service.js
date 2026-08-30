@@ -1,4 +1,4 @@
-const agentLlmsRepository = require("../repositories/agent-llms.repository");
+const agentLlmsRepository = require("../../repositories/agents/agents-llms.repository");
 const crypto = require("crypto");
 
 // Minimal simple encryption for API keys - in a real app, use KMS or a secure vault
@@ -38,7 +38,7 @@ function decrypt(text) {
   }
 }
 
-class AgentLlmsService {
+class AgentsLLMsService {
   async createLlmConfig(userId, data) {
     if (!data.title || !data.provider || !data.model || !data.apiKey) {
       throw new Error("Missing required fields (title, provider, model, apiKey).");
@@ -91,4 +91,4 @@ class AgentLlmsService {
   }
 }
 
-module.exports = new AgentLlmsService();
+module.exports = new AgentsLLMsService();

@@ -1,30 +1,14 @@
 const express = require("express");
 
-const {
-  chat,
-  getChatHistory,
-  deleteChatSession,
-  getAvailableModels,
-  submitFeedback,
-  shareChatSession,
-  getSharedChatPreview,
-  forkSharedChat,
-} = require("./controllers/chat.controller");
+// Chat Controllers
+const chatEngineController = require("./controllers/chat/chat-engine.controller");
+const chatSessionsController = require("./controllers/chat/chat-sessions.controller");
+const chatSharingController = require("./controllers/chat/chat-sharing.controller");
 
 // Agent House Controllers
-const {
-  createLlmConfig,
-  getLlmConfigs,
-  updateLlmConfig,
-  deleteLlmConfig,
-} = require("./controllers/agent-llms.controller");
-const {
-  createCustomTool,
-  getCustomTools,
-  updateCustomTool,
-  deleteCustomTool,
-} = require("./controllers/agent-custom-tools.controller");
-const agentsController = require("./controllers/agents.controller");
+const agentLlmsController = require("./controllers/agents/agents-llms.controller");
+const agentCustomToolsController = require("./controllers/agents/agents-tools.controller");
+const agentsController = require("./controllers/agents/agents-management.controller");
 
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { requireScope } = require("@/middlewares/auth/require-scope");
@@ -65,19 +49,31 @@ router.use((req, res, next) => {
 });
 
 // Chat endpoints
-router.post("/chat", handleChatFilesUpload, validate(chatPayloadSchema, "body"), chat);
-router.get("/chat/history", validate(getChatHistorySchema, "query"), getChatHistory);
-router.delete("/chat/:sessionId", deleteChatSession);
+router.post("/chat", handleChatFilesUpload, validate(chatPayloadSchema, "body"), (req, res, next) =>
+  chatEngineController.chat(req, res, next)
+);
+router.get("/chat/history", validate(getChatHistorySchema, "query"), (req, res, next) =>
+  chatSessionsController.getChatHistory(req, res, next)
+);
+router.delete("/chat/:sessionId", (req, res, next) =>
+  chatSessionsController.deleteChatSession(req, res, next)
+);
 router.post(
   "/chat/messages/:messageId/feedback",
   validate(submitFeedbackSchema, "body"),
-  submitFeedback
+  (req, res, next) => chatSessionsController.submitFeedback(req, res, next)
 );
-router.post("/chat/:sessionId/share", shareChatSession);
-router.get("/chat/share/:token", getSharedChatPreview);
-router.post("/chat/share/:token/fork", forkSharedChat);
+router.post("/chat/:sessionId/share", (req, res, next) =>
+  chatSharingController.shareChatSession(req, res, next)
+);
+router.get("/chat/share/:token", (req, res, next) =>
+  chatSharingController.getSharedChatPreview(req, res, next)
+);
+router.post("/chat/share/:token/fork", (req, res, next) =>
+  chatSharingController.forkSharedChat(req, res, next)
+);
 
-router.get("/models", getAvailableModels);
+router.get("/models", (req, res, next) => agentLlmsController.getAvailableModels(req, res, next));
 
 // Agent House - Agents
 router.post(
@@ -87,7 +83,9 @@ router.post(
   (req, res, next) => agentsController.createAgent(req, res, next)
 );
 router.get("/agents", (req, res, next) => agentsController.getAgents(req, res, next));
-router.get("/agents/providers", getAvailableModels);
+router.get("/agents/providers", (req, res, next) =>
+  agentLlmsController.getAvailableModels(req, res, next)
+);
 router.get("/agents/:id", (req, res, next) => agentsController.getAgentById(req, res, next));
 router.put(
   "/agents/:id",
@@ -113,31 +111,37 @@ router.post(
   "/agents/llms",
   requireManageWeaveAi,
   validate(createLlmSchema, "body"),
-  createLlmConfig
+  (req, res, next) => agentLlmsController.createLlmConfig(req, res, next)
 );
-router.get("/agents/llms", getLlmConfigs);
+router.get("/agents/llms", (req, res, next) => agentLlmsController.getLlmConfigs(req, res, next));
 router.put(
   "/agents/llms/:id",
   requireManageWeaveAi,
   validate(updateLlmSchema, "body"),
-  updateLlmConfig
+  (req, res, next) => agentLlmsController.updateLlmConfig(req, res, next)
 );
-router.delete("/agents/llms/:id", requireManageWeaveAi, deleteLlmConfig);
+router.delete("/agents/llms/:id", requireManageWeaveAi, (req, res, next) =>
+  agentLlmsController.deleteLlmConfig(req, res, next)
+);
 
 // Agent House - Custom Tools
 router.post(
   "/agents/tools",
   requireManageWeaveAi,
   validate(createCustomToolSchema, "body"),
-  createCustomTool
+  (req, res, next) => agentCustomToolsController.createCustomTool(req, res, next)
 );
-router.get("/agents/tools", getCustomTools);
+router.get("/agents/tools", (req, res, next) =>
+  agentCustomToolsController.getCustomTools(req, res, next)
+);
 router.put(
   "/agents/tools/:id",
   requireManageWeaveAi,
   validate(updateCustomToolSchema, "body"),
-  updateCustomTool
+  (req, res, next) => agentCustomToolsController.updateCustomTool(req, res, next)
 );
-router.delete("/agents/tools/:id", requireManageWeaveAi, deleteCustomTool);
+router.delete("/agents/tools/:id", requireManageWeaveAi, (req, res, next) =>
+  agentCustomToolsController.deleteCustomTool(req, res, next)
+);
 
 module.exports = router;

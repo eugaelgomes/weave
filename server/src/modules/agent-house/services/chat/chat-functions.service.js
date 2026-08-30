@@ -9,7 +9,7 @@
  * Used by:
  * - `agent-house/services/chat-orchestrator.service.js`: During the ReAct loop to execute functions returned by the engine.
  */
-const { getI18n } = require("./agent-house-i18n.util");
+const { getI18n } = require("../../utils/agent-house-i18n.util");
 
 class ChatFunctionsService {
   /**
@@ -29,7 +29,7 @@ class ChatFunctionsService {
         ? functionCall.arguments
         : {};
 
-    const registry = require("../handlers/tool-registry");
+    const registry = require("../../handlers/tool-registry");
     const handler = registry.getHandler(name);
 
     if (!handler) {

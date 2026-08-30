@@ -1,16 +1,9 @@
-const agentsService = require("../services/agents.service");
+const agentsService = require("../../services/agents/agents-management.service");
 const { AppError } = require("@/errors");
-const agentsRepository = require("../repositories/agents.repository");
+const agentsRepository = require("../../repositories/agents/agents-management.repository");
+const BaseController = require("../base.controller");
 
-class AgentsController {
-  _validateAuthentication(req) {
-    const userId = req.user?.userId || req.user?.id;
-    if (!userId) {
-      throw AppError.unauthorized("Authentication required");
-    }
-    return userId;
-  }
-
+class AgentsManagementController extends BaseController {
   async createAgent(req, res, next) {
     try {
       const userId = this._validateAuthentication(req);
@@ -120,4 +113,4 @@ class AgentsController {
   }
 }
 
-module.exports = new AgentsController();
+module.exports = new AgentsManagementController();

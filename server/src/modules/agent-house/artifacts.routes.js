@@ -1,13 +1,13 @@
 const express = require("express");
-const artifactsController = require("./controllers/artifacts.controller");
+const artifactsController = require("./controllers/artifacts/artifacts.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 
 const router = express.Router();
 
 router.use(verifyToken);
 
-router.post("/", artifactsController.createArtifact.bind(artifactsController));
-router.get("/:id", artifactsController.getArtifact.bind(artifactsController));
-router.patch("/:id", artifactsController.updateArtifact.bind(artifactsController));
+router.post("/", (req, res, next) => artifactsController.createArtifact(req, res, next));
+router.get("/:id", (req, res, next) => artifactsController.getArtifact(req, res, next));
+router.patch("/:id", (req, res, next) => artifactsController.updateArtifact(req, res, next));
 
 module.exports = router;
