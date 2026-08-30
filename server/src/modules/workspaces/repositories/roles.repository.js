@@ -30,7 +30,10 @@ class WorkspaceRolesRepository {
     return results[0] || null;
   }
 
-  async createRole({ workspaceId, name, description, permissions, isSystem = false, createdBy = null }, txClient = null) {
+  async createRole(
+    { workspaceId, name, description, permissions, isSystem = false, createdBy = null },
+    txClient = null
+  ) {
     const query = `
       INSERT INTO workspaces_roles (
         workspace_id, name, description, permissions, is_system, created_by
@@ -44,7 +47,7 @@ class WorkspaceRolesRepository {
       description || null,
       JSON.stringify(permissions || []),
       isSystem,
-      createdBy
+      createdBy,
     ];
 
     if (txClient) {
@@ -55,7 +58,7 @@ class WorkspaceRolesRepository {
     return results[0];
   }
 
-  async updateRole(roleId, workspaceId, { name, description, permissions }, updatedBy = null) {
+  async updateRole(roleId, workspaceId, { name, description, permissions }, _updatedBy = null) {
     const fields = [];
     const values = [roleId, workspaceId];
     let count = 3;

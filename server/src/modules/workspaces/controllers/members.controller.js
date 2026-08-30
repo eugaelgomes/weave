@@ -1,4 +1,3 @@
-const teamsRepository = require("@/modules/workspaces/repositories/teams.repository");
 /**
  * @typedef {import('express').Request} Request
  * @typedef {import('express').Response} Response
@@ -8,8 +7,7 @@ const teamsRepository = require("@/modules/workspaces/repositories/teams.reposit
 const { fromUnknown } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
-
-
+const { memberListResponseSchema } = require("../schemas/members.schema");
 
 const { send_organization_invite } = require("@/services/email/templates/invite-member");
 const { getUserEmailLocale } = require("@/services/email/i18n");
@@ -197,35 +195,7 @@ class OrganizationMembersController extends OrganizationsBaseController {
           acc[member.status] = (acc[member.status] || 0) + 1;
           return acc;
         }, {}),
-        list_org_members: members.map((member) => ({
-          member_data: {
-            activity: {
-              teams: member.teams || [],
-              last_login_at: member.last_login_at || null,
-              notes_count: parseInt(member.notes_count, 10) || 0,
-              projects: member.projects || [],
-            },
-            avatar_url: member.avatar_url || null,
-            email: member.email,
-            id: member.user_id,
-            invited_by: member.invited_by
-              ? {
-                  avatar_url: member.inviter_avatar_url || null,
-                  id: member.invited_by,
-                  name: member.inviter_name,
-                  username: member.inviter_username,
-                }
-              : null,
-            membership: {
-              created_at: member.created_at,
-              role: member.role,
-              status: member.status,
-              updated_at: member.updated_at,
-            },
-            name: member.name,
-            username: member.username,
-          },
-        })),
+        list_org_members: memberListResponseSchema.parse(members),
         organization_id: currentOrg.id,
 
         status: "OK",

@@ -99,9 +99,72 @@ const updateMemberRoleSchema = z.object({
     ),
 });
 
+/**
+ * Standardizes the member data response.
+ */
+const memberResponseSchema = z
+  .object({
+    avatar_url: z.string().nullable().optional(),
+    created_at: z.union([z.string(), z.date()]).optional(),
+    email: z.string(),
+    invited_by: z.string().nullable().optional(),
+    inviter_avatar_url: z.string().nullable().optional(),
+    inviter_name: z.string().nullable().optional(),
+    inviter_username: z.string().nullable().optional(),
+    last_login_at: z.union([z.string(), z.date()]).nullable().optional(),
+    name: z.string(),
+    notes_count: z.union([z.string(), z.number()]).optional(),
+    projects: z.array(z.any()).optional(),
+    role: z.string(),
+    status: z.string(),
+    teams: z.array(z.any()).optional(),
+    updated_at: z.union([z.string(), z.date()]).optional(),
+    user_id: z.string(),
+    username: z.string().nullable().optional(),
+  })
+  .transform((member) => ({
+    member_data: {
+      activity: {
+        last_login_at: member.last_login_at || null,
+        notes_count:
+          typeof member.notes_count === "string"
+            ? parseInt(member.notes_count, 10)
+            : member.notes_count || 0,
+        projects: member.projects || [],
+        teams: member.teams || [],
+      },
+      avatar_url: member.avatar_url || null,
+      email: member.email,
+      id: member.user_id,
+      invited_by: member.invited_by
+        ? {
+            avatar_url: member.inviter_avatar_url || null,
+            id: member.invited_by,
+            name: member.inviter_name,
+            username: member.inviter_username,
+          }
+        : null,
+      membership: {
+        created_at: member.created_at,
+        role: member.role,
+        status: member.status,
+        updated_at: member.updated_at,
+      },
+      name: member.name,
+      username: member.username,
+    },
+  }));
+
+/**
+ * Standardizes the member list response.
+ */
+const memberListResponseSchema = z.array(memberResponseSchema);
+
 module.exports = {
   acceptInviteSchema,
   inviteMembersBulkSchema,
   inviteMemberSchema,
+  memberListResponseSchema,
+  memberResponseSchema,
   updateMemberRoleSchema,
 };

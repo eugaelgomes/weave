@@ -2,6 +2,8 @@ const { fromUnknown } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
 const rolesRepository = require("@/modules/workspaces/repositories/roles.repository");
 const { workspace_permissions_catalog } = require("@/modules/workspaces/permissions-catalog");
+const { roleResponseSchema } = require("../schemas/roles.schema");
+const { z } = require("zod");
 
 class WorkspaceRolesController extends OrganizationsBaseController {
   constructor() {
@@ -20,7 +22,7 @@ class WorkspaceRolesController extends OrganizationsBaseController {
       }
 
       const roles = await this.rolesRepository.listRoles(workspace.id);
-      res.status(200).json({ data: roles, status: "OK" });
+      res.status(200).json({ data: z.array(roleResponseSchema).parse(roles), status: "OK" });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -49,15 +51,19 @@ class WorkspaceRolesController extends OrganizationsBaseController {
       }
 
       const newRole = await this.rolesRepository.createRole({
-        workspaceId: workspace.id,
-        name,
-        description,
-        permissions: permissions || [],
         createdBy: userId,
+        description,
         isSystem: false,
+        name,
+        permissions: permissions || [],
+        workspaceId: workspace.id,
       });
 
-      res.status(201).json({ data: newRole, status: "OK", message: "Role created successfully" });
+      res.status(201).json({
+        data: roleResponseSchema.parse(newRole),
+        message: "Role created successfully",
+        status: "OK",
+      });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -89,11 +95,15 @@ class WorkspaceRolesController extends OrganizationsBaseController {
       const updatedRole = await this.rolesRepository.updateRole(
         roleId,
         workspace.id,
-        { name, description, permissions },
+        { description, name, permissions },
         userId
       );
 
-      res.status(200).json({ data: updatedRole, status: "OK", message: "Role updated successfully" });
+      res.status(200).json({
+        data: roleResponseSchema.parse(updatedRole),
+        message: "Role updated successfully",
+        status: "OK",
+      });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -123,7 +133,7 @@ class WorkspaceRolesController extends OrganizationsBaseController {
 
       await this.rolesRepository.deleteRole(roleId, workspace.id, userId);
 
-      res.status(200).json({ status: "OK", message: "Role deleted successfully" });
+      res.status(200).json({ message: "Role deleted successfully", status: "OK" });
     } catch (error) {
       next(fromUnknown(error));
     }

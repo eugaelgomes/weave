@@ -2,11 +2,7 @@ const settingsRepository = require("@/modules/workspaces/repositories/settings.r
 const teamsRepository = require("@/modules/workspaces/repositories/teams.repository");
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 const membersRepository = require("@/modules/workspaces/repositories/members.repository");
-const membersRepository = require("@/modules/workspaces/repositories/members.repository");
-const membersRepository = require("@/modules/workspaces/repositories/members.repository");
 const { z } = require("zod");
-
-
 
 const { validRoles } = require("@/modules/workspaces/normalizer");
 
@@ -237,7 +233,7 @@ const createOrganizationsTools = (user) => {
           if (action === "update_sso") {
             if (!domain_name || !metadata || !provider)
               throw new Error("domain_name, metadata, and provider are required for update_sso");
-            
+
             const domain = domains.find((d) => d.domain_name === domain_name);
             if (!domain) throw new Error("Domain not found.");
 
@@ -255,7 +251,7 @@ const createOrganizationsTools = (user) => {
             if (!domain_name) throw new Error("domain_name is required for delete action");
             const domainIndex = domains.findIndex((d) => d.domain_name === domain_name);
             if (domainIndex === -1) throw new Error("Domain not found.");
-            
+
             domains.splice(domainIndex, 1);
             await settingsRepository.updateDomains(organizationId, domains);
             return {
@@ -359,9 +355,7 @@ const createOrganizationsTools = (user) => {
             args;
 
           if (action === "get_active") {
-            const org = await baseRepository.getActiveOrganizationWithMembership(
-              user.userId
-            );
+            const org = await baseRepository.getActiveOrganizationWithMembership(user.userId);
             if (!org)
               return {
                 content: [{ text: "No active workspace found.", type: "text" }],

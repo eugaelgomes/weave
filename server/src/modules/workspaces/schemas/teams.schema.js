@@ -92,9 +92,41 @@ const updateAreaSchema = z.object({
   slug: z.string().trim().optional().describe("A URL-friendly identifier string for the team."),
 });
 
+/**
+ * Standardizes the team data response.
+ */
+const teamResponseSchema = z
+  .object({
+    active: z.boolean().optional(),
+    area_name: z.string(),
+    created_at: z.union([z.string(), z.date()]).optional(),
+    created_by: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    id: z.string(),
+    organization_id: z.string(),
+    parent_area_id: z.string().nullable().optional(),
+    properties: z.any().optional(),
+    slug: z.string().nullable().optional(),
+    updated_at: z.union([z.string(), z.date()]).optional(),
+  })
+  .transform((team) => ({
+    active: team.active,
+    area_name: team.area_name,
+    created_at: team.created_at,
+    created_by: team.created_by,
+    description: team.description,
+    id: team.id,
+    organization_id: team.organization_id,
+    parent_area_id: team.parent_area_id,
+    properties: team.properties || {},
+    slug: team.slug,
+    updated_at: team.updated_at,
+  }));
+
 module.exports = {
   addAreaMemberSchema,
   createAreaSchema,
+  teamResponseSchema,
   updateAreaMemberSchema,
   updateAreaSchema,
 };

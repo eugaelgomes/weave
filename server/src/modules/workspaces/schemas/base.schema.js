@@ -89,7 +89,56 @@ const updateOrganizationSchema = z.object({
     .describe("A globally unique identifier string for the workspace."),
 });
 
+/**
+ * Standardizes the organization data response.
+ */
+const organizationResponseSchema = z
+  .object({
+    avatar_url: z.string().nullable().optional(),
+    banner_url: z.string().nullable().optional(),
+    created_at: z.union([z.string(), z.date()]).optional(),
+    deleted: z.boolean().optional().default(false),
+    description: z.string().nullable().optional(),
+    email: z.string().nullable().optional(),
+    id: z.string(),
+    logo_url: z.string().nullable().optional(),
+    member_role: z.string().nullable().optional(),
+    name: z.string().nullable().optional(),
+    org_name: z.string(),
+    settings: z.any().optional().nullable(),
+    unique_name: z.string().nullable().optional(),
+    updated_at: z.union([z.string(), z.date()]).optional(),
+    user_id: z.string(),
+    username: z.string().nullable().optional(),
+  })
+  .transform((data) => ({
+    created_at: data.created_at,
+    deleted: data.deleted,
+    identity: {
+      banner_url: data.banner_url || null,
+      description: data.description || null,
+      id: data.id,
+      logo_url: data.logo_url || null,
+      member_role: data.member_role ?? null,
+      org_name: data.org_name,
+      unique_name: data.unique_name || null,
+      user_id: data.user_id,
+    },
+    owners: [
+      {
+        avatar_url: data.avatar_url || null,
+        email: data.email || null,
+        id: data.user_id,
+        name: data.name || null,
+        username: data.username || null,
+      },
+    ],
+    settings: data.settings || {},
+    updated_at: data.updated_at,
+  }));
+
 module.exports = {
   createOrganizationSchema,
+  organizationResponseSchema,
   updateOrganizationSchema,
 };

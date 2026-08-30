@@ -5,11 +5,13 @@ const OrganizationsBaseController = require("./base-controller");
 const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
 const { normalizeOrganizationName } = require("../normalizer");
 const { ORG_ROLES } = require("@/modules/workspaces/workspace-role-policy");
+const { teamResponseSchema } = require("../schemas/teams.schema");
+const { z } = require("zod");
 
 class OrganizationAreasController extends OrganizationsBaseController {
   constructor() {
     super();
-    this.areasRepository = areasRepository;
+    this.teamsRepository = teamsRepository;
   }
 
   /** Role in `organization_members` (aligned with permission engine). */
@@ -97,7 +99,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
 
       res.status(200).json({
         count: teams.length,
-        data: teams,
+        data: z.array(teamResponseSchema).parse(teams),
         organization_id: workspace.id,
         status: "OK",
       });
@@ -124,7 +126,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
         return res.status(404).json({ error: "Team not found", success: false });
       }
 
-      res.status(200).json({ data: team, status: "OK" });
+      res.status(200).json({ data: teamResponseSchema.parse(team), status: "OK" });
     } catch (error) {
       console.error("Error fetching team:", error);
       return next(fromUnknown(error));
@@ -192,7 +194,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       });
 
       res.status(201).json({
-        data: newArea,
+        data: teamResponseSchema.parse(newArea),
         message: "Team created successfully",
         status: "OK",
       });
@@ -270,18 +272,14 @@ class OrganizationAreasController extends OrganizationsBaseController {
           return res.status(400).json({ error: "Invalid slug", success: false });
         }
 
-        const finalSlug = await this._ensureUniqueSlug(
-          workspace.id,
-          baseSlug,
-          existingArea.slug
-        );
+        const finalSlug = await this._ensureUniqueSlug(workspace.id, baseSlug, existingArea.slug);
         updates.slug = finalSlug;
       }
 
       const updatedArea = await this.teamsRepository.updateArea(areaId, workspace.id, updates);
 
       res.status(200).json({
-        data: updatedArea,
+        data: teamResponseSchema.parse(updatedArea),
         message: "Team updated successfully",
         status: "OK",
       });
@@ -321,7 +319,7 @@ class OrganizationAreasController extends OrganizationsBaseController {
       const deletedArea = await this.teamsRepository.softDeleteArea(areaId, workspace.id);
 
       res.status(200).json({
-        data: deletedArea,
+        data: teamResponseSchema.parse(deletedArea),
         message: "Team removed successfully",
         status: "OK",
       });

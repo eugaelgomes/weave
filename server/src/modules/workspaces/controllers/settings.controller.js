@@ -3,9 +3,11 @@ const { enqueueDomainVerificationJob } = require("@theweave/database");
 const { fromUnknown } = require("@/errors");
 const OrganizationsBaseController = require("./base-controller");
 const settingsRepository = require("@/modules/workspaces/repositories/settings.repository");
-const { OrganizationCreationStepsService } = require("@/modules/workspaces/utils/workspace-creation-steps.util");
-const { normalizeOrganizationName } = require("@/modules/workspaces/normalizer");
+const {
+  OrganizationCreationStepsService,
+} = require("@/modules/workspaces/utils/workspace-creation-steps.util");
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
+const { domainResponseSchema } = require("../schemas/settings.schema");
 
 class WorkspaceSettingsController extends OrganizationsBaseController {
   constructor() {
@@ -32,7 +34,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       // For now, we trust the route middleware
       const updates = req.body;
       const updated = await this.settingsRepository.updateSystemSettings(updates);
-      res.status(200).json({ data: updated, status: "OK", message: "System settings updated" });
+      res.status(200).json({ data: updated, message: "System settings updated", status: "OK" });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -76,7 +78,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
           validated,
           false
         );
-        const newOrg = await baseRepository.createOrgs(
+        await baseRepository.createOrgs(
           userId,
           validated.org_name,
           validated.unique_name,
@@ -89,7 +91,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
           settingsWithStep,
           null
         );
-        
+
         workspace = await this._getUserOrganization(userId);
       } else {
         const settingsWithStep = this.creationStepsService.buildStepOneSettings(
@@ -97,21 +99,17 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
           validated,
           false
         );
-        workspace = await this.settingsRepository.updateCreationIdentityStep(
-          workspace.id,
-          userId,
-          {
-            banner_url: workspace.banner_url,
-            country: validated.country,
-            default_locale: validated.default_locale,
-            default_timezone: workspace.default_timezone || "America/Sao_Paulo",
-            description: validated.description,
-            logo_url: validated.logo_url !== null ? validated.logo_url : workspace.logo_url,
-            org_name: validated.org_name,
-            settings: settingsWithStep,
-            unique_name: validated.unique_name,
-          }
-        );
+        workspace = await this.settingsRepository.updateCreationIdentityStep(workspace.id, userId, {
+          banner_url: workspace.banner_url,
+          country: validated.country,
+          default_locale: validated.default_locale,
+          default_timezone: workspace.default_timezone || "America/Sao_Paulo",
+          description: validated.description,
+          logo_url: validated.logo_url !== null ? validated.logo_url : workspace.logo_url,
+          org_name: validated.org_name,
+          settings: settingsWithStep,
+          unique_name: validated.unique_name,
+        });
       }
 
       return res.status(200).json({
@@ -139,7 +137,10 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
 
       const role = workspace?.settings?.organization_role || null;
       if (!role) {
-        return res.status(400).json({ error: "organization_role must be defined before completing step 1", success: false });
+        return res.status(400).json({
+          error: "organization_role must be defined before completing step 1",
+          success: false,
+        });
       }
 
       const currentStepData = {
@@ -195,30 +196,6 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
     return `weave-domain-verification=${randomSeed}`;
   }
 
-  _serializeDomain(domain, orgSettings) {
-    if (!domain) return null;
-    return {
-      created_at: domain.created_at,
-      deleted: false,
-      domain_name: domain.domain_name,
-      id: domain.domain_name,
-      instructions: {
-        description: "Create a TXT record for _weave-challenge.<domain> with the provided value to complete verification.",
-        host: `_weave-challenge.${domain.domain_name}`,
-        type: "TXT",
-        value: domain.verification_token,
-      },
-      organization_id: orgSettings.organization_id,
-      sso_enabled: orgSettings.saml?.enabled || false,
-      sso_metadata: orgSettings.saml?.metadata || null,
-      sso_provider: orgSettings.saml?.provider || null,
-      status: domain.status,
-      updated_at: domain.updated_at || domain.created_at,
-      verification_token: domain.verification_token,
-      verified_at: domain.verified_at,
-    };
-  }
-
   async listDomains(req, res) {
     try {
       const userId = this._validateAuthentication(req, res);
@@ -231,7 +208,9 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const domains = settings?.domains || [];
 
       res.status(200).json({
-        domains: domains.map((domain) => this._serializeDomain(domain, settings)),
+        domains: domains.map((domain) =>
+          domainResponseSchema.parse({ domain, orgSettings: settings })
+        ),
         status: "OK",
       });
     } catch (error) {
@@ -258,12 +237,16 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const domains = settings?.domains || [];
 
       if (domains.find((d) => d.domain_name === normalizedDomain)) {
-        return res.status(400).json({ error: "Domain already registered for this workspace", success: false });
+        return res
+          .status(400)
+          .json({ error: "Domain already registered for this workspace", success: false });
       }
 
       const existingOrg = await this.settingsRepository.findByDomain(normalizedDomain);
       if (existingOrg && existingOrg.organization_id !== workspace.id) {
-        return res.status(409).json({ error: "Domain is already in use by another workspace", success: false });
+        return res
+          .status(409)
+          .json({ error: "Domain is already in use by another workspace", success: false });
       }
 
       const verificationToken = this._generateVerificationToken();
@@ -278,7 +261,7 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       await this.settingsRepository.updateDomains(workspace.id, domains);
 
       res.status(201).json({
-        data: this._serializeDomain(newDomain, settings),
+        data: domainResponseSchema.parse({ domain: newDomain, orgSettings: settings }),
         message: "Domain registered. Configure the TXT record and click verify.",
         status: "OK",
       });
@@ -314,8 +297,9 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       });
 
       res.status(200).json({
-        data: this._serializeDomain(domain, settings),
-        message: "Domain verification queued. Worker will retry DNS every 30 minutes until verified.",
+        data: domainResponseSchema.parse({ domain, orgSettings: settings }),
+        message:
+          "Domain verification queued. Worker will retry DNS every 30 minutes until verified.",
         status: "OK",
       });
     } catch (error) {
@@ -376,7 +360,9 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const domain = domains.find((d) => d.domain_name === domainName);
 
       if (!domain || domain.status !== "VERIFIED") {
-        return res.status(400).json({ error: "Enable SSO only after domain is verified", success: false });
+        return res
+          .status(400)
+          .json({ error: "Enable SSO only after domain is verified", success: false });
       }
 
       const { provider, metadata, enabled } = req.body;
@@ -400,8 +386,10 @@ class WorkspaceSettingsController extends OrganizationsBaseController {
       const updatedSettings = await this.settingsRepository.getSettings(workspace.id);
 
       res.status(200).json({
-        data: this._serializeDomain(domain, updatedSettings),
-        message: shouldEnable ? "SAML settings saved. Users of this domain will be redirected to the IdP." : "SSO disabled for this domain",
+        data: domainResponseSchema.parse({ domain, orgSettings: updatedSettings }),
+        message: shouldEnable
+          ? "SAML settings saved. Users of this domain will be redirected to the IdP."
+          : "SSO disabled for this domain",
         status: "OK",
       });
     } catch (error) {

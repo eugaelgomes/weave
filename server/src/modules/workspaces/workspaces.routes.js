@@ -22,10 +22,7 @@ const { validateImageMimeAndSize } = require("@/utils/middlewares.util");
 const { validate } = require("@/middlewares/validation/validate");
 
 // Schemas
-const {
-  createOrganizationSchema,
-  updateOrganizationSchema,
-} = require("./schemas/workspaces.schema");
+const { createOrganizationSchema, updateOrganizationSchema } = require("./schemas/base.schema");
 const {
   inviteMemberSchema,
   inviteMembersBulkSchema,
@@ -37,8 +34,12 @@ const {
   addAreaMemberSchema,
   updateAreaMemberSchema,
 } = require("./schemas/teams.schema");
-const { createDomainSchema, updateSsoSettingsSchema } = require("./schemas/domains.schema");
-const { saveStepOneSchema } = require("./schemas/creation-steps.schema");
+const {
+  createDomainSchema,
+  updateSsoSettingsSchema,
+  saveStepOneSchema,
+} = require("./schemas/settings.schema");
+const { createRoleSchema, updateRoleSchema } = require("./schemas/roles.schema");
 
 const router = express.Router();
 
@@ -211,12 +212,14 @@ router.get(
 router.post(
   "/roles",
   structuralLimiter,
+  validate(createRoleSchema, "body"),
   workspaceRolesController.createRole.bind(workspaceRolesController)
 );
 
 router.put(
   "/roles/:roleId",
   structuralLimiter,
+  validate(updateRoleSchema, "body"),
   workspaceRolesController.updateRole.bind(workspaceRolesController)
 );
 
@@ -226,10 +229,7 @@ router.delete(
   workspaceRolesController.deleteRole.bind(workspaceRolesController)
 );
 
-router.get(
-  "/members",
-  workspaceMembersController.getMembers.bind(workspaceMembersController)
-);
+router.get("/members", workspaceMembersController.getMembers.bind(workspaceMembersController));
 
 router.patch(
   "/members/:memberId",
