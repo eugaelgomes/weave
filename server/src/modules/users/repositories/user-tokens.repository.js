@@ -13,7 +13,7 @@ class UserTokensRepository extends BaseRepository {
     const query = `
       UPDATE tokens
       SET active = FALSE
-      WHERE user_id = $1 AND active = TRUE AND type = 'email_verification'
+      WHERE user_id = $1 AND active = TRUE AND type = 'EMAIL_VERIFICATION'
     `;
     return await executeQuery(query, [userId]);
   }
@@ -30,7 +30,7 @@ class UserTokensRepository extends BaseRepository {
       INSERT INTO tokens
         (user_id, token, type, expires_at, created_at, active, data_to_update) 
       VALUES 
-        ($1, $2, 'email_verification', ($3::timestamp + interval '1 hour'), $3, TRUE, $4);
+        ($1, $2, 'EMAIL_VERIFICATION', ($3::timestamp + interval '1 hour'), $3, TRUE, $4);
     `;
     return await executeQuery(query, [
       userId,
@@ -48,7 +48,7 @@ class UserTokensRepository extends BaseRepository {
   async findEmailChangeToken(userId, token) {
     const query = `
       SELECT * FROM tokens 
-      WHERE user_id = $1 AND token = $2 AND active = TRUE AND type = 'email_verification' AND expires_at > NOW()
+      WHERE user_id = $1 AND token = $2 AND active = TRUE AND type = 'EMAIL_VERIFICATION' AND expires_at > NOW()
     `;
     const results = await executeQuery(query, [userId, token]);
     return results[0];
@@ -62,7 +62,7 @@ class UserTokensRepository extends BaseRepository {
     const query = `
       SELECT data_to_update 
       FROM tokens 
-      WHERE user_id = $1 AND active = TRUE AND type = 'email_verification' AND expires_at > NOW()
+      WHERE user_id = $1 AND active = TRUE AND type = 'EMAIL_VERIFICATION' AND expires_at > NOW()
     `;
     const results = await executeQuery(query, [userId]);
     return results[0]?.data_to_update;
@@ -76,7 +76,7 @@ class UserTokensRepository extends BaseRepository {
     const query = `
       UPDATE tokens 
       SET data_to_update = NULL 
-      WHERE user_id = $1 AND type = 'email_verification'`;
+      WHERE user_id = $1 AND type = 'EMAIL_VERIFICATION'`;
     return await executeQuery(query, [userId]);
   }
 
@@ -104,7 +104,7 @@ class UserTokensRepository extends BaseRepository {
     const query = `
       INSERT INTO tokens 
         (user_id, token, code, type, expires_at, created_at, active) 
-      VALUES ($1, $2, $3, 'email_verification', ($4::timestamp + interval '7 days'), $4, TRUE)
+      VALUES ($1, $2, $3, 'EMAIL_VERIFICATION', ($4::timestamp + interval '7 days'), $4, TRUE)
     `;
     return await executeQuery(query, [userId, token, code, createdAt], client);
   }
@@ -116,7 +116,7 @@ class UserTokensRepository extends BaseRepository {
   async findEmailActivationToken(token) {
     const query = `
       SELECT * FROM tokens 
-      WHERE token = $1 AND active = TRUE AND type = 'email_verification' AND expires_at > NOW()
+      WHERE token = $1 AND active = TRUE AND type = 'EMAIL_VERIFICATION' AND expires_at > NOW()
     `;
     const results = await executeQuery(query, [token]);
     return results[0];
@@ -131,7 +131,7 @@ class UserTokensRepository extends BaseRepository {
     const query = `
       SELECT t.* FROM tokens t
       JOIN users u ON u.user_id = t.user_id
-      WHERE t.code = $1 AND u.email = $2 AND t.active = TRUE AND t.type = 'email_verification' AND t.expires_at > NOW()
+      WHERE t.code = $1 AND u.email = $2 AND t.active = TRUE AND t.type = 'EMAIL_VERIFICATION' AND t.expires_at > NOW()
     `;
     const results = await executeQuery(query, [code, email]);
     return results[0];

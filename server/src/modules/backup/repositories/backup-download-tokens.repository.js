@@ -35,7 +35,7 @@ class BackupDownloadTokensRepository extends BaseRepository {
         AND j.result IS NOT NULL
         AND j.result->>'downloadToken' = t.token
       WHERE t.token = $1 
-      AND t.type = 'backup_download'
+      AND t.type = 'BACKUP_DOWNLOAD'
       AND t.used_at IS NULL
     `;
 

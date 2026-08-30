@@ -38,9 +38,9 @@
     "db:migrate": "./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate dev --schema=packages/shared/prisma/schema.prisma'",
     "db:migrate:doppler": "USE_DOPPLER=true ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate dev --schema=packages/shared/prisma/schema.prisma'",
     "db:migrate:local": "USE_DOPPLER=false ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate dev --schema=packages/shared/prisma/schema.prisma'",
-    "db:migrate:reset": "./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate reset --schema=packages/shared/prisma/schema.prisma'",
-    "db:migrate:reset:doppler": "USE_DOPPLER=true ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate reset --schema=packages/shared/prisma/schema.prisma'",
-    "db:migrate:reset:local": "USE_DOPPLER=false ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate reset --schema=packages/shared/prisma/schema.prisma'",
+    "db:migrate:reset": "./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate reset --schema=packages/shared/prisma/schema.prisma --force' && npm run db:triggers && npm run db:seed",
+    "db:migrate:reset:doppler": "USE_DOPPLER=true ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate reset --schema=packages/shared/prisma/schema.prisma --force' && npm run db:triggers:doppler && npm run db:seed:doppler",
+    "db:migrate:reset:local": "USE_DOPPLER=false ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma migrate reset --schema=packages/shared/prisma/schema.prisma --force' && npm run db:triggers:local && npm run db:seed:local",
     "db:generate": "./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma generate --schema=packages/shared/prisma/schema.prisma'",
     "db:generate:doppler": "USE_DOPPLER=true ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma generate --schema=packages/shared/prisma/schema.prisma'",
     "db:generate:local": "USE_DOPPLER=false ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma generate --schema=packages/shared/prisma/schema.prisma'",
@@ -56,6 +56,10 @@
     "db:studio": "./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma studio --schema=packages/shared/prisma/schema.prisma'",
     "db:studio:doppler": "USE_DOPPLER=true ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma studio --schema=packages/shared/prisma/schema.prisma'",
     "db:studio:local": "USE_DOPPLER=false ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma studio --schema=packages/shared/prisma/schema.prisma'",
+    "db:seed": "./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma db seed --schema=packages/shared/prisma/schema.prisma'",
+    "db:seed:doppler": "USE_DOPPLER=true ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma db seed --schema=packages/shared/prisma/schema.prisma'",
+    "db:seed:local": "USE_DOPPLER=false ./scripts/run-with-env.sh bash -c 'export DATABASE_URL=\"${DATABASE_URL:-postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST_URL}:${DATABASE_SERVICE_PORT}/${DATABASE_NAME}?schema=public}\" && prisma db seed --schema=packages/shared/prisma/schema.prisma'",
+    "db:setup:doppler": "npm run db:push:doppler && npm run db:triggers:doppler && npm run db:seed:doppler",
     "knip": "knip"
   },
   "devDependencies": {
@@ -82,5 +86,8 @@
     "worker",
     "llm",
     "web"
-  ]
+  ],
+  "prisma": {
+    "seed": "node packages/shared/prisma/seed.js"
+  }
 }
