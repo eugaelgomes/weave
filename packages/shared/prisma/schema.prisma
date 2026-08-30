@@ -1164,13 +1164,6 @@ enum sync_status {
   OUT_OF_SYNC
 }
 
-enum system_users_roles {
-  SUPER_ADMIN
-  MANAGER
-  SUPPORT
-  READ_ONLY
-}
-
 enum theme_mode_pattern {
   DARK
   LIGHT

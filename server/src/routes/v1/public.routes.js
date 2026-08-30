@@ -3,7 +3,6 @@ const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { API_SCOPES } = require("@/config/api-scopes");
 const { logPublicApiRequest } = require("@/middlewares/http/log-public-api-request");
 
-const calendarRoutes = require("@/modules/calendar/calendar.routes");
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
 const { requireScope } = require("@/middlewares/auth/require-scope");
@@ -54,7 +53,6 @@ const createPublicRouter = ({ version = DEFAULT_VERSION } = {}) => {
     router[method](path, ...middlewares, handler);
   });
 
-  router.use("/calendar", calendarRoutes);
   router.use("/agent-house", agentHouseRoutes);
 
   // Expose ONLY the search endpoint for users

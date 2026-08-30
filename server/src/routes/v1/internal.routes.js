@@ -13,16 +13,10 @@ const userRoutes = require("@/modules/users/users.routes");
 const backupRoutes = require("@/modules/backup/backup.routes");
 const organizationsRoutes = require("@/modules/workspaces/workspaces.routes");
 const plansRoutes = require("@/modules/plans/plans.routes");
-const webhooksRoutes = require("@/modules/webhooks/webhooks.routes");
-const notificationsRoutes = require("@/modules/notifications/notifications.routes");
-const calendarRoutes = require("@/modules/calendar/calendar.routes");
 const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
-const storageRoutes = require("@/modules/storage/storage.routes");
 
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
-const slackRoutes = require("@/modules/slack/slack.routes");
 const artifactsRoutes = require("@/modules/agent-house/artifacts.routes");
-const tracingRoutes = require("@/modules/tracing/tracing.routes");
 
 const DEFAULT_VERSION = "v1";
 const DEV_ORIGIN_REGEX = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -86,7 +80,7 @@ let missingOriginConfigLogged = false;
  * @returns {boolean} True if the path should bypass origin checks
  */
 const shouldSkipOriginGuard = (path) =>
-  path.startsWith("/webhooks") || path.startsWith("/auth/oauth") || path.startsWith("/auth/sso");
+  path.startsWith("/auth/oauth") || path.startsWith("/auth/sso");
 
 /**
  * Checks if a given origin is allowed to access the API
@@ -127,17 +121,11 @@ const routeRegistry = [
   { basePath: "/api-tokens", handler: apiTokensRoutes },
   { basePath: "/auth", handler: authRoutes },
   { basePath: "/backup", handler: backupRoutes },
-  { basePath: "/calendar", handler: calendarRoutes },
   { basePath: "/workspaces", handler: organizationsRoutes },
   { basePath: "/plans", handler: plansRoutes },
-  { basePath: "/notifications", handler: notificationsRoutes },
-  { basePath: "/storage", handler: storageRoutes },
   { basePath: "/users", handler: userRoutes },
-  { basePath: "/webhooks", handler: webhooksRoutes },
   { basePath: "/weave-ai", handler: agentHouseRoutes },
-  { basePath: "/slack", handler: slackRoutes },
   { basePath: "/artifacts", handler: artifactsRoutes },
-  { basePath: "/workspaces", handler: tracingRoutes },
 ];
 
 /**
