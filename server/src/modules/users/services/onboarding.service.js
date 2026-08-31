@@ -1,35 +1,23 @@
 const { withTransaction } = require("@/database/connection");
-const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
 const WorkspacesRepository = require("@/modules/workspaces/repositories/base.repository");
-const TeamsRepository = require("@/modules/workspaces/repositories/teams.repository");
 const OnboardingRepository = require("../repositories/onboarding.repository");
 const queueController = require("@theweave/database");
 
 class OnboardingService {
   /**
-   * Processes the zero step (Terms Acceptance)
-   */
-  async processTermsStep(userId, termsData = {}) {
-    return await withTransaction(async (client) => {
-      const { ip, terms_version } = termsData;
-
-      const metadata = JSON.stringify({
-        terms_accepted_at: new Date().toISOString(),
-        terms_ip: ip,
-        terms_version: terms_version,
-      });
-
-      await OnboardingRepository.acceptTerms(userId, metadata, client);
-
-      return { success: true };
-    });
-  }
-
-  /**
    * Processes the first onboarding step (Profile Setup)
    */
   async processProfileStep(userId, profileData) {
     const { name, username, timezone } = profileData;
+
+    // Check if user already accepted terms
+    const user = await SearchUsersRepository.findById(userId);
+    const completedSteps = user.onboarding_state?.completed_steps || [];
+
+    if (!completedSteps.includes("terms")) {
+      throw new Error("TERMS_NOT_ACCEPTED");
+    }
 
     return await withTransaction(async (client) => {
       // 1. Check username availability
@@ -62,7 +50,7 @@ class OnboardingService {
    * Processes the second onboarding step (Workspace Setup)
    */
   async processWorkspaceStep(userId, workspaceData) {
-    const { workspace_name, unique_name, workspace_role, invite_token } = workspaceData;
+    const { workspace_name, unique_name, invite_token } = workspaceData;
 
     return await withTransaction(async (client) => {
       let workspaceIdToJoin = null;
@@ -85,33 +73,18 @@ class OnboardingService {
           await OnboardingRepository.activateInvite(pendingMember.id, client);
         }
       } else {
-        // 1. Create workspace
-        const workspace = await WorkspacesRepository.createWorkspace(
-          { uniqueName: unique_name, workspaceName: workspace_name },
+        // 1. Create workspace (this also creates settings, default team, and adds member as admin)
+        const workspace = await WorkspacesRepository.createWorkspaces(
+          userId,
+          workspace_name,
+          unique_name,
+          null,
+          null,
+          null,
+          null,
           client
         );
         workspaceIdToJoin = workspace.id;
-
-        // 2. Create workspace settings
-        await WorkspacesRepository.createWorkspaceSettings(
-          workspaceIdToJoin,
-          { role: workspace_role || "general" },
-          client
-        );
-
-        // 3. Create General team
-        await TeamsRepository.createTeam(
-          {
-            createdBy: userId,
-            slug: "general",
-            teamName: "General",
-            workspaceId: workspaceIdToJoin,
-          },
-          client
-        );
-
-        // 4. Add member as owner
-        await WorkspacesRepository.addWorkspaceMember(workspaceIdToJoin, userId, "owner", client);
       }
 
       // 5. Update onboarding status preserving completed_steps

@@ -1,5 +1,5 @@
 const BackupBaseController = require("./base.controller");
-const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
 const backupJobsRepository = require("@/modules/backup/repositories/backup-jobs.repository");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const PlansService = require("@/modules/plans/services/plans.service");

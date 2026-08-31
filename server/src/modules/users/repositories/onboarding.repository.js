@@ -41,24 +41,6 @@ class OnboardingRepository extends BaseRepository {
   }
 
   /**
-   * Updates terms metadata and sets state to TERMS_ACCEPTED
-   */
-  async acceptTerms(userId, metadata, client) {
-    const query = `
-      UPDATE users 
-      SET onboarding_state = jsonb_set(
-        jsonb_set(
-          jsonb_set(COALESCE(onboarding_state, '{}'::jsonb), '{step}', '"TERMS_ACCEPTED"'),
-          '{completed_steps}', (COALESCE(onboarding_state->'completed_steps', '[]'::jsonb) - 'terms') || '["terms"]'::jsonb
-        ),
-        '{metadata}', COALESCE(onboarding_state->'metadata', '{}'::jsonb) || $2::jsonb
-      )
-      WHERE user_id = $1
-    `;
-    return await client.query(query, [userId, metadata]);
-  }
-
-  /**
    * Updates basic profile fields for the user
    */
   async updateProfile(userId, { name, username, timezone }, client) {

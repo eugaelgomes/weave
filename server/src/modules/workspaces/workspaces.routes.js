@@ -6,7 +6,7 @@ const workspaceMembersController = require("@/modules/workspaces/controllers/mem
 const workspaceTeamsController = require("@/modules/workspaces/controllers/teams.controller");
 const workspaceSettingsController = require("@/modules/workspaces/controllers/settings.controller");
 const workspaceRolesController = require("@/modules/workspaces/controllers/roles.controller");
-const userDataController = require("@/modules/users/controllers/user-data.controller");
+const UsersController = require("@/modules/users/controllers/users.controller");
 
 // Middlewares
 const { verifyToken } = require("@/middlewares/auth/verify-token");
@@ -48,13 +48,13 @@ router.use(verifyToken);
 router.get(
   "/my-workspaces",
   highTrafficLimiter,
-  userDataController.listMyWorkspaces.bind(userDataController)
+  UsersController.listMyWorkspaces.bind(UsersController)
 );
 
 router.post(
   "/switch",
   standardTrafficLimiter,
-  userDataController.switchWorkspace.bind(userDataController)
+  UsersController.switchWorkspace.bind(UsersController)
 );
 
 router.get("/", highTrafficLimiter, workspacesController.getWorkspace.bind(workspacesController));

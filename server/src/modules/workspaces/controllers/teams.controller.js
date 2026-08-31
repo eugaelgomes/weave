@@ -2,7 +2,7 @@ const teamsRepository = require("@/modules/workspaces/repositories/teams.reposit
 const { AppError, fromUnknown } = require("@/errors");
 const WorkspacesBaseController = require("./base-controller");
 
-const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
 const { normalizeWorkspaceName } = require("../utils/normalizer");
 const { teamResponseSchema } = require("../schemas/teams.schema");
 const { z } = require("zod");

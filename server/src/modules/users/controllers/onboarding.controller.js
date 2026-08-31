@@ -1,25 +1,8 @@
 const BaseController = require("@/modules/workspaces/controllers/base-controller");
 const OnboardingService = require("../services/onboarding.service");
-const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
 
 class OnboardingController extends BaseController {
-  /**
-   * POST /api/v1/users/me/onboarding/step-0
-   * Accepts terms and privacy policy
-   */
-  async submitStepZeroTerms(req, res, next) {
-    try {
-      const { userId } = req.user;
-      const { terms_version } = req.body;
-      const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || req.ip || "unknown";
-
-      const result = await OnboardingService.processTermsStep(userId, { ip, terms_version });
-      res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
-
   /**
    * POST /api/v1/users/me/onboarding/step-1
    * Configures personal profile details
@@ -30,12 +13,10 @@ class OnboardingController extends BaseController {
 
       const user = await SearchUsersRepository.findById(userId);
       if (!user.email_verified) {
-        return res
-          .status(403)
-          .json({
-            code: "EMAIL_NOT_VERIFIED",
-            error: "Email verification is required before proceeding.",
-          });
+        return res.status(403).json({
+          code: "EMAIL_NOT_VERIFIED",
+          error: "Email verification is required before proceeding.",
+        });
       }
 
       const result = await OnboardingService.processProfileStep(userId, req.body);
@@ -55,12 +36,10 @@ class OnboardingController extends BaseController {
 
       const user = await SearchUsersRepository.findById(userId);
       if (!user.email_verified) {
-        return res
-          .status(403)
-          .json({
-            code: "EMAIL_NOT_VERIFIED",
-            error: "Email verification is required before proceeding.",
-          });
+        return res.status(403).json({
+          code: "EMAIL_NOT_VERIFIED",
+          error: "Email verification is required before proceeding.",
+        });
       }
 
       const result = await OnboardingService.processWorkspaceStep(userId, req.body);

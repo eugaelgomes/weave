@@ -22,11 +22,7 @@ const {
   searchUsersSchema,
   confirmDeleteAccountSchema,
 } = require("./schemas/users.schema");
-const {
-  submitStepZeroSchema,
-  submitStepOneSchema,
-  submitStepTwoSchema,
-} = require("./schemas/onboarding.schema");
+const { submitStepOneSchema, submitStepTwoSchema } = require("./schemas/onboarding.schema");
 
 // Utils
 const { multipartImageUpload } = require("@/utils/middlewares.util");
@@ -65,13 +61,6 @@ router.get(
 );
 
 // Onboarding Routes
-router.post(
-  "/me/onboarding/step-0",
-  verifyToken,
-  standardTrafficLimiter,
-  validate(submitStepZeroSchema, "body"),
-  OnboardingController.submitStepZeroTerms.bind(OnboardingController)
-);
 
 router.post(
   "/me/onboarding/step-1",

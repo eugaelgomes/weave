@@ -4,7 +4,7 @@ const { API_SCOPES } = require("@/config/api-scopes");
 const { logPublicApiRequest } = require("@/middlewares/http/log-public-api-request");
 
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
-const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
+const UsersController = require("@/modules/users/controllers/users.controller");
 const { requireScope } = require("@/middlewares/auth/require-scope");
 const { highTrafficLimiter } = require("@/middlewares/security/request-limiters");
 
@@ -61,7 +61,7 @@ const createPublicRouter = ({ version = DEFAULT_VERSION } = {}) => {
     verifyToken,
     highTrafficLimiter,
     requireScope(API_SCOPES.USERS_READ),
-    (req, res, next) => SearchUsersController.searchUsers(req, res, next)
+    (req, res, next) => UsersController.searchUsers(req, res, next)
   );
 
   return router;

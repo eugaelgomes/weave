@@ -3,7 +3,7 @@ const { AppError, fromUnknown } = require("@/errors");
 const {
   buildUniqueConflictPayload,
   getUniqueFieldFromPgError,
-} = require("@/modules/users/utils/unique-conflicts");
+} = require("@/modules/users/utils/unique-conflicts.util");
 
 const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone");
 

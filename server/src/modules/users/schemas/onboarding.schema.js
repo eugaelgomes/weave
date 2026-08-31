@@ -18,13 +18,6 @@ const usernameValidator = z
   .regex(usernameRegex, "Only letters, numbers, ., -, or _ are allowed.")
   .toLowerCase();
 
-const submitStepZeroSchema = z.object({
-  terms_accepted: z.boolean().refine((val) => val === true, {
-    message: "You must accept the terms to proceed.",
-  }),
-  terms_version: z.string().optional().default("1.0"),
-});
-
 const submitStepOneSchema = z.object({
   name: nameValidator,
   timezone: z.string().optional(),
@@ -45,5 +38,4 @@ const submitStepTwoSchema = z
 module.exports = {
   submitStepOneSchema,
   submitStepTwoSchema,
-  submitStepZeroSchema,
 };

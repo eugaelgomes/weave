@@ -6,7 +6,7 @@
 
 const { AppError, fromUnknown } = require("@/errors");
 const WorkspacesBaseController = require("./base-controller");
-const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
 const { memberListResponseSchema } = require("../schemas/members.schema");
 
 const { send_workspace_invite } = require("@/services/email/templates/invite-member");

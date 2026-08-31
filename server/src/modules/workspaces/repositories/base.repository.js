@@ -138,11 +138,13 @@ class WorkspaceBaseRepository {
     logo_url,
     banner_url,
     description,
-    country
+    country,
+    txClient = null
   ) {
-    const client = await getConnection();
+    const client = txClient || (await getConnection());
+    const shouldManageTx = !txClient;
     try {
-      await client.query("BEGIN");
+      if (shouldManageTx) await client.query("BEGIN");
 
       const defaultPlanQuery = `
         WITH candidates AS (
@@ -275,15 +277,15 @@ class WorkspaceBaseRepository {
         );
       }
 
-      await client.query("COMMIT");
+      if (shouldManageTx) await client.query("COMMIT");
 
       return workspace;
     } catch (err) {
-      await client.query("ROLLBACK");
+      if (shouldManageTx) await client.query("ROLLBACK");
       console.error("Erro ao criar organização:", err);
       throw err;
     } finally {
-      client.release();
+      if (shouldManageTx) client.release();
     }
   }
 

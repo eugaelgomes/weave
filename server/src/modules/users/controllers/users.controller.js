@@ -9,7 +9,7 @@ const UsersRepository = require("@/modules/users/repositories/users.repository")
 const spacesService = require("@/services/storage.service");
 const { presignObjectFields } = require("@/utils/storage.util");
 const updateProfileLogs = require("../utils/user-logs.util");
-const { normalizeAppPreferences } = require("@/modules/users/normalize");
+const { normalizeAppPreferences } = require("@/modules/users/utils/normalize");
 const {
   buildUniqueConflictPayload,
   normalizeEmail,

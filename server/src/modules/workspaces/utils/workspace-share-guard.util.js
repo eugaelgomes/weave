@@ -1,4 +1,4 @@
-const workspaceUserScopeRepository = require("@/modules/users/repositories/workspace-user-scope.repository");
+const workspaceUserScopeRepository = require("@/modules/users/repositories/users.repository");
 
 const WORKSPACE_SHARE_DENIED = {
   error: "Partilha não permitida entre contextos de workspace",

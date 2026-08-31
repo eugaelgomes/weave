@@ -1,6 +1,9 @@
 const BaseRepository = require("./base.repository");
 const { executeQuery } = require("@/database/connection");
-const { defaultAppPreferences, normalizeAppPreferences } = require("@/modules/users/normalize");
+const {
+  defaultAppPreferences,
+  normalizeAppPreferences,
+} = require("@/modules/users/utils/normalize");
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const { generatePublicId } = require("@/utils/formatters.util");
 const {
@@ -26,6 +29,7 @@ class UsersRepository extends BaseRepository {
       phone_number,
       avatar_url,
       plan_id,
+      onboarding_state,
     } = userData;
 
     const resolvedPlanId = plan_id || (await PlansRepository.getDefaultSignupPlanId());
@@ -34,10 +38,10 @@ class UsersRepository extends BaseRepository {
     const query = `
     INSERT INTO users (
       name, username, email, password, timezone, private_profile,
-      birth_date, phone_number, avatar_url, user_preference, plan_id, public_user_id
+      birth_date, phone_number, avatar_url, user_preference, plan_id, public_user_id, onboarding_state
     ) 
     VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
     )
     RETURNING user_id, public_user_id, email, name, avatar_url, created_at;
   `;
@@ -57,6 +61,7 @@ class UsersRepository extends BaseRepository {
         defaultAppPreferences,
         resolvedPlanId,
         publicUserId,
+        onboarding_state || null,
       ],
       client
     );
@@ -74,15 +79,23 @@ class UsersRepository extends BaseRepository {
   }
 
   async updateUserActivation(userId, userData, client = null) {
-    const { name, username, password, timezone, private_profile, birth_date, phone_number } =
-      userData;
+    const {
+      name,
+      username,
+      password,
+      timezone,
+      private_profile,
+      birth_date,
+      phone_number,
+      onboarding_state,
+    } = userData;
 
     const query = `
       UPDATE users SET
         name = $1, username = $2, password = $3, phone_number = $4,
         timezone = $5, birth_date = $6, private_profile = $7,
-        status = 'ACTIVE', updated_at = NOW()
-      WHERE user_id = $8
+        status = 'ACTIVE', onboarding_state = COALESCE($8, onboarding_state), updated_at = NOW()
+      WHERE user_id = $9
       RETURNING user_id, email, name, username, created_at;
     `;
     const values = [
@@ -93,6 +106,7 @@ class UsersRepository extends BaseRepository {
       timezone,
       birth_date || null,
       private_profile || false,
+      onboarding_state || null,
       userId,
     ];
     return await executeQuery(query, values, client);

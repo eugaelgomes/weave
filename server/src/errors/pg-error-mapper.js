@@ -2,7 +2,7 @@ const { ERROR_CODES } = require("@/errors/codes");
 const {
   getUniqueFieldFromPgError,
   buildUniqueConflictPayload,
-} = require("@/modules/users/utils/unique-conflicts");
+} = require("@/modules/users/utils/unique-conflicts.util");
 
 /**
  * @typedef {Error & {

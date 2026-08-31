@@ -1,5 +1,5 @@
 const { AppError } = require("@/errors");
-const UsersRepository = require("@/modules/users/repositories/search-users.repository");
+const UsersRepository = require("@/modules/users/repositories/users.repository");
 
 /**
  * Middleware that ensures a user has fully completed their onboarding process.

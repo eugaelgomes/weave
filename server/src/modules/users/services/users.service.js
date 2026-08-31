@@ -17,7 +17,7 @@ const {
   normalizeUsername,
   normalizePhoneNumber,
 } = require("@/modules/users/utils/unique-conflicts.util");
-const { normalizeAppPreferences } = require("@/modules/users/normalize");
+const { normalizeAppPreferences } = require("@/modules/users/utils/normalize");
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 
@@ -68,6 +68,7 @@ class UsersService {
       birth_date,
       name,
       user_name,
+      terms_version,
     } = userData;
 
     const existingUsersByEmail = await UsersRepository.findByUsernameOrEmail("", email);
@@ -115,6 +116,12 @@ class UsersService {
           {
             birth_date,
             name: userName,
+            onboarding_state: {
+              completed_steps: ["terms"],
+              step: "TERMS_ACCEPTED",
+              terms_accepted_at: new Date().toISOString(),
+              terms_version: terms_version,
+            },
             password: hashedPassword,
             phone_number,
             private_profile,
@@ -132,6 +139,12 @@ class UsersService {
             birth_date,
             email,
             name: userName,
+            onboarding_state: {
+              completed_steps: ["terms"],
+              step: "TERMS_ACCEPTED",
+              terms_accepted_at: new Date().toISOString(),
+              terms_version: terms_version,
+            },
             password: hashedPassword,
             phone_number,
             private_profile,

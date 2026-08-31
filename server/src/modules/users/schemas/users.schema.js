@@ -44,6 +44,10 @@ const createAccountSchema = z.object({
   password: passwordValidator,
   phone_number: z.string().nullable().optional(),
   private_profile: z.union([z.boolean(), z.string().transform((val) => val === "true")]).optional(),
+  terms_accepted: z.boolean().refine((val) => val === true, {
+    message: "You must accept the terms of service.",
+  }),
+  terms_version: z.string().min(1, "Terms version is required."),
   timezone: z.string().optional(),
   user_name: nameValidator,
   username: usernameValidator,
