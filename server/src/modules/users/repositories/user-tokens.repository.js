@@ -151,5 +151,34 @@ class UserTokensRepository extends BaseRepository {
     const results = await executeQuery(query, [userId]);
     return results[0];
   }
+
+  // ==========================================
+  // DELETE ACCOUNT TOKENS
+  // ==========================================
+
+  async createDeleteAccountToken(userId, token) {
+    await executeQuery(
+      `UPDATE tokens SET active = FALSE WHERE user_id = $1 AND type = 'DELETE_USER_ACCOUNT' AND active = TRUE`,
+      [userId]
+    );
+
+    const query = `
+      INSERT INTO tokens (user_id, token, type, expires_at, created_at, active)
+      VALUES ($1, $2, 'DELETE_USER_ACCOUNT', ($3::timestamp + interval '7 days'), $3, TRUE)
+      RETURNING *;
+    `;
+    return await executeQuery(query, [userId, token, new Date().toISOString()]);
+  }
+
+  async findDeleteAccountToken(token) {
+    const query = `SELECT * FROM tokens WHERE token = $1 AND active = TRUE AND type = 'DELETE_USER_ACCOUNT' AND expires_at > NOW()`;
+    const results = await executeQuery(query, [token]);
+    return results[0];
+  }
+
+  async deactivateDeleteAccountToken(token) {
+    const query = `UPDATE tokens SET active = FALSE WHERE token = $1 AND type = 'DELETE_USER_ACCOUNT'`;
+    return await executeQuery(query, [token]);
+  }
 }
 module.exports = new UserTokensRepository();

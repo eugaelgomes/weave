@@ -1,10 +1,7 @@
 const express = require("express");
 
 // Controllers
-const CreateUsersController = require("@/modules/users/controllers/create-users.controller");
-const DeleteUsersController = require("@/modules/users/controllers/delete-users.controller");
-const SearchUsersController = require("@/modules/users/controllers/search-users.controllers");
-const UserDataController = require("@/modules/users/controllers/user-data.controller");
+const UsersController = require("@/modules/users/controllers/users.controller");
 const OnboardingController = require("@/modules/users/controllers/onboarding.controller");
 
 // Middlewares
@@ -48,7 +45,7 @@ router.post(
   multipartImageUpload.single("profileImage"),
   validateCompressedImageSize,
   validate(createAccountSchema, "body"),
-  CreateUsersController.createUser.bind(CreateUsersController)
+  UsersController.createUser.bind(UsersController)
 );
 
 // Activate User
@@ -56,7 +53,7 @@ router.post(
   "/activate-account",
   standardTrafficLimiter,
   validate(activateAccountSchema, "body"),
-  CreateUsersController.activateAccount.bind(CreateUsersController)
+  UsersController.activateAccount.bind(UsersController)
 );
 
 // User Data
@@ -64,7 +61,7 @@ router.get(
   "/me",
   verifyToken,
   highTrafficLimiter,
-  UserDataController.getProfile.bind(UserDataController)
+  UsersController.getProfile.bind(UsersController)
 );
 
 // Onboarding Routes
@@ -105,7 +102,7 @@ router.get(
   verifyToken,
   standardTrafficLimiter,
   validate(checkAvailabilitySchema, "query"),
-  UserDataController.checkAvailability.bind(UserDataController)
+  UsersController.checkAvailability.bind(UsersController)
 );
 
 // Check Username Availability (Public)
@@ -113,7 +110,7 @@ router.get(
   "/check-username",
   standardTrafficLimiter,
   validate(checkUsernamePublicSchema, "query"),
-  UserDataController.checkUsernamePublic.bind(UserDataController)
+  UsersController.checkUsernamePublic.bind(UsersController)
 );
 
 // Update Profile
@@ -124,7 +121,7 @@ router.put(
   multipartImageUpload.single("profilePicture"),
   validateCompressedImageSize,
   validate(updateProfileSchema, "body"),
-  UserDataController.updateProfile.bind(UserDataController)
+  UsersController.updateProfile.bind(UsersController)
 );
 
 // Search Users
@@ -135,36 +132,32 @@ router.get(
   requireScope("users:read"),
   validate(searchUsersSchema, "query"),
   (req, res, next) => {
-    SearchUsersController.searchUsers(req, res, next);
+    UsersController.searchUsers(req, res, next);
   }
 );
 
 // Get Profile Image
-router.get(
-  "/my-profile-image",
-  verifyToken,
-  UserDataController.getProfileImage.bind(UserDataController)
-);
+router.get("/my-profile-image", verifyToken, UsersController.getProfileImage.bind(UsersController));
 
 // Get Profile Image Info
 router.get(
   "/my-profile-image-info",
   verifyToken,
-  UserDataController.getProfileImageInfo.bind(UserDataController)
+  UsersController.getProfileImageInfo.bind(UsersController)
 );
 
 // Delete User
 router.delete(
   "/delete-my-account",
   verifyToken,
-  DeleteUsersController.requestDeleteUser.bind(DeleteUsersController)
+  UsersController.requestDeleteUser.bind(UsersController)
 );
 
 // Confirm Delete User
 router.post(
   "/confirm-delete-account",
   validate(confirmDeleteAccountSchema, "body"),
-  DeleteUsersController.confirmDeleteUser.bind(DeleteUsersController)
+  UsersController.confirmDeleteUser.bind(UsersController)
 );
 
 module.exports = router;

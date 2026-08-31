@@ -1,16 +1,21 @@
+const crypto = require("crypto");
+const fs = require("fs");
+
 const BaseController = require("./base.controller");
-const UserDataRepository = require("@/modules/users/repositories/user-data.repository");
-const SearchUsersRepository = require("@/modules/users/repositories/search-users.repository");
+const UsersService = require("../services/users.service");
+const UserTokensRepository = require("@/modules/users/repositories/user-tokens.repository");
+const UsersRepository = require("@/modules/users/repositories/users.repository");
+
+const spacesService = require("@/services/storage.service");
 const { presignObjectFields } = require("@/utils/storage.util");
-const updateProfileLogs = require("../utils/update-profile-logs.util");
+const updateProfileLogs = require("../utils/user-logs.util");
 const { normalizeAppPreferences } = require("@/modules/users/normalize");
-const UserDataService = require("@/modules/users/utils/user-data.util");
 const {
   buildUniqueConflictPayload,
   normalizeEmail,
   normalizeUsername,
   normalizePhoneNumber,
-} = require("@/modules/users/utils/unique-conflicts");
+} = require("@/modules/users/utils/unique-conflicts.util");
 
 const workspacesBaseRepository = require("@/modules/workspaces/repositories/base.repository");
 const workspacesMembersRepository = require("@/modules/workspaces/repositories/members.repository");
@@ -18,24 +23,11 @@ const workspacesTeamsRepository = require("@/modules/workspaces/repositories/tea
 const credentialsRepository = require("@/modules/authentication/repositories/credentials.repository");
 const { buildJwtPayload } = require("@/modules/authentication/schemas/session.schema");
 
-/**
- * @typedef {import('express').Request & {
- *   user: { userId: string|number, username: string },
- *   body?: Record<string, unknown>,
- *   file?: { buffer: Buffer, mimetype: string }
- * }} UserDataRequest
- */
+const {
+  delete_account_notification,
+} = require("@/services/email/templates/delete-account-message");
+const { delete_account_request } = require("@/services/email/templates/delete-account-request");
 
-/**
- * @param {Record<string, unknown>|null|undefined} defaultTeamData
- * @returns {null|{
- *   id: unknown,
- *   name: unknown,
- *   slug: unknown,
- *   description: unknown,
- *   properties: Record<string, unknown>
- * }}
- */
 const mapDefaultTeamInfo = (defaultTeamData) => {
   if (!defaultTeamData) return null;
   return {
@@ -47,17 +39,6 @@ const mapDefaultTeamInfo = (defaultTeamData) => {
   };
 };
 
-/**
- * @param {Record<string, unknown>|null|undefined} workspaceData
- * @returns {null|{
- *   id: unknown,
- *   unique_name: unknown,
- *   name: unknown,
- *   logo_url: unknown,
- *   member_role: unknown,
- *   member_since: unknown
- * }}
- */
 const mapWorkspaceInfo = (workspaceData) => {
   if (!workspaceData) return null;
   return {
@@ -72,17 +53,6 @@ const mapWorkspaceInfo = (workspaceData) => {
   };
 };
 
-/**
- * @param {Record<string, unknown>|null|undefined} usageData
- * @returns {null|{
- *   plan_id: unknown,
- *   plan_name: unknown,
- *   client_type: unknown,
- *   period_start: unknown,
- *   period_end: unknown,
- *   details: Record<string, unknown>
- * }}
- */
 const mapPlanUsageInfo = (usageData) => {
   if (!usageData) return null;
   return {
@@ -95,31 +65,146 @@ const mapPlanUsageInfo = (usageData) => {
   };
 };
 
-/**
- * Authenticated user profile: read, update and image.
- */
-class UserDataController extends BaseController {
-  /**
-   * Redirects to the logged user's profile image URL.
-   *
-   * @param {UserDataRequest} req
-   * @param {import('express').Response} res
-   * @returns {Promise<void>}
-   */
+class UsersController extends BaseController {
+  // ==========================================
+  // CREATE & ACTIVATE ACCOUNT
+  // ==========================================
+
+  async createUser(req, res, next) {
+    try {
+      const { timezone } = req.body;
+
+      if (timezone && !this._isValidTimezone(timezone)) {
+        const allTimezones = Intl.supportedValuesOf("timeZone");
+        return res.status(400).json({
+          isValidTimezones: allTimezones,
+          message: "Invalid timezone provided.",
+          status: "error",
+        });
+      }
+
+      const result = await UsersService.createUser(req.body);
+
+      if (result.conflict) {
+        return res.status(409).json(buildUniqueConflictPayload(result.conflict));
+      }
+
+      const { user } = result;
+
+      let profileImageUrl = null;
+      if (req.file && req.file.path) {
+        try {
+          const fileStream = fs.createReadStream(req.file.path);
+
+          const saveResult = await spacesService.uploadProfileImage(
+            fileStream,
+            req.file.mimetype,
+            user.userId
+          );
+
+          fs.unlink(req.file.path, (err) => {
+            if (err) console.error("Failed to delete temp file:", err);
+          });
+
+          if (saveResult.success) {
+            profileImageUrl = saveResult.key;
+            await UsersRepository.updateProfileImage(user.userId, profileImageUrl);
+          } else {
+            console.error("Image upload failed:", saveResult.error);
+          }
+        } catch (imageError) {
+          console.error("Error processing image:", imageError);
+        }
+      }
+
+      return res.status(201).json({
+        message: `Welcome to Weave ${user.userName}! Check your email to activate your account.`,
+        redirect: "/auth/",
+        status: "OK",
+        user: {
+          avatar_url: profileImageUrl,
+          created_at: user.createdAt,
+          email: user.email,
+          id: user.userId,
+          name: user.userName,
+          username: user.username,
+        },
+      });
+    } catch (error) {
+      if (error.message === "CORPORATE_DOMAIN_INVITE_REQUIRED") {
+        return res.status(403).json({
+          message:
+            "This email belongs to a verified corporate domain. You need an invitation from the workspace to create an account.",
+          status: "error",
+        });
+      }
+      console.error("An error occurred during registration:", error);
+      return this._handleError(error, res, next);
+    }
+  }
+
+  async activateAccount(req, res, next) {
+    const { token, code, email } = req.body;
+
+    if (!token && (!code || !email)) {
+      return res.status(400).json({
+        message: "Activation token or both verification code and email are required",
+      });
+    }
+
+    try {
+      let tokenRecord;
+      if (token) {
+        tokenRecord = await UserTokensRepository.findEmailActivationToken(token);
+      } else {
+        tokenRecord = await UserTokensRepository.findEmailActivationTokenByCodeAndEmail(
+          code,
+          email
+        );
+      }
+
+      if (!tokenRecord) {
+        return res.status(400).json({
+          message: "Invalid or expired activation token or verification code",
+        });
+      }
+
+      const verifiedUser = await UserTokensRepository.verifyUserEmail(tokenRecord.user_id);
+
+      if (!verifiedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await UserTokensRepository.deactivateEmailToken(tokenRecord.token);
+
+      return res.status(200).json({
+        message: "Email verified successfully",
+        user: {
+          email: verifiedUser.email,
+          email_verified: verifiedUser.email_verified,
+          email_verified_at: verifiedUser.email_verified_at,
+          id: verifiedUser.user_id,
+        },
+      });
+    } catch (error) {
+      console.error("Error activating account:", error);
+      this._handleError(error, res, next);
+    }
+  }
+
+  // ==========================================
+  // READ & UPDATE PROFILE
+  // ==========================================
+
   async getProfileImage(req, res, next) {
     try {
-      // Uses logged user's userId
       const userId = req.user.userId;
-
       this._validateAuthentication(req, res, next);
-
-      const user = await UserDataRepository.getProfileImage(userId);
+      const user = await UsersRepository.getProfileImage(userId);
 
       if (!user || !user.avatar_url) {
         return res.status(404).send("Profile image not found.");
       }
-
-      // Redirects to the image URL
       return res.redirect(user.avatar_url);
     } catch (error) {
       console.error("Error retrieving profile image:", error);
@@ -127,20 +212,11 @@ class UserDataController extends BaseController {
     }
   }
 
-  /**
-   * Returns profile image metadata (without redirecting).
-   *
-   * @param {UserDataRequest} req
-   * @param {import('express').Response} res
-   * @returns {Promise<void>}
-   */
   async getProfileImageInfo(req, res, next) {
     try {
       const userId = req.user.userId;
-
       this._validateAuthentication(req, res, next);
-
-      const user = await UserDataRepository.getProfileImage(userId);
+      const user = await UsersRepository.getProfileImage(userId);
 
       if (!user || !user.avatar_url) {
         return res.status(404).json({
@@ -164,17 +240,9 @@ class UserDataController extends BaseController {
     }
   }
 
-  /**
-   * Complete profile (`/me`): profile, workspace, plan data and pre-signed URLs.
-   *
-   * @param {UserDataRequest} req
-   * @param {import('express').Response} res
-   * @returns {Promise<void>}
-   */
   async getProfile(req, res, next) {
     try {
       this._validateAuthentication(req, res, next);
-
       const user = await this.signinRepository.findUserByUsername(req.user.username);
 
       if (!user) {
@@ -185,8 +253,6 @@ class UserDataController extends BaseController {
       const defaultArea = mapDefaultTeamInfo(user.default_area);
       const planUsage = mapPlanUsageInfo(user.current_usage);
 
-      // Generate pre-signed URLs to prevent unauthorized and direct access to S3
-      // The 12-hour duration keeps the image visible in the frontend for the same lifespan as a normal session (although it uses next/auth cookies)
       const protectedUser = await presignObjectFields(user, ["avatar_url"], {
         expiresIn: 12 * 60 * 60,
         userId: req.user.userId,
@@ -250,66 +316,6 @@ class UserDataController extends BaseController {
     }
   }
 
-  /**
-   * Public: check username availability without requiring authentication.
-   * Only checks the `username` field. Used in the invite-accept flow.
-   *
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @returns {Promise<void>}
-   */
-  async checkUsernamePublic(req, res) {
-    try {
-      const username = normalizeUsername(req.query?.username);
-      if (!username) {
-        return res.status(400).json({ error: "username query param is required" });
-      }
-      const availability = await SearchUsersRepository.checkUniqueAvailability({
-        username,
-      });
-      return res.status(200).json({ availability });
-    } catch (error) {
-      console.error("Error checking username availability (public):", error);
-      res.status(500).json({ error: "Error checking username" });
-    }
-  }
-
-  /**
-   * Checks availability of `email`, `username` and `phone_number` for the authenticated user.
-   *
-   * @param {UserDataRequest} req
-   * @param {import('express').Response} res
-   * @returns {Promise<void>}
-   */
-  async checkAvailability(req, res, next) {
-    try {
-      this._validateAuthentication(req);
-
-      const email = normalizeEmail(req.query?.email);
-      const username = normalizeUsername(req.query?.username);
-      const phone_number = normalizePhoneNumber(req.query?.phone_number);
-
-      const availability = await SearchUsersRepository.checkUniqueAvailability(
-        { email, phone_number, username },
-        { excludeUserId: req.user.userId }
-      );
-
-      return res.status(200).json({
-        availability,
-      });
-    } catch (error) {
-      console.error("Error checking user unique availability:", error);
-      this._handleError(error, res, next);
-    }
-  }
-
-  /**
-   * Updates profile, preferences, email (with validation flow), password and optional avatar (`profilePicture`).
-   *
-   * @param {UserDataRequest} req
-   * @param {import('express').Response} res
-   * @returns {Promise<void>}
-   */
   async updateProfile(req, res, next) {
     try {
       const currentUser = await this.signinRepository.findUserByUsername(req.user.username);
@@ -319,13 +325,7 @@ class UserDataController extends BaseController {
       }
 
       const { updatedUser, emailPendingValidation, pendingEmail } =
-        await UserDataService.updateProfile(
-          req.user.userId,
-          currentUser,
-          req.body,
-          req.file,
-          req // required for updateProfileLogs inside service
-        );
+        await UsersService.updateProfile(req.user.userId, currentUser, req.body, req.file, req);
 
       const mockUserForPresign = { avatar_url: updatedUser.avatar_url };
       const protectedMock = await presignObjectFields(mockUserForPresign, ["avatar_url"], {
@@ -389,9 +389,195 @@ class UserDataController extends BaseController {
     }
   }
 
-  /**
-   * List all active workspaces where the logged-in user is a member.
-   */
+  // ==========================================
+  // SEARCH & AVAILABILITY
+  // ==========================================
+
+  async checkUsernamePublic(req, res) {
+    try {
+      const username = normalizeUsername(req.query?.username);
+      if (!username) {
+        return res.status(400).json({ error: "username query param is required" });
+      }
+      const availability = await UsersRepository.checkUniqueAvailability({ username });
+      return res.status(200).json({ availability });
+    } catch (error) {
+      console.error("Error checking username availability (public):", error);
+      res.status(500).json({ error: "Error checking username" });
+    }
+  }
+
+  async checkAvailability(req, res, next) {
+    try {
+      this._validateAuthentication(req);
+
+      const email = normalizeEmail(req.query?.email);
+      const username = normalizeUsername(req.query?.username);
+      const phone_number = normalizePhoneNumber(req.query?.phone_number);
+
+      const availability = await UsersRepository.checkUniqueAvailability(
+        { email, phone_number, username },
+        { excludeUserId: req.user.userId }
+      );
+
+      return res.status(200).json({ availability });
+    } catch (error) {
+      console.error("Error checking user unique availability:", error);
+      this._handleError(error, res, next);
+    }
+  }
+
+  async searchUsers(req, res, next) {
+    try {
+      const { q, contextType, contextId } = req.query;
+
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      if (!q || q.trim().length < 3) {
+        return res.status(400).json({
+          error: "The search query must be at least 3 characters long.",
+        });
+      }
+
+      const searchTerm = q.trim();
+
+      const search_users = await UsersService.searchWithContext(
+        searchTerm,
+        userId,
+        contextType,
+        contextId
+      );
+
+      const filteredUsers = search_users
+        .filter((user) => user && user.id !== userId)
+        .map((user) => ({
+          avatar_url: user.avatar_url,
+          context_info: user.context_info,
+          email: user.email,
+          id: user.id,
+          name: user.name,
+          username: user.username,
+        }));
+
+      res.status(200).json({
+        search_users: filteredUsers,
+        search_users_query: searchTerm,
+      });
+    } catch (error) {
+      this._handleError(error, res, next);
+    }
+  }
+
+  // ==========================================
+  // DELETE ACCOUNT
+  // ==========================================
+
+  async requestDeleteUser(req, res, next) {
+    try {
+      const userId = req.user.userId;
+
+      const userData = await UsersRepository.findById(userId);
+
+      if (!userData) {
+        return res.status(404).json({
+          error: "User not found",
+          message: "User does not exist.",
+        });
+      }
+
+      const token = crypto.randomBytes(12).toString("hex");
+
+      const result = await UserTokensRepository.createDeleteAccountToken(userId, token);
+
+      if (result && result.length > 0) {
+        try {
+          await delete_account_request(userData.name, userData.email, userData.username, token);
+        } catch (emailError) {
+          console.error("Failed to send email to:", emailError);
+          return res.status(500).json({
+            error: "Email error",
+            message: "Failed to send confirmation email. Please try again later.",
+          });
+        }
+
+        res.status(200).json({
+          message: "Confirmation email sent. Please check your inbox to confirm account deletion.",
+          status: "OK",
+        });
+      } else {
+        res.status(500).json({
+          error: "Token error",
+          message: "Failed to generate deletion token.",
+        });
+      }
+    } catch (error) {
+      console.error("Error requesting account deletion:", error);
+      this._handleError(error, res, next);
+    }
+  }
+
+  async confirmDeleteUser(req, res, next) {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        return res.status(400).json({
+          error: "Validation error",
+          message: "Token is required.",
+        });
+      }
+
+      const tokenData = await UserTokensRepository.findDeleteAccountToken(token);
+
+      if (!tokenData) {
+        return res.status(400).json({
+          error: "Invalid token",
+          message: "Invalid or expired token.",
+        });
+      }
+
+      const userId = tokenData.user_id;
+      const userData = await UsersRepository.findById(userId);
+
+      if (!userData) {
+        return res.status(404).json({
+          error: "User not found",
+          message: "User does not exist.",
+        });
+      }
+
+      await UserTokensRepository.deactivateDeleteAccountToken(token);
+
+      const deleteResult = await UsersRepository.deleteUser(userId);
+
+      if (deleteResult && deleteResult.length > 0) {
+        try {
+          await delete_account_notification(userData.name, userData.email, userData.username);
+        } catch (emailError) {
+          console.error("Failed to send deletion confirmation email:", emailError);
+        }
+
+        res.status(200).json({
+          message: "Account deleted successfully.",
+          status: "OK",
+        });
+      } else {
+        res.status(500).json({
+          error: "Deletion error",
+          message: "Failed to delete account.",
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming account deletion:", error);
+      this._handleError(error, res, next);
+    }
+  }
+
+  // ==========================================
+  // WORKSPACE CONTEXT
+  // ==========================================
+
   async listMyWorkspaces(req, res, next) {
     try {
       const userId = this._validateAuthentication(req);
@@ -425,9 +611,6 @@ class UserDataController extends BaseController {
     }
   }
 
-  /**
-   * Switch the active workspace context in the user's session.
-   */
   async switchWorkspace(req, res, next) {
     try {
       const userId = this._validateAuthentication(req);
@@ -437,7 +620,6 @@ class UserDataController extends BaseController {
         return res.status(400).json({ error: "workspaceId is required", success: false });
       }
 
-      // Check membership
       const role = await workspacesMembersRepository.getMembershipRole(workspaceId, userId);
       if (!role) {
         return res.status(403).json({
@@ -446,13 +628,11 @@ class UserDataController extends BaseController {
         });
       }
 
-      // Fetch user full data to rebuild session
       const user = await credentialsRepository.findUserById(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found", success: false });
       }
 
-      // Fetch workspace details
       const userWorkspaces = await workspacesBaseRepository.getUserWorkspacesWithMembership(userId);
       const targetOrg = userWorkspaces.find((o) => o.id === workspaceId);
 
@@ -468,13 +648,10 @@ class UserDataController extends BaseController {
         workspace_name: targetOrg.workspace_name,
       };
 
-      // Get default team for this workspace if any
       let defaultArea = null;
       try {
         defaultArea = await workspacesTeamsRepository.getDefaultArea(workspaceId);
-      } catch {
-        // Team optional fallback
-      }
+      } catch {}
 
       const payload = buildJwtPayload(user, workspace, defaultArea);
 
@@ -497,4 +674,5 @@ class UserDataController extends BaseController {
     }
   }
 }
-module.exports = new UserDataController();
+
+module.exports = new UsersController();
