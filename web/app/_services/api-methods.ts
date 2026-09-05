@@ -205,9 +205,9 @@ export const API_ENDPOINTS = {
   GOOGLE_CALENDAR_DISCONNECT: "/webhooks/google/calendar/disconnect",
 
   // Slack
-  SLACK_STATUS: "/slack/integrations",
-  SLACK_INSTALL: "/slack/install",
-  SLACK_DISCONNECT: "/slack/integrations",
+  SLACK_STATUS: "/integrations/slack/integrations",
+  SLACK_INSTALL: "/integrations/slack/install",
+  SLACK_DISCONNECT: "/integrations/slack/integrations",
 
   // Internal Calendar Events
   CALENDAR_EVENTS: "/calendar",

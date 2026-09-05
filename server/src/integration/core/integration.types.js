@@ -30,6 +30,7 @@ const PROVIDER_KEYS = Object.freeze({
   GOOGLE: "google",
   MICROSOFT: "microsoft",
   NOTION: "notion",
+  SLACK: "slack",
   ZENDESK: "zendesk",
 });
 

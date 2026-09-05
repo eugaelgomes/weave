@@ -42,13 +42,10 @@ function configureGlobalMiddlewares(app) {
     if (req.method === "POST" && req.path === "/api/v1/webhooks/google/calendar") {
       return next();
     }
-    if (req.method === "POST" && req.path.startsWith("/api/v1/webhooks/slack")) {
-      return next();
-    }
     if (
-      req.path.startsWith("/api/v1/slack/events") ||
-      req.path.startsWith("/api/v1/slack/interactivity") ||
-      req.path.startsWith("/api/v1/slack/oauth/callback")
+      req.path.startsWith("/api/v1/integrations/slack/events") ||
+      req.path.startsWith("/api/v1/integrations/slack/interactivity") ||
+      req.path.startsWith("/api/v1/integrations/slack/oauth/callback")
     ) {
       return next();
     }
@@ -61,7 +58,7 @@ function configureGlobalMiddlewares(app) {
     if (req.method === "GET" && req.path.startsWith("/api/v1/webhooks/google/auth")) {
       return next();
     }
-    if (req.method === "GET" && req.path.startsWith("/api/v1/slack/install")) {
+    if (req.method === "GET" && req.path.startsWith("/api/v1/integrations/slack/install")) {
       return next();
     }
     return corsMiddleware(req, res, next);

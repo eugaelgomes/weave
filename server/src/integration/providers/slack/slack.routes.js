@@ -7,9 +7,9 @@ const {
 } = require("@/middlewares/security/request-limiters");
 const { setDefaultChannelSchema, slackOauthCallbackSchema } = require("./schemas/slack.schema");
 
-const SlackIntegrationsController = require("@/modules/slack/controllers/slack-integrations.controller");
-const SlackOauthController = require("@/modules/slack/controllers/slack-oauth.controller");
-const SlackEventsController = require("@/modules/slack/controllers/slack-events.controller");
+const SlackIntegrationsController = require("./controllers/slack-integrations.controller");
+const SlackOauthController = require("./controllers/slack-oauth.controller");
+const SlackEventsController = require("./controllers/slack-events.controller");
 
 const router = express.Router();
 

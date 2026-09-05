@@ -1,38 +1,41 @@
-const baseRepository = require("@/modules/workspaces/repositories/base.repository");
-const WebhooksBaseController = require("@/modules/webhooks/controllers/base.controller");
+const WorkspacesBaseController = require("@/modules/workspaces/controllers/base-controller");
 
-const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/mutate-slack-integrations.repository");
+const MutateSlackIntegrationsRepository = require("@/integration/providers/slack/repositories/mutate-slack-integrations.repository");
 const {
   issueSlackInstallState,
   verifySlackInstallState,
-} = require("@/modules/slack/utils/slack-oauth-state.util");
-const { buildAuthorizeUrl, exchangeOAuthCode } = require("@/modules/slack/utils/slack-client.util");
+} = require("@/integration/providers/slack/utils/slack-oauth-state.util");
+const { SlackClient } = require("@/integration/providers/slack/slack.client");
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 /**
- * Slack OAuth install/callback under `/webhooks/slack/*`.
+ * Slack OAuth install/callback under `/integrations/slack/*`.
  */
-class SlackOauthController extends WebhooksBaseController {
+class SlackOauthController extends WorkspacesBaseController {
   /**
    * Redirects the authenticated user to Slack OAuth (workspace install).
-   * `GET /webhooks/slack/install`
+   * `GET /integrations/slack/install`
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
   async slackInstall(req, res) {
     try {
-      const userId = this._requireAuthenticatedUser(req, res);
+      const userId = this._validateAuthentication(req, res);
       if (userId === null || userId === undefined) return;
 
-      const workspace = await baseRepository.getActiveOrganizationWithMembership(userId);
+      const workspace = await this._getUserWorkspace(userId);
       if (!workspace?.id) {
         return res.status(404).json({ error: "Workspace not found" });
       }
 
-      const role = workspace.member_role;
-      if (!role || !role.permissions?.includes("manage_global_integrations")) {
+      if (
+        !this._workspaceRoleHasPermission(
+          workspace,
+          this._workspacePermissions.MANAGE_ORG_LIFECYCLE
+        )
+      ) {
         return res.status(403).json({
           code: "ORG_FORBIDDEN",
           error: "Insufficient workspace permissions",
@@ -43,7 +46,7 @@ class SlackOauthController extends WebhooksBaseController {
         organizationId: String(workspace.id),
         userId: String(userId),
       });
-      const url = buildAuthorizeUrl({ state });
+      const url = SlackClient.buildAuthorizeUrl({ state });
       return res.redirect(url);
     } catch (error) {
       console.error("[Slack Install]", error);
@@ -53,7 +56,7 @@ class SlackOauthController extends WebhooksBaseController {
 
   /**
    * Slack OAuth callback — exchanges code, persists installation, redirects to the app.
-   * `GET /webhooks/slack/oauth/callback`
+   * `GET /integrations/slack/oauth/callback`
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -72,7 +75,7 @@ class SlackOauthController extends WebhooksBaseController {
         return res.status(400).json({ error: "Invalid or expired state" });
       }
 
-      const data = await exchangeOAuthCode(String(code));
+      const data = await SlackClient.exchangeOAuthCode(String(code));
       if (!data?.ok) {
         console.error("[Slack OAuth callback] oauth.v2.access:", data?.error);
         return res.redirect(`${FRONTEND_URL}/app/settings/integrations?slack=error`);

@@ -19,10 +19,10 @@ function shouldSkipInternalChallenge(path) {
     return true;
   }
   const isSlackWebhookOrOAuth =
-    path.startsWith("/slack/events") ||
-    path.startsWith("/slack/interactivity") ||
-    path.startsWith("/slack/install") ||
-    path.startsWith("/slack/oauth/callback");
+    path.startsWith("/integrations/slack/events") ||
+    path.startsWith("/integrations/slack/interactivity") ||
+    path.startsWith("/integrations/slack/install") ||
+    path.startsWith("/integrations/slack/oauth/callback");
 
   if (path.startsWith("/webhooks") || isSsoAuthPath || isSlackWebhookOrOAuth) {
     return true;

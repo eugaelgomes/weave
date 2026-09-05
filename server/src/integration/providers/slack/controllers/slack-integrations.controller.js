@@ -1,7 +1,7 @@
 const OrganizationsBaseController = require("@/modules/workspaces/controllers/base-controller");
-const ReadSlackIntegrationsRepository = require("@/modules/slack/repositories/read-slack-integrations.repository");
-const MutateSlackIntegrationsRepository = require("@/modules/slack/repositories/mutate-slack-integrations.repository");
-const { conversationsInfo, authRevoke } = require("@/modules/slack/utils/slack-client.util");
+const ReadSlackIntegrationsRepository = require("@/integration/providers/slack/repositories/read-slack-integrations.repository");
+const MutateSlackIntegrationsRepository = require("@/integration/providers/slack/repositories/mutate-slack-integrations.repository");
+const { SlackClient } = require("@/integration/providers/slack/slack.client");
 
 /**
  * Slack integration settings for the active workspace.
@@ -20,11 +20,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
 
       const workspace = await this._getUserOrganization(userId);
       if (
-        !this._ensureOrgPermission(
-          workspace,
-          this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS,
-          res
-        )
+        !this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS, res)
       ) {
         return;
       }
@@ -71,11 +67,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
 
       const workspace = await this._getUserOrganization(userId);
       if (
-        !this._ensureOrgPermission(
-          workspace,
-          this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS,
-          res
-        )
+        !this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS, res)
       ) {
         return;
       }
@@ -89,9 +81,9 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         return res.status(400).json({ error: "Slack is not connected for this workspace" });
       }
 
-      const info = await conversationsInfo({
+      const slackClient = new SlackClient({ botAccessToken: integration.bot_access_token });
+      const info = await slackClient.conversationsInfo({
         channel: channelId.trim(),
-        token: integration.bot_access_token,
       });
       if (!info?.ok || !info.channel) {
         return res.status(400).json({
@@ -131,11 +123,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
 
       const workspace = await this._getUserOrganization(userId);
       if (
-        !this._ensureOrgPermission(
-          workspace,
-          this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS,
-          res
-        )
+        !this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS, res)
       ) {
         return;
       }
@@ -145,7 +133,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       );
       if (integration?.bot_access_token) {
         try {
-          await authRevoke(integration.bot_access_token);
+          await SlackClient.authRevoke(integration.bot_access_token);
         } catch (revokeErr) {
           console.error("[disconnectSlack] auth.revoke:", revokeErr);
         }

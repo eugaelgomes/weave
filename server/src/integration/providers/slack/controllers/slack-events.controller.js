@@ -1,4 +1,4 @@
-const { verifySlackSignature } = require("@/modules/slack/utils/slack-client.util");
+const { SlackClient } = require("@/integration/providers/slack/slack.client");
 
 /**
  * Slack Events API / interactivity endpoints (public).
@@ -6,7 +6,7 @@ const { verifySlackSignature } = require("@/modules/slack/utils/slack-client.uti
 class SlackEventsController {
   /**
    * Handles Events API (URL verification and future events).
-   * `POST /webhooks/slack/events`
+   * `POST /integrations/slack/events`
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -23,7 +23,7 @@ class SlackEventsController {
     const rawBody = req.rawBody;
     const sig = req.headers["x-slack-signature"];
     const ts = req.headers["x-slack-request-timestamp"];
-    const ok = verifySlackSignature({
+    const ok = SlackClient.verifySlackSignature({
       rawBody,
       signingSecret,
       slackSignature: typeof sig === "string" ? sig : "",
@@ -43,7 +43,7 @@ class SlackEventsController {
 
   /**
    * Reserved for Block Kit / shortcuts (payload is URL-encoded).
-   * `POST /webhooks/slack/interactivity`
+   * `POST /integrations/slack/interactivity`
    *
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -60,7 +60,7 @@ class SlackEventsController {
     const rawBody = req.rawBody;
     const sig = req.headers["x-slack-signature"];
     const ts = req.headers["x-slack-request-timestamp"];
-    const ok = verifySlackSignature({
+    const ok = SlackClient.verifySlackSignature({
       rawBody,
       signingSecret,
       slackSignature: typeof sig === "string" ? sig : "",

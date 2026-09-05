@@ -11,6 +11,7 @@ const { GoogleIntegration } = require("./providers/google/google.integration");
 const { NotionIntegration } = require("./providers/notion/notion.integration");
 const { ZendeskIntegration } = require("./providers/zendesk/zendesk.integration");
 const { MicrosoftIntegration } = require("./providers/microsoft/microsoft.integration");
+const { SlackIntegration } = require("./providers/slack/slack.integration");
 
 /**
  * Automatically register default business application providers
@@ -20,6 +21,7 @@ const defaultProviders = [
   new NotionIntegration(),
   new ZendeskIntegration(),
   new MicrosoftIntegration(),
+  new SlackIntegration(),
 ];
 
 for (const provider of defaultProviders) {
@@ -49,5 +51,6 @@ module.exports = {
   MicrosoftIntegration,
   NotionIntegration,
   PROVIDER_KEYS,
+  SlackIntegration,
   ZendeskIntegration,
 };

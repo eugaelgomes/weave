@@ -113,6 +113,8 @@ const isAllowedOrigin = (origin, isDev) => {
   return originMatchers.some((fn) => fn(normalizedOrigin));
 };
 
+const slackRoutes = require("@/integration/providers/slack/slack.routes");
+
 /**
  * Registry mapping base paths to their respective handler routes
  * @type {Array<{basePath: string, handler: import('express').Router}>}
@@ -125,6 +127,7 @@ const routeRegistry = [
   { basePath: "/plans", handler: plansRoutes, requireOnboarding: true },
   { basePath: "/users", handler: userRoutes, requireOnboarding: false },
   { basePath: "/weave-ai", handler: agentHouseRoutes, requireOnboarding: true },
+  { basePath: "/integrations/slack", handler: slackRoutes, requireOnboarding: false },
 ];
 
 /**
