@@ -1,5 +1,5 @@
 const BaseRepository = require("./base.repository");
-const { executeQuery } = require("@/database/connection");
+const { prisma } = require("@theweave/database");
 const {
   defaultAppPreferences,
   normalizeAppPreferences,
@@ -35,47 +35,53 @@ class UsersRepository extends BaseRepository {
     const resolvedPlanId = plan_id || (await PlansRepository.getDefaultSignupPlanId());
     const publicUserId = generatePublicId();
 
-    const query = `
-    INSERT INTO users (
-      name, username, email, password, timezone, private_profile,
-      birth_date, phone_number, avatar_url, user_preference, plan_id, public_user_id, onboarding_state
-    ) 
-    VALUES (
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
-    )
-    RETURNING user_id, public_user_id, email, name, avatar_url, created_at;
-  `;
+    const db = client || prisma;
 
-    return await executeQuery(
-      query,
-      [
-        name,
-        username,
+    return await db.users.create({
+      data: {
+        avatar_url: avatar_url || null,
+        birth_date: birth_date ? new Date(birth_date) : null,
         email,
+        name,
+        onboarding_state: onboarding_state || undefined,
         password,
-        timezone || null,
-        private_profile ?? false,
-        birth_date || null,
-        phone_number || null,
-        avatar_url || null,
-        defaultAppPreferences,
-        resolvedPlanId,
-        publicUserId,
-        onboarding_state || null,
-      ],
-      client
-    );
+        phone_number: phone_number || null,
+        plan_id: resolvedPlanId,
+        private_profile: private_profile ?? false,
+        public_user_id: publicUserId,
+        timezone: timezone || null,
+        user_preference: defaultAppPreferences,
+        username,
+      },
+      select: {
+        avatar_url: true,
+        created_at: true,
+        email: true,
+        name: true,
+        public_user_id: true,
+        user_id: true,
+      },
+    });
   }
 
   async createGithubUser(username, name, githubId, client = null) {
     const planId = await PlansRepository.getDefaultSignupPlanId();
     const publicUserId = generatePublicId();
-    const query = `
-      INSERT INTO users (username, name, github_id, plan_id, public_user_id) 
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING user_id, public_user_id;
-    `;
-    return await executeQuery(query, [username, name, githubId, planId, publicUserId], client);
+    const db = client || prisma;
+
+    return await db.users.create({
+      data: {
+        github_id: githubId,
+        name,
+        plan_id: planId,
+        public_user_id: publicUserId,
+        username,
+      },
+      select: {
+        public_user_id: true,
+        user_id: true,
+      },
+    });
   }
 
   async updateUserActivation(userId, userData, client = null) {
@@ -90,26 +96,29 @@ class UsersRepository extends BaseRepository {
       onboarding_state,
     } = userData;
 
-    const query = `
-      UPDATE users SET
-        name = $1, username = $2, password = $3, phone_number = $4,
-        timezone = $5, birth_date = $6, private_profile = $7,
-        status = 'ACTIVE', onboarding_state = COALESCE($8, onboarding_state), updated_at = NOW()
-      WHERE user_id = $9
-      RETURNING user_id, email, name, username, created_at;
-    `;
-    const values = [
-      name,
-      username,
-      password,
-      phone_number,
-      timezone,
-      birth_date || null,
-      private_profile || false,
-      onboarding_state || null,
-      userId,
-    ];
-    return await executeQuery(query, values, client);
+    const db = client || prisma;
+    return await db.users.update({
+      data: {
+        birth_date: birth_date ? new Date(birth_date) : null,
+        name,
+        onboarding_state: onboarding_state || undefined,
+        password,
+        phone_number,
+        private_profile: private_profile || false,
+        status: "ACTIVE",
+        timezone,
+        updated_at: new Date(),
+        username,
+      },
+      select: {
+        created_at: true,
+        email: true,
+        name: true,
+        user_id: true,
+        username: true,
+      },
+      where: { user_id: userId },
+    });
   }
 
   // ==========================================
@@ -117,17 +126,29 @@ class UsersRepository extends BaseRepository {
   // ==========================================
 
   async findAll() {
-    const query = `
-      SELECT name, email, username, 
-      CASE WHEN avatar_url IS NOT NULL THEN true ELSE false END as has_profile_image 
-      FROM users
-    `;
-    return await executeQuery(query);
+    const users = await prisma.users.findMany({
+      select: {
+        avatar_url: true,
+        email: true,
+        name: true,
+        username: true,
+      },
+    });
+    return users.map((u) => ({
+      email: u.email,
+      has_profile_image: u.avatar_url !== null,
+      name: u.name,
+      username: u.username,
+    }));
   }
 
   async findByUsernameOrEmail(username, email) {
-    const query = `SELECT * FROM users WHERE (email = $1 OR username = $2) AND deleted = false`;
-    return await executeQuery(query, [email, username]);
+    return await prisma.users.findMany({
+      where: {
+        deleted: false,
+        OR: [{ email: email }, { username: username }],
+      },
+    });
   }
 
   async checkUniqueAvailability(fields, options = {}) {
@@ -141,38 +162,31 @@ class UsersRepository extends BaseRepository {
       username: { available: true },
     };
 
-    const conditions = [];
-    const values = [];
-    let paramIndex = 1;
+    const OR = [];
+    if (email) OR.push({ email: { equals: email, mode: "insensitive" } });
+    if (username) OR.push({ username });
+    if (phoneNumber) OR.push({ phone_number: phoneNumber });
 
-    if (email) {
-      conditions.push(`LOWER(email) = LOWER($${paramIndex++})`);
-      values.push(email);
-    }
-    if (username) {
-      conditions.push(`username = $${paramIndex++}`);
-      values.push(username);
-    }
-    if (phoneNumber) {
-      conditions.push(`phone_number = $${paramIndex++}`);
-      values.push(phoneNumber);
-    }
+    if (OR.length === 0) return availability;
 
-    if (conditions.length === 0) return availability;
+    const where = {
+      deleted: false,
+      OR,
+    };
 
-    let excludeClause = "";
     if (options.excludeUserId) {
-      excludeClause = ` AND user_id <> $${paramIndex++}`;
-      values.push(options.excludeUserId);
+      where.user_id = { not: options.excludeUserId };
     }
 
-    const query = `
-      SELECT user_id, email, username, phone_number
-      FROM users
-      WHERE deleted = false AND (${conditions.join(" OR ")}) ${excludeClause}
-    `;
-
-    const existingUsers = await executeQuery(query, values);
+    const existingUsers = await prisma.users.findMany({
+      select: {
+        email: true,
+        phone_number: true,
+        user_id: true,
+        username: true,
+      },
+      where,
+    });
 
     for (const user of existingUsers) {
       if (email && normalizeEmail(user.email) === email) {
@@ -189,12 +203,20 @@ class UsersRepository extends BaseRepository {
   }
 
   async getUserById(userId) {
-    const query = `
-      SELECT user_id, username, name, email, avatar_url, created_at 
-      FROM users WHERE user_id = $1 AND deleted = false LIMIT 1
-    `;
-    const results = await executeQuery(query, [userId]);
-    return results[0];
+    return await prisma.users.findFirst({
+      select: {
+        avatar_url: true,
+        created_at: true,
+        email: true,
+        name: true,
+        user_id: true,
+        username: true,
+      },
+      where: {
+        deleted: false,
+        user_id: userId,
+      },
+    });
   }
 
   async findById(userId) {
@@ -202,45 +224,70 @@ class UsersRepository extends BaseRepository {
   }
 
   async findByGithubId(githubId) {
-    const query = `SELECT user_id, username, name FROM users WHERE github_id = $1 LIMIT 1`;
-    const results = await executeQuery(query, [githubId]);
-    return results[0];
+    return await prisma.users.findFirst({
+      select: {
+        name: true,
+        user_id: true,
+        username: true,
+      },
+      where: {
+        github_id: githubId,
+      },
+    });
   }
 
   async searchUsers(searchTerm, searcherUserId) {
-    const workspacesQuery = `
-      SELECT DISTINCT workspace_id FROM workspace_members
-      WHERE user_id = $1::uuid AND deleted = false AND status = 'ACTIVE'::public.workspace_member_status_enum
-    `;
-    const searcherWorkspaces = await executeQuery(workspacesQuery, [searcherUserId]);
-    const workspaceIds = searcherWorkspaces.map((w) => w.workspace_id);
+    const workspaces = await prisma.workspace_members.findMany({
+      select: { workspace_id: true },
+      where: {
+        deleted: false,
+        status: "ACTIVE",
+        user_id: searcherUserId,
+      },
+    });
 
-    let usersQuery = `
-      SELECT u.user_id, u.username, u.name, u.email, u.avatar_url
-      FROM users u
-      WHERE (LOWER(u.username) LIKE LOWER($1) OR LOWER(u.email) LIKE LOWER($1))
-        AND u.deleted = false AND u.private_profile = false
-    `;
+    const workspaceIds = workspaces.map((w) => w.workspace_id);
+
+    const whereClause = {
+      deleted: false,
+      OR: [
+        { username: { contains: searchTerm, mode: "insensitive" } },
+        { email: { contains: searchTerm, mode: "insensitive" } },
+      ],
+      private_profile: false,
+    };
 
     if (workspaceIds.length === 0) {
-      usersQuery += `
-        AND NOT EXISTS (
-          SELECT 1 FROM workspace_members om
-          WHERE om.user_id = u.user_id AND om.deleted = false AND om.status = 'ACTIVE'::public.workspace_member_status_enum
-        )
-      `;
+      whereClause.workspace_members_workspace_members_user_idTousers = {
+        none: {
+          deleted: false,
+          status: "ACTIVE",
+        },
+      };
     } else {
-      const workspaceIdsList = workspaceIds.map((id) => `'${id}'`).join(",");
-      usersQuery += `
-        AND EXISTS (
-          SELECT 1 FROM workspace_members om
-          WHERE om.user_id = u.user_id AND om.deleted = false AND om.status = 'ACTIVE'::public.workspace_member_status_enum
-          AND om.workspace_id IN (${workspaceIdsList})
-        )
-      `;
+      whereClause.workspace_members_workspace_members_user_idTousers = {
+        some: {
+          deleted: false,
+          status: "ACTIVE",
+          workspace_id: { in: workspaceIds },
+        },
+      };
     }
-    usersQuery += ` ORDER BY u.name ASC LIMIT 15;`;
-    return await executeQuery(usersQuery, [`%${searchTerm}%`]);
+
+    return await prisma.users.findMany({
+      orderBy: {
+        name: "asc",
+      },
+      select: {
+        avatar_url: true,
+        email: true,
+        name: true,
+        user_id: true,
+        username: true,
+      },
+      take: 15,
+      where: whereClause,
+    });
   }
 
   // ==========================================
@@ -248,97 +295,108 @@ class UsersRepository extends BaseRepository {
   // ==========================================
 
   async getProfileImage(userId) {
-    const query = `SELECT avatar_url, name FROM users WHERE user_id = $1 LIMIT 1`;
-    const results = await executeQuery(query, [userId]);
-    return results[0];
+    return await prisma.users.findFirst({
+      select: { avatar_url: true, name: true },
+      where: { user_id: userId },
+    });
   }
 
   async updateProfileImage(userId, url) {
-    const query = `UPDATE users SET avatar_url = $1 WHERE user_id = $2 RETURNING user_id, avatar_url;`;
-    return await executeQuery(query, [url, userId]);
+    return await prisma.users.update({
+      data: { avatar_url: url },
+      select: { avatar_url: true, user_id: true },
+      where: { user_id: userId },
+    });
   }
 
   async updateUserProfile(userId, updates, client = null) {
-    const fields = [];
-    const values = [];
-    let paramIndex = 1;
-
-    if (updates.name !== undefined) {
-      fields.push(`name = $${paramIndex++}`);
-      values.push(updates.name);
-    }
-    if (updates.email !== undefined) {
-      fields.push(`email = $${paramIndex++}`);
-      values.push(updates.email);
-    }
-    if (updates.username !== undefined) {
-      fields.push(`username = $${paramIndex++}`);
-      values.push(updates.username);
-    }
+    const data = {};
+    if (updates.name !== undefined) data.name = updates.name;
+    if (updates.email !== undefined) data.email = updates.email;
+    if (updates.username !== undefined) data.username = updates.username;
     if (updates.theme_mode !== undefined) {
       const upper = String(updates.theme_mode).trim().toUpperCase();
       if (upper === "LIGHT" || upper === "DARK") {
-        fields.push(`theme_mode = $${paramIndex++}`);
-        values.push(upper);
+        data.theme_mode = upper;
       }
     }
-    if (updates.birth_date !== undefined) {
-      fields.push(`birth_date = $${paramIndex++}`);
-      values.push(updates.birth_date);
-    }
-    if (updates.phone_number !== undefined) {
-      fields.push(`phone_number = $${paramIndex++}`);
-      values.push(updates.phone_number);
-    }
-    if (updates.private_profile !== undefined) {
-      fields.push(`private_profile = $${paramIndex++}`);
-      values.push(updates.private_profile);
-    }
-    if (updates.user_preference !== undefined) {
-      fields.push(`user_preference = $${paramIndex++}`);
-      values.push(updates.user_preference);
+    if (updates.birth_date !== undefined)
+      data.birth_date = updates.birth_date ? new Date(updates.birth_date) : null;
+    if (updates.phone_number !== undefined) data.phone_number = updates.phone_number;
+    if (updates.private_profile !== undefined) data.private_profile = updates.private_profile;
+    if (updates.user_preference !== undefined) data.user_preference = updates.user_preference;
+
+    const db = client || prisma;
+
+    if (Object.keys(data).length === 0) {
+      return await db.users.findFirst({
+        select: {
+          avatar_url: true,
+          birth_date: true,
+          created_at: true,
+          email: true,
+          name: true,
+          phone_number: true,
+          private_profile: true,
+          theme_mode: true,
+          user_id: true,
+          user_preference: true,
+          username: true,
+        },
+        where: { deleted: false, user_id: userId },
+      });
     }
 
-    if (fields.length === 0) {
-      const query = `
-        SELECT user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, user_preference, created_at
-        FROM users WHERE user_id = $1 AND deleted = false
-      `;
-      const results = await executeQuery(query, [userId], client);
-      return results[0];
-    }
-
-    values.push(userId);
-    const query = `
-      UPDATE users SET ${fields.join(", ")}
-      WHERE user_id = $${paramIndex} AND deleted = false
-      RETURNING user_id, username, name, email, avatar_url, theme_mode, birth_date, phone_number, private_profile, user_preference, created_at;
-    `;
-    const results = await executeQuery(query, values, client);
-    return results[0];
+    return await db.users.update({
+      data,
+      select: {
+        avatar_url: true,
+        birth_date: true,
+        created_at: true,
+        email: true,
+        name: true,
+        phone_number: true,
+        private_profile: true,
+        theme_mode: true,
+        user_id: true,
+        user_preference: true,
+        username: true,
+      },
+      where: { user_id: userId },
+    });
   }
 
   async updateUserPassword(userId, hashedPassword, client = null) {
-    const query = `UPDATE users SET password = $1 WHERE user_id = $2 AND deleted = false`;
-    return await executeQuery(query, [hashedPassword, userId], client);
+    const db = client || prisma;
+    const result = await db.users.updateMany({
+      data: { password: hashedPassword },
+      where: { deleted: false, user_id: userId },
+    });
+    return result.count > 0 ? [{ user_id: userId }] : [];
   }
 
   async setDefaultAppPreferences(userId) {
-    const query = `UPDATE users SET user_preference = $1 WHERE user_id = $2 RETURNING user_id, user_preference`;
-    const results = await executeQuery(query, [defaultAppPreferences, userId]);
-    return results[0];
+    return await prisma.users.update({
+      data: { user_preference: defaultAppPreferences },
+      select: { user_id: true, user_preference: true },
+      where: { user_id: userId },
+    });
   }
 
   async updateUserPreferences(userId, preferences) {
-    const query = `UPDATE users SET user_preference = $1, updated_at = NOW() WHERE user_id = $2 RETURNING user_id, user_preference, updated_at`;
-    const results = await executeQuery(query, [preferences, userId]);
-    return results[0];
+    return await prisma.users.update({
+      data: { updated_at: new Date(), user_preference: preferences },
+      select: { updated_at: true, user_id: true, user_preference: true },
+      where: { user_id: userId },
+    });
   }
 
   async getUserPreferences(userId) {
-    const query = `SELECT user_preference FROM users WHERE user_id = $1`;
-    const results = await executeQuery(query, [userId]);
-    return normalizeAppPreferences(results[0]?.user_preference || {});
+    const result = await prisma.users.findUnique({
+      select: { user_preference: true },
+      where: { user_id: userId },
+    });
+    return normalizeAppPreferences(result?.user_preference || {});
   }
 
   // ==========================================
@@ -347,19 +405,22 @@ class UsersRepository extends BaseRepository {
 
   async deleteUser(userId, client = null) {
     const randomSuffix = Math.floor(Math.random() * 1000000000);
-    const query = `
-      UPDATE users SET 
-        email = $2, username = $3, phone_number = NULL, avatar_url = NULL, 
-        name = 'Deleted User', deleted = TRUE, deleted_at = NOW()
-      WHERE user_id = $1
-      RETURNING user_id
-    `;
     const deletedUserDomain = process.env.APP_DOMAIN || "weavenotes.app";
-    return await executeQuery(
-      query,
-      [userId, `deleted_user_${randomSuffix}@${deletedUserDomain}`, `deleted_user_${randomSuffix}`],
-      client
-    );
+    const db = client || prisma;
+
+    return await db.users.update({
+      data: {
+        avatar_url: null,
+        deleted: true,
+        deleted_at: new Date(),
+        email: `deleted_user_${randomSuffix}@${deletedUserDomain}`,
+        name: "Deleted User",
+        phone_number: null,
+        username: `deleted_user_${randomSuffix}`,
+      },
+      select: { user_id: true },
+      where: { user_id: userId },
+    });
   }
 
   // ==========================================
@@ -367,23 +428,27 @@ class UsersRepository extends BaseRepository {
   // ==========================================
 
   async getActiveWorkspaceIdsForUser(userId) {
-    const query = `
-      SELECT DISTINCT workspace_id::text FROM workspace_members
-      WHERE user_id = $1::uuid AND deleted = false AND status = 'ACTIVE'::public.workspace_member_status_enum
-    `;
-    const rows = await executeQuery(query, [userId]);
+    const rows = await prisma.workspace_members.findMany({
+      distinct: ["workspace_id"],
+      select: { workspace_id: true },
+      where: {
+        deleted: false,
+        status: "ACTIVE",
+        user_id: userId,
+      },
+    });
     return rows.map((r) => r.workspace_id);
   }
 
   async usersMayInteract(actorUserId, targetUserId) {
-    const query = `
+    const rows = await prisma.$queryRaw`
       WITH actor_workspaces AS (
         SELECT DISTINCT workspace_id FROM workspace_members
-        WHERE user_id = $1::uuid AND deleted = false AND status = 'ACTIVE'::public.workspace_member_status_enum
+        WHERE user_id = ${actorUserId}::uuid AND deleted = false AND status = 'ACTIVE'::public.workspace_member_status_enum
       ),
       target_workspaces AS (
         SELECT DISTINCT workspace_id FROM workspace_members
-        WHERE user_id = $2::uuid AND deleted = false AND status = 'ACTIVE'::public.workspace_member_status_enum
+        WHERE user_id = ${targetUserId}::uuid AND deleted = false AND status = 'ACTIVE'::public.workspace_member_status_enum
       ),
       actor_count AS (SELECT COUNT(*)::int AS c FROM actor_workspaces),
       target_count AS (SELECT COUNT(*)::int AS c FROM target_workspaces)
@@ -395,7 +460,7 @@ class UsersRepository extends BaseRepository {
           INNER JOIN target_workspaces t ON a.workspace_id = t.workspace_id
         ) AS intersects
     `;
-    const rows = await executeQuery(query, [actorUserId, targetUserId]);
+
     const row = rows[0];
     if (!row) return false;
 
