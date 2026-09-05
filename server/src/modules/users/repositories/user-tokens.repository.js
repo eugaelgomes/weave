@@ -1,5 +1,5 @@
 const BaseRepository = require("./base.repository");
-const { executeQuery } = require("@/database/connection");
+const { prisma } = require("@theweave/database");
 
 /**
  * `tokens` table operations for email verification/change and account activation.
@@ -7,15 +7,19 @@ const { executeQuery } = require("@/database/connection");
 class UserTokensRepository extends BaseRepository {
   /**
    * @param {string|number} userId
-   * @returns {Promise<import('pg').QueryResultRow[]>}
+   * @returns {Promise<any>}
    */
   async deactivateOldEmailTokens(userId) {
-    const query = `
-      UPDATE tokens
-      SET active = FALSE
-      WHERE user_id = $1 AND active = TRUE AND type = 'EMAIL_VERIFICATION'
-    `;
-    return await executeQuery(query, [userId]);
+    return await prisma.tokens.updateMany({
+      data: {
+        active: false,
+      },
+      where: {
+        active: true,
+        type: "EMAIL_VERIFICATION",
+        user_id: userId,
+      },
+    });
   }
 
   /**
@@ -23,35 +27,40 @@ class UserTokensRepository extends BaseRepository {
    * @param {string} token
    * @param {string} newEmail
    * @param {string} createdAt ISO string or Postgres timestamp
-   * @returns {Promise<import('pg').QueryResultRow[]>}
+   * @returns {Promise<any>}
    */
   async createEmailChangeToken(userId, token, newEmail, createdAt) {
-    const query = `
-      INSERT INTO tokens
-        (user_id, token, type, expires_at, created_at, active, data_to_update) 
-      VALUES 
-        ($1, $2, 'EMAIL_VERIFICATION', ($3::timestamp + interval '1 hour'), $3, TRUE, $4);
-    `;
-    return await executeQuery(query, [
-      userId,
-      token,
-      createdAt,
-      JSON.stringify({ new_email: newEmail }),
-    ]);
+    const createdDate = new Date(createdAt);
+    const expiresDate = new Date(createdDate.getTime() + 60 * 60 * 1000); // 1 hour
+
+    return await prisma.tokens.create({
+      data: {
+        active: true,
+        created_at: createdDate,
+        data_to_update: { new_email: newEmail },
+        expires_at: expiresDate,
+        token: token,
+        type: "EMAIL_VERIFICATION",
+        user_id: userId,
+      },
+    });
   }
 
   /**
    * @param {string|number} userId
    * @param {string} token
-   * @returns {Promise<import('pg').QueryResultRow|undefined>}
+   * @returns {Promise<any>}
    */
   async findEmailChangeToken(userId, token) {
-    const query = `
-      SELECT * FROM tokens 
-      WHERE user_id = $1 AND token = $2 AND active = TRUE AND type = 'EMAIL_VERIFICATION' AND expires_at > NOW()
-    `;
-    const results = await executeQuery(query, [userId, token]);
-    return results[0];
+    return await prisma.tokens.findFirst({
+      where: {
+        active: true,
+        expires_at: { gt: new Date() },
+        token: token,
+        type: "EMAIL_VERIFICATION",
+        user_id: userId,
+      },
+    });
   }
 
   /**
@@ -59,37 +68,43 @@ class UserTokensRepository extends BaseRepository {
    * @returns {Promise<unknown>}
    */
   async getDataToUpdate(userId) {
-    const query = `
-      SELECT data_to_update 
-      FROM tokens 
-      WHERE user_id = $1 AND active = TRUE AND type = 'EMAIL_VERIFICATION' AND expires_at > NOW()
-    `;
-    const results = await executeQuery(query, [userId]);
-    return results[0]?.data_to_update;
+    const result = await prisma.tokens.findFirst({
+      select: { data_to_update: true },
+      where: {
+        active: true,
+        expires_at: { gt: new Date() },
+        type: "EMAIL_VERIFICATION",
+        user_id: userId,
+      },
+    });
+    return result?.data_to_update;
   }
 
   /**
    * @param {string|number} userId
-   * @returns {Promise<import('pg').QueryResultRow[]>}
+   * @returns {Promise<any>}
    */
   async clearDataToUpdate(userId) {
-    const query = `
-      UPDATE tokens 
-      SET data_to_update = NULL 
-      WHERE user_id = $1 AND type = 'EMAIL_VERIFICATION'`;
-    return await executeQuery(query, [userId]);
+    return await prisma.tokens.updateMany({
+      data: {
+        data_to_update: null,
+      },
+      where: {
+        type: "EMAIL_VERIFICATION",
+        user_id: userId,
+      },
+    });
   }
 
   /**
    * @param {string} token
-   * @returns {Promise<import('pg').QueryResultRow[]>}
+   * @returns {Promise<any>}
    */
   async deactivateEmailToken(token) {
-    const query = `
-      UPDATE tokens 
-      SET active = FALSE 
-      WHERE token = $1;`;
-    return await executeQuery(query, [token]);
+    return await prisma.tokens.updateMany({
+      data: { active: false },
+      where: { token: token },
+    });
   }
 
   /**
@@ -97,44 +112,56 @@ class UserTokensRepository extends BaseRepository {
    * @param {string} token
    * @param {string} code
    * @param {string} createdAt
-   * @param {import('pg').PoolClient} [client=null]
-   * @returns {Promise<import('pg').QueryResultRow[]>}
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<any>}
    */
-  async createEmailActivationToken(userId, token, code, createdAt, client = null) {
-    const query = `
-      INSERT INTO tokens 
-        (user_id, token, code, type, expires_at, created_at, active) 
-      VALUES ($1, $2, $3, 'EMAIL_VERIFICATION', ($4::timestamp + interval '7 days'), $4, TRUE)
-    `;
-    return await executeQuery(query, [userId, token, code, createdAt], client);
+  async createEmailActivationToken(userId, token, code, createdAt, client = prisma) {
+    const createdDate = new Date(createdAt);
+    const expiresDate = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    return await client.tokens.create({
+      data: {
+        active: true,
+        code: code,
+        created_at: createdDate,
+        expires_at: expiresDate,
+        token: token,
+        type: "EMAIL_VERIFICATION",
+        user_id: userId,
+      },
+    });
   }
 
   /**
    * @param {string} token
-   * @returns {Promise<import('pg').QueryResultRow|undefined>}
+   * @returns {Promise<any>}
    */
   async findEmailActivationToken(token) {
-    const query = `
-      SELECT * FROM tokens 
-      WHERE token = $1 AND active = TRUE AND type = 'EMAIL_VERIFICATION' AND expires_at > NOW()
-    `;
-    const results = await executeQuery(query, [token]);
-    return results[0];
+    return await prisma.tokens.findFirst({
+      where: {
+        active: true,
+        expires_at: { gt: new Date() },
+        token: token,
+        type: "EMAIL_VERIFICATION",
+      },
+    });
   }
 
   /**
    * @param {string} code
    * @param {string} email
-   * @returns {Promise<import('pg').QueryResultRow|undefined>}
+   * @returns {Promise<any>}
    */
   async findEmailActivationTokenByCodeAndEmail(code, email) {
-    const query = `
-      SELECT t.* FROM tokens t
-      JOIN users u ON u.user_id = t.user_id
-      WHERE t.code = $1 AND u.email = $2 AND t.active = TRUE AND t.type = 'EMAIL_VERIFICATION' AND t.expires_at > NOW()
-    `;
-    const results = await executeQuery(query, [code, email]);
-    return results[0];
+    return await prisma.tokens.findFirst({
+      where: {
+        active: true,
+        code: code,
+        expires_at: { gt: new Date() },
+        type: "EMAIL_VERIFICATION",
+        users: { email: email },
+      },
+    });
   }
 
   /**
@@ -142,14 +169,19 @@ class UserTokensRepository extends BaseRepository {
    * @returns {Promise<{ user_id: string|number, email: string, email_verified: boolean, email_verified_at: Date|string|null }|undefined>}
    */
   async verifyUserEmail(userId) {
-    const query = `
-      UPDATE users
-      SET email_verified = TRUE, email_verified_at = NOW()
-      WHERE user_id = $1
-      RETURNING user_id, email, email_verified, email_verified_at
-    `;
-    const results = await executeQuery(query, [userId]);
-    return results[0];
+    return await prisma.users.update({
+      data: {
+        email_verified: true,
+        email_verified_at: new Date(),
+      },
+      select: {
+        email: true,
+        email_verified: true,
+        email_verified_at: true,
+        user_id: true,
+      },
+      where: { user_id: userId },
+    });
   }
 
   // ==========================================
@@ -157,28 +189,50 @@ class UserTokensRepository extends BaseRepository {
   // ==========================================
 
   async createDeleteAccountToken(userId, token) {
-    await executeQuery(
-      `UPDATE tokens SET active = FALSE WHERE user_id = $1 AND type = 'DELETE_USER_ACCOUNT' AND active = TRUE`,
-      [userId]
-    );
+    await prisma.tokens.updateMany({
+      data: { active: false },
+      where: {
+        active: true,
+        type: "DELETE_USER_ACCOUNT",
+        user_id: userId,
+      },
+    });
 
-    const query = `
-      INSERT INTO tokens (user_id, token, type, expires_at, created_at, active)
-      VALUES ($1, $2, 'DELETE_USER_ACCOUNT', ($3::timestamp + interval '7 days'), $3, TRUE)
-      RETURNING *;
-    `;
-    return await executeQuery(query, [userId, token, new Date().toISOString()]);
+    const createdDate = new Date();
+    const expiresDate = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    return await prisma.tokens.create({
+      data: {
+        active: true,
+        created_at: createdDate,
+        expires_at: expiresDate,
+        token: token,
+        type: "DELETE_USER_ACCOUNT",
+        user_id: userId,
+      },
+    });
   }
 
   async findDeleteAccountToken(token) {
-    const query = `SELECT * FROM tokens WHERE token = $1 AND active = TRUE AND type = 'DELETE_USER_ACCOUNT' AND expires_at > NOW()`;
-    const results = await executeQuery(query, [token]);
-    return results[0];
+    return await prisma.tokens.findFirst({
+      where: {
+        active: true,
+        expires_at: { gt: new Date() },
+        token: token,
+        type: "DELETE_USER_ACCOUNT",
+      },
+    });
   }
 
   async deactivateDeleteAccountToken(token) {
-    const query = `UPDATE tokens SET active = FALSE WHERE token = $1 AND type = 'DELETE_USER_ACCOUNT'`;
-    return await executeQuery(query, [token]);
+    return await prisma.tokens.updateMany({
+      data: { active: false },
+      where: {
+        token: token,
+        type: "DELETE_USER_ACCOUNT",
+      },
+    });
   }
 }
+
 module.exports = new UserTokensRepository();

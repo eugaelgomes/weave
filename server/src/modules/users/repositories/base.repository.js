@@ -1,13 +1,13 @@
-const { executeQuery } = require("@/database/connection");
+const { prisma } = require("@theweave/database");
 const { defaultAppPreferences } = require("@/modules/users/utils/normalize");
 
 /**
- * Base for user repositories: exposes `executeQuery` and default app preferences.
+ * Base for user repositories: exposes `prisma` and default app preferences.
  */
 class BaseRepository {
   constructor() {
-    /** @type {typeof executeQuery} */
-    this.executeQuery = executeQuery;
+    /** @type {import('@prisma/client').PrismaClient} */
+    this.prisma = prisma;
 
     /** @type {typeof defaultAppPreferences} */
     this.defaultAppPreferences = defaultAppPreferences;
