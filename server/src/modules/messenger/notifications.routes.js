@@ -1,8 +1,8 @@
 const express = require("express");
-const NotificationsListController = require("@/modules/notifications/controllers/notifications-list.controller");
-const NotificationsCreateController = require("@/modules/notifications/controllers/notifications-create.controller");
-const NotificationsUpdateController = require("@/modules/notifications/controllers/notifications-update.controller");
-const NotificationsDeleteController = require("@/modules/notifications/controllers/notifications-delete.controller");
+const NotificationsListController = require("@/modules/messenger/controllers/notifications-list.controller");
+const NotificationsCreateController = require("@/modules/messenger/controllers/notifications-create.controller");
+const NotificationsUpdateController = require("@/modules/messenger/controllers/notifications-update.controller");
+const NotificationsDeleteController = require("@/modules/messenger/controllers/notifications-delete.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
 const { validate } = require("@/middlewares/validation/validate");
 const {

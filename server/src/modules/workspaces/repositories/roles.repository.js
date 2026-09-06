@@ -1,119 +1,199 @@
-const { executeQuery } = require("@/database/connection");
+/**
+ * @typedef {Object} WorkspaceRole
+ * @property {string} id
+ * @property {string} workspace_id
+ * @property {string} name
+ * @property {string|null} description
+ * @property {any} permissions
+ * @property {boolean} is_system
+ * @property {boolean} deleted
+ * @property {string|null} created_by
+ * @property {string|null} updated_by
+ * @property {string|null} deleted_by
+ * @property {Date} created_at
+ * @property {Date} updated_at
+ * @property {Date|null} deleted_at
+ */
+
+const { prisma } = require("@theweave/database");
 
 class WorkspaceRolesRepository {
-  async listRoles(workspaceId) {
-    const query = `
-      SELECT * FROM workspaces_roles
-      WHERE workspace_id = $1 AND deleted = false
-      ORDER BY created_at ASC
-    `;
-    return await executeQuery(query, [workspaceId]);
+  /**
+   * @param {string} workspaceId
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<WorkspaceRole[]>}
+   */
+  async listRoles(workspaceId, client = prisma) {
+    return await client.workspaces_roles.findMany({
+      orderBy: {
+        created_at: "asc",
+      },
+      where: {
+        deleted: false,
+        workspace_id: workspaceId,
+      },
+    });
   }
 
-  async getRoleById(roleId, workspaceId) {
-    const query = `
-      SELECT * FROM workspaces_roles
-      WHERE id = $1 AND workspace_id = $2 AND deleted = false
-      LIMIT 1
-    `;
-    const results = await executeQuery(query, [roleId, workspaceId]);
-    return results[0] || null;
+  /**
+   * @param {string} roleId
+   * @param {string} workspaceId
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<WorkspaceRole|null>}
+   */
+  async getRoleById(roleId, workspaceId, client = prisma) {
+    return await client.workspaces_roles.findFirst({
+      where: {
+        deleted: false,
+        id: roleId,
+        workspace_id: workspaceId,
+      },
+    });
   }
 
-  async getRoleByName(name, workspaceId) {
-    const query = `
-      SELECT * FROM workspaces_roles
-      WHERE name = $1 AND workspace_id = $2 AND deleted = false
-      LIMIT 1
-    `;
-    const results = await executeQuery(query, [name, workspaceId]);
-    return results[0] || null;
+  /**
+   * @param {string} name
+   * @param {string} workspaceId
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<WorkspaceRole|null>}
+   */
+  async getRoleByName(name, workspaceId, client = prisma) {
+    return await client.workspaces_roles.findFirst({
+      where: {
+        deleted: false,
+        name,
+        workspace_id: workspaceId,
+      },
+    });
   }
 
+  /**
+   * @param {Object} data
+   * @param {string} data.workspaceId
+   * @param {string} data.name
+   * @param {string} [data.description]
+   * @param {any[]} [data.permissions]
+   * @param {boolean} [data.isSystem=false]
+   * @param {string} [data.createdBy]
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<WorkspaceRole>}
+   */
   async createRole(
     { workspaceId, name, description, permissions, isSystem = false, createdBy = null },
-    txClient = null
+    client = prisma
   ) {
-    const query = `
-      INSERT INTO workspaces_roles (
-        workspace_id, name, description, permissions, is_system, created_by
-      )
-      VALUES ($1, $2, $3, $4::jsonb, $5, $6)
-      RETURNING *
-    `;
-    const params = [
-      workspaceId,
-      name,
-      description || null,
-      JSON.stringify(permissions || []),
-      isSystem,
-      createdBy,
-    ];
-
-    if (txClient) {
-      const { rows } = await txClient.query(query, params);
-      return rows[0];
-    }
-    const results = await executeQuery(query, params);
-    return results[0];
+    return await client.workspaces_roles.create({
+      data: {
+        created_by: createdBy,
+        description: description || null,
+        is_system: isSystem,
+        name,
+        permissions: permissions || [],
+        workspace_id: workspaceId,
+      },
+    });
   }
 
-  async updateRole(roleId, workspaceId, { name, description, permissions }, _updatedBy = null) {
-    const fields = [];
-    const values = [roleId, workspaceId];
-    let count = 3;
+  /**
+   * @param {string} roleId
+   * @param {string} workspaceId
+   * @param {Object} data
+   * @param {string} [data.name]
+   * @param {string} [data.description]
+   * @param {any[]} [data.permissions]
+   * @param {string} [_updatedBy]
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<WorkspaceRole|null>}
+   */
+  async updateRole(
+    roleId,
+    workspaceId,
+    { name, description, permissions },
+    _updatedBy = null,
+    client = prisma
+  ) {
+    const data = {};
+    if (name !== undefined) data.name = name;
+    if (description !== undefined) data.description = description;
+    if (permissions !== undefined) data.permissions = permissions;
 
-    if (name !== undefined) {
-      fields.push(`name = $${count}`);
-      values.push(name);
-      count++;
-    }
-    if (description !== undefined) {
-      fields.push(`description = $${count}`);
-      values.push(description);
-      count++;
-    }
-    if (permissions !== undefined) {
-      fields.push(`permissions = $${count}::jsonb`);
-      values.push(JSON.stringify(permissions));
-      count++;
-    }
+    if (Object.keys(data).length === 0) return this.getRoleById(roleId, workspaceId, client);
 
-    if (fields.length === 0) return this.getRoleById(roleId, workspaceId);
+    const result = await client.workspaces_roles.updateMany({
+      data: {
+        ...data,
+        updated_at: new Date(),
+      },
+      where: {
+        deleted: false,
+        id: roleId,
+        workspace_id: workspaceId,
+      },
+    });
 
-    const query = `
-      UPDATE workspaces_roles
-      SET ${fields.join(", ")}, updated_at = now()
-      WHERE id = $1 AND workspace_id = $2 AND deleted = false
-      RETURNING *
-    `;
-    const results = await executeQuery(query, values);
-    return results[0] || null;
+    if (result.count === 0) return null;
+    return this.getRoleById(roleId, workspaceId, client);
   }
 
-  async deleteRole(roleId, workspaceId, deletedBy) {
-    const query = `
-      UPDATE workspaces_roles
-      SET deleted = true, deleted_at = now(), deleted_by = $3
-      WHERE id = $1 AND workspace_id = $2 AND is_system = false AND deleted = false
-      RETURNING *
-    `;
-    const results = await executeQuery(query, [roleId, workspaceId, deletedBy]);
-    return results[0] || null;
+  /**
+   * @param {string} roleId
+   * @param {string} workspaceId
+   * @param {string} deletedBy
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<WorkspaceRole|null>}
+   */
+  async deleteRole(roleId, workspaceId, deletedBy, client = prisma) {
+    const result = await client.workspaces_roles.updateMany({
+      data: {
+        deleted: true,
+        deleted_at: new Date(),
+        deleted_by: deletedBy,
+      },
+      where: {
+        deleted: false,
+        id: roleId,
+        is_system: false,
+        workspace_id: workspaceId,
+      },
+    });
+
+    if (result.count === 0) return null;
+    return await client.workspaces_roles.findFirst({
+      where: { id: roleId },
+    });
   }
 
-  async setRolePermissions(roleId, workspaceId, permissions) {
-    const query = `
-      UPDATE workspaces_roles
-      SET permissions = $3::jsonb, updated_at = now()
-      WHERE id = $1 AND workspace_id = $2 AND deleted = false
-      RETURNING *
-    `;
-    const results = await executeQuery(query, [roleId, workspaceId, JSON.stringify(permissions)]);
-    return results[0] || null;
+  /**
+   * @param {string} roleId
+   * @param {string} workspaceId
+   * @param {any[]} permissions
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<WorkspaceRole|null>}
+   */
+  async setRolePermissions(roleId, workspaceId, permissions, client = prisma) {
+    const result = await client.workspaces_roles.updateMany({
+      data: {
+        permissions,
+        updated_at: new Date(),
+      },
+      where: {
+        deleted: false,
+        id: roleId,
+        workspace_id: workspaceId,
+      },
+    });
+
+    if (result.count === 0) return null;
+    return this.getRoleById(roleId, workspaceId, client);
   }
 
-  async getUserEffectivePermissions(workspaceId, userId) {
+  /**
+   * @param {string} workspaceId
+   * @param {string} userId
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<string[]>}
+   */
+  async getUserEffectivePermissions(workspaceId, userId, client = prisma) {
     const query = `
       SELECT DISTINCT perm
       FROM workspace_members om
@@ -125,7 +205,7 @@ class WorkspaceRolesRepository {
         AND om.deleted = false
         AND r.deleted = false
     `;
-    const results = await executeQuery(query, [workspaceId, userId]);
+    const results = await client.$queryRawUnsafe(query, workspaceId, userId);
     return results.map((row) => row.perm);
   }
 }

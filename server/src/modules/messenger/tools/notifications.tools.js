@@ -1,7 +1,5 @@
 const { z } = require("zod");
-const NotificationsReadRepository = require("../repositories/notifications-read.repository");
-const NotificationsUpdateRepository = require("../repositories/notifications-update.repository");
-const NotificationsCreateRepository = require("../repositories/notifications-create.repository");
+const NotificationsRepository = require("../repositories/notifications.repository");
 
 const manageNotificationsSchema = z.discriminatedUnion("action", [
   z.object({
@@ -42,7 +40,7 @@ const createNotificationsTools = (user) => ({
         } = args;
 
         if (action === "create") {
-          const result = await NotificationsCreateRepository.createNotification({
+          const result = await NotificationsRepository.createNotification({
             actorId: user.id,
             content,
             entityId: entity_id,
@@ -57,7 +55,7 @@ const createNotificationsTools = (user) => ({
         }
 
         if (action === "list") {
-          const result = await NotificationsReadRepository.listUserNotifications({
+          const result = await NotificationsRepository.listUserNotifications({
             userId: user.id,
             ...listArgs,
           });
@@ -68,7 +66,7 @@ const createNotificationsTools = (user) => ({
 
         if (action === "mark_read") {
           if (!notificationId) throw new Error("notificationId is required for mark_read action.");
-          const result = await NotificationsUpdateRepository.markNotificationRead({
+          const result = await NotificationsRepository.markNotificationRead({
             isRead: isRead !== undefined ? isRead : true,
             notificationId,
             userId: user.id,

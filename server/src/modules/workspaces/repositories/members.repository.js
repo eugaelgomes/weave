@@ -1,44 +1,83 @@
-const { executeQuery, getConnection } = require("@/database/connection");
+const prisma = require("@theweave/database");
 const { generatePublicId } = require("@/utils/formatters.util");
 
+/**
+ * @typedef {import('@prisma/client').PrismaClient} PrismaClient
+ * @typedef {import('@prisma/client').workspace_members} WorkspaceMember
+ * @typedef {import('@prisma/client').workspace_roles} WorkspaceRole
+ */
+
 class WorkspaceMembersRepository {
-  async getMembershipRole(workspace_id, user_id) {
-    const query = `
-      SELECT array_agg(r.name) as roles 
-      FROM workspace_members om
-      JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
-      JOIN workspaces_roles r ON r.id = wmr.role_id
-      WHERE om.workspace_id = $1
-        AND om.user_id = $2
-        AND om.deleted = false
-      GROUP BY om.id
-      LIMIT 1;
-    `;
-    const rows = await executeQuery(query, [workspace_id, user_id]);
-    return rows[0]?.roles ?? [];
+  /**
+   * Retrieves the role names of a workspace member.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} user_id - The user ID.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance for transactions.
+   * @returns {Promise<string[]>} Array of role names.
+   */
+  async getMembershipRole(workspace_id, user_id, client = prisma) {
+    const member = await client.workspace_members.findFirst({
+      include: {
+        workspace_member_roles: {
+          include: {
+            workspace_roles: true,
+          },
+        },
+      },
+      where: { deleted: false, user_id, workspace_id },
+    });
+    return member?.workspace_member_roles.map((wmr) => wmr.workspace_roles.name) ?? [];
   }
 
-  async getMembershipsByUserIds(userIds, workspaceId) {
+  /**
+   * Retrieves memberships for multiple users in a workspace.
+   * @param {string[]} userIds - Array of user IDs.
+   * @param {string} workspaceId - The workspace ID.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance for transactions.
+   * @returns {Promise<Array<{user_id: string, roles: string[], status: string}>>} Array of memberships.
+   */
+  async getMembershipsByUserIds(userIds, workspaceId, client = prisma) {
     if (!userIds || userIds.length === 0) return [];
 
-    const query = `
-      SELECT om.user_id::text, 
-             array_agg(r.name) as roles, 
-             om.status
-      FROM workspace_members om
-      JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
-      JOIN workspaces_roles r ON r.id = wmr.role_id
-      WHERE om.workspace_id = $1
-        AND om.user_id = ANY($2::uuid[])
-        AND om.deleted = false
-      GROUP BY om.id, om.user_id, om.status
-    `;
-    return await executeQuery(query, [workspaceId, userIds]);
+    const members = await client.workspace_members.findMany({
+      include: {
+        workspace_member_roles: {
+          include: {
+            workspace_roles: true,
+          },
+        },
+      },
+      where: {
+        deleted: false,
+        user_id: { in: userIds },
+        workspace_id: workspaceId,
+      },
+    });
+
+    return members.map((member) => ({
+      roles: member.workspace_member_roles.map((wmr) => wmr.workspace_roles.name),
+      status: member.status,
+      user_id: member.user_id,
+    }));
   }
 
+  /**
+   * Retrieves paginated workspace members with extended details (roles, permissions, notes count, projects, teams, last login).
+   * Note: This method retains a raw query due to the high complexity of the aggregations.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {Object} options - Pagination and filter options.
+   * @param {number} [options.page=1]
+   * @param {number} [options.limit=50]
+   * @param {string} [options.search=""]
+   * @param {string|null} [options.role_id=null]
+   * @param {string|null} [options.status=null]
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
+   * @returns {Promise<any[]>} Paginated member records.
+   */
   async getWorkspaceMembers(
     workspace_id,
-    { page = 1, limit = 50, search = "", role_id = null, status = null } = {}
+    { page = 1, limit = 50, search = "", role_id = null, status = null } = {},
+    client = prisma
   ) {
     const offset = (page - 1) * limit;
 
@@ -62,11 +101,11 @@ class WorkspaceMembersRepository {
         FROM workspace_members om
         JOIN users u1 ON om.user_id = u1.user_id
         LEFT JOIN users u2 ON om.invited_by = u2.user_id
-        WHERE om.workspace_id = $1
+        WHERE om.workspace_id = $1::uuid
           AND om.deleted = false
           AND ($2::text = '' OR u1.name ILIKE '%' || $2 || '%' OR u1.email ILIKE '%' || $2 || '%')
-          AND ($3::uuid IS NULL OR EXISTS (SELECT 1 FROM workspace_member_roles wmr WHERE wmr.workspace_member_id = om.id AND wmr.role_id = $3))
-          AND ($4::text IS NULL OR om.status::text = $4)
+          AND ($3::uuid IS NULL OR EXISTS (SELECT 1 FROM workspace_member_roles wmr WHERE wmr.workspace_member_id = om.id AND wmr.role_id = $3::uuid))
+          AND ($4::text IS NULL OR om.status::text = $4::text)
       ),
       total_count AS (
         SELECT COUNT(*) as count FROM filtered_members
@@ -74,7 +113,7 @@ class WorkspaceMembersRepository {
       paginated_members AS (
         SELECT * FROM filtered_members
         ORDER BY created_at DESC
-        LIMIT $5 OFFSET $6
+        LIMIT $5::int OFFSET $6::int
       )
       SELECT 
         pm.*,
@@ -127,80 +166,112 @@ class WorkspaceMembersRepository {
       ORDER BY pm.created_at DESC;
     `;
 
-    const results = await executeQuery(query, [
+    const results = await client.$queryRawUnsafe(
+      query,
       workspace_id,
       search || "",
       role_id,
       status,
       limit,
-      offset,
-    ]);
-    return results;
+      offset
+    );
+
+    return results.map((row) => ({
+      ...row,
+      notes_count: Number(row.notes_count),
+      total_count: Number(row.total_count),
+    }));
   }
 
-  async countActiveMembersByRole(workspace_id, role) {
-    const query = `
-      SELECT COUNT(DISTINCT om.id)::int AS total
-      FROM workspace_members om
-      JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
-      JOIN workspaces_roles r ON r.id = wmr.role_id
-      WHERE om.workspace_id = $1
-        AND r.name = UPPER($2)
-        AND om.deleted = false;
-    `;
-    const results = await executeQuery(query, [workspace_id, role]);
-    return results[0]?.total || 0;
+  /**
+   * Counts active members by role name.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} role - The role name.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
+   * @returns {Promise<number>} Total count of active members with the given role.
+   */
+  async countActiveMembersByRole(workspace_id, role, client = prisma) {
+    return client.workspace_members.count({
+      where: {
+        deleted: false,
+        workspace_id,
+        workspace_member_roles: {
+          some: {
+            workspace_roles: {
+              name: {
+                equals: role,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
-  async addWorkspaceMember(workspace_id, user_id, role_ids, status, invited_by, txClient = null) {
+  /**
+   * Adds a new workspace member or restores a deleted one (upsert), and assigns roles.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} user_id - The user ID.
+   * @param {string|string[]} role_ids - One or more role IDs to assign.
+   * @param {string} status - Member status.
+   * @param {string} invited_by - The user ID of the inviter.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance for transactions.
+   * @returns {Promise<WorkspaceMember>} The added or updated member.
+   */
+  async addWorkspaceMember(workspace_id, user_id, role_ids, status, invited_by, client = prisma) {
     const roleIdsArray = Array.isArray(role_ids) ? role_ids : [role_ids];
     const inviterId = invited_by || user_id;
-    const client = txClient || (await getConnection());
 
-    try {
-      if (!txClient) await client.query("BEGIN");
+    const execute = async (tx) => {
+      const member = await tx.workspace_members.upsert({
+        create: {
+          deleted: false,
+          invited_by: inviterId,
+          status: status.toUpperCase(),
+          user_id,
+          workspace_id,
+        },
+        update: {
+          deleted: false,
+          status: status.toUpperCase(),
+          updated_at: new Date(),
+        },
+        where: {
+          unique_workspace_user: {
+            user_id,
+            workspace_id,
+          },
+        },
+      });
 
-      const upsertMemberQuery = `
-        INSERT INTO workspace_members (workspace_id, user_id, status, invited_by, deleted, updated_at)
-        VALUES ($1, $2, UPPER($3)::public.workspace_member_status_enum, $4, false, now())
-        ON CONFLICT (workspace_id, user_id) 
-        DO UPDATE SET deleted = false, status = EXCLUDED.status, updated_at = now()
-        RETURNING *;
-      `;
+      await tx.workspace_member_roles.deleteMany({
+        where: { workspace_member_id: member.id },
+      });
 
-      const { rows: memberRows } = await client.query(upsertMemberQuery, [
-        workspace_id,
-        user_id,
-        status,
-        inviterId,
-      ]);
-      const member = memberRows[0];
-
-      // Delete existing roles
-      await client.query("DELETE FROM workspace_member_roles WHERE workspace_member_id = $1", [
-        member.id,
-      ]);
-
-      // Insert new roles
       if (roleIdsArray.length > 0) {
-        const insertRolesQuery = `
-          INSERT INTO workspace_member_roles (workspace_member_id, role_id)
-          SELECT $1, unnest($2::uuid[])
-        `;
-        await client.query(insertRolesQuery, [member.id, roleIdsArray]);
+        await tx.workspace_member_roles.createMany({
+          data: roleIdsArray.map((role_id) => ({
+            role_id,
+            workspace_member_id: member.id,
+          })),
+        });
       }
 
-      if (!txClient) await client.query("COMMIT");
       return member;
-    } catch (err) {
-      if (!txClient) await client.query("ROLLBACK");
-      throw err;
-    } finally {
-      if (!txClient) client.release();
-    }
+    };
+
+    return client.$transaction ? client.$transaction(execute) : execute(client);
   }
 
-  async getAutoAssignableProjectMembers(workspaceId, excludeUserId) {
+  /**
+   * Retrieves auto-assignable project members. Retains raw query due to jsonb permission filtering and unions.
+   * @param {string} workspaceId - The workspace ID.
+   * @param {string} excludeUserId - The user ID to exclude.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
+   * @returns {Promise<any[]>} List of auto-assignable members.
+   */
+  async getAutoAssignableProjectMembers(workspaceId, excludeUserId, client = prisma) {
     const query = `
       SELECT DISTINCT ON (user_id) user_id::text, project_role
       FROM (
@@ -208,7 +279,7 @@ class WorkspaceMembersRepository {
         FROM workspace_members om
         JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
         JOIN workspaces_roles r ON r.id = wmr.role_id
-        WHERE om.workspace_id = $1
+        WHERE om.workspace_id = $1::uuid
           AND r.permissions ? 'manage_workspace'
           AND om.deleted = false
           AND om.user_id != $2::uuid
@@ -219,7 +290,7 @@ class WorkspaceMembersRepository {
         FROM team_members am
         JOIN teams a ON a.id = am.team_id
         JOIN workspaces_roles tr ON tr.id = am.role_id
-        WHERE a.workspace_id = $1
+        WHERE a.workspace_id = $1::uuid
           AND tr.permissions ? 'manage_teams'
           AND am.deleted = false
           AND am.user_id != $2::uuid
@@ -230,7 +301,7 @@ class WorkspaceMembersRepository {
         FROM team_members am
         JOIN teams a ON a.id = am.team_id
         JOIN workspaces_roles tr ON tr.id = am.role_id
-        WHERE a.workspace_id = $1
+        WHERE a.workspace_id = $1::uuid
           AND NOT (tr.permissions ? 'manage_teams')
           AND am.deleted = false
           AND am.user_id != $2::uuid
@@ -238,147 +309,214 @@ class WorkspaceMembersRepository {
       ORDER BY user_id, priority ASC;
     `;
 
-    return executeQuery(query, [workspaceId, excludeUserId]);
+    return client.$queryRawUnsafe(query, workspaceId, excludeUserId);
   }
 
-  async removeWorkspaceMember(workspace_id, user_id) {
-    const query = `
-      WITH member_permissions AS (
+  /**
+   * Removes a member from a workspace and its teams, unless the member is a workspace admin.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} user_id - The user ID.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance for transactions.
+   * @returns {Promise<WorkspaceMember|null>} The deleted member, or null if they were an admin or not found.
+   */
+  async removeWorkspaceMember(workspace_id, user_id, client = prisma) {
+    const execute = async (tx) => {
+      const memberInfo = await tx.$queryRawUnsafe(
+        `
         SELECT om.id, bool_or(r.permissions ? 'manage_workspace') as is_admin
         FROM workspace_members om
         LEFT JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
         LEFT JOIN workspaces_roles r ON r.id = wmr.role_id
-        WHERE om.workspace_id = $1 AND om.user_id = $2
+        WHERE om.workspace_id = $1::uuid AND om.user_id = $2::uuid
         GROUP BY om.id
-      ),
-      deleted_workspace_member AS (
-        UPDATE workspace_members om
-        SET deleted = true, updated_at = now()
-        FROM member_permissions mp
-        WHERE om.id = mp.id AND mp.is_admin = false
-        RETURNING om.*
-      ),
-      deleted_team_members AS (
-        UPDATE team_members am
-        SET deleted = true, updated_at = now()
-        FROM teams a
-        WHERE a.id = am.team_id
-          AND a.workspace_id = $1 
-          AND am.user_id = $2
-          AND EXISTS (SELECT 1 FROM deleted_workspace_member)
-        RETURNING am.*
-      )
-      SELECT * FROM deleted_workspace_member;
-    `;
-    const results = await executeQuery(query, [workspace_id, user_id]);
-    return results[0];
-  }
-
-  async updateMemberRole(workspace_id, user_id, role_ids) {
-    const roleIdsArray = Array.isArray(role_ids) ? role_ids : [role_ids];
-    const client = await getConnection();
-
-    try {
-      await client.query("BEGIN");
-
-      const findMember = await client.query(
-        "SELECT id FROM workspace_members WHERE workspace_id = $1 AND user_id = $2 AND deleted = false LIMIT 1",
-        [workspace_id, user_id]
+      `,
+        workspace_id,
+        user_id
       );
 
-      if (findMember.rows.length === 0) {
+      if (!memberInfo || memberInfo.length === 0) return null;
+      if (memberInfo[0].is_admin) return null;
+
+      const memberId = memberInfo[0].id;
+
+      const deletedMember = await tx.workspace_members.update({
+        data: { deleted: true, updated_at: new Date() },
+        where: { id: memberId },
+      });
+
+      await tx.team_members.updateMany({
+        data: { deleted: true, updated_at: new Date() },
+        where: {
+          teams: { workspace_id },
+          user_id,
+        },
+      });
+
+      return deletedMember;
+    };
+
+    return client.$transaction ? client.$transaction(execute) : execute(client);
+  }
+
+  /**
+   * Updates the roles for a workspace member.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} user_id - The user ID.
+   * @param {string|string[]} role_ids - The new role IDs.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance for transactions.
+   * @returns {Promise<WorkspaceMember>} The updated workspace member.
+   */
+  async updateMemberRole(workspace_id, user_id, role_ids, client = prisma) {
+    const roleIdsArray = Array.isArray(role_ids) ? role_ids : [role_ids];
+
+    const execute = async (tx) => {
+      const member = await tx.workspace_members.findFirst({
+        where: { deleted: false, user_id, workspace_id },
+      });
+
+      if (!member) {
         throw new Error("Member not found");
       }
 
-      const memberId = findMember.rows[0].id;
-
-      // Assume role_ids are UUIDs. If they are names, we would need to map them here.
-      // Assuming the controller handles validation and mapping to UUIDs.
-
-      await client.query("DELETE FROM workspace_member_roles WHERE workspace_member_id = $1", [
-        memberId,
-      ]);
+      await tx.workspace_member_roles.deleteMany({
+        where: { workspace_member_id: member.id },
+      });
 
       if (roleIdsArray.length > 0) {
-        const insertRolesQuery = `
-          INSERT INTO workspace_member_roles (workspace_member_id, role_id)
-          SELECT $1, unnest($2::uuid[])
-        `;
-        await client.query(insertRolesQuery, [memberId, roleIdsArray]);
+        await tx.workspace_member_roles.createMany({
+          data: roleIdsArray.map((role_id) => ({
+            role_id,
+            workspace_member_id: member.id,
+          })),
+        });
       }
 
-      const updateMember = await client.query(
-        "UPDATE workspace_members SET updated_at = now() WHERE id = $1 RETURNING *",
-        [memberId]
-      );
+      return tx.workspace_members.update({
+        data: { updated_at: new Date() },
+        where: { id: member.id },
+      });
+    };
 
-      await client.query("COMMIT");
-      return updateMember.rows[0];
-    } catch (err) {
-      await client.query("ROLLBACK");
-      throw err;
-    } finally {
-      client.release();
-    }
+    return client.$transaction ? client.$transaction(execute) : execute(client);
   }
 
-  async updateMemberStatus(workspace_id, user_id, status) {
-    const query = `
-      UPDATE workspace_members
-      SET status = UPPER($3)::public.workspace_member_status_enum,
-          updated_at = now()
-      WHERE workspace_id = $1 AND user_id = $2 
-      RETURNING *;
-    `;
-    const results = await executeQuery(query, [workspace_id, user_id, status]);
-    return results[0];
+  /**
+   * Updates the status of a workspace member.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} user_id - The user ID.
+   * @param {string} status - The new status.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
+   * @returns {Promise<WorkspaceMember>} The updated workspace member.
+   */
+  async updateMemberStatus(workspace_id, user_id, status, client = prisma) {
+    return client.workspace_members.update({
+      data: {
+        status: status.toUpperCase(),
+        updated_at: new Date(),
+      },
+      where: {
+        unique_workspace_user: { user_id, workspace_id },
+      },
+    });
   }
 
-  async getWorkspaceMember(workspace_id, user_id) {
-    const query = `
-      SELECT om.*, array_agg(r.name) as roles 
-      FROM workspace_members om
-      LEFT JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
-      LEFT JOIN workspaces_roles r ON r.id = wmr.role_id
-      WHERE om.workspace_id = $1
-        AND om.user_id = $2
-        AND om.deleted = false
-      GROUP BY om.id
-      LIMIT 1;
-    `;
-    const results = await executeQuery(query, [workspace_id, user_id]);
-    return results[0];
+  /**
+   * Retrieves a single workspace member with their roles.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} user_id - The user ID.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
+   * @returns {Promise<WorkspaceMember & {roles: string[]}|null>} The member with their role names, or null.
+   */
+  async getWorkspaceMember(workspace_id, user_id, client = prisma) {
+    const member = await client.workspace_members.findFirst({
+      include: {
+        workspace_member_roles: {
+          include: {
+            workspace_roles: true,
+          },
+        },
+      },
+      where: { deleted: false, user_id, workspace_id },
+    });
+
+    if (!member) return null;
+
+    return {
+      ...member,
+      roles: member.workspace_member_roles.map((wmr) => wmr.workspace_roles.name),
+    };
   }
 
-  async isMember(workspace_id, user_id) {
-    const query = `
-      SELECT 1 FROM workspace_members
-      WHERE workspace_id = $1
-        AND user_id = $2
-        AND deleted = false
-      LIMIT 1;
-    `;
-    const results = await executeQuery(query, [workspace_id, user_id]);
-    return results.length > 0;
+  /**
+   * Checks if a user is an active member of a workspace.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} user_id - The user ID.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
+   * @returns {Promise<boolean>} True if the user is a member, otherwise false.
+   */
+  async isMember(workspace_id, user_id, client = prisma) {
+    const count = await client.workspace_members.count({
+      where: { deleted: false, user_id, workspace_id },
+    });
+    return count > 0;
   }
 
-  async getWorkspaceOwner(workspace_id) {
-    const query = `
-      SELECT om.*, array_agg(r.name) as roles, u.name, u.username, u.email, u.avatar_url
-      FROM workspace_members om
-      LEFT JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
-      LEFT JOIN workspaces_roles r ON r.id = wmr.role_id
-      LEFT JOIN users u ON om.user_id = u.user_id
-      INNER JOIN workspaces o ON o.id = om.workspace_id
-      WHERE om.workspace_id = $1 AND om.user_id = o.user_id
-        AND om.deleted = false
-      GROUP BY om.id, u.user_id
-      LIMIT 1;
-    `;
-    const results = await executeQuery(query, [workspace_id]);
-    return results[0] || null;
+  /**
+   * Retrieves the owner of a workspace.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
+   * @returns {Promise<Object|null>} The owner details, or null if not found.
+   */
+  async getWorkspaceOwner(workspace_id, client = prisma) {
+    const workspace = await client.workspaces.findUnique({
+      select: { user_id: true },
+      where: { id: workspace_id },
+    });
+
+    if (!workspace) return null;
+
+    const member = await client.workspace_members.findFirst({
+      include: {
+        users_workspace_members_user_idTousers: true,
+        workspace_member_roles: {
+          include: {
+            workspace_roles: true,
+          },
+        },
+      },
+      where: {
+        deleted: false,
+        user_id: workspace.user_id,
+        workspace_id,
+      },
+    });
+
+    if (!member) return null;
+
+    const user = member.users_workspace_members_user_idTousers;
+
+    return {
+      ...member,
+      avatar_url: user?.avatar_url,
+      email: user?.email,
+      name: user?.name,
+      roles: member.workspace_member_roles.map((wmr) => wmr.workspace_roles.name),
+      username: user?.username,
+    };
   }
 
+  /**
+   * Creates a workspace invite for a new or existing user.
+   * @param {string} workspace_id - The workspace ID.
+   * @param {string} email - The email to invite.
+   * @param {string|string[]} roleIds - The role IDs to assign.
+   * @param {string} invited_by - The user ID of the inviter.
+   * @param {string|null} [name=null] - Optional name for a new user.
+   * @param {string|null} [username=null] - Optional username for a new user.
+   * @param {any[]} [_target_teams=[]] - Optional target teams (legacy param, kept for signature match).
+   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance for transactions.
+   * @returns {Promise<Object>} An object containing the invite details.
+   */
   async createWorkspaceInvite(
     workspace_id,
     email,
@@ -386,58 +524,40 @@ class WorkspaceMembersRepository {
     invited_by,
     name = null,
     username = null,
-    _target_teams = []
+    _target_teams = [],
+    client = prisma
   ) {
-    const client = await getConnection();
-    try {
-      await client.query("BEGIN");
+    const execute = async (tx) => {
+      let user = await tx.users.findFirst({
+        where: { email: { equals: email, mode: "insensitive" } },
+      });
 
-      const findUserQuery = `SELECT user_id, status FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`;
-      const findUserRes = await client.query(findUserQuery, [email]);
-
-      let userId;
-      let userStatus;
-
-      if (findUserRes.rows.length > 0) {
-        userId = findUserRes.rows[0].user_id;
-        userStatus = findUserRes.rows[0].status;
-      } else {
+      if (!user) {
         const publicUserId = generatePublicId();
-        const insertUserQuery = `
-          INSERT INTO users (
-            email, name, username, status, public_user_id, password
-          )
-          VALUES (
-            $1, $2, $3, 'PENDING_INVITE', $4, ''
-          )
-          RETURNING user_id, status;
-        `;
-        const insertRes = await client.query(insertUserQuery, [
-          email,
-          name,
-          username || email.split("@")[0],
-          publicUserId,
-        ]);
-        userId = insertRes.rows[0].user_id;
-        userStatus = insertRes.rows[0].status;
+        user = await tx.users.create({
+          data: {
+            email,
+            name,
+            password: "",
+            public_user_id: publicUserId,
+            status: "PENDING_INVITE",
+            username: username || email.split("@")[0],
+          },
+        });
       }
 
-      await this.addWorkspaceMember(workspace_id, userId, roleIds, "ACTIVE", invited_by, client);
+      await this.addWorkspaceMember(workspace_id, user.user_id, roleIds, "ACTIVE", invited_by, tx);
 
-      await client.query("COMMIT");
       return {
         email,
-        invite_id: userId,
+        invite_id: user.user_id,
         roles: roleIds,
-        status: userStatus,
-        user_id: userId,
+        status: user.status,
+        user_id: user.user_id,
       };
-    } catch (err) {
-      await client.query("ROLLBACK");
-      throw err;
-    } finally {
-      client.release();
-    }
+    };
+
+    return client.$transaction ? client.$transaction(execute) : execute(client);
   }
 }
 

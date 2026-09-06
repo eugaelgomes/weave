@@ -1,6 +1,6 @@
 const { fromUnknown } = require("@/errors");
-const NotificationsRepository = require("@/modules/notifications/repositories/notifications.repository");
-const NotificationsBaseController = require("@/modules/notifications/controllers/base.controller");
+const NotificationsRepository = require("@/modules/messenger/repositories/notifications.repository");
+const NotificationsBaseController = require("@/modules/messenger/controllers/base.controller");
 
 class NotificationsDeleteController extends NotificationsBaseController {
   constructor() {
