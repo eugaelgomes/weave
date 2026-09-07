@@ -15,6 +15,12 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 function detectBrowserLocale(): SupportedLocale {
   if (typeof navigator === "undefined") return "en-US";
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("weave_locale");
+    if (saved === "pt-BR" || saved === "es-ES" || saved === "en-US") {
+      return saved;
+    }
+  }
   const lang = navigator.language;
   if (lang.startsWith("pt")) return "pt-BR";
   if (lang.startsWith("es")) return "es-ES";
@@ -48,6 +54,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLocale = useCallback(
     (newLocale: SupportedLocale) => {
       setLocaleState(newLocale);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("weave_locale", newLocale);
+      }
       if (user) {
         const currentPrefs = (user.usage_preference as UserPreferences) || {};
         updateUser({

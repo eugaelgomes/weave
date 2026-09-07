@@ -70,8 +70,10 @@ export function WeaveLogoAnimation() {
     let raf: number;
 
     const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.scale(dpr, dpr);
     };
     resize();
     window.addEventListener("resize", resize);
@@ -87,7 +89,7 @@ export function WeaveLogoAnimation() {
     let lastEnd = 0;
 
     const startDrop = (now: number) => {
-      const built = buildPieces(canvas.width, canvas.height, charW);
+      const built = buildPieces(canvas.offsetWidth, canvas.offsetHeight, charW);
       pieces = built.pieces;
       lastEnd = built.lastEnd;
       phase = "drop";
@@ -98,10 +100,10 @@ export function WeaveLogoAnimation() {
 
     const draw = (now: number) => {
       const elapsed = now - phaseStart;
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
 
-      ctx.clearRect(0, 0, w, h);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Phase transitions
       if (phase === "drop" && elapsed > lastEnd + 200) {

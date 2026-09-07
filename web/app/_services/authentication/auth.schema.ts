@@ -342,6 +342,8 @@ export const CreateUserDataSchema = z.object({
   email: EmailNoPlusAliasSchema,
   password: z.string().min(6),
   user_name: z.string().optional(),
+  terms_accepted: z.boolean(),
+  terms_version: z.string(),
 });
 
 export const ActivateAccountPayloadSchema = z.object({

@@ -73,6 +73,7 @@ function logServerError(err, req) {
 
   console.error("[API Error]", {
     code: appError.code,
+    details: appError.details,
     message: err instanceof Error ? err.message : String(err),
     method: req.method,
     path: req.originalUrl,

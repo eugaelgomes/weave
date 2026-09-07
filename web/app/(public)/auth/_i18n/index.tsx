@@ -12,5 +12,5 @@ export type LocaleKey = keyof typeof locales;
 export type NavigationTranslations = typeof ptBR;
 
 export function getTranslations(locale: LocaleKey): NavigationTranslations {
-  return locales[locale] || locales["pt-br"];
+  return locales[locale] || locales["en-us"];
 }

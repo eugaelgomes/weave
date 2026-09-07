@@ -241,6 +241,8 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
       email: trimmedEmail,
       password,
       name: trimmedName,
+      terms_accepted: acceptTerms,
+      terms_version: "1.0",
     } as any);
 
     if (!createResult.success) {
