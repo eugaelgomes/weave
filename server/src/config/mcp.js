@@ -11,7 +11,7 @@ const {
 // Import all active module tool factories
 const { createPlansTools } = require("@/modules/plans/tools/plans.tools");
 
-const { createApiTokensTools } = require("@/modules/api-tokens/tools/api-tokens.tools");
+const { createWorkspaceTokensTools } = require("@/modules/workspaces/tools/workspace-tokens.tools");
 const { createArtifactsTools } = require("@/modules/agent-house/tools/artifacts.tools");
 const { createBackupTools } = require("@/modules/backup/tools/backup.tools");
 
@@ -31,7 +31,7 @@ function buildRegistry(user) {
   const allTools = {
     ...createPlansTools(user),
 
-    ...createApiTokensTools(user),
+    ...createWorkspaceTokensTools(user),
     ...createArtifactsTools(user),
     ...createBackupTools(user),
 

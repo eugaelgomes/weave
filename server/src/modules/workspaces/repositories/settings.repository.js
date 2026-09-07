@@ -147,24 +147,14 @@ class WorkspaceSettingsRepository {
    * @returns {Promise<import('@prisma/client').workspace_settings | null>}
    */
   async findByDomain(domainName, client = prisma) {
-    const rows = await client.$queryRaw`
-      SELECT *
-      FROM workspace_settings
-      WHERE deleted = false
-        AND EXISTS (
-          SELECT 1
-          FROM jsonb_array_elements(
-            CASE 
-              WHEN jsonb_typeof(domains) = 'array' THEN domains 
-              ELSE '[]'::jsonb 
-            END
-          ) AS d
-          WHERE d->>'domain_name' = ${domainName}
-            AND d->>'status' = 'VERIFIED'
-        )
-      LIMIT 1
-    `;
-    return rows[0] || null;
+    return await client.workspace_settings.findFirst({
+      where: {
+        deleted: false,
+        domains: {
+          array_contains: [{ domain_name: domainName, status: "VERIFIED" }],
+        },
+      },
+    });
   }
 
   /**
@@ -176,24 +166,17 @@ class WorkspaceSettingsRepository {
    * @returns {Promise<boolean>}
    */
   async isDomainRestricted(domainName, client = prisma) {
-    const rows = await client.$queryRaw`
-      SELECT 1
-      FROM workspace_settings
-      WHERE deleted = false
-        AND EXISTS (
-          SELECT 1
-          FROM jsonb_array_elements(
-            CASE 
-              WHEN jsonb_typeof(domains) = 'array' THEN domains 
-              ELSE '[]'::jsonb 
-            END
-          ) AS d
-          WHERE d->>'domain_name' = ${domainName}
-            AND (d->>'status' = 'VERIFIED' OR d->>'status' = 'PENDING')
-        )
-      LIMIT 1
-    `;
-    return rows.length > 0;
+    const setting = await client.workspace_settings.findFirst({
+      select: { id: true },
+      where: {
+        deleted: false,
+        OR: [
+          { domains: { array_contains: [{ domain_name: domainName, status: "VERIFIED" }] } },
+          { domains: { array_contains: [{ domain_name: domainName, status: "PENDING" }] } },
+        ],
+      },
+    });
+    return !!setting;
   }
 
   /**
@@ -211,47 +194,50 @@ class WorkspaceSettingsRepository {
     { workspace_name, unique_name, logo_url, banner_url, description, country },
     client = prisma
   ) {
-    const rows = await client.$queryRaw`
-      UPDATE workspaces o
-      SET workspace_name = ${workspace_name},
-          unique_name = ${unique_name},
-          logo_url = ${logo_url},
-          banner_url = ${banner_url},
-          description = ${description},
-          country = ${country},
-          updated_at = NOW()
-      WHERE o.id = ${workspace_id}::uuid
-        AND (
-          o.user_id = ${user_id}::uuid
-          OR EXISTS (
-            SELECT 1 FROM workspace_members om
-            WHERE om.workspace_id = o.id
-              AND om.user_id = ${user_id}::uuid
-              
-              AND om.deleted = false
-              AND EXISTS (
-                SELECT 1 FROM workspace_member_roles wmr 
-                JOIN workspaces_roles r ON r.id = wmr.role_id 
-                WHERE wmr.workspace_member_id = om.id AND r.permissions ? 'manage_workspace'
-              )
-          )
-        )
-      RETURNING
-        id,
-        user_id,
-        workspace_name,
-        unique_name,
-        logo_url,
+    const hasAccess = await client.workspaces.findFirst({
+      where: {
+        id: workspace_id,
+        OR: [
+          { user_id },
+          {
+            workspace_members: {
+              some: {
+                deleted: false,
+                user_id,
+                workspace_member_roles: {
+                  some: {
+                    workspace_roles: {
+                      permissions: { array_contains: "manage_workspace" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    if (!hasAccess) return null;
+
+    const updatedWorkspace = await client.workspaces.update({
+      data: {
         banner_url,
-        description,
         country,
-        NULL AS plan_snapshot,
-        plan_id,
-        created_at,
-        updated_at,
-        deleted;
-    `;
-    return rows[0] || null;
+        description,
+        logo_url,
+        unique_name,
+        updated_at: new Date(),
+        workspace_name,
+      },
+      where: { id: workspace_id },
+    });
+
+    // Attach plan_snapshot placeholder to maintain return signature
+    return {
+      ...updatedWorkspace,
+      plan_snapshot: null,
+    };
   }
 
   /**
@@ -264,42 +250,58 @@ class WorkspaceSettingsRepository {
    * @returns {Promise<any>}
    */
   async updateCreationConfigurationStep(workspace_id, user_id, { plan_id }, client = prisma) {
-    const rows = await client.$queryRaw`
-      UPDATE workspaces o
-      SET plan_id = ${plan_id}::uuid,
-          updated_at = NOW()
-      WHERE o.id = ${workspace_id}::uuid
-        AND (
-          o.user_id = ${user_id}::uuid
-          OR EXISTS (
-            SELECT 1 FROM workspace_members om
-            WHERE om.workspace_id = o.id
-              AND om.user_id = ${user_id}::uuid
-              
-              AND om.deleted = false
-              AND EXISTS (
-                SELECT 1 FROM workspace_member_roles wmr 
-                JOIN workspaces_roles r ON r.id = wmr.role_id 
-                WHERE wmr.workspace_member_id = om.id AND r.permissions ?| array['manage_workspace', 'manage_billing']
-              )
-          )
-        )
-      RETURNING
-        id,
-        user_id,
-        workspace_name,
-        unique_name,
-        logo_url,
-        banner_url,
-        description,
-        country,
-        NULL AS plan_snapshot,
+    const hasAccess = await client.workspaces.findFirst({
+      where: {
+        id: workspace_id,
+        OR: [
+          { user_id },
+          {
+            workspace_members: {
+              some: {
+                deleted: false,
+                OR: [
+                  {
+                    workspace_member_roles: {
+                      some: {
+                        workspace_roles: {
+                          permissions: { array_contains: "manage_workspace" },
+                        },
+                      },
+                    },
+                  },
+                  {
+                    workspace_member_roles: {
+                      some: {
+                        workspace_roles: {
+                          permissions: { array_contains: "manage_billing" },
+                        },
+                      },
+                    },
+                  },
+                ],
+                user_id,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    if (!hasAccess) return null;
+
+    const updatedWorkspace = await client.workspaces.update({
+      data: {
         plan_id,
-        created_at,
-        updated_at,
-        deleted;
-    `;
-    return rows[0] || null;
+        updated_at: new Date(),
+      },
+      where: { id: workspace_id },
+    });
+
+    // Attach plan_snapshot placeholder to maintain return signature
+    return {
+      ...updatedWorkspace,
+      plan_snapshot: null,
+    };
   }
 
   // --- SYSTEM SETTINGS ---

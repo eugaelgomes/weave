@@ -16,12 +16,12 @@ class CredentialsRepository extends BaseRepository {
           SELECT * FROM users WHERE email = $1 AND deleted = false
           LIMIT 1
       ),
-      latest_org AS (
-        SELECT om.user_id, om.organization_id
-        FROM organization_members om
-        INNER JOIN target_user tu ON tu.user_id = om.user_id
-        WHERE om.deleted = false
-        ORDER BY om.created_at DESC
+      latest_workspace AS (
+        SELECT wm.user_id, wm.workspace_id
+        FROM workspace_members wm
+        INNER JOIN target_user tu ON tu.user_id = wm.user_id
+        WHERE wm.deleted = false
+        ORDER BY wm.created_at DESC
         LIMIT 1
       )
       SELECT
@@ -52,24 +52,24 @@ class CredentialsRepository extends BaseRepository {
         (SELECT p.details FROM plans p WHERE p.plan_id = u.plan_id) AS plan_details,
 
         (
-          SELECT row_to_json(org_data)
+          SELECT row_to_json(workspace_data)
           FROM (
             SELECT 
-              om.organization_id AS org_id, 
-              om.role AS org_member_role, 
-              om.created_at AS org_member_since, 
-              o.unique_name AS org_unique_name, 
-              o.public_id AS org_public_id,
-              o.org_name, 
-              o.logo_url AS org_logo_url,
-              o.settings->'modules' AS active_modules
-            FROM organization_members om
-            JOIN workspaces o ON o.id = om.organization_id
-            WHERE om.user_id = u.user_id
-              AND om.deleted = false
-            ORDER BY om.created_at DESC 
+              wm.workspace_id AS org_id, 
+              (SELECT wr.name FROM workspace_member_roles wmr JOIN workspaces_roles wr ON wr.id = wmr.role_id WHERE wmr.workspace_member_id = wm.id LIMIT 1) AS org_member_role, 
+              wm.created_at AS org_member_since, 
+              w.unique_name AS org_unique_name, 
+              w.public_id AS org_public_id,
+              w.workspace_name AS org_name, 
+              w.logo_url AS org_logo_url,
+              (SELECT integrations FROM workspace_settings ws WHERE ws.workspace_id = w.id) AS active_modules
+            FROM workspace_members wm
+            JOIN workspaces w ON w.id = wm.workspace_id
+            WHERE wm.user_id = u.user_id
+              AND wm.deleted = false
+            ORDER BY wm.created_at DESC 
             LIMIT 1
-          ) org_data
+          ) workspace_data
         ) AS workspace,
 
         (
@@ -84,11 +84,11 @@ class CredentialsRepository extends BaseRepository {
               p2.name AS usage_plan_name
             FROM plan_usages pu
             LEFT JOIN plans p2 ON p2.plan_id = pu.plan_id
-            LEFT JOIN latest_org lo ON lo.user_id = u.user_id
+            LEFT JOIN latest_workspace lw ON lw.user_id = u.user_id
             WHERE (
               pu.subscriber_type = 'workspace'
-              AND lo.organization_id IS NOT NULL
-              AND pu.subscriber_id = lo.organization_id
+              AND lw.workspace_id IS NOT NULL
+              AND pu.subscriber_id = lw.workspace_id
             ) OR (
               pu.subscriber_type = 'user'
               AND pu.subscriber_id = u.user_id
@@ -105,26 +105,26 @@ class CredentialsRepository extends BaseRepository {
         ) AS current_usage,
 
         (
-          SELECT row_to_json(area_data)
+          SELECT row_to_json(team_data)
           FROM (
             SELECT 
-              oa.id AS org_default_area_id,
-              oa.area_name AS org_default_area_name,
-              oa.slug AS org_default_area_slug,
-              oa.description AS org_default_area_description,
-              oa.properties AS org_default_area_properties
-            FROM organization_areas oa
-            WHERE oa.deleted = false
-              AND oa.organization_id = (
-                  SELECT organization_id FROM organization_members 
+              t.id AS org_default_area_id,
+              t.name AS org_default_area_name,
+              t.slug AS org_default_area_slug,
+              t.description AS org_default_area_description,
+              t.properties AS org_default_area_properties
+            FROM teams t
+            WHERE t.deleted = false
+              AND t.workspace_id = (
+                  SELECT workspace_id FROM workspace_members 
                   WHERE user_id = u.user_id
                     AND deleted = false
                   ORDER BY created_at DESC
                   LIMIT 1
               )
-            ORDER BY oa.is_root_area DESC, oa.created_at ASC 
+            ORDER BY t.parent_team_id NULLS FIRST, t.created_at ASC 
             LIMIT 1
-          ) area_data
+          ) team_data
         ) AS default_area
 
       FROM target_user u;

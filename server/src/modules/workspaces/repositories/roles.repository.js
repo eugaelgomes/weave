@@ -194,19 +194,37 @@ class WorkspaceRolesRepository {
    * @returns {Promise<string[]>}
    */
   async getUserEffectivePermissions(workspaceId, userId, client = prisma) {
-    const query = `
-      SELECT DISTINCT perm
-      FROM workspace_members om
-      JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
-      JOIN workspaces_roles r ON r.id = wmr.role_id
-      CROSS JOIN jsonb_array_elements_text(r.permissions) as perm
-      WHERE om.workspace_id = $1
-        AND om.user_id = $2
-        AND om.deleted = false
-        AND r.deleted = false
-    `;
-    const results = await client.$queryRawUnsafe(query, workspaceId, userId);
-    return results.map((row) => row.perm);
+    const members = await client.workspace_members.findMany({
+      include: {
+        workspace_member_roles: {
+          include: {
+            workspace_roles: {
+              where: {
+                deleted: false,
+              },
+            },
+          },
+        },
+      },
+      where: {
+        deleted: false,
+        user_id: userId,
+        workspace_id: workspaceId,
+      },
+    });
+
+    const permissionsSet = new Set();
+    for (const member of members) {
+      for (const wmr of member.workspace_member_roles) {
+        if (wmr.workspace_roles && Array.isArray(wmr.workspace_roles.permissions)) {
+          for (const perm of wmr.workspace_roles.permissions) {
+            permissionsSet.add(perm);
+          }
+        }
+      }
+    }
+
+    return Array.from(permissionsSet);
   }
 }
 

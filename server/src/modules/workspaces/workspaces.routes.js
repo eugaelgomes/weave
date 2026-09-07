@@ -6,6 +6,7 @@ const workspaceMembersController = require("@/modules/workspaces/controllers/mem
 const workspaceTeamsController = require("@/modules/workspaces/controllers/teams.controller");
 const workspaceSettingsController = require("@/modules/workspaces/controllers/settings.controller");
 const workspaceRolesController = require("@/modules/workspaces/controllers/roles.controller");
+const WorkspaceTokensController = require("@/modules/workspaces/controllers/workspace-tokens.controller");
 const UsersController = require("@/modules/users/controllers/users.controller");
 
 // Middlewares
@@ -40,6 +41,10 @@ const {
   saveStepOneSchema,
 } = require("./schemas/settings.schema");
 const { createRoleSchema, updateRoleSchema } = require("./schemas/roles.schema");
+const {
+  workspaceTokenParamsSchema,
+  createWorkspaceTokenSchema,
+} = require("./schemas/workspace-tokens.schema");
 
 const router = express.Router();
 
@@ -89,6 +94,26 @@ router.patch(
   structuralLimiter,
   validate(updateSsoSettingsSchema, "body"),
   workspaceSettingsController.updateSsoSettings.bind(workspaceSettingsController)
+);
+
+// ------ Workspace Tokens Routes ------
+router.get(
+  "/api-tokens/scopes",
+  WorkspaceTokensController.getScopesInfo.bind(WorkspaceTokensController)
+);
+router.get(
+  "/api-tokens/get-tokens",
+  WorkspaceTokensController.listTokens.bind(WorkspaceTokensController)
+);
+router.post(
+  "/api-tokens/create-token",
+  validate(createWorkspaceTokenSchema, "body"),
+  WorkspaceTokensController.createToken.bind(WorkspaceTokensController)
+);
+router.post(
+  "/api-tokens/:id/revoke",
+  validate(workspaceTokenParamsSchema, "params"),
+  WorkspaceTokensController.revokeToken.bind(WorkspaceTokensController)
 );
 
 // ------ Teams Routes ------

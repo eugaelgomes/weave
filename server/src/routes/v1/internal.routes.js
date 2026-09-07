@@ -14,7 +14,6 @@ const backupRoutes = require("@/modules/backup/backup.routes");
 const organizationsRoutes = require("@/modules/workspaces/workspaces.routes");
 const requireOnboarding = require("@/middlewares/auth/require-onboarding");
 const plansRoutes = require("@/modules/plans/plans.routes");
-const apiTokensRoutes = require("@/modules/api-tokens/api-tokens.routes");
 
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 
@@ -120,7 +119,6 @@ const slackRoutes = require("@/integration/providers/slack/slack.routes");
  * @type {Array<{basePath: string, handler: import('express').Router}>}
  */
 const routeRegistry = [
-  { basePath: "/api-tokens", handler: apiTokensRoutes, requireOnboarding: true },
   { basePath: "/auth", handler: authRoutes, requireOnboarding: false },
   { basePath: "/backup", handler: backupRoutes, requireOnboarding: true },
   { basePath: "/workspaces", handler: organizationsRoutes, requireOnboarding: true },

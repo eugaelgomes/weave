@@ -87,7 +87,7 @@ const API_SCOPES = [
   },
 ];
 
-class ApiTokensNormalizer {
+class WorkspaceTokensNormalizer {
   /**
    * Returns API scopes formatted for frontend selection components.
    * @returns {Array<{value: string, label: string, description: string}>}
@@ -114,4 +114,4 @@ class ApiTokensNormalizer {
   }
 }
 
-module.exports = ApiTokensNormalizer;
+module.exports = WorkspaceTokensNormalizer;

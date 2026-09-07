@@ -191,6 +191,7 @@ model workspaces {
   ai_mcp_servers                       ai_mcp_servers[]
   workflows                            workflows[]
   credentials                          credentials[]
+  plans                                plans?                    @relation(fields: [plan_id], references: [plan_id], onUpdate: NoAction)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -894,6 +895,7 @@ model plans {
   plan_usage_history   plan_usage_history[]
   plan_usages          plan_usages[]
   subscriptions        subscriptions[]
+  workspaces           workspaces[]
 
   @@index([is_active, deleted], map: "idx_plans_active")
 }

@@ -265,54 +265,6 @@ class WorkspaceMembersRepository {
   }
 
   /**
-   * Retrieves auto-assignable project members. Retains raw query due to jsonb permission filtering and unions.
-   * @param {string} workspaceId - The workspace ID.
-   * @param {string} excludeUserId - The user ID to exclude.
-   * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
-   * @returns {Promise<any[]>} List of auto-assignable members.
-   */
-  async getAutoAssignableProjectMembers(workspaceId, excludeUserId, client = prisma) {
-    const query = `
-      SELECT DISTINCT ON (user_id) user_id::text, project_role
-      FROM (
-        SELECT om.user_id, 'PROJECT_MANAGER' AS project_role, 1 AS priority
-        FROM workspace_members om
-        JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
-        JOIN workspaces_roles r ON r.id = wmr.role_id
-        WHERE om.workspace_id = $1::uuid
-          AND r.permissions ? 'manage_workspace'
-          AND om.deleted = false
-          AND om.user_id != $2::uuid
-
-        UNION ALL
-
-        SELECT am.user_id, 'PROJECT_MANAGER' AS project_role, 2 AS priority
-        FROM team_members am
-        JOIN teams a ON a.id = am.team_id
-        JOIN workspaces_roles tr ON tr.id = am.role_id
-        WHERE a.workspace_id = $1::uuid
-          AND tr.permissions ? 'manage_teams'
-          AND am.deleted = false
-          AND am.user_id != $2::uuid
-
-        UNION ALL
-
-        SELECT am.user_id, 'CONTRIBUTOR' AS project_role, 3 AS priority
-        FROM team_members am
-        JOIN teams a ON a.id = am.team_id
-        JOIN workspaces_roles tr ON tr.id = am.role_id
-        WHERE a.workspace_id = $1::uuid
-          AND NOT (tr.permissions ? 'manage_teams')
-          AND am.deleted = false
-          AND am.user_id != $2::uuid
-      ) sub
-      ORDER BY user_id, priority ASC;
-    `;
-
-    return client.$queryRawUnsafe(query, workspaceId, excludeUserId);
-  }
-
-  /**
    * Removes a member from a workspace and its teams, unless the member is a workspace admin.
    * @param {string} workspace_id - The workspace ID.
    * @param {string} user_id - The user ID.
@@ -321,23 +273,32 @@ class WorkspaceMembersRepository {
    */
   async removeWorkspaceMember(workspace_id, user_id, client = prisma) {
     const execute = async (tx) => {
-      const memberInfo = await tx.$queryRawUnsafe(
-        `
-        SELECT om.id, bool_or(r.permissions ? 'manage_workspace') as is_admin
-        FROM workspace_members om
-        LEFT JOIN workspace_member_roles wmr ON wmr.workspace_member_id = om.id
-        LEFT JOIN workspaces_roles r ON r.id = wmr.role_id
-        WHERE om.workspace_id = $1::uuid AND om.user_id = $2::uuid
-        GROUP BY om.id
-      `,
-        workspace_id,
-        user_id
-      );
+      const member = await tx.workspace_members.findFirst({
+        include: {
+          workspace_member_roles: {
+            include: {
+              workspace_roles: true,
+            },
+          },
+        },
+        where: { user_id, workspace_id },
+      });
 
-      if (!memberInfo || memberInfo.length === 0) return null;
-      if (memberInfo[0].is_admin) return null;
+      if (!member) return null;
 
-      const memberId = memberInfo[0].id;
+      const isAdmin = member.workspace_member_roles.some((wmr) => {
+        const permissions = wmr.workspace_roles?.permissions;
+        return (
+          permissions &&
+          (Array.isArray(permissions)
+            ? permissions.includes("manage_workspace")
+            : permissions.manage_workspace)
+        );
+      });
+
+      if (isAdmin) return null;
+
+      const memberId = member.id;
 
       const deletedMember = await tx.workspace_members.update({
         data: { deleted: true, updated_at: new Date() },
