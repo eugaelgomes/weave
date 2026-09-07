@@ -190,9 +190,12 @@ const Navbar = ({ onToggleSidebar, isCollapsed = false }: NavbarProps) => {
                         type="button"
                         title={(t.common as any)?.changeLanguage || "Mudar idioma"}
                         aria-label={(t.common as any)?.changeLanguage || "Mudar idioma"}
-                        className="flex items-center pt-1 pb-1 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                        className="flex items-center gap-1.5 pt-1 pb-1 text-xs font-medium text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                       >
                         <Globe className="h-4 w-4" />
+                        <span>
+                          {locale === "pt-BR" ? "Português" : locale === "en-US" ? "English" : "Español"}
+                        </span>
                       </button>
 
                       <div className="ring-opacity-5 invisible absolute top-full right-0 z-50 w-32 origin-top-right rounded-md bg-white p-1 opacity-0 shadow-lg ring-1 ring-black transition-all group-hover:visible group-hover:opacity-100 focus:outline-none dark:bg-neutral-800 dark:ring-white/10">

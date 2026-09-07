@@ -14,11 +14,11 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 function detectBrowserLocale(): SupportedLocale {
-  if (typeof navigator === "undefined") return "pt-BR";
+  if (typeof navigator === "undefined") return "en-US";
   const lang = navigator.language;
-  if (lang.startsWith("en")) return "en-US";
+  if (lang.startsWith("pt")) return "pt-BR";
   if (lang.startsWith("es")) return "es-ES";
-  return "pt-BR";
+  return "en-US";
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -28,8 +28,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const userLocale = prefs.language?.interface as SupportedLocale | undefined;
 
   // Use a stable initial state (SSR safe) to prevent hydration mismatches.
-  // The server always returns 'pt-BR' when navigator is undefined.
-  const [locale, setLocaleState] = useState<SupportedLocale>(userLocale || "pt-BR");
+  // The server always returns 'en-US' when navigator is undefined.
+  const [locale, setLocaleState] = useState<SupportedLocale>(userLocale || "en-US");
 
   useEffect(() => {
     if (userLocale) {
@@ -61,7 +61,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [user, updateUser]
   );
 
-  const t = useMemo(() => locales[locale] || locales["pt-BR"], [locale]);
+  const t = useMemo(() => locales[locale] || locales["en-US"], [locale]);
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale, t }}>{children}</LanguageContext.Provider>

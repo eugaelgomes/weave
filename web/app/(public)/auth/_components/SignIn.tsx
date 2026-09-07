@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User, Lock, Eye, EyeOff, Link } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Link, Mail, Shield } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useRouter } from "next/navigation";
@@ -46,17 +46,6 @@ function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function MicrosoftIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-      <rect x="2" y="2" width="9" height="9" fill="#F25022" />
-      <rect x="13" y="2" width="9" height="9" fill="#7FBA00" />
-      <rect x="2" y="13" width="9" height="9" fill="#00A4EF" />
-      <rect x="13" y="13" width="9" height="9" fill="#FFB900" />
-    </svg>
-  );
-}
-
 export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
@@ -64,7 +53,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const t = getTranslations(locale);
-  const { login, loginWithGoogle, loginWithGithub, loginWithMicrosoft } = useAuth();
+  const { login, loginWithGoogle, loginWithGithub } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -135,65 +124,69 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
   return (
     <div className="flex w-full flex-col px-6 py-2 sm:px-8">
       <div className="mt-1">
-        <div className="mb-4 flex flex-col gap-1 text-center">
-          {/*<h1 className="text-xl font-bold tracking-tight text-neutral-800 sm:text-2xl">
-            {t.signIn.title}
-          </h1>*/}
-          <p className="text-brand-secondary-500 text-sm font-medium">{t.signIn.subtitle}</p>
-        </div>
 
-        <form className="space-y-1.5" onSubmit={handleSubmit}>
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <User className="text-brand-secondary-400 h-4 w-4" />
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-neutral-700">
+              {t.signIn.usernameLabel}
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <User className="text-brand-secondary-400 h-4 w-4" />
+              </div>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={t.signIn.usernamePlaceholder}
+                className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+                disabled={isLoading}
+              />
             </div>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder={t.signIn.usernamePlaceholder}
-              className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
-              disabled={isLoading}
-            />
           </div>
 
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Lock className="text-brand-secondary-400 h-4 w-4" />
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="block text-xs font-semibold text-neutral-700">
+                {t.signIn.passwordLabel}
+              </label>
+              <button
+                type="button"
+                onClick={() => onNavigate("forgot")}
+                className="text-brand-secondary-500 hover:text-brand-primary-500 text-xs font-medium transition-colors"
+              >
+                {t.signIn.forgotPassword}
+              </button>
             </div>
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t.signIn.passwordPlaceholder}
-              className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
-              disabled={isLoading}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <Lock className="text-brand-secondary-400 h-4 w-4" />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t.signIn.passwordPlaceholder}
+                className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
-          <div className="mt-1.5 flex items-center justify-between sm:mt-2.5">
-            <button
-              type="button"
-              onClick={() => onNavigate("forgot")}
-              className="text-brand-secondary-500 hover:text-brand-primary-500 text-xs font-medium transition-colors"
-            >
-              {t.signIn.forgotPassword}
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="bg-brand-primary-500 shadow-brand-yellow/20 hover:bg-brand-primary-800 flex items-center justify-center rounded-md px-4 py-1 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-            >
-              {isLoading ? "Entrando..." : t.signIn.submitButton}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-brand-primary-500 shadow-brand-yellow/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {isLoading ? "Entrando..." : t.signIn.submitButton}
+          </button>
 
           {error && (
             <div className="animate-in fade-in slide-in-from-top-4 fixed top-4 right-4 z-[999] flex max-w-sm items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
@@ -246,17 +239,28 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
 
           <button
             type="button"
-            onClick={loginWithMicrosoft}
+            onClick={() => {}}
             className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
           >
-            <MicrosoftIcon className="h-4 w-4" />
-            Microsoft
+            <Mail className="h-4 w-4 text-brand-secondary-600" />
+            {t.signIn.loginWithCode}
+          </button>
+        </div>
+
+        <div className="mt-2 w-full">
+          <button
+            type="button"
+            onClick={() => {}}
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+          >
+            <Shield className="h-4 w-4 text-brand-secondary-600" />
+            {t.signIn.loginWithSso}
           </button>
         </div>
 
         <button
           onClick={() => onNavigate("signup")}
-          className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-5 text-xs font-medium transition-colors duration-200"
+          className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-3 text-xs font-medium transition-colors duration-200"
         >
           {t.signIn.noAccount}{" "}
           <span className="text-brand-primary-500 hover:text-brand-yellow font-semibold transition-colors duration-200">
@@ -264,7 +268,7 @@ export function SignIn({ onNavigate, locale = "pt-br" }: Props) {
           </span>
         </button>
       </div>
-      <div className="text-brand-secondary-400 mt-5 flex flex-col items-center gap-1 text-xs">
+      <div className="text-brand-secondary-400 mt-3 flex flex-col items-center gap-1 text-xs">
         <div className="flex items-center gap-2">
           <a
             href="/terms"

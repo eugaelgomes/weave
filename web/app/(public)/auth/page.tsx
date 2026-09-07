@@ -9,15 +9,75 @@ import { ForgotPassword } from "@/app/(public)/auth/_components/ForgotPassword";
 import { ResetPassword } from "@/app/(public)/auth/_components/ResetPassword";
 import { ConfirmCreateAccount } from "@/app/(public)/auth/_components/ConfirmCreateAccount";
 import { AcceptOrganizationInviteModal } from "@/app/(public)/auth/_components/AcceptOrganizationInviteModal";
+import { WeaveLogoAnimation } from "@/app/(public)/auth/_components/WeaveLogoAnimation";
 import { Fredoka } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { getTranslations } from "@/app/(public)/auth/_i18n";
 
+import { Globe, ChevronDown } from "lucide-react";
+import type { SupportedLocale } from "@/app/_i18n";
+
 const fredoka = Fredoka({
   subsets: ["latin"],
   weight: ["600"],
 });
+
+const LANGUAGE_LABELS: Record<SupportedLocale, string> = {
+  "pt-BR": "Português",
+  "en-US": "English",
+  "es-ES": "Español",
+};
+
+function LanguageToggle({
+  locale,
+  setLocale,
+}: {
+  locale: SupportedLocale;
+  setLocale: (locale: SupportedLocale) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative inline-block text-left">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 focus:outline-none"
+      >
+        <Globe className="h-4 w-4 text-neutral-500" />
+        <span>{LANGUAGE_LABELS[locale] || "English"}</span>
+        <ChevronDown className="h-3 w-3 text-neutral-400" />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute left-0 z-50 mt-1.5 w-32 rounded-md bg-white p-1 shadow-lg ring-1 ring-black/5 text-xs">
+            {(["pt-BR", "en-US", "es-ES"] as const).map((langKey) => (
+              <button
+                key={langKey}
+                type="button"
+                onClick={() => {
+                  setLocale(langKey);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  "w-full rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-neutral-100",
+                  locale === langKey
+                    ? "bg-neutral-100 font-semibold text-neutral-900"
+                    : "text-neutral-600"
+                )}
+              >
+                {LANGUAGE_LABELS[langKey]}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export type AuthView =
   | "signin"
@@ -35,7 +95,7 @@ export interface PendingAuthData {
 }
 
 export default function AuthPage() {
-  const { locale } = useLanguage();
+  const { locale, setLocale } = useLanguage();
   const authT = getTranslations(locale.toLowerCase() as any);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -109,52 +169,74 @@ export default function AuthPage() {
   }, [searchParams]);
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-white p-4 text-slate-950 sm:p-8">
-      <div className="relative z-10 w-full max-w-[440px] overflow-hidden">
-        <div className="mb-2 flex flex-col items-center justify-center text-center">
-          <span className="text-xs font-bold tracking-wide text-neutral-500">
-            {(authT.authHeader.preTitle as any)[currentView] ||
-              (authT.authHeader.preTitle as any).default}
-          </span>
+    <div className="flex min-h-[100dvh] w-full bg-white">
+      {/* Left Pane - Auth Form */}
+      <div className="relative flex w-full flex-col items-center justify-center p-4 text-slate-950 sm:p-8 lg:w-1/2">
+        <div className="absolute left-8 top-8 hidden lg:flex items-center gap-2.5">
           <span
             className={cn(
-              "text-brand-yellow mt-0.5 text-4xl font-extrabold tracking-tight",
+              "text-slate-800 text-2xl font-extrabold tracking-tight",
               fredoka.className
             )}
           >
             Weave
           </span>
+          <span className="text-neutral-300 font-light select-none">|</span>
+          <LanguageToggle locale={locale as SupportedLocale} setLocale={setLocale} />
         </div>
 
-        <div className="w-full">
-          {currentView === "signin" && <SignIn onNavigate={handleNavigate} />}
-          {currentView === "signup" && <SignUp onNavigate={handleNavigate} />}
-          {currentView === "forgot" && <ForgotPassword onNavigate={handleNavigate} />}
-          {currentView === "reset-password" && (
-            <ResetPassword
-              onNavigate={handleNavigate}
-              token={searchParams.get("token") || searchParams.get("reset_token") || ""}
-            />
-          )}
-          {currentView === "accept-invite" && (
-            <AcceptOrganizationInviteModal
-              isOpen={!!inviteToken}
-              token={inviteToken ?? ""}
-              onClose={() => router.replace("/auth/")}
-              onSuccess={(login?: string) =>
-                handleNavigate("signin", login ? { login } : undefined)
-              }
-            />
-          )}
-          {currentView === "confirm" && (
-            <ConfirmCreateAccount
-              onNavigate={handleNavigate}
-              email={pendingLogin ?? undefined}
-              pendingAuth={pendingAuth}
-            />
-          )}
+        <div className="relative w-full max-w-[440px]">
+          <div className="mb-8 flex items-center justify-center gap-2.5 text-center lg:hidden">
+            <span
+              className={cn(
+                "text-slate-800 mt-0.5 text-3xl font-extrabold tracking-tight",
+                fredoka.className
+              )}
+            >
+              Weave
+            </span>
+            <span className="text-neutral-300 font-light select-none">|</span>
+            <LanguageToggle locale={locale as SupportedLocale} setLocale={setLocale} />
+          </div>
+
+          <div className="w-full">
+            {currentView === "signin" && <SignIn onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />}
+            {currentView === "signup" && <SignUp onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />}
+            {currentView === "forgot" && <ForgotPassword onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />}
+            {currentView === "reset-password" && (
+              <ResetPassword
+                onNavigate={handleNavigate}
+                token={searchParams.get("token") || searchParams.get("reset_token") || ""}
+                locale={locale.toLowerCase() as any}
+              />
+            )}
+            {currentView === "accept-invite" && (
+              <AcceptOrganizationInviteModal
+                isOpen={!!inviteToken}
+                token={inviteToken ?? ""}
+                onClose={() => router.replace("/auth/")}
+                onSuccess={(login?: string) =>
+                  handleNavigate("signin", login ? { login } : undefined)
+                }
+              />
+            )}
+            {currentView === "confirm" && (
+              <ConfirmCreateAccount
+                onNavigate={handleNavigate}
+                email={pendingLogin ?? undefined}
+                pendingAuth={pendingAuth}
+                locale={locale.toLowerCase() as any}
+              />
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* Right Pane - same white background */}
+      <div className="relative hidden w-1/2 overflow-hidden lg:block bg-white">
+        <WeaveLogoAnimation />
       </div>
     </div>
   );
 }
+
