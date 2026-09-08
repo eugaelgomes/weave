@@ -18,11 +18,7 @@ export const WorkspaceSwitcher = () => {
   const [loading, setLoading] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
 
-  // Create Modal State
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newOrgName, setNewOrgName] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -77,27 +73,7 @@ export const WorkspaceSwitcher = () => {
     }
   };
 
-  const handleCreateWorkspace = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newOrgName.trim() || creating) return;
 
-    setCreating(true);
-    setCreateError(null);
-
-    try {
-      const newOrg = await createOrganization({ org_name: newOrgName.trim() });
-      if (newOrg && newOrg.id) {
-        setShowCreateModal(false);
-        setNewOrgName("");
-        setIsOpen(false);
-        await switchOrganization(newOrg.id);
-      }
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Erro ao criar workspace");
-    } finally {
-      setCreating(false);
-    }
-  };
 
   if (!activeOrgName && !activeOrgUniqueName) {
     return null;
@@ -219,7 +195,7 @@ export const WorkspaceSwitcher = () => {
                 type="button"
                 onClick={() => {
                   setIsOpen(false);
-                  setShowCreateModal(true);
+                  window.location.href = "/onboarding?step=2";
                 }}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium text-gray-600 transition-colors hover:bg-black/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
               >
@@ -231,72 +207,7 @@ export const WorkspaceSwitcher = () => {
         )}
       </div>
 
-      {/* Modal Criar Workspace */}
-      {showCreateModal && (
-        <div className="animate-in fade-in-50 fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#1d1d1b]">
-            <div className="flex items-center justify-between pb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black/5 dark:bg-white/10">
-                  <Building2 className="h-4 w-4 text-gray-700 dark:text-gray-200" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                  Criar novo workspace
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="rounded-lg p-1 text-gray-400 hover:bg-black/5 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-200"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
 
-            <form onSubmit={handleCreateWorkspace} className="space-y-4">
-              {createError && (
-                <div className="rounded-lg bg-red-50 p-3 text-xs text-red-600 dark:bg-red-500/10 dark:text-red-400">
-                  {createError}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                  Nome da Organização / Workspace
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newOrgName}
-                  onChange={(e) => setNewOrgName(e.target.value)}
-                  placeholder="Ex: Minha Empresa"
-                  className="mt-1.5 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 placeholder-gray-400 focus:border-black focus:ring-1 focus:ring-black focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-white dark:focus:ring-white"
-                  autoFocus
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  disabled={creating}
-                  className="rounded-lg px-3 py-2 text-xs font-medium text-gray-600 hover:bg-black/5 dark:text-gray-300 dark:hover:bg-white/10"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating || !newOrgName.trim()}
-                  className="flex items-center gap-1.5 rounded-lg bg-black px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
-                >
-                  {creating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  Criar Workspace
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   );
 };

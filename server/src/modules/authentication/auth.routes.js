@@ -13,7 +13,11 @@ const LogoutController = require("./controllers/logout.controller");
 const PasswordController = require("./controllers/password.controller");
 
 // Schemas
-const { signinSchema } = require("./schemas/credentials.schema");
+const {
+  signinCodeRequestSchema,
+  signinCodeVerifySchema,
+  signinSchema,
+} = require("./schemas/credentials.schema");
 const { oauthCallbackSchema } = require("./schemas/oauth.schema");
 const { ssoDiscoverSchema, samlAcsCallbackSchema } = require("./schemas/saml.schema");
 const { forgotPasswordSchema, resetPasswordSchema } = require("./schemas/password.schema");
@@ -21,10 +25,7 @@ const { forgotPasswordSchema, resetPasswordSchema } = require("./schemas/passwor
 const router = express.Router();
 
 // ── Available Providers ──
-router.get(
-  "/providers",
-  ProvidersController.listProviders.bind(ProvidersController)
-);
+router.get("/providers", ProvidersController.listProviders.bind(ProvidersController));
 
 // ── Credentials ──
 router.post(
@@ -34,11 +35,22 @@ router.post(
   CredentialsController.userSignin.bind(CredentialsController)
 );
 
-// ── Social OAuth ──
-router.get(
-  "/oauth/google",
-  GoogleController.googleAuth.bind(GoogleController)
+router.post(
+  "/signin/code/request",
+  authLimiter,
+  validate(signinCodeRequestSchema, "body"),
+  CredentialsController.requestSigninCode.bind(CredentialsController)
 );
+
+router.post(
+  "/signin/code/verify",
+  authLimiter,
+  validate(signinCodeVerifySchema, "body"),
+  CredentialsController.userSigninWithCode.bind(CredentialsController)
+);
+
+// ── Social OAuth ──
+router.get("/oauth/google", GoogleController.googleAuth.bind(GoogleController));
 
 router.get(
   "/oauth/google/callback",
@@ -47,10 +59,7 @@ router.get(
   GoogleController.googleCallback.bind(GoogleController)
 );
 
-router.get(
-  "/oauth/github",
-  GithubController.githubAuth.bind(GithubController)
-);
+router.get("/oauth/github", GithubController.githubAuth.bind(GithubController));
 
 router.get(
   "/oauth/github/callback",
@@ -59,10 +68,7 @@ router.get(
   GithubController.githubCallback.bind(GithubController)
 );
 
-router.get(
-  "/oauth/microsoft",
-  MicrosoftController.microsoftAuth.bind(MicrosoftController)
-);
+router.get("/oauth/microsoft", MicrosoftController.microsoftAuth.bind(MicrosoftController));
 
 router.get(
   "/oauth/microsoft/callback",
@@ -79,10 +85,7 @@ router.post(
   SamlController.discoverSso.bind(SamlController)
 );
 
-router.get(
-  "/sso/saml/:organizationId/login",
-  SamlController.samlLogin.bind(SamlController)
-);
+router.get("/sso/saml/:organizationId/login", SamlController.samlLogin.bind(SamlController));
 
 router.post(
   "/sso/saml/acs",
@@ -91,10 +94,7 @@ router.post(
 );
 
 // ── Session ──
-router.post(
-  "/logout",
-  LogoutController.logout.bind(LogoutController)
-);
+router.post("/logout", LogoutController.logout.bind(LogoutController));
 
 // ── Password Recovery ──
 router.post(

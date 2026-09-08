@@ -97,6 +97,48 @@ class UserTokensRepository extends BaseRepository {
   }
 
   /**
+   * @param {string|number} userId
+   * @returns {Promise<any>}
+   */
+  async deactivateOldLoginCodeTokens(userId) {
+    return await prisma.tokens.updateMany({
+      data: {
+        active: false,
+      },
+      where: {
+        active: true,
+        type: "LOGIN_CODE",
+        user_id: userId,
+      },
+    });
+  }
+
+  /**
+   * @param {string|number} userId
+   * @param {string} token
+   * @param {string} code
+   * @param {string} createdAt
+   * @param {import('@prisma/client').PrismaClient} [client=prisma]
+   * @returns {Promise<any>}
+   */
+  async createLoginCodeToken(userId, token, code, createdAt, client = prisma) {
+    const createdDate = new Date(createdAt);
+    const expiresDate = new Date(createdDate.getTime() + 10 * 60 * 1000); // 10 minutes
+
+    return await client.tokens.create({
+      data: {
+        active: true,
+        code: code,
+        created_at: createdDate,
+        expires_at: expiresDate,
+        token: token,
+        type: "LOGIN_CODE",
+        user_id: userId,
+      },
+    });
+  }
+
+  /**
    * @param {string} token
    * @returns {Promise<any>}
    */
@@ -104,6 +146,40 @@ class UserTokensRepository extends BaseRepository {
     return await prisma.tokens.updateMany({
       data: { active: false },
       where: { token: token },
+    });
+  }
+
+  /**
+   * @param {string|number} userId
+   * @param {string} code
+   * @returns {Promise<any>}
+   */
+  async findLoginCodeTokenByCodeAndUserId(code, userId) {
+    return await prisma.tokens.findFirst({
+      where: {
+        active: true,
+        code: code,
+        expires_at: { gt: new Date() },
+        type: "LOGIN_CODE",
+        user_id: userId,
+      },
+    });
+  }
+
+  /**
+   * @param {string} token
+   * @returns {Promise<any>}
+   */
+  async consumeLoginCodeToken(token) {
+    return await prisma.tokens.updateMany({
+      data: {
+        active: false,
+        used_at: new Date(),
+      },
+      where: {
+        token: token,
+        type: "LOGIN_CODE",
+      },
     });
   }
 

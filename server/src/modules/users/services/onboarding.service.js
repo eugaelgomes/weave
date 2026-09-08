@@ -20,19 +20,33 @@ class OnboardingService {
     }
 
     return await withTransaction(async (client) => {
-      // 1. Check username availability
-      const isUnique = await SearchUsersRepository.checkUniqueAvailability(
-        { username },
-        { excludeUserId: userId },
-        client
-      );
+      const profileUpdates = {};
 
-      if (!isUnique.username.available) {
-        throw new Error("Username is not available");
+      if (typeof name === "string" && name.trim()) {
+        profileUpdates.name = name.trim();
       }
 
-      // 2. Update profile
-      await OnboardingRepository.updateProfile(userId, { name, timezone, username }, client);
+      if (typeof username === "string" && username.trim()) {
+        const isUnique = await SearchUsersRepository.checkUniqueAvailability(
+          { username },
+          { excludeUserId: userId },
+          client
+        );
+
+        if (!isUnique.username.available) {
+          throw new Error("Username is not available");
+        }
+
+        profileUpdates.username = username.trim().toLowerCase();
+      }
+
+      if (typeof timezone === "string" && timezone.trim()) {
+        profileUpdates.timezone = timezone.trim();
+      }
+
+      if (Object.keys(profileUpdates).length > 0) {
+        await OnboardingRepository.updateProfile(userId, profileUpdates, client);
+      }
 
       // 3. Update onboarding status preserving completed_steps
       await OnboardingRepository.appendOnboardingStep(

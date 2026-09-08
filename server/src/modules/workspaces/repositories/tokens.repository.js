@@ -1,10 +1,9 @@
-const BaseRepository = require("./base.repository");
 const { prisma } = require("@theweave/database");
 
 /**
  * Repository for API tokens domain (creation, lookup, mutation, logging).
  */
-class WorkspaceTokensRepository extends BaseRepository {
+class WorkspaceTokensRepository {
   /**
    * @param {Object} params
    * @param {string} params.name

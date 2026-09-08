@@ -14,7 +14,7 @@ const {
 
 /**
  * @typedef {Object} CreateUserData
- * @property {string} name - User's display name.
+ * @property {string|null} [name] - User's display name.
  * @property {string} username - User's unique handle.
  * @property {string} email - User's email address.
  * @property {string} [password] - Hashed password.
@@ -29,7 +29,7 @@ const {
 
 /**
  * @typedef {Object} UpdateActivationData
- * @property {string} name - User's display name.
+ * @property {string|null} [name] - User's display name.
  * @property {string} username - Unique username handle.
  * @property {string} password - Hashed account password.
  * @property {string} [timezone] - Preferred timezone string.
@@ -114,7 +114,7 @@ class UsersRepository extends BaseRepository {
         avatar_url: avatar_url || null,
         birth_date: birth_date ? new Date(birth_date) : null,
         email,
-        name,
+        name: name ?? null,
         onboarding_state: onboarding_state || undefined,
         password,
         phone_number: phone_number || null,
@@ -187,7 +187,7 @@ class UsersRepository extends BaseRepository {
     return await client.users.update({
       data: {
         birth_date: birth_date ? new Date(birth_date) : null,
-        name,
+        name: name ?? null,
         onboarding_state: onboarding_state || undefined,
         password,
         phone_number,

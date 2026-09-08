@@ -40,7 +40,7 @@ const createAccountSchema = z.object({
   birth_date: z.string().datetime().or(z.string().date()).nullable().optional(),
   email: emailValidator,
   locale: z.string().optional(),
-  name: nameValidator,
+  name: nameValidator.optional(),
   password: passwordValidator,
   phone_number: z.string().nullable().optional(),
   private_profile: z.union([z.boolean(), z.string().transform((val) => val === "true")]).optional(),
@@ -49,8 +49,8 @@ const createAccountSchema = z.object({
   }),
   terms_version: z.string().min(1, "Terms version is required."),
   timezone: z.string().optional(),
-  user_name: nameValidator,
-  username: usernameValidator,
+  user_name: nameValidator.optional(),
+  username: usernameValidator.optional(),
 });
 
 const activateAccountSchema = z
@@ -79,7 +79,7 @@ const updateProfileSchema = z.object({
   currentPassword: z.string().optional(),
   email: emailValidator.optional().or(z.literal("")),
   emailValidationToken: z.string().optional(),
-  name: nameValidator,
+  name: nameValidator.optional(),
   newPassword: z
     .string()
     .min(8, "Password must be at least 8 characters long.")

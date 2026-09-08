@@ -1,4 +1,4 @@
-const LogApiRequestsRepository = require("@/modules/api-tokens/repositories/log-api-requests.repository");
+const WorkspaceTokensRepository = require("@/modules/workspaces/repositories/tokens.repository");
 
 /**
  * Express middleware that records every authenticated Public API request
@@ -29,14 +29,13 @@ function logPublicApiRequest(req, res, next) {
     // Capture error_code injected by AppError handlers (if any).
     const errorCode = res.locals?.errorCode ?? null;
 
-    void LogApiRequestsRepository.insert({
+    void WorkspaceTokensRepository.insertLog({
       apiTokenId: req.apiToken?.id ?? null,
       apiVersion: req.apiVersion ?? "v1",
       durationMs,
       errorCode,
       httpMethod: req.method,
       ipAddress: req.clientIp ?? null,
-      organizationId: req.user?.organizationId ?? null,
       originHeader: req.headers["origin"] ?? null,
       path: req.originalUrl ?? req.path,
       refererHeader: req.headers["referer"] ?? null,
@@ -45,6 +44,7 @@ function logPublicApiRequest(req, res, next) {
       statusCode: res.statusCode,
       userAgent: req.headers["user-agent"] ?? null,
       userId: req.user?.userId ?? null,
+      workspaceId: req.user?.organizationId ?? null,
     }).catch((err) => {
       // Never break the response for a logging failure.
       console.error("[PublicApiLog] Failed to insert request log:", err.message);

@@ -118,7 +118,7 @@ class UsersController extends BaseController {
       }
 
       return res.status(201).json({
-        message: `Welcome to Weave ${user.userName}! Check your email to activate your account.`,
+        message: "Welcome to Weave! Check your email to activate your account.",
         redirect: "/auth/",
         status: "OK",
         user: {

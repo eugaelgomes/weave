@@ -1,9 +1,26 @@
 import { API_BASE_URL, API_ENDPOINTS } from "../api-methods";
 import { apiClient, handleResponse } from "../api-methods";
-import { BackendAuthResponseSchema, BackendMeResponseSchema } from "./auth.schema";
+import {
+  BackendAuthResponseSchema,
+  BackendMeResponseSchema,
+  SamlSsoDiscoverRequestSchema,
+  SamlSsoDiscoverResponseSchema,
+} from "./auth.schema";
 import { mapLoginResponseToUser, mapMeResponseToUser } from "./auth.mappers";
-import type { LoginCredentials, LoginResponse, User } from "./auth.types";
-import { LoginCredentialsSchema } from "./auth.schema";
+import type {
+  LoginCodeRequest,
+  LoginCodeVerification,
+  LoginCredentials,
+  LoginResponse,
+  SamlSsoDiscoverRequest,
+  SamlSsoDiscoverResponse,
+  User,
+} from "./auth.types";
+import {
+  LoginCodeRequestSchema,
+  LoginCodeVerificationSchema,
+  LoginCredentialsSchema,
+} from "./auth.schema";
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   // Validate input
@@ -32,6 +49,65 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
   }
 
   throw new Error(data.message || "Erro desconhecido ao realizar login.");
+};
+
+export const requestLoginCode = async (payload: LoginCodeRequest): Promise<{ message: string }> => {
+  const validPayload = LoginCodeRequestSchema.parse(payload);
+  const response = await apiClient.post(API_ENDPOINTS.SIGNIN_CODE_REQUEST, validPayload);
+  return await handleResponse<{ message: string }>(response, {
+    skipSessionInvalidationOn401: true,
+  });
+};
+
+export const loginWithCode = async (payload: LoginCodeVerification): Promise<LoginResponse> => {
+  const validPayload = LoginCodeVerificationSchema.parse(payload);
+  const response = await apiClient.post(API_ENDPOINTS.SIGNIN_CODE_VERIFY, validPayload);
+  const rawData = await handleResponse<unknown>(response, {
+    skipSessionInvalidationOn401: true,
+  });
+
+  const result = BackendAuthResponseSchema.safeParse(rawData);
+  if (!result.success) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[loginWithCode] Response failed schema validation:", result.error.flatten());
+    }
+    throw new Error("Login response format is invalid. Please try again.");
+  }
+
+  const data = result.data;
+
+  if (data.status === "OK" && data.user) {
+    return {
+      user: mapLoginResponseToUser(data),
+      token: data.auth?.token,
+    };
+  }
+
+  throw new Error(data.message || "Erro desconhecido ao realizar login.");
+};
+
+export const discoverSamlSso = async (
+  payload: SamlSsoDiscoverRequest
+): Promise<SamlSsoDiscoverResponse> => {
+  const validPayload = SamlSsoDiscoverRequestSchema.parse(payload);
+  const response = await apiClient.post(API_ENDPOINTS.SAML_SSO_DISCOVER, validPayload);
+  const rawData = await handleResponse<unknown>(response, {
+    skipSessionInvalidationOn401: true,
+  });
+
+  const parsed = SamlSsoDiscoverResponseSchema.safeParse(rawData);
+  if (!parsed.success) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[discoverSamlSso] Response failed schema validation:", parsed.error.flatten());
+    }
+    throw new Error("SSO discovery response format is invalid. Please try again.");
+  }
+
+  return parsed.data;
+};
+
+export const startSamlSsoLogin = (organizationId: string): void => {
+  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.SAML_SSO_LOGIN(organizationId)}`;
 };
 
 export const logout = async (): Promise<void> => {

@@ -19,9 +19,9 @@ const usernameValidator = z
   .toLowerCase();
 
 const submitStepOneSchema = z.object({
-  name: nameValidator,
+  name: nameValidator.optional(),
   timezone: z.string().optional(),
-  username: usernameValidator,
+  username: usernameValidator.optional(),
 });
 
 const submitStepTwoSchema = z

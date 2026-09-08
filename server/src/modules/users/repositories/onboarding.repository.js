@@ -58,13 +58,27 @@ class OnboardingRepository extends BaseRepository {
    * @param {import('@prisma/client').PrismaClient | import('@prisma/client').Prisma.TransactionClient} [client=prisma] - Transaction or client instance.
    * @returns {Promise<import('@prisma/client').users>} Updated user record.
    */
-  async updateProfile(userId, { name, username, timezone }, client = prisma) {
+  async updateProfile(userId, profileData, client = prisma) {
+    const data = {};
+
+    if (typeof profileData.name === "string") {
+      data.name = profileData.name;
+    }
+
+    if (typeof profileData.username === "string") {
+      data.username = profileData.username;
+    }
+
+    if (typeof profileData.timezone === "string") {
+      data.timezone = profileData.timezone || null;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return await client.users.findUnique({ where: { user_id: userId } });
+    }
+
     return await client.users.update({
-      data: {
-        name,
-        timezone: timezone || null,
-        username,
-      },
+      data,
       where: { user_id: userId },
     });
   }

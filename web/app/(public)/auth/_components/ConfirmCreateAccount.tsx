@@ -150,18 +150,14 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
           router.push(
             user?.org_public_id
               ? `/${user.org_public_id}/home`
-              : user?.public_id
-                ? `/${user.public_id}/home`
-                : "/home"
+              : "/onboarding"
           )
         }
         onComplete={() =>
           router.push(
             user?.org_public_id
               ? `/${user.org_public_id}/home`
-              : user?.public_id
-                ? `/${user.public_id}/home`
-                : "/home"
+              : "/onboarding"
           )
         }
       />
@@ -278,9 +274,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                     router.push(
                       user?.org_public_id
                         ? `/${user.org_public_id}/home`
-                        : user?.public_id
-                          ? `/${user.public_id}/home`
-                          : "/home"
+                        : "/onboarding"
                     )
                   }
                   className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border bg-white px-4 py-1.5 text-sm font-medium transition-colors"

@@ -3,10 +3,14 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import {
   login as loginService,
+  loginWithCode as loginWithCodeService,
   logout as logoutService,
   getUserData as getUserDataService,
   createUserService,
   activateAccountService,
+  requestLoginCode as requestLoginCodeService,
+  discoverSamlSso as discoverSamlSsoService,
+  startSamlSsoLogin as startSamlSsoLoginService,
   updateUserData,
   updatePassword,
   type UserUniqueField,
@@ -21,6 +25,7 @@ import {
   type CreateUserData,
   type ActivateAccountPayload,
   type LoginResponse,
+  type SamlSsoDiscoverResponse,
 } from "../_services/authentication/auth-service";
 import { setUnauthorizedHandler } from "../_services/session-invalidation";
 import { ApiError } from "../_services/api-error";
@@ -59,6 +64,10 @@ type AuthContextType = {
     usernameOrPayload: string | { login: string; password: string },
     password?: string
   ) => Promise<LoginResult>;
+  requestLoginCode: (login: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithCode: (payload: { login: string; code: string }) => Promise<LoginResult>;
+  discoverSamlSso: (email: string) => Promise<SamlSsoDiscoverResponse>;
+  startSamlSsoLogin: (organizationId: string) => void;
   loginWithGoogle: () => void;
   loginWithGithub: () => void;
   loginWithMicrosoft: () => void;
@@ -252,6 +261,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const requestLoginCode = async (login: string) => {
+    try {
+      const data = await requestLoginCodeService({ login });
+      return { success: true, message: data.message };
+    } catch (error) {
+      return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    }
+  };
+
+  const loginWithCode = async (payload: { login: string; code: string }) => {
+    setLoading(true);
+
+    try {
+      const response = await loginWithCodeService(payload);
+
+      if (response && response.user) {
+        try {
+          const fullUserData = await getUserDataService();
+          setUser(fullUserData);
+          const fullUserThemeMode = toUiThemeMode(fullUserData.theme_mode);
+          if (fullUserThemeMode) {
+            setTheme(fullUserThemeMode);
+          }
+        } catch {
+          setUser(response.user);
+          const responseUserThemeMode = toUiThemeMode(response.user.theme_mode);
+          if (responseUserThemeMode) {
+            setTheme(responseUserThemeMode);
+          }
+        }
+
+        return { success: true as const, data: response };
+      }
+
+      throw new Error("Resposta de login inválida");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro de conexão";
+      const errorData = err instanceof ApiError ? err.data : undefined;
+      return { success: false as const, message, data: errorData };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const discoverSamlSso = async (email: string) => {
+    try {
+      return await discoverSamlSsoService({ email });
+    } catch (error) {
+      logClientError("auth.discoverSamlSso", error);
+      return {
+        success: false,
+        requires_sso: false,
+      };
+    }
+  };
+
+  const startSamlSsoLogin = (organizationId: string) => {
+    startSamlSsoLoginService(organizationId);
+  };
+
   const loginWithGoogle = () => {
     initiateGoogleLogin();
   };
@@ -405,6 +474,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshUser,
         mergeUser,
         login,
+        requestLoginCode,
+        loginWithCode,
+        discoverSamlSso,
+        startSamlSsoLogin,
         loginWithGoogle,
         loginWithGithub,
         loginWithMicrosoft,

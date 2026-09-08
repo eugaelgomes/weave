@@ -152,7 +152,15 @@ export default function AuthPage() {
       return;
     }
 
-    if (view === "confirm" || token || code) {
+    if (view === "signin") {
+      setCurrentView("signin");
+      if (queryLogin) {
+        setPendingLogin(queryLogin);
+      }
+      return;
+    }
+
+    if (view === "confirm" || token || (code && !queryLogin)) {
       setCurrentView("confirm");
       if (queryLogin) {
         setPendingLogin(queryLogin);
@@ -200,7 +208,15 @@ export default function AuthPage() {
           </div>
 
           <div className="w-full">
-            {currentView === "signin" && <SignIn onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />}
+            {currentView === "signin" && (
+              <SignIn
+                onNavigate={handleNavigate}
+                locale={locale.toLowerCase() as any}
+                initialLogin={pendingLogin ?? searchParams.get("login") ?? undefined}
+                initialCode={searchParams.get("code") ?? undefined}
+                initialMode={searchParams.get("code") ? "code" : undefined}
+              />
+            )}
             {currentView === "signup" && <SignUp onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />}
             {currentView === "forgot" && <ForgotPassword onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />}
             {currentView === "reset-password" && (
@@ -239,4 +255,3 @@ export default function AuthPage() {
     </div>
   );
 }
-

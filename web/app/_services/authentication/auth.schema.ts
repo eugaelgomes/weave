@@ -336,9 +336,32 @@ export const LoginCredentialsSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const LoginCodeRequestSchema = z.object({
+  login: z.string().trim().min(1, "Login is required"),
+});
+
+export const LoginCodeVerificationSchema = z.object({
+  login: z.string().trim().min(1, "Login is required"),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Invalid code format."),
+});
+
+export const SamlSsoDiscoverRequestSchema = z.object({
+  email: z.string().trim().email("Invalid email"),
+});
+
+export const SamlSsoDiscoverResponseSchema = z.object({
+  success: z.boolean(),
+  requires_sso: z.boolean().optional(),
+  organization_id: z.string().uuid().optional(),
+  provider: z.string().optional(),
+});
+
 export const CreateUserDataSchema = z.object({
   name: z.string().optional(),
-  username: z.string().min(3),
+  username: z.string().min(3).optional(),
   email: EmailNoPlusAliasSchema,
   password: z.string().min(6),
   user_name: z.string().optional(),
@@ -363,5 +386,9 @@ export type BackendOrganization = z.infer<typeof BackendOrganizationSchema>;
 export type BackendAuthResponse = z.infer<typeof BackendAuthResponseSchema>;
 export type BackendMeResponse = z.infer<typeof BackendMeResponseSchema>;
 export type LoginCredentials = z.infer<typeof LoginCredentialsSchema>;
+export type LoginCodeRequest = z.infer<typeof LoginCodeRequestSchema>;
+export type LoginCodeVerification = z.infer<typeof LoginCodeVerificationSchema>;
+export type SamlSsoDiscoverRequest = z.infer<typeof SamlSsoDiscoverRequestSchema>;
+export type SamlSsoDiscoverResponse = z.infer<typeof SamlSsoDiscoverResponseSchema>;
 export type CreateUserData = z.infer<typeof CreateUserDataSchema>;
 export type ActivateAccountPayload = z.infer<typeof ActivateAccountPayloadSchema>;

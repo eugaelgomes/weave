@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const Sentry = require("@sentry/node");
-const LookupApiTokensRepository = require("@/modules/api-tokens/repositories/lookup-api-tokens.repository");
+const WorkspaceTokensRepository = require("@/modules/workspaces/repositories/tokens.repository");
 const { jwtPayloadSchema } = require("@/modules/authentication/schemas/session.schema");
 
 /**
@@ -34,7 +34,7 @@ const verifyToken = async (req, res, next) => {
       const keyPrefix = prefixPart.replace("wn_", "");
 
       // Fetch and validate business rules of the API Token
-      const tokenRecord = await LookupApiTokensRepository.getTokenByKeyPrefix(keyPrefix);
+      const tokenRecord = await WorkspaceTokensRepository.getTokenByKeyPrefix(keyPrefix);
 
       if (!tokenRecord) {
         return res.status(401).json({ error: "API Token not found or inactive." });

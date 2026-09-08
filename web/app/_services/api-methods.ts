@@ -55,6 +55,10 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Auth
   SIGNIN: "/auth/signin",
+  SIGNIN_CODE_REQUEST: "/auth/signin/code/request",
+  SIGNIN_CODE_VERIFY: "/auth/signin/code/verify",
+  SAML_SSO_DISCOVER: "/auth/sso/discover",
+  SAML_SSO_LOGIN: (organizationId: string) => `/auth/sso/saml/${organizationId}/login`,
   SIGNUP: "/users/signup",
   LOGOUT: "/auth/logout",
   ME: "/users/me",
@@ -73,6 +77,9 @@ export const API_ENDPOINTS = {
   DELETE_ACCOUNT: "/users/delete-my-account",
   CREATE_ACCOUNT: "/users/create-account",
   USERS: "/auth/users",
+  ONBOARDING_STEP_ONE: "/users/me/onboarding/step-1",
+  ONBOARDING_STEP_TWO: "/users/me/onboarding/step-2",
+  ONBOARDING_STEP_THREE: "/users/me/onboarding/step-3-complete",
 
   /** Lean plan + usage + gates for the authenticated web session */
   PLANS_ME: "/plans/me",

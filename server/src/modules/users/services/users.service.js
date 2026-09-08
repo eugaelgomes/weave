@@ -21,6 +21,37 @@ const { normalizeAppPreferences } = require("@/modules/users/utils/normalize");
 
 const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
 
+const normalizeDisplayName = (value) => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const buildDisplayNameFromEmail = (email) => {
+  const localPart = String(email || "")
+    .split("@")[0]
+    .replace(/[._-]+/g, " ")
+    .trim();
+
+  if (!localPart) return "New user";
+
+  return localPart
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
+const buildUsernameBaseFromEmail = (email) => {
+  const localPart = String(email || "")
+    .split("@")[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, ".")
+    .replace(/^[._-]+|[._-]+$/g, "");
+
+  return (localPart || "user").slice(0, 32);
+};
+
 class UsersService {
   /**
    * Fetches the user by ID
@@ -85,20 +116,53 @@ class UsersService {
 
     await this._validateCorporateDomain(email, existingPendingUser);
 
-    const userName = user_name || name;
+    const storedName =
+      normalizeDisplayName(name) ||
+      normalizeDisplayName(user_name) ||
+      normalizeDisplayName(existingPendingUser?.name) ||
+      null;
+
+    const displayName = storedName || buildDisplayNameFromEmail(email);
+    const providedUsername = normalizeUsername(username);
+    const existingUsername = normalizeUsername(existingPendingUser?.username);
+    const baseUsername = buildUsernameBaseFromEmail(email);
+    const usernameBase = providedUsername || existingUsername || baseUsername;
 
     const availability = await UsersRepository.checkUniqueAvailability(
       {
         email,
         phone_number,
-        username,
+        username: usernameBase,
       },
       existingPendingUser ? { excludeUserId: existingPendingUser.user_id } : {}
     );
 
     if (!availability.email.available) return { conflict: "email" };
-    if (!availability.username.available) return { conflict: "username" };
     if (!availability.phone_number.available) return { conflict: "phone_number" };
+    if (providedUsername && !availability.username.available) return { conflict: "username" };
+
+    let usernameToUse = providedUsername || existingUsername;
+    if (!usernameToUse) {
+      const candidatePrefix = baseUsername.slice(0, 24);
+      usernameToUse = null;
+
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const suffix = attempt === 0 ? "" : `-${crypto.randomBytes(3).toString("hex")}`;
+        const candidateBase = candidatePrefix.slice(0, Math.max(1, 50 - suffix.length));
+        const candidate = `${candidateBase}${suffix}`;
+        const candidateAvailability = await UsersRepository.checkUniqueAvailability(
+          { username: candidate },
+          existingPendingUser ? { excludeUserId: existingPendingUser.user_id } : {}
+        );
+
+        if (candidateAvailability.username.available) {
+          usernameToUse = candidate;
+          break;
+        }
+      }
+    }
+
+    if (!usernameToUse) return { conflict: "username" };
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -115,7 +179,7 @@ class UsersService {
           existingPendingUser.user_id,
           {
             birth_date,
-            name: userName,
+            name: storedName,
             onboarding_state: {
               completed_steps: ["terms"],
               step: "TERMS_ACCEPTED",
@@ -126,7 +190,7 @@ class UsersService {
             phone_number,
             private_profile,
             timezone,
-            username,
+            username: usernameToUse,
           },
           client
         );
@@ -138,7 +202,7 @@ class UsersService {
             avatar_url: null,
             birth_date,
             email,
-            name: userName,
+            name: storedName,
             onboarding_state: {
               completed_steps: ["terms"],
               step: "TERMS_ACCEPTED",
@@ -149,7 +213,7 @@ class UsersService {
             phone_number,
             private_profile,
             timezone,
-            username,
+            username: usernameToUse,
           },
           client
         );
@@ -169,8 +233,8 @@ class UsersService {
         createdAt: createdDate,
         email,
         userId,
-        userName,
-        username,
+        userName: displayName,
+        username: usernameToUse,
       };
     });
 
