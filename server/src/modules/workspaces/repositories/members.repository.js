@@ -1,4 +1,4 @@
-const prisma = require("@theweave/database");
+const { prisma } = require("@theweave/database");
 const { generatePublicId } = require("@/utils/formatters.util");
 
 /**
