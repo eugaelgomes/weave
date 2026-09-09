@@ -67,6 +67,7 @@ export const API_ENDPOINTS = {
   GITHUB_AUTH: "/auth/signin/sso/github",
   MICROSOFT_AUTH: "/auth/signin/sso/microsoft",
   ACTIVATE_ACCOUNT: "/users/activate-account",
+  RESEND_ACTIVATION_CODE: "/users/resend-activation-code",
 
   // User Management
   UPDATE_PROFILE: "/users/me/update-profile",

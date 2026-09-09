@@ -7,19 +7,38 @@ const requiredEnvVars = [
   "DATABASE_PASSWORD",
   "DATABASE_NAME",
   "NODE_ENV",
-  "RESEND_API_KEY",
-  "EMAIL_FROM",
   "CONTACT_EMAIL",
   "FRONTEND_URL",
   // S3_* vars are optional — SpacesService disables itself gracefully when unconfigured
   // API_URL is optional — backup processor falls back to http://localhost:8080
 ];
 
-function validateEnv() {
-  const missing = requiredEnvVars.filter((key) => !process.env[key]);
+function parseBoolean(value, defaultValue = false) {
+  if (value === undefined) return defaultValue;
+  return value.toLowerCase() === "true";
+}
 
-  if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
+function validateEnv() {
+  const transport = (process.env.EMAIL_TRANSPORT || "smtp").toLowerCase();
+  const missing = [...requiredEnvVars];
+
+  if (transport === "smtp") {
+    missing.push("EMAIL_FROM", "EMAIL_SMTP_HOST", "EMAIL_SMTP_USER", "EMAIL_SMTP_PASSWORD");
+  }
+
+  const unset = missing.filter((key) => !process.env[key]);
+
+  if (unset.length > 0) {
+    throw new Error(`Missing required environment variables: ${unset.join(", ")}`);
+  }
+
+  if (!["smtp", "noop"].includes(transport)) {
+    throw new Error("EMAIL_TRANSPORT must be either 'smtp' or 'noop'");
+  }
+
+  const smtpPort = parseInt(process.env.EMAIL_SMTP_PORT || "587", 10);
+  if (transport === "smtp" && (!Number.isInteger(smtpPort) || smtpPort < 1 || smtpPort > 65535)) {
+    throw new Error("EMAIL_SMTP_PORT must be a valid TCP port");
   }
 
   return true;
@@ -37,7 +56,15 @@ const env = {
     contactEmail: process.env.CONTACT_EMAIL,
     from: process.env.EMAIL_FROM,
     logoUrl: process.env.EMAIL_LOGO_URL,
-    resendApiKey: process.env.RESEND_API_KEY,
+    smtp: {
+      host: process.env.EMAIL_SMTP_HOST,
+      password: process.env.EMAIL_SMTP_PASSWORD,
+      port: parseInt(process.env.EMAIL_SMTP_PORT || "587", 10),
+      requireTls: parseBoolean(process.env.EMAIL_SMTP_REQUIRE_TLS),
+      secure: parseBoolean(process.env.EMAIL_SMTP_SECURE),
+      user: process.env.EMAIL_SMTP_USER,
+    },
+    transport: (process.env.EMAIL_TRANSPORT || "smtp").toLowerCase(),
   },
   isDevelopment: process.env.NODE_ENV !== "production",
 

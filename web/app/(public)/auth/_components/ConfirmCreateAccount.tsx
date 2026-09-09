@@ -1,16 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { ChevronRight, KeyRound, MailCheck } from "lucide-react";
+import { ChevronRight, MailCheck, RotateCcw } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SetProfileSettings } from "./SetProfileSettings";
+import { resendActivationCodeService } from "@/app/_services/authentication/auth.account";
 
 interface Props {
   onNavigate: (
     view: "signin" | "signup" | "forgot" | "confirm" | "profile-settings" | "accept-invite",
-    payload?: { email?: string; password?: string }
+    payload?: { email?: string; login?: string; mode?: "code"; password?: string }
   ) => void;
   email?: string;
   pendingAuth?: { email?: string; login?: string; password?: string };
@@ -39,7 +40,9 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
 
   const [verificationEmail, setVerificationEmail] = useState(initialEmail);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [canSetupProfile, setCanSetupProfile] = useState(false);
@@ -77,7 +80,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
         return;
       }
 
-      setSuccessMessage(activationResult.message || confirmT.successMessage);
+      setSuccessMessage(confirmT.successMessage);
 
       const autoLoginEmail = pendingAuth?.email || pendingAuth?.login || verificationEmail;
       if (autoLoginEmail && pendingAuth?.password) {
@@ -142,23 +145,35 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
     }
   };
 
+  const handleResend = async () => {
+    const recipient = verificationEmail.trim();
+    if (!recipient) {
+      setError(confirmT.missingEmailError);
+      return;
+    }
+
+    setIsResending(true);
+    setError(null);
+    setResendMessage(null);
+    try {
+      await resendActivationCodeService(recipient);
+      setResendMessage(confirmT.codeResent);
+    } catch (resendError) {
+      setError(resendError instanceof Error ? resendError.message : confirmT.resendError);
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   if (showProfileSetup) {
     return (
       <SetProfileSettings
         locale={locale}
         onSkip={() =>
-          router.push(
-            user?.org_public_id
-              ? `/${user.org_public_id}/home`
-              : "/onboarding"
-          )
+          router.push(user?.org_public_id ? `/${user.org_public_id}/home` : "/onboarding")
         }
         onComplete={() =>
-          router.push(
-            user?.org_public_id
-              ? `/${user.org_public_id}/home`
-              : "/onboarding"
-          )
+          router.push(user?.org_public_id ? `/${user.org_public_id}/home` : "/onboarding")
         }
       />
     );
@@ -167,26 +182,21 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
   const isCodeComplete = codeArray.join("").length === 6;
 
   return (
-    <div className="flex w-full flex-col items-center justify-center px-6 py-2 sm:px-8">
+    <div className="flex w-full flex-col items-center justify-center px-6 py-4 sm:px-8">
       <div className="flex w-full max-w-sm flex-col items-center text-center">
-        <div className="bg-brand-secondary-100 text-brand-primary-500 mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
-          <MailCheck className="h-7 w-7" />
+        <div className="bg-brand-secondary-100 text-brand-primary-500 mb-3 flex h-11 w-11 items-center justify-center rounded-full">
+          <MailCheck className="h-5 w-5" />
         </div>
 
-        <h1 className="text-brand-secondary-900 mb-1.5 text-xl font-bold tracking-tight sm:text-2xl">
+        <h1 className="text-brand-secondary-900 mb-1.5 text-xl font-semibold tracking-tight sm:text-2xl">
           {confirmT.title}
         </h1>
 
         <p className="text-brand-secondary-500 mb-4 text-sm leading-relaxed">{confirmT.subtitle}</p>
 
         {!successMessage ? (
-          <div className="border-brand-secondary-200/60 w-full rounded-xl border bg-white p-4 shadow-sm sm:p-4">
-            <div className="text-brand-secondary-800 mb-3 flex items-center gap-2 text-sm font-semibold">
-              <KeyRound className="text-brand-secondary-500 h-4 w-4" />
-              <span>{confirmT.sectionTitle}</span>
-            </div>
-
-            <div className="flex flex-col gap-3.5 text-left">
+          <div className="w-full text-left">
+            <div className="flex flex-col gap-4">
               {!initialEmail && (
                 <div className="space-y-1.5">
                   <label className="text-brand-secondary-600 text-xs font-medium">E-mail</label>
@@ -203,9 +213,9 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
 
               <div className="space-y-1.5">
                 <label className="text-brand-secondary-600 text-xs font-medium">
-                  Código de Verificação
+                  {confirmT.codeLabel}
                 </label>
-                <div className="flex justify-between gap-2" onPaste={handleCodePaste}>
+                <div className="flex justify-between gap-1.5 sm:gap-2" onPaste={handleCodePaste}>
                   {codeArray.map((digit, index) => (
                     <input
                       key={index}
@@ -219,7 +229,8 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                       onChange={(e) => handleCodeChange(index, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(index, e)}
                       disabled={isLoading}
-                      className="border-brand-secondary-200 text-brand-secondary-900 focus:ring-brand-primary-700 h-9 w-9 rounded-md border bg-white text-center text-base font-bold transition-all focus:ring-2 focus:outline-none disabled:opacity-50 sm:h-10 sm:w-10 sm:text-lg"
+                      aria-label={`${confirmT.codeLabel} ${index + 1}`}
+                      className="border-brand-secondary-200 text-brand-secondary-900 focus:border-brand-primary-500 focus:ring-brand-primary-500/15 h-10 w-10 rounded-lg border bg-white text-center text-base font-semibold transition-colors focus:ring-4 focus:outline-none disabled:opacity-50"
                     />
                   ))}
                 </div>
@@ -243,14 +254,31 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={() => void handleActivation()}
-                disabled={isLoading || !isCodeComplete}
-                className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 mt-2 w-full rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-              >
-                {isLoading ? confirmT.validating : confirmT.confirmButton}
-              </button>
+              {resendMessage && (
+                <p className="text-brand-secondary-500 text-center text-xs" role="status">
+                  {resendMessage}
+                </p>
+              )}
+
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => void handleResend()}
+                  disabled={isLoading || isResending}
+                  className="text-brand-secondary-600 hover:text-brand-primary-600 inline-flex items-center gap-1.5 px-1 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  <RotateCcw className={`h-3.5 w-3.5 ${isResending ? "animate-spin" : ""}`} />
+                  {isResending ? confirmT.resending : confirmT.resendButton}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleActivation()}
+                  disabled={isLoading || isResending || !isCodeComplete}
+                  className="bg-brand-primary-500 hover:bg-brand-primary-800 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:pointer-events-none disabled:opacity-50"
+                >
+                  {isLoading ? confirmT.validating : confirmT.confirmButton}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -259,30 +287,38 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
               {successMessage}
             </div>
 
-            {canSetupProfile && (
-              <div className="flex w-full flex-col gap-2">
+            <div className="flex w-full flex-col gap-2">
+              {canSetupProfile ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileSetup(true)}
+                    className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 w-full rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+                  >
+                    {confirmT.setupProfile}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      router.push(
+                        user?.org_public_id ? `/${user.org_public_id}/home` : "/onboarding"
+                      )
+                    }
+                    className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border bg-white px-4 py-1.5 text-sm font-medium transition-colors"
+                  >
+                    {confirmT.skipAndEnter}
+                  </button>
+                </>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => setShowProfileSetup(true)}
-                  className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 w-full rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+                  onClick={() => onNavigate("signin", { login: verificationEmail, mode: "code" })}
+                  className="bg-brand-primary-500 hover:bg-brand-primary-800 w-full rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
                 >
-                  {confirmT.setupProfile}
+                  {confirmT.continueToSignIn}
                 </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    router.push(
-                      user?.org_public_id
-                        ? `/${user.org_public_id}/home`
-                        : "/onboarding"
-                    )
-                  }
-                  className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border bg-white px-4 py-1.5 text-sm font-medium transition-colors"
-                >
-                  {confirmT.skipAndEnter}
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 

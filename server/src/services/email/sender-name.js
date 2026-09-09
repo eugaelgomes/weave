@@ -1,6 +1,3 @@
-/** Default From header for development (Resend onboarding domain). */
-const DEV_SENDER = "Weave <onboarding@resend.dev>";
-
 /**
  * Normalizes display name in EMAIL_FROM (e.g. "Weave Notes <x>" → "Weave <x>").
  *
@@ -15,4 +12,4 @@ function normalizeSenderFrom(from) {
   return from.replace(/^Weave Notes(?=\s*<|\s|$)/, "Weave");
 }
 
-module.exports = { DEV_SENDER, normalizeSenderFrom };
+module.exports = { normalizeSenderFrom };

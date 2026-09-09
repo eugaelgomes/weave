@@ -16,6 +16,7 @@ const { validate } = require("@/middlewares/validation/validate");
 const {
   createAccountSchema,
   activateAccountSchema,
+  resendActivationCodeSchema,
   checkUsernamePublicSchema,
   checkAvailabilitySchema,
   updateProfileSchema,
@@ -50,6 +51,13 @@ router.post(
   standardTrafficLimiter,
   validate(activateAccountSchema, "body"),
   UsersController.activateAccount.bind(UsersController)
+);
+
+router.post(
+  "/resend-activation-code",
+  standardTrafficLimiter,
+  validate(resendActivationCodeSchema, "body"),
+  UsersController.resendActivationCode.bind(UsersController)
 );
 
 // User Data

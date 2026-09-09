@@ -9,8 +9,8 @@ class UserTokensRepository extends BaseRepository {
    * @param {string|number} userId
    * @returns {Promise<any>}
    */
-  async deactivateOldEmailTokens(userId) {
-    return await prisma.tokens.updateMany({
+  async deactivateOldEmailTokens(userId, client = prisma) {
+    return await client.tokens.updateMany({
       data: {
         active: false,
       },

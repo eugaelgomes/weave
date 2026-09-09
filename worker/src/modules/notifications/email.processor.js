@@ -1,30 +1,22 @@
-const { Resend } = require("resend");
 const { redisConsumer: redis } = require("@theweave/database");
 const { getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
-const { DEV_SENDER, normalizeSenderFrom } = require("../../mail/sender-name");
+const { createMailService } = require("../../mail/sender");
 const { logger } = require("@theweave/database");
 
 class EmailProcessor {
   constructor() {
-    if (!process.env.RESEND_API_KEY) {
-      logger.warn("[Email Processor] RESEND_API_KEY is not defined. Email processor disabled.");
-      this.resend = null;
-    } else {
-      this.resend = new Resend(process.env.RESEND_API_KEY);
-    }
+    this.mailService = createMailService();
     this.isRunning = false;
+  }
+
+  async verifyTransport() {
+    return this.mailService.verify();
   }
 
   async start() {
     if (this.isRunning) return;
+    await this.verifyTransport();
     this.isRunning = true;
-
-    if (!process.env.RESEND_API_KEY) {
-      logger.warn(
-        "[Email Processor] RESEND_API_KEY is not defined. Email queue processor will exit."
-      );
-      return;
-    }
 
     const queueName = getEmailQueueRedisKey();
     logger.info(`[Email Processor] Listening for jobs on list: ${queueName}`);
@@ -52,38 +44,10 @@ class EmailProcessor {
     logger.info(`[Email Processor] Processing email job to: ${payload.to.join(", ")}`);
 
     try {
-      const outbound = {
-        ...payload,
-        from: normalizeSenderFrom(payload.from),
-      };
-
-      let { data, error } = await this.resend.emails.send(outbound);
-
-      const errorMessage = error?.message || "";
-      const shouldRetryWithOnboardingSender =
-        process.env.NODE_ENV !== "production" &&
-        outbound.from !== DEV_SENDER &&
-        /domain|verify|verified/i.test(errorMessage);
-
-      if (shouldRetryWithOnboardingSender) {
-        logger.info("[Email Processor] Retrying email with onboarding sender...");
-        ({ data, error } = await this.resend.emails.send({
-          ...outbound,
-          from: DEV_SENDER,
-        }));
-      }
-
-      if (error) {
-        const details = [error.message, error.name, error.statusCode].filter(Boolean).join(" | ");
-        logger.error(
-          `[Email Processor] Resend API Error on job to ${payload.to.join(", ")}: ${details}`,
-          { error }
-        );
-        return false;
-      }
+      const result = await this.mailService.sendMail(payload);
 
       logger.info(
-        `[Email Processor] Email successfully sent to ${payload.to.join(", ")}. Status ID: ${data?.id}`
+        `[Email Processor] Email successfully sent to ${payload.to.join(", ")}. Status ID: ${result.id}`
       );
       return true;
     } catch (error) {

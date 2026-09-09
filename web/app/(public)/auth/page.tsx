@@ -53,7 +53,7 @@ function LanguageToggle({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 z-50 mt-1.5 w-32 rounded-md bg-white p-1 shadow-lg ring-1 ring-black/5 text-xs">
+          <div className="absolute left-0 z-50 mt-1.5 w-32 rounded-md bg-white p-1 text-xs shadow-lg ring-1 ring-black/5">
             {(["pt-BR", "en-US", "es-ES"] as const).map((langKey) => (
               <button
                 key={langKey}
@@ -91,6 +91,7 @@ export type AuthView =
 export interface PendingAuthData {
   email?: string;
   login?: string;
+  mode?: "code";
   password?: string;
 }
 
@@ -122,12 +123,17 @@ export default function AuthPage() {
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", view);
 
-    if (view === "confirm" && confirmIdentifier) {
+    if ((view === "confirm" || view === "signin") && confirmIdentifier) {
       params.set("login", confirmIdentifier);
+    }
+
+    if (view === "signin" && payload?.mode === "code") {
+      params.set("mode", "code");
     } else if (view !== "confirm") {
       params.delete("token");
       params.delete("code");
       params.delete("login");
+      params.delete("mode");
     }
 
     const query = params.toString();
@@ -180,16 +186,16 @@ export default function AuthPage() {
     <div className="flex min-h-[100dvh] w-full bg-white">
       {/* Left Pane - Auth Form */}
       <div className="relative flex w-full flex-col items-center justify-center p-4 text-slate-950 sm:p-8 lg:w-1/2">
-        <div className="absolute left-8 top-8 hidden lg:flex items-center gap-2.5">
+        <div className="absolute top-8 left-8 hidden items-center gap-2.5 lg:flex">
           <span
             className={cn(
-              "text-slate-800 text-2xl font-extrabold tracking-tight",
+              "text-2xl font-extrabold tracking-tight text-slate-800",
               fredoka.className
             )}
           >
             Weave
           </span>
-          <span className="text-neutral-300 font-light select-none">|</span>
+          <span className="font-light text-neutral-300 select-none">|</span>
           <LanguageToggle locale={locale as SupportedLocale} setLocale={setLocale} />
         </div>
 
@@ -197,13 +203,13 @@ export default function AuthPage() {
           <div className="mb-8 flex items-center justify-center gap-2.5 text-center lg:hidden">
             <span
               className={cn(
-                "text-slate-800 mt-0.5 text-3xl font-extrabold tracking-tight",
+                "mt-0.5 text-3xl font-extrabold tracking-tight text-slate-800",
                 fredoka.className
               )}
             >
               Weave
             </span>
-            <span className="text-neutral-300 font-light select-none">|</span>
+            <span className="font-light text-neutral-300 select-none">|</span>
             <LanguageToggle locale={locale as SupportedLocale} setLocale={setLocale} />
           </div>
 
@@ -214,11 +220,19 @@ export default function AuthPage() {
                 locale={locale.toLowerCase() as any}
                 initialLogin={pendingLogin ?? searchParams.get("login") ?? undefined}
                 initialCode={searchParams.get("code") ?? undefined}
-                initialMode={searchParams.get("code") ? "code" : undefined}
+                initialMode={
+                  searchParams.get("code") || searchParams.get("mode") === "code"
+                    ? "code"
+                    : undefined
+                }
               />
             )}
-            {currentView === "signup" && <SignUp onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />}
-            {currentView === "forgot" && <ForgotPassword onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />}
+            {currentView === "signup" && (
+              <SignUp onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />
+            )}
+            {currentView === "forgot" && (
+              <ForgotPassword onNavigate={handleNavigate} locale={locale.toLowerCase() as any} />
+            )}
             {currentView === "reset-password" && (
               <ResetPassword
                 onNavigate={handleNavigate}
@@ -249,7 +263,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right Pane - same white background */}
-      <div className="relative hidden w-1/2 overflow-hidden lg:block bg-white">
+      <div className="relative hidden w-1/2 overflow-hidden bg-white lg:block">
         <WeaveLogoAnimation />
       </div>
     </div>

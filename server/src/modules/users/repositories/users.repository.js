@@ -106,7 +106,7 @@ class UsersRepository extends BaseRepository {
       onboarding_state,
     } = userData;
 
-    const resolvedPlanId = plan_id || (await PlansRepository.getDefaultSignupPlanId());
+    const resolvedPlanId = plan_id || (await PlansRepository.getDefaultSignupPlanId(client));
     const publicUserId = generatePublicId();
 
     return await client.users.create({

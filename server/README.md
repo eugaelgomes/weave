@@ -27,7 +27,7 @@ src/
 │   └── connection.js      # PostgreSQL pool (`executeQuery`, …)
 ├── services/
 │   ├── queue/             # Redis producers and keys
-│   ├── email/             # Resend + templates
+│   ├── email/             # SMTP queue + templates
 │   ├── reasoning/         # Engine trigger/response consumers (in API process)
 │   ├── plans/             # Plan paths and helpers
 │   ├── storage/           # S3-compatible object storage
@@ -85,7 +85,11 @@ docker compose up server --build
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`      | Google OAuth                                          |
 | `GOOGLE_REDIRECT_URI`                            | Google OAuth callback                                 |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`      | GitHub OAuth                                          |
-| `RESEND_API_KEY`                                 | Resend transactional email                            |
+| `EMAIL_TRANSPORT`                                | Email transport (`smtp` or `noop`)                    |
+| `EMAIL_SMTP_HOST` / `EMAIL_SMTP_PORT`            | SMTP server host and port                             |
+| `EMAIL_SMTP_USER` / `EMAIL_SMTP_PASSWORD`        | SMTP credentials                                      |
+| `EMAIL_SMTP_SECURE` / `EMAIL_SMTP_REQUIRE_TLS`   | SMTP TLS settings                                     |
+| `EMAIL_FROM`                                     | Default transactional sender                           |
 | `S3_ENDPOINT`                             | S3 endpoint (e.g. AWS S3, MinIO, DO Spaces)           |
 | `S3_ACCESS_KEY` / `S3_SECRET_KEY`         | Object storage keys                                   |
 | `S3_BUCKET_NAME` / `S3_REGION`            | Bucket and region                                     |
@@ -194,7 +198,7 @@ Use `next(fromUnknown(err))` or `throw AppError.*` for operational failures. Pub
 | `pg`                                     | PostgreSQL client               |
 | `connect-pg-simple`                      | Session store in PostgreSQL     |
 | `ioredis`                                | Redis queues                    |
-| `resend`                                 | Transactional email             |
+| `nodemailer`                             | SMTP email delivery (worker)    |
 | `@aws-sdk/client-s3`                     | Object storage                  |
 | `@google/generative-ai`                  | Gemini (where invoked from API) |
 | `multer` / `sharp`                       | Uploads and images              |

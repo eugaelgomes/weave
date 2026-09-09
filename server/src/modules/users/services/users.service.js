@@ -1,4 +1,4 @@
-const { withTransaction } = require("@/database/connection");
+const { prisma } = require("@theweave/database");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
@@ -10,6 +10,7 @@ const settingsRepository = require("@/modules/workspaces/repositories/settings.r
 
 const updateProfileLogs = require("@/modules/users/utils/user-logs.util");
 const { sendEmailChangeValidation } = require("@/services/email/templates/reset-password");
+const { send_code } = require("@/services/email/templates/send-code");
 const spacesService = require("@/services/storage.service");
 
 const {
@@ -107,7 +108,7 @@ class UsersService {
 
     let existingPendingUser = null;
     if (existingUser) {
-      if (existingUser.status === "PENDING_INVITE") {
+      if (existingUser.status === "PENDING_INVITE" || !existingUser.email_verified) {
         existingPendingUser = existingUser;
       } else {
         return { conflict: "email" };
@@ -170,7 +171,7 @@ class UsersService {
     const activationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const currentDateTime = new Date().toISOString().slice(0, 19).replace("T", " ");
 
-    const result = await withTransaction(async (client) => {
+    const result = await prisma.$transaction(async (client) => {
       let userId;
       let createdDate;
 
@@ -179,7 +180,7 @@ class UsersService {
           existingPendingUser.user_id,
           {
             birth_date,
-            name: storedName,
+            name: displayName,
             onboarding_state: {
               completed_steps: ["terms"],
               step: "TERMS_ACCEPTED",
@@ -194,15 +195,15 @@ class UsersService {
           },
           client
         );
-        userId = activatedUser[0].user_id;
-        createdDate = activatedUser[0].created_at;
+        userId = activatedUser.user_id;
+        createdDate = activatedUser.created_at;
       } else {
         const newUser = await UsersRepository.createUser(
           {
             avatar_url: null,
             birth_date,
             email,
-            name: storedName,
+            name: displayName,
             onboarding_state: {
               completed_steps: ["terms"],
               step: "TERMS_ACCEPTED",
@@ -217,10 +218,11 @@ class UsersService {
           },
           client
         );
-        userId = newUser[0].user_id;
-        createdDate = newUser[0].created_at;
+        userId = newUser.user_id;
+        createdDate = newUser.created_at;
       }
 
+      await UserTokensRepository.deactivateOldEmailTokens(userId, client);
       await UserTokensRepository.createEmailActivationToken(
         userId,
         activationToken,
@@ -238,7 +240,51 @@ class UsersService {
       };
     });
 
+    // Queue only after commit so the code is valid when the recipient receives it.
+    const emailResult = await send_code({
+      code: activationCode,
+      email: result.email,
+      name: result.userName,
+    });
+
+    if (!emailResult.success) {
+      // Account creation remains successful; the user can retry confirmation
+      // instead of losing a committed account because the queue is unavailable.
+      console.error("Failed to queue account activation email:", emailResult.error);
+    }
+
     return { success: true, user: result };
+  }
+
+  /** Replaces a pending account's verification code and queues it for delivery. */
+  async resendActivationCode(email) {
+    const normalizedEmail = normalizeEmail(email);
+    const users = await UsersRepository.findByUsernameOrEmail("", normalizedEmail);
+    const user = users.find((candidate) => normalizeEmail(candidate.email) === normalizedEmail);
+
+    // Return success for unknown or active accounts to avoid exposing account status.
+    if (!user || user.email_verified) return { success: true };
+
+    const activationToken = crypto.randomBytes(12).toString("hex");
+    const activationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const currentDateTime = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+    await prisma.$transaction(async (client) => {
+      await UserTokensRepository.deactivateOldEmailTokens(user.user_id, client);
+      await UserTokensRepository.createEmailActivationToken(
+        user.user_id,
+        activationToken,
+        activationCode,
+        currentDateTime,
+        client
+      );
+    });
+
+    return await send_code({
+      code: activationCode,
+      email: user.email,
+      name: user.name,
+    });
   }
 
   /**
@@ -264,7 +310,7 @@ class UsersService {
       user_preference,
     } = reqBody;
 
-    const result = await withTransaction(async (client) => {
+    const result = await prisma.$transaction(async (client) => {
       // 1. Process Password Update
       if (currentPassword && newPassword) {
         const match = await bcrypt.compare(currentPassword, currentUser.password);

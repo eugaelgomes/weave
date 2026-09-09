@@ -192,6 +192,28 @@ class UsersController extends BaseController {
     }
   }
 
+  async resendActivationCode(req, res, next) {
+    try {
+      const { email } = req.body;
+      const result = await UsersService.resendActivationCode(email);
+
+      if (!result.success) {
+        return res.status(502).json({
+          message: "Unable to resend the verification code. Please try again.",
+          status: "error",
+        });
+      }
+
+      return res.status(200).json({
+        message: "A new verification code was sent if the account is pending activation.",
+        status: "OK",
+      });
+    } catch (error) {
+      console.error("Error resending activation code:", error);
+      return this._handleError(error, res, next);
+    }
+  }
+
   // ==========================================
   // READ & UPDATE PROFILE
   // ==========================================

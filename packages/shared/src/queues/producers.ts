@@ -21,10 +21,10 @@ export async function enqueueRedisListJob(listKey: string, jobBody: Record<strin
   }
 }
 
-export async function enqueueEmailJob(resendPayload: any, requestId?: string) {
+export async function enqueueEmailJob(emailPayload: any, requestId?: string) {
   const finalRequestId = requestId || getRequestId();
   await enqueueRedisListJob(getEmailQueueRedisKey(), {
-    payload: resendPayload,
+    payload: emailPayload,
     queuedAt: new Date().toISOString(),
     requestId: finalRequestId,
   });

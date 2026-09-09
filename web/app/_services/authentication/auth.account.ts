@@ -62,6 +62,16 @@ export const activateAccountService = async (
   };
 };
 
+export const resendActivationCodeService = async (email: string): Promise<{ message: string }> => {
+  const response = await apiClient.post(API_ENDPOINTS.RESEND_ACTIVATION_CODE, {
+    email: email.trim(),
+  });
+  const data = await handleResponse<{ message?: string }>(response, {
+    skipSessionInvalidationOn401: true,
+  });
+  return { message: data?.message || "Código reenviado." };
+};
+
 export const updateUserData = async (
   userData: Partial<User> & { profilePicture?: File }
 ): Promise<Partial<User>> => {

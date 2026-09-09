@@ -38,9 +38,9 @@
     "dotenv": "^16.6.1",
     "googleapis": "^173.0.0",
     "ioredis": "^5.10.1",
+    "nodemailer": "^10.0.1",
     "pdfkit": "^0.17.2",
     "pg": "^8.16.3",
-    "resend": "^6.11.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

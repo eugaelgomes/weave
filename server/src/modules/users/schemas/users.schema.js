@@ -64,6 +64,10 @@ const activateAccountSchema = z
     path: ["token"],
   });
 
+const resendActivationCodeSchema = z.object({
+  email: emailValidator,
+});
+
 const checkUsernamePublicSchema = z.object({
   username: z.string().min(1, "username query param is required"),
 });
@@ -125,6 +129,7 @@ module.exports = {
   confirmDeleteAccountSchema,
   createAccountSchema,
   manageUsersSchema,
+  resendActivationCodeSchema,
   searchUsersSchema,
   updateProfileSchema,
 };

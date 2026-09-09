@@ -1,4 +1,4 @@
-const { withTransaction } = require("@/database/connection");
+const { prisma } = require("@theweave/database");
 const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
 const WorkspacesRepository = require("@/modules/workspaces/repositories/base.repository");
 const OnboardingRepository = require("../repositories/onboarding.repository");
@@ -19,7 +19,7 @@ class OnboardingService {
       throw new Error("TERMS_NOT_ACCEPTED");
     }
 
-    return await withTransaction(async (client) => {
+    return await prisma.$transaction(async (client) => {
       const profileUpdates = {};
 
       if (typeof name === "string" && name.trim()) {
@@ -66,7 +66,7 @@ class OnboardingService {
   async processWorkspaceStep(userId, workspaceData) {
     const { workspace_name, unique_name, invite_token } = workspaceData;
 
-    return await withTransaction(async (client) => {
+    return await prisma.$transaction(async (client) => {
       let workspaceIdToJoin = null;
 
       if (invite_token) {
@@ -117,7 +117,7 @@ class OnboardingService {
    * Completes the onboarding flow and dispatches welcome email
    */
   async completeOnboarding(userId) {
-    await withTransaction(async (client) => {
+    await prisma.$transaction(async (client) => {
       await OnboardingRepository.appendOnboardingStep(userId, "COMPLETED", "intro", client);
     });
 

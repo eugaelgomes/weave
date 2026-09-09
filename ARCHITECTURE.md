@@ -31,7 +31,7 @@ flowchart TB
     Gemini[Gemini]
     OpenAI[OpenAI]
     Google[Google_OAuth_Calendar]
-    Resend[Resend]
+    SMTP[SMTP_Provider]
     S3[S3_Spaces]
     Sentry[Sentry]
   end
@@ -55,9 +55,9 @@ flowchart TB
   Engine --> Gemini
   Engine --> OpenAI
   API --> Google
-  API --> Resend
+  API -->|enqueue_email| Redis
   API --> S3
-  Worker --> Resend
+  Worker --> SMTP
   Worker --> S3
   Engine --> Sentry
 ```

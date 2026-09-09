@@ -1,8 +1,6 @@
 /**
- * keep in sync with weave-api/src/services/email/sender-name.js
+ * Keep in sync with server/src/services/email/sender-name.js.
  */
-
-const DEV_SENDER = "Weave <onboarding@resend.dev>";
 
 /**
  * @param {string|undefined|null} from
@@ -16,4 +14,4 @@ function normalizeSenderFrom(from) {
   return from.replace(/^Weave Notes(?=\s*<|\s|$)/, "Weave");
 }
 
-module.exports = { DEV_SENDER, normalizeSenderFrom };
+module.exports = { normalizeSenderFrom };

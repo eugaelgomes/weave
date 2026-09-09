@@ -80,7 +80,7 @@ export const REDIS_QUEUE_KEYS = Object.freeze({
 export const CUSTOM_QUEUES_REGISTRY_KEY = "weave:queues:custom:registry";
 
 export const SYSTEM_QUEUES = Object.freeze([
-  { description: "Outbound emails queue for Resend worker", isDeletable: false, isSystem: true, key: getEmailQueueRedisKey(), name: "Email Queue" },
+  { description: "Outbound email delivery queue", isDeletable: false, isSystem: true, key: getEmailQueueRedisKey(), name: "Email Queue" },
   { description: "LLM request jobs for Weave Engine", isDeletable: false, isSystem: true, key: getEngineLlmRequestQueueRedisKey(), name: "LLM Request Queue" },
   { description: "Vector embedding jobs for notes", isDeletable: false, isSystem: true, key: getNoteEmbeddingsQueueRedisKey(), name: "Note Embeddings Queue" },
   { description: "Domain DNS verification jobs", isDeletable: false, isSystem: true, key: getDomainVerifyQueueRedisKey(), name: "Domain Verification Queue" },

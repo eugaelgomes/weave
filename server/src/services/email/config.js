@@ -1,5 +1,5 @@
 const { enqueueEmailJob } = require("@theweave/database");
-const { DEV_SENDER, normalizeSenderFrom } = require("./sender-name");
+const { normalizeSenderFrom } = require("./sender-name");
 
 let mailServiceInstance = null;
 
@@ -41,9 +41,7 @@ function MailService() {
         replyTo,
       } = mailOptions;
 
-      const sender = normalizeSenderFrom(
-        from || (process.env.NODE_ENV !== "production" ? DEV_SENDER : null)
-      );
+      const sender = normalizeSenderFrom(from);
 
       if (!sender) {
         throw new Error("Configuração de email faltando: EMAIL_FROM");
