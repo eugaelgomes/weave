@@ -5,6 +5,7 @@ const PlansMeController = require("@/modules/plans/controllers/plans-me.controll
 const PlansUsageHistoryController = require("@/modules/plans/controllers/plans-usage-history.controller");
 const PlansSubscriptionController = require("@/modules/plans/controllers/plans-subscription.controller");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const requireOnboarding = require("@/middlewares/auth/require-onboarding");
 const { validate } = require("@/middlewares/validation/validate");
 const { changePlanSchema } = require("./schemas/plans.schema");
 const { highTrafficLimiter } = require("@/middlewares/security/request-limiters");
@@ -14,6 +15,7 @@ const router = express.Router();
 router.get(
   "/me",
   verifyToken,
+  requireOnboarding,
   highTrafficLimiter,
   PlansMeController.getPlanMe.bind(PlansMeController)
 );
@@ -21,6 +23,7 @@ router.get(
 router.get(
   "/usage-history",
   verifyToken,
+  requireOnboarding,
   highTrafficLimiter,
   PlansUsageHistoryController.getUsageHistory.bind(PlansUsageHistoryController)
 );
@@ -28,12 +31,14 @@ router.get(
 router.get(
   "/subscription",
   verifyToken,
+  requireOnboarding,
   PlansSubscriptionController.getSubscription.bind(PlansSubscriptionController)
 );
 
 router.put(
   "/subscription",
   verifyToken,
+  requireOnboarding,
   validate(changePlanSchema, "body"),
   PlansSubscriptionController.changePlan.bind(PlansSubscriptionController)
 );
@@ -41,6 +46,7 @@ router.put(
 router.post(
   "/subscription/cancel",
   verifyToken,
+  requireOnboarding,
   PlansSubscriptionController.cancelSubscription.bind(PlansSubscriptionController)
 );
 

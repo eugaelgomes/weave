@@ -43,17 +43,17 @@ function LanguageToggle({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 focus:outline-none"
+        className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900 focus:outline-none dark:text-neutral-400 dark:hover:text-neutral-100"
       >
-        <Globe className="h-4 w-4 text-neutral-500" />
+        <Globe className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
         <span>{LANGUAGE_LABELS[locale] || "English"}</span>
-        <ChevronDown className="h-3 w-3 text-neutral-400" />
+        <ChevronDown className="h-3 w-3 text-neutral-400 dark:text-neutral-500" />
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 z-50 mt-1.5 w-32 rounded-md bg-white p-1 text-xs shadow-lg ring-1 ring-black/5">
+          <div className="dark:border-surface-dark-border-strong absolute left-0 z-50 mt-1.5 w-32 rounded-md border border-transparent bg-white p-1 text-xs shadow-lg ring-1 ring-black/5 dark:bg-[#1d1d1b] dark:ring-white/10">
             {(["pt-BR", "en-US", "es-ES"] as const).map((langKey) => (
               <button
                 key={langKey}
@@ -63,10 +63,10 @@ function LanguageToggle({
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "w-full rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-neutral-100",
+                  "w-full rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800",
                   locale === langKey
-                    ? "bg-neutral-100 font-semibold text-neutral-900"
-                    : "text-neutral-600"
+                    ? "bg-neutral-100 font-semibold text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
+                    : "text-neutral-600 dark:text-neutral-400"
                 )}
               >
                 {LANGUAGE_LABELS[langKey]}
@@ -183,19 +183,19 @@ export default function AuthPage() {
   }, [searchParams]);
 
   return (
-    <div className="flex min-h-[100dvh] w-full bg-white">
+    <div className="flex min-h-[100dvh] w-full bg-white dark:bg-[#1d1d1b]">
       {/* Left Pane - Auth Form */}
-      <div className="relative flex w-full flex-col items-center justify-center p-4 text-slate-950 sm:p-8 lg:w-1/2">
+      <div className="relative flex w-full flex-col items-center justify-center p-4 text-slate-950 sm:p-8 lg:w-1/2 dark:text-neutral-100">
         <div className="absolute top-8 left-8 hidden items-center gap-2.5 lg:flex">
           <span
             className={cn(
-              "text-2xl font-extrabold tracking-tight text-slate-800",
+              "text-2xl font-extrabold tracking-tight text-slate-800 dark:text-neutral-100",
               fredoka.className
             )}
           >
             Weave
           </span>
-          <span className="font-light text-neutral-300 select-none">|</span>
+          <span className="font-light text-neutral-300 select-none dark:text-neutral-600">|</span>
           <LanguageToggle locale={locale as SupportedLocale} setLocale={setLocale} />
         </div>
 
@@ -203,13 +203,13 @@ export default function AuthPage() {
           <div className="mb-8 flex items-center justify-center gap-2.5 text-center lg:hidden">
             <span
               className={cn(
-                "mt-0.5 text-3xl font-extrabold tracking-tight text-slate-800",
+                "mt-0.5 text-3xl font-extrabold tracking-tight text-slate-800 dark:text-neutral-100",
                 fredoka.className
               )}
             >
               Weave
             </span>
-            <span className="font-light text-neutral-300 select-none">|</span>
+            <span className="font-light text-neutral-300 select-none dark:text-neutral-600">|</span>
             <LanguageToggle locale={locale as SupportedLocale} setLocale={setLocale} />
           </div>
 
@@ -263,7 +263,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right Pane - same white background */}
-      <div className="relative hidden w-1/2 overflow-hidden bg-white lg:block">
+      <div className="relative hidden w-1/2 overflow-hidden bg-white lg:block dark:bg-[#1d1d1b]">
         <WeaveLogoAnimation />
       </div>
     </div>

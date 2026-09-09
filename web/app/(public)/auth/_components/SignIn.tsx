@@ -64,7 +64,10 @@ export function SignIn({
   const [passwordStep, setPasswordStep] = useState<PasswordStep>("login");
   const [loginValue, setLoginValue] = useState(initialLogin);
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState(initialCode);
+  const [codeArray, setCodeArray] = useState<string[]>(() => {
+    const digits = initialCode.replace(/\D/g, "").slice(0, 6).split("");
+    return [...digits, ...Array(6 - digits.length).fill("")];
+  });
   const [codeRequested, setCodeRequested] = useState(Boolean(initialCode));
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(
@@ -83,6 +86,7 @@ export function SignIn({
   } = useAuth();
   const router = useRouter();
   const autoSubmitRef = useRef(false);
+  const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     if (initialLogin) {
@@ -93,7 +97,8 @@ export function SignIn({
   useEffect(() => {
     if (initialCode) {
       setMode("code");
-      setCode(initialCode);
+      const digits = initialCode.replace(/\D/g, "").slice(0, 6).split("");
+      setCodeArray([...digits, ...Array(6 - digits.length).fill("")]);
       setCodeRequested(true);
       setInfoMessage(t.signIn.codeSentMessage);
     }
@@ -225,7 +230,7 @@ export function SignIn({
     setError(null);
   }
 
-  async function handleCodeSignIn(loginInput = loginValue, codeInput = code) {
+  async function handleCodeSignIn(loginInput = loginValue, codeInput = codeArray.join("")) {
     const trimmedLogin = loginInput.trim();
 
     if (!trimmedLogin || !codeInput) {
@@ -315,7 +320,7 @@ export function SignIn({
     setMode("code");
     setError(null);
     setCodeRequested(false);
-    setCode("");
+    setCodeArray(Array(6).fill(""));
     setInfoMessage(null);
   };
 
@@ -326,6 +331,32 @@ export function SignIn({
     if (mode === "password") {
       setPasswordStep("login");
     }
+  };
+
+  const handleCodeChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const nextCodeArray = [...codeArray];
+    nextCodeArray[index] = digit;
+    setCodeArray(nextCodeArray);
+
+    if (digit && index < 5) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !codeArray[index] && index > 0) {
+      codeInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleCodePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const pastedCode = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pastedCode) return;
+
+    setCodeArray([...pastedCode.split(""), ...Array(6 - pastedCode.length).fill("")]);
+    codeInputRefs.current[Math.min(pastedCode.length, 5)]?.focus();
   };
 
   const primaryButtonLabel =
@@ -342,21 +373,24 @@ export function SignIn({
   return (
     <div className="flex w-full flex-col px-6 py-2 sm:px-8">
       <div className="mt-1">
-        <form className="space-y-2" onSubmit={handleSubmit}>
+        <form
+          className={`space-y-2 ${isCodeMode ? "mx-auto max-w-sm" : ""}`}
+          onSubmit={handleSubmit}
+        >
           <div>
-            <label className="mb-1.5 block text-xs text-neutral-700">
+            <label className="mb-1.5 block text-xs text-neutral-700 dark:text-neutral-300">
               {t.signIn.usernameLabel}
             </label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                <User className="text-brand-secondary-400 h-4 w-4" />
+                <User className="text-brand-secondary-400 h-4 w-4 dark:text-neutral-500" />
               </div>
               <input
                 type="text"
                 value={loginValue}
                 onChange={(e) => handleLoginChange(e.target.value)}
                 placeholder={t.signIn.usernamePlaceholder}
-                className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border bg-white py-2 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+                className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-neutral-400 dark:border-surface-dark-border-strong w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none dark:bg-[#252525] dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-500"
                 disabled={isLoading}
               />
             </div>
@@ -366,26 +400,26 @@ export function SignIn({
             passwordStep === "password" && (
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs text-neutral-700">
+                  <label className="block text-xs text-neutral-700 dark:text-neutral-300">
                     {t.signIn.passwordLabel}
                   </label>
                 </div>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                    <Lock className="text-brand-secondary-400 h-4 w-4" />
+                    <Lock className="text-brand-secondary-400 h-4 w-4 dark:text-neutral-500" />
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={t.signIn.passwordPlaceholder}
-                    className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border bg-white py-2 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
+                    className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-neutral-400 dark:border-surface-dark-border-strong w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none dark:bg-[#252525] dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-500"
                     disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5"
+                    className="text-brand-secondary-400 hover:text-brand-secondary-600 absolute inset-y-0 right-0 flex items-center pr-3.5 dark:text-neutral-500 dark:hover:text-neutral-200"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -393,74 +427,99 @@ export function SignIn({
               </div>
             )
           ) : (
-            <div className="space-y-3 rounded-md border border-dashed border-neutral-200 bg-neutral-50 p-4">
-              <p className="text-xs leading-5 text-neutral-600">{t.signIn.codeModeDescription}</p>
+            <div className="space-y-2 pt-1">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-neutral-700">
+                <label className="mb-1.5 block text-xs text-neutral-700 dark:text-neutral-300">
                   {t.signIn.codeInputLabel}
                 </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                    <Mail className="text-brand-secondary-400 h-4 w-4" />
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder={t.signIn.codeInputPlaceholder}
-                    className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-yellow w-full rounded-md border bg-white py-2 pr-4 pl-10 text-sm tracking-[0.35em] transition-colors focus:ring-2 focus:outline-none"
-                    disabled={isLoading}
-                  />
+                <div className="flex justify-between gap-1 sm:gap-1.5" onPaste={handleCodePaste}>
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <input
+                      key={index}
+                      ref={(element) => {
+                        codeInputRefs.current[index] = element;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete={index === 0 ? "one-time-code" : "off"}
+                      maxLength={1}
+                      value={codeArray[index] || ""}
+                      onChange={(e) => handleCodeChange(index, e.target.value)}
+                      onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                      aria-label={`${t.signIn.codeInputLabel} ${index + 1}`}
+                      className="border-brand-secondary-200 text-brand-secondary-900 focus:border-neutral-500 focus:ring-neutral-500/15 dark:border-surface-dark-border-strong h-9 w-9 rounded-md border bg-white text-center text-sm font-semibold transition-colors focus:ring-2 focus:outline-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:focus:border-neutral-400"
+                      disabled={isLoading}
+                    />
+                  ))}
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={switchToPassword}
-                className="text-brand-secondary-500 hover:text-brand-primary-500 text-xs font-medium transition-colors"
-              >
-                {t.signIn.backToPassword}
-              </button>
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={switchToPassword}
+                  className="text-brand-secondary-600 hover:text-neutral-900 px-1 py-1 text-xs font-medium transition-colors dark:text-neutral-400 dark:hover:text-neutral-100"
+                >
+                  {t.signIn.backToPassword}
+                </button>
+                {codeRequested && (
+                  <button
+                    type="button"
+                    onClick={() => void handleRequestCode()}
+                    disabled={isLoading}
+                    className="text-brand-secondary-600 hover:text-neutral-900 px-1 py-1 text-xs font-medium transition-colors disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
+                  >
+                    {t.confirmAccount.resendButton}
+                  </button>
+                )}
+                {!codeRequested && (
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="rounded-md border border-neutral-300 bg-white px-4 py-1.5 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-100 disabled:pointer-events-none disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
+                  >
+                    {isLoading ? "Enviando..." : primaryButtonLabel}
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
           {!isCodeMode && passwordStep === "password" ? (
-            <div className="mt-1 flex justify-between flex-col gap-1 sm:flex-row">
+            <div className="mt-1 flex flex-col justify-between gap-2 sm:flex-row">
               <button
                 type="button"
                 onClick={() => onNavigate("forgot")}
-                className="border-brand-secondary-200 text-brand-secondary-500 hover:text-brand-primary-500 bg-white py-2 text-sm transition-colors sm:w-auto"
+                className="border-brand-secondary-200 text-brand-secondary-500 hover:text-neutral-900 bg-white py-1.5 text-sm transition-colors sm:w-auto dark:bg-[#1d1d1b] dark:hover:text-neutral-100"
               >
                 {t.signIn.forgotPassword}
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="bg-brand-primary-500 shadow-brand-yellow/20 hover:bg-brand-primary-800 flex max-w-[80px] flex-1 items-center justify-center rounded-md py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                className="flex max-w-[80px] flex-1 items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:bg-neutral-100 hover:scale-[1.01] active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
               >
                 {isLoading ? "Entrando..." : primaryButtonLabel}
               </button>
             </div>
-          ) : (
+          ) : isCodeMode && !codeRequested ? null : (
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-brand-primary-500 shadow-brand-yellow/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.01] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+              className="flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:bg-neutral-100 hover:scale-[1.01] active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
             >
               {isLoading ? "Entrando..." : primaryButtonLabel}
             </button>
           )}
 
           {infoMessage && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+            <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
               {infoMessage}
             </div>
           )}
 
           {error && (
-            <div className="animate-in fade-in slide-in-from-top-4 fixed top-4 right-4 z-[999] flex max-w-sm items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+            <div className="animate-in fade-in slide-in-from-top-4 fixed top-4 right-4 z-[999] flex max-w-sm items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg dark:border-red-900/60 dark:bg-red-950/50 dark:text-red-300">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 shrink-0 text-red-500"
@@ -479,13 +538,15 @@ export function SignIn({
         </form>
       </div>
 
-      <div className="mt-5 flex flex-col items-center">
+      <div className="mt-2 flex flex-col items-center">
         <div className="relative mb-3.5 w-full">
           <div className="absolute inset-0 flex items-center">
-            <div className="border-brand-secondary-200 w-full border-t"></div>
+            <div className="border-brand-secondary-200 dark:border-surface-dark-border w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="text-brand-secondary-500 bg-white px-2">{t.signIn.orLoginWith}</span>
+            <span className="text-brand-secondary-500 bg-white px-2 dark:bg-[#1d1d1b] dark:text-neutral-400">
+              {t.signIn.orLoginWith}
+            </span>
           </div>
         </div>
 
@@ -493,7 +554,7 @@ export function SignIn({
           <button
             type="button"
             onClick={loginWithGoogle}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
           >
             <GoogleIcon className="h-4 w-4" />
             Google
@@ -502,7 +563,7 @@ export function SignIn({
           <button
             type="button"
             onClick={loginWithGithub}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
           >
             <GitHubIcon className="h-4 w-4" />
             GitHub
@@ -511,7 +572,7 @@ export function SignIn({
           <button
             type="button"
             onClick={switchToCode}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
           >
             <Mail className="text-brand-secondary-600 h-4 w-4" />
             {t.signIn.loginWithCode}
@@ -522,7 +583,7 @@ export function SignIn({
           <button
             type="button"
             onClick={handleSamlSso}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
           >
             <Shield className="text-brand-secondary-600 h-4 w-4" />
             {t.signIn.loginWithSso}
@@ -531,26 +592,26 @@ export function SignIn({
 
         <button
           onClick={() => onNavigate("signup")}
-          className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-3 text-xs font-medium transition-colors duration-200"
+          className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-3 text-xs font-medium transition-colors duration-200 dark:text-neutral-400 dark:hover:text-neutral-200"
         >
           {t.signIn.noAccount}{" "}
-          <span className="text-brand-primary-500 hover:text-brand-yellow font-semibold transition-colors duration-200">
+          <span className="font-semibold text-neutral-700 transition-colors duration-200 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100">
             {t.signIn.createAccount}
           </span>
         </button>
       </div>
-      <div className="text-brand-secondary-400 mt-3 flex flex-col items-center gap-1 text-xs">
+      <div className="text-brand-secondary-400 mt-3 flex flex-col items-center gap-1 text-xs dark:text-neutral-500">
         <div className="flex items-center gap-2">
           <a
             href="/terms"
-            className="hover:text-brand-secondary-600 transition-colors hover:underline"
+            className="hover:text-brand-secondary-600 transition-colors hover:underline dark:hover:text-neutral-300"
           >
             {t.signIn.terms}
           </a>
           <span className="text-brand-secondary-300">|</span>
           <a
             href="/privacy"
-            className="hover:text-brand-secondary-600 transition-colors hover:underline"
+            className="hover:text-brand-secondary-600 transition-colors hover:underline dark:hover:text-neutral-300"
           >
             {t.signIn.privacy}
           </a>

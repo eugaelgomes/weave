@@ -12,8 +12,8 @@ const userRoutes = require("@/modules/users/users.routes");
 
 const backupRoutes = require("@/modules/backup/backup.routes");
 const organizationsRoutes = require("@/modules/workspaces/workspaces.routes");
-const requireOnboarding = require("@/middlewares/auth/require-onboarding");
 const plansRoutes = require("@/modules/plans/plans.routes");
+const notificationsRoutes = require("@/modules/messenger/notifications.routes");
 
 const agentHouseRoutes = require("@/modules/agent-house/agent-house.routes");
 
@@ -119,13 +119,14 @@ const slackRoutes = require("@/integration/providers/slack/slack.routes");
  * @type {Array<{basePath: string, handler: import('express').Router}>}
  */
 const routeRegistry = [
-  { basePath: "/auth", handler: authRoutes, requireOnboarding: false },
-  { basePath: "/backup", handler: backupRoutes, requireOnboarding: true },
-  { basePath: "/workspaces", handler: organizationsRoutes, requireOnboarding: true },
-  { basePath: "/plans", handler: plansRoutes, requireOnboarding: true },
-  { basePath: "/users", handler: userRoutes, requireOnboarding: false },
-  { basePath: "/weave-ai", handler: agentHouseRoutes, requireOnboarding: true },
-  { basePath: "/integrations/slack", handler: slackRoutes, requireOnboarding: false },
+  { basePath: "/auth", handler: authRoutes },
+  { basePath: "/backup", handler: backupRoutes },
+  { basePath: "/workspaces", handler: organizationsRoutes },
+  { basePath: "/plans", handler: plansRoutes },
+  { basePath: "/users", handler: userRoutes },
+  { basePath: "/weave-ai", handler: agentHouseRoutes },
+  { basePath: "/notifications", handler: notificationsRoutes },
+  { basePath: "/integrations/slack", handler: slackRoutes },
 ];
 
 /**
@@ -158,12 +159,8 @@ const createInternalRouter = ({ version = DEFAULT_VERSION } = {}) => {
   router.get("/_internal/challenge", issueInternalChallenge);
   router.use(verifyInternalWebChallenge);
 
-  routeRegistry.forEach(({ basePath, handler, requireOnboarding: needsOnboarding }) => {
-    if (needsOnboarding) {
-      router.use(basePath, requireOnboarding, handler);
-    } else {
-      router.use(basePath, handler);
-    }
+  routeRegistry.forEach(({ basePath, handler }) => {
+    router.use(basePath, handler);
   });
 
   return router;

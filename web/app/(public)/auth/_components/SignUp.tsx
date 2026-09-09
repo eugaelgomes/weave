@@ -71,7 +71,7 @@ function TermsModal({
               onAccept();
               onClose();
             }}
-            className="bg-brand-primary-500 hover:bg-brand-primary-800 rounded px-4 py-2 text-sm font-medium text-white transition-colors"
+            className="rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
           >
             {t.signUp.termsModalAccept}
           </button>
@@ -142,7 +142,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
         : "";
 
   const getInputClassName = (hasError: boolean) =>
-    `text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-brand-primary-700 w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none ${
+    `text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-neutral-400 dark:focus:ring-neutral-500 w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:placeholder:text-neutral-500 ${
       hasError ? "border-red-400 focus:ring-red-500" : "border-brand-secondary-200"
     }`;
 
@@ -225,7 +225,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
         locale={locale}
       />
       <div className="mt-1">
-        <form className="space-y-1.5" onSubmit={handleSubmit} autoComplete="off">
+        <form className="space-y-2" onSubmit={handleSubmit} autoComplete="off">
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
               <Mail className="text-brand-secondary-400 h-4 w-4" />
@@ -244,21 +244,21 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <p className="px-1 text-xs text-red-600">{emailError}</p>
           )}
 
-          <div className="mt-1.5 flex flex-col justify-between gap-3 sm:mt-2.5 sm:flex-row sm:items-center">
+          <div className="mt-2 flex flex-col justify-between gap-2 sm:mt-2 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="terms"
                 checked={acceptTerms}
                 onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="border-brand-secondary-300 text-brand-primary-500 focus:ring-brand-primary-300 h-4 w-4 rounded"
+                className="border-brand-secondary-300 text-neutral-700 focus:ring-neutral-400 h-4 w-4 rounded"
               />
               <label htmlFor="terms" className="text-brand-secondary-500 text-xs leading-tight">
                 {t.signUp.termsText1}
                 <button
                   type="button"
                   onClick={() => setShowTermsModal(true)}
-                  className="text-brand-primary-500 font-medium hover:underline"
+                  className="font-medium text-neutral-700 hover:text-neutral-900 hover:underline dark:text-neutral-300 dark:hover:text-neutral-100"
                 >
                   {t.signUp.termsText2}
                 </button>
@@ -266,7 +266,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowTermsModal(true)}
-                  className="text-brand-primary-500 font-medium hover:underline"
+                  className="font-medium text-neutral-700 hover:text-neutral-900 hover:underline dark:text-neutral-300 dark:hover:text-neutral-100"
                 >
                   {t.signUp.termsText4}
                 </button>
@@ -275,7 +275,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-brand-primary-500 shadow-brand-primary-700/20 hover:bg-brand-primary-800 flex w-full items-center justify-center rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px]"
+              className="flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:bg-neutral-100 hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800 sm:w-[150px]"
             >
               {isLoading ? "Continuando..." : t.signUp.continueButton}
             </button>
@@ -358,7 +358,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
           className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-5 text-xs font-medium transition-colors duration-200"
         >
           {t.signUp.alreadyHaveAccount}{" "}
-          <span className="text-brand-primary-500 hover:text-brand-primary-500 font-semibold transition-colors">
+          <span className="font-semibold text-neutral-700 transition-colors hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100">
             {t.signUp.loginNow}
           </span>
         </button>

@@ -12,6 +12,7 @@ const agentsController = require("./controllers/agents/agents-management.control
 const artifactsController = require("./controllers/artifacts/artifacts.controller");
 
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const requireOnboarding = require("@/middlewares/auth/require-onboarding");
 const { requireScope } = require("@/middlewares/auth/require-scope");
 
 const { validate } = require("@/middlewares/validation/validate");
@@ -33,7 +34,7 @@ const { handleChatFilesUpload } = require("./utils/chat-upload.util");
 
 const router = express.Router();
 
-router.use(verifyToken, strictLimiter);
+router.use(verifyToken, requireOnboarding, strictLimiter);
 const { requireModule } = require("@/middlewares/auth/require-module");
 router.use(requireModule("agent_house"));
 router.use((req, res, next) => {

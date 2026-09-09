@@ -1,5 +1,6 @@
 const express = require("express");
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const requireOnboarding = require("@/middlewares/auth/require-onboarding");
 const { validate } = require("@/middlewares/validation/validate");
 
 const DownloadBackupController = require("@/modules/backup/controllers/download-backup.controller");
@@ -14,7 +15,7 @@ router.get("/download/:token", validate(downloadBackupSchema, "params"), (req, r
   DownloadBackupController.downloadBackup(req, res, next);
 });
 
-router.use(verifyToken);
+router.use(verifyToken, requireOnboarding);
 
 router.post("/request", (req, res, next) => {
   BackupExportController.requestBackup(req, res, next);

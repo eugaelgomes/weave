@@ -11,6 +11,7 @@ const UsersController = require("@/modules/users/controllers/users.controller");
 
 // Middlewares
 const { verifyToken } = require("@/middlewares/auth/verify-token");
+const requireOnboarding = require("@/middlewares/auth/require-onboarding");
 const {
   structuralLimiter,
   standardTrafficLimiter,
@@ -48,7 +49,7 @@ const {
 
 const router = express.Router();
 
-router.use(verifyToken);
+router.use(verifyToken, requireOnboarding);
 
 router.get(
   "/my-workspaces",
