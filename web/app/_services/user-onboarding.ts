@@ -1,4 +1,4 @@
-import { apiClient, API_ENDPOINTS } from "./api-methods";
+import { apiClient, API_ENDPOINTS, handleResponse } from "./api-methods";
 
 export interface OnboardingProfileData {
   name?: string;
@@ -26,10 +26,13 @@ export const submitOnboardingProfile = async (data: OnboardingProfileData): Prom
 export const submitOnboardingWorkspace = async (
   data: OnboardingWorkspaceData
 ): Promise<OnboardingWorkspaceResponse> => {
-  return (await apiClient.post(
-    API_ENDPOINTS.ONBOARDING_STEP_TWO,
-    data
-  )) as unknown as OnboardingWorkspaceResponse;
+  const response = await apiClient.post(API_ENDPOINTS.ONBOARDING_STEP_TWO, data);
+  const result = await handleResponse<{ workspaceId: string }>(response);
+
+  return {
+    success: true,
+    data: result,
+  };
 };
 
 export const completeOnboarding = async (): Promise<void> => {
