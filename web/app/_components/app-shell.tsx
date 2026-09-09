@@ -6,7 +6,6 @@ import ProtectedLayout from "@/app/_components/protected-layout";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { AuthenticatedProviders } from "@/app/_contexts/authenticated-providers";
 import GlobalLoading from "@/app/_components/ui/global-loading";
-import { TaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { authenticated, loading, user } = useAuth();
@@ -53,7 +52,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <AuthenticatedProviders>
       <ProtectedLayout>{children}</ProtectedLayout>
-      <TaskNoteModal />
     </AuthenticatedProviders>
   );
 }

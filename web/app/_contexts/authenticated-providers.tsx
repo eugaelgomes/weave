@@ -2,12 +2,8 @@
 
 import React from "react";
 import { NotificationProvider } from "./notification-context";
-import { CalendarProvider } from "./calendar-context";
-import { TaskNoteModalProvider } from "@/app/(protected)/_components/task-note-modal";
-import { ProjectsProvider } from "./projects-context";
 import { ChatProvider } from "./chat-context";
 import { AgentProvider } from "./agent-context";
-import { NotesProvider } from "./notes-context";
 
 import { ModulesProvider } from "./modules-context";
 
@@ -28,10 +24,6 @@ const composeProviders = (...providers: React.ElementType[]) =>
 const GlobalProviders = composeProviders(
   ModulesProvider,
   NotificationProvider,
-  CalendarProvider,
-  TaskNoteModalProvider,
-  ProjectsProvider,
-  NotesProvider,
   AgentProvider,
   ChatProvider
 );

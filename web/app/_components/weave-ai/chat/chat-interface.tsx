@@ -5,8 +5,6 @@ import { X, FileText, Loader2, Share2 } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useChat, type AIModel } from "@/app/_contexts/chat-context";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { useNotes } from "@/app/_contexts/notes-context";
-import { useProjects } from "@/app/_contexts/projects-context";
 import { useAgent, type Agent } from "@/app/_contexts/agent-context";
 import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 import Link from "next/link";
@@ -21,6 +19,8 @@ import { ChatMessageItem } from "./components/chat-message-item";
 import { ChatScrollButtons } from "./components/chat-scroll-buttons";
 
 export type ChatInterfaceVariant = "fullPage" | "widget";
+
+const EMPTY_CONTEXT_ITEMS: never[] = [];
 
 function getChatHeaderTitle(messages: any[], fallbackTitle?: string | null): string {
   const firstUserMessage = messages.find(
@@ -105,8 +105,8 @@ export default function ChatInterface({
     createNewSession,
   } = useChat();
   const { user } = useAuth();
-  const { notesOverview } = useNotes();
-  const { projectsOverview } = useProjects();
+  const notesOverview = EMPTY_CONTEXT_ITEMS;
+  const projectsOverview = EMPTY_CONTEXT_ITEMS;
   const { agents, loadAgents } = useAgent();
   const { canSendAiMessage } = usePlanUsage();
 

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 import { UserAvatar } from "@/app/(protected)/_components/layout/user-menu";
 import SettingsModal from "@/app/(protected)/_components/modals/settings/settings-modal";
 
@@ -11,7 +10,6 @@ import Image from "next/image";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useNotification } from "@/app/_contexts/notification-context";
-import { useProjects } from "@/app/_contexts/projects-context";
 import { useChat } from "@/app/_contexts/chat-context";
 import { useModules } from "@/app/_contexts/modules-context";
 import { usePathname } from "next/navigation";
@@ -52,7 +50,6 @@ import {
   Search,
   type LucideIcon,
 } from "lucide-react";
-import { ProjectIcon } from "@/app/(protected)/projects/_components/project-icon";
 
 const useKeyboardShortcut = (key: string, callback: () => void) => {
   useEffect(() => {
@@ -261,9 +258,7 @@ function RecentItems({
                       "transition-transform duration-200 group-hover:scale-110"
                     )}
                   >
-                    {item.projectIcon !== undefined ? (
-                      <ProjectIcon icon={item.projectIcon} color={item.projectColor} size="sm" />
-                    ) : ItemIcon ? (
+                    {ItemIcon ? (
                       <ItemIcon
                         className={cn(
                           "size-[18px] shrink-0 transition-colors",
@@ -301,7 +296,6 @@ interface SidebarBottomActionsProps {
 }
 
 function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomActionsProps) {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -311,7 +305,6 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
     const handleHashChange = () => {
       const hash = window.location.hash;
       setIsSettingsOpen(hash.startsWith("#settings"));
-      setIsSearchOpen(hash.startsWith("#search"));
     };
 
     handleHashChange();
@@ -319,48 +312,8 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  useKeyboardShortcut("k", () => {
-    window.location.hash = "#search";
-  });
-
   return (
     <div className="flex shrink-0 flex-col gap-0.5 px-1 pt-1 pb-1.5">
-      <button
-        type="button"
-        onClick={() => {
-          window.location.hash = "#search";
-        }}
-        title={t.navbar?.searchSystem || "Pesquisar"}
-        aria-label={t.navbar?.searchSystem || "Pesquisar"}
-        className={cn(
-          NAV_ROW_CLASS,
-          "group gap-2 px-2",
-          "focus-visible:ring-brand-yellow/50 text-gray-700 hover:bg-black/5 focus-visible:ring-2 focus-visible:outline-none dark:text-gray-300 dark:hover:bg-white/6"
-        )}
-      >
-        <span
-          className={cn(
-            NAV_ICON_RAIL_CLASS,
-            "transition-transform duration-200 group-hover:scale-110"
-          )}
-        >
-          <Search className="size-4 shrink-0 text-gray-800 transition-colors group-hover:text-slate-950 dark:text-white" />
-        </span>
-        <span
-          className={cn(
-            COLLAPSED_LABEL_CLASS,
-            isCollapsed ? "pointer-events-none max-w-0 opacity-0" : "opacity-100"
-          )}
-        >
-          <span className="truncate">{t.navbar?.searchSystem || "Pesquisar"}</span>
-          {!isCollapsed && (
-            <kbd className="items-bottom ml-auto flex gap-1 rounded px-1.5 font-sans text-[10px] font-medium text-gray-600 dark:text-gray-300">
-              <span>⌘</span>K
-            </kbd>
-          )}
-        </span>
-      </button>
-
       <div className="relative w-full">
         <button
           type="button"
@@ -394,15 +347,6 @@ function SidebarBottomActions({ isCollapsed, user, t, logout }: SidebarBottomAct
         </button>
       </div>
 
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => {
-          window.history.replaceState(null, "", window.location.pathname + window.location.search);
-          window.dispatchEvent(new HashChangeEvent("hashchange"));
-          setIsSearchOpen(false);
-        }}
-      />
-
       {mounted && (
         <SettingsModal
           isOpen={isSettingsOpen}
@@ -432,7 +376,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  const projectsCtx = useProjects();
   const { chatHistory } = useChat();
   const { isModuleActive } = useModules();
 
@@ -475,17 +418,6 @@ const Sidebar = ({ onLinkClick, isCollapsed = true, toggleCollapse }: SidebarPro
     {
       title: "Workspace",
       items: [
-        isModuleActive("notes") && {
-          path: "/notes",
-          icon: NotebookPen,
-          label: t.nav.notes || "Notas",
-        },
-        isModuleActive("projects") && {
-          path: "/projects",
-          icon: Folder,
-          label: t.nav.projects || "Projetos",
-        },
-        { path: "/calendar", icon: Calendar, label: "Agenda & Calendário" },
         hasOrg && { path: "/organization/general", icon: Building2, label: "Visão Geral" },
         hasOrg && { path: "/organization/members/list", icon: Users, label: "Membros & Usuários" },
         hasOrg && {

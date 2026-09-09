@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Plug } from "lucide-react";
-import { useCalendar } from "@/app/_contexts/calendar-context";
 import Image from "next/image";
 
 // Importações diretas das logomarcas (Ajuste o caminho conforme a estrutura do seu projeto)
@@ -13,7 +12,9 @@ import { SettingsPageShell } from "@/app/(protected)/_components/modals/settings
 import { useSlack } from "@/app/_contexts/slack-context";
 
 export const IntegrationsSettings: React.FC = () => {
-  const { googleConnected, connectGoogleCalendar, disconnectGoogleCalendar } = useCalendar();
+  const googleConnected = false;
+  const connectGoogleCalendar = () => undefined;
+  const disconnectGoogleCalendar = () => undefined;
   const { slackStatus, updatingChannel, connectSlack, disconnectSlack, updateDefaultChannel } =
     useSlack();
 

@@ -59,6 +59,22 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (
+    pathname === "/notes" ||
+    pathname.startsWith("/notes/") ||
+    pathname === "/projects" ||
+    pathname.startsWith("/projects/") ||
+    pathname === "/calendar" ||
+    pathname.startsWith("/calendar/") ||
+    pathname === "/organization/projects" ||
+    pathname.startsWith("/organization/projects/") ||
+    pathname === "/organization/dashboard"
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/chat";
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 
@@ -70,5 +86,10 @@ export const config = {
     "/auth/",
     "/auth/reset-password",
     "/auth/reset-password/",
+    "/notes/:path*",
+    "/projects/:path*",
+    "/calendar/:path*",
+    "/organization/projects/:path*",
+    "/organization/dashboard",
   ],
 };
