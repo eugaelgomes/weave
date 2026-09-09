@@ -9,10 +9,12 @@ import GlobalLoading from "@/app/_components/ui/global-loading";
 import { TaskNoteModal } from "@/app/(protected)/_components/task-note-modal";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { authenticated, loading } = useAuth();
+  const { authenticated, loading, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const hasRedirected = useRef(false);
+  const isOnboardingPath = pathname === "/onboarding" || pathname.startsWith("/onboarding/");
+  const onboardingComplete = user?.onboarding_state?.step === "COMPLETED";
 
   useEffect(() => {
     if (!loading && !authenticated && !hasRedirected.current) {
@@ -26,8 +28,26 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [authenticated, loading, pathname, router]);
 
-  if (loading || !authenticated) {
+  useEffect(() => {
+    if (
+      !loading &&
+      authenticated &&
+      user &&
+      !onboardingComplete &&
+      !isOnboardingPath &&
+      !hasRedirected.current
+    ) {
+      hasRedirected.current = true;
+      router.replace("/onboarding");
+    }
+  }, [authenticated, isOnboardingPath, loading, onboardingComplete, router, user]);
+
+  if (loading || !authenticated || (authenticated && !onboardingComplete && !isOnboardingPath)) {
     return <GlobalLoading className="h-screen min-h-screen" />;
+  }
+
+  if (isOnboardingPath) {
+    return children;
   }
 
   return (

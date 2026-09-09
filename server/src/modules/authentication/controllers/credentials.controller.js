@@ -62,6 +62,7 @@ class CredentialsController extends AuthBaseController {
         message,
         status: "OK",
         user: {
+          onboarding_state: user.onboarding_state || {},
           user_organization: {
             default_area: defaultArea,
             id: protectedOrg?.id || null,

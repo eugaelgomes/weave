@@ -295,6 +295,7 @@ class UsersController extends BaseController {
             plan_name: user.plan_name,
           },
           current_plan_usage: planUsage,
+          onboarding_state: user.onboarding_state || {},
           usage_preference: normalizeAppPreferences(user.user_preference || {}),
           user_profile: {
             avatar_url: protectedUser.avatar_url,

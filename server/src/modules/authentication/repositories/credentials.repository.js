@@ -47,6 +47,7 @@ class CredentialsRepository extends BaseRepository {
         u.email_verified_at,
         u.plan_id,
         u.user_preference,
+        u.onboarding_state,
         
         (SELECT p.name FROM plans p WHERE p.plan_id = u.plan_id) AS plan_name,
         (SELECT p.details FROM plans p WHERE p.plan_id = u.plan_id) AS plan_details,

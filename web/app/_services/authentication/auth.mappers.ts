@@ -130,6 +130,7 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     // Plan
     plan_id: user.user_subscription.plan_id,
     plan_name: user.user_subscription.plan_name,
+    onboarding_state: user.onboarding_state,
   };
 };
 
@@ -198,6 +199,7 @@ export const mapMeResponseToUser = (data: BackendMeResponse): User => {
     usage_period_start: currentPlanUsage?.period_start ?? undefined,
     usage_period_end: currentPlanUsage?.period_end ?? undefined,
     usage_details: currentPlanUsage?.details as User["usage_details"],
+    onboarding_state: user.onboarding_state,
 
     // App Preferences
     usage_preference: user.usage_preference || {},

@@ -29,7 +29,7 @@ export const submitOnboardingWorkspace = async (
   return (await apiClient.post(
     API_ENDPOINTS.ONBOARDING_STEP_TWO,
     data
-  )) as Promise<OnboardingWorkspaceResponse>;
+  )) as unknown as OnboardingWorkspaceResponse;
 };
 
 export const completeOnboarding = async (): Promise<void> => {

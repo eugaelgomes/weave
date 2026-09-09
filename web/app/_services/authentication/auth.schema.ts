@@ -191,6 +191,12 @@ export const UserSchema = z.object({
   usage_details: UsageDetailsSchema,
 
   org_default_area: BackendOrgDefaultAreaFieldsSchema.nullable().optional(),
+  onboarding_state: z
+    .object({
+      step: z.string().optional(),
+      completed_steps: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 export const BackendProfileSchema = z.object({
@@ -243,6 +249,12 @@ export const BackendAuthResponseSchema = z.object({
   status: z.string(),
   message: z.string().optional(),
   user: z.object({
+    onboarding_state: z
+      .object({
+        step: z.string().optional(),
+        completed_steps: z.array(z.string()).optional(),
+      })
+      .optional(),
     user_profile: z.object({
       id: z.string(),
       name: z.string().optional(),
@@ -326,6 +338,12 @@ export const BackendMeResponseSchema = z.object({
       })
       .optional()
       .nullable(),
+    onboarding_state: z
+      .object({
+        step: z.string().optional(),
+        completed_steps: z.array(z.string()).optional(),
+      })
+      .optional(),
     usage_preference: z.record(z.string(), z.unknown()).nullable().optional(),
   }),
 });

@@ -12,6 +12,7 @@ function buildUserWithContextQuery(whereClause) {
       u.avatar_url, u.auth_with_google, u.auth_with_github, u.auth_with_microsoft,
       u.github_id, u.microsoft_id, u.theme_mode,
       u.private_profile, u.plan_id, u.created_at,
+      u.onboarding_state,
 
       (SELECT p.name FROM plans p WHERE p.plan_id = u.plan_id) AS plan_name,
 
