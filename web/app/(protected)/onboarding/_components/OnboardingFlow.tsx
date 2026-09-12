@@ -220,8 +220,8 @@ export function OnboardingFlow() {
   );
 
   return (
-    <main className="mx-2 flex h-full min-h-0 w-auto flex-1 flex-col overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 lg:p-8">
-      <div className="mx-auto my-auto w-full max-w-4xl space-y-5 sm:space-y-6 py-2 sm:py-4">
+    <main className="mx-2 h-full min-h-0 w-auto flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 lg:p-8">
+      <div className="mx-auto w-full max-w-4xl space-y-5 sm:space-y-6 py-2 pb-24 sm:py-4 sm:pb-28">
         {/* Superior Horizontal Stepper Overview */}
         <nav
           aria-label="Etapas do onboarding"
