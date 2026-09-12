@@ -98,17 +98,18 @@ class CredentialsController extends AuthBaseController {
   }
 
   /**
-   * Signin user with email/username and password.
+   * Signin user with email and password.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    * @param {import('express').NextFunction} next
    * @returns {Promise<unknown>}
    */
   async userSignin(req, res, next) {
-    const { login: username, password } = req.body;
+    const email = (req.body.email || req.body.login || "").trim().toLowerCase();
+    const { password } = req.body;
 
     try {
-      const user = await CredentialsRepository.findUserByUsername(username);
+      const user = await CredentialsRepository.findUserByEmail(email);
 
       if (!user) {
         return next(AppError.unauthorized("Invalid credentials."));
@@ -150,10 +151,10 @@ class CredentialsController extends AuthBaseController {
    * @returns {Promise<unknown>}
    */
   async requestSigninCode(req, res, next) {
-    const { login } = req.body;
+    const email = (req.body.email || req.body.login || "").trim().toLowerCase();
 
     try {
-      const user = await CredentialsRepository.findUserByUsername(login);
+      const user = await CredentialsRepository.findUserByEmail(email);
 
       if (!user) {
         return res.status(200).json({
@@ -193,17 +194,18 @@ class CredentialsController extends AuthBaseController {
   }
 
   /**
-   * Signin user with email/username and a one-time login code.
+   * Signin user with email and a one-time login code.
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    * @param {import('express').NextFunction} next
    * @returns {Promise<unknown>}
    */
   async userSigninWithCode(req, res, next) {
-    const { login, code } = req.body;
+    const email = (req.body.email || req.body.login || "").trim().toLowerCase();
+    const { code } = req.body;
 
     try {
-      const user = await CredentialsRepository.findUserByUsername(login);
+      const user = await CredentialsRepository.findUserByEmail(email);
 
       if (!user) {
         return next(AppError.unauthorized("Invalid credentials."));

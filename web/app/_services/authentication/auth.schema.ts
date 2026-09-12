@@ -3,7 +3,6 @@ import { emailLocalPartContainsPlus } from "@/app/_utils/email-rules";
 
 /** RFC-like email string without `+` in the local part (aligned with API rules). */
 export const EmailNoPlusAliasSchema = z
-  .string()
   .email()
   .refine((val: string) => !emailLocalPartContainsPlus(val), {
     message: "Emails with plus aliases are not allowed.",
@@ -132,7 +131,7 @@ export const UserSchema = z.object({
   id: z.string().optional(),
   username: z.string().optional(),
   user_name: z.string().optional(),
-  email: z.string().email("Invalid email").optional(),
+  email: z.email("Invalid email").optional(),
   avatar_url: z.string().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
@@ -203,7 +202,7 @@ export const BackendProfileSchema = z.object({
   id: z.coerce.string(),
   user_name: z.string(),
   username: z.string(),
-  email: z.union([z.string().email(), z.null(), z.literal("")]),
+  email: z.union([z.email(), z.null(), z.literal("")]),
   avatar_url: z.union([z.string(), z.null()]),
   created_at: z.string(),
   updated_at: z.string().optional().nullable(),
@@ -259,7 +258,7 @@ export const BackendAuthResponseSchema = z.object({
       id: z.string(),
       name: z.string().optional(),
       username: z.string(),
-      email: z.union([z.string().email(), z.null(), z.literal("")]).optional(),
+      email: z.union([z.email(), z.null(), z.literal("")]).optional(),
       avatar_url: z.union([z.string(), z.null()]).optional(),
       public_id: z.string().optional(),
     }),
@@ -350,16 +349,16 @@ export const BackendMeResponseSchema = z.object({
 
 // Zod schemas for payload parameters
 export const LoginCredentialsSchema = z.object({
-  login: z.string().min(1, "Login is required"),
+  login: z.email("Invalid email").trim(),
   password: z.string().min(1, "Password is required"),
 });
 
 export const LoginCodeRequestSchema = z.object({
-  login: z.string().trim().min(1, "Login is required"),
+  login: z.email("Invalid email").trim(),
 });
 
 export const LoginCodeVerificationSchema = z.object({
-  login: z.string().trim().min(1, "Login is required"),
+  login: z.email("Invalid email").trim(),
   code: z
     .string()
     .trim()
@@ -367,7 +366,7 @@ export const LoginCodeVerificationSchema = z.object({
 });
 
 export const SamlSsoDiscoverRequestSchema = z.object({
-  email: z.string().trim().email("Invalid email"),
+  email: z.email("Invalid email").trim(),
 });
 
 export const SamlSsoDiscoverResponseSchema = z.object({

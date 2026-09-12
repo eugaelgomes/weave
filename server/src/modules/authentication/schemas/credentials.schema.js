@@ -2,12 +2,20 @@ const { z } = require("zod");
 
 const signinSchema = z
   .object({
-    login: z
-      .string({ required_error: "Username or email is required." })
-      .min(3, "Invalid username or email length.")
-      .max(255, "Invalid username or email length.")
+    email: z
+      .email("Invalid email format.")
+      .max(255, "Invalid email length.")
       .trim()
-      .describe("The username or email address used for authentication."),
+      .toLowerCase()
+      .optional()
+      .describe("The email address used for authentication."),
+    login: z
+      .email("Invalid email format.")
+      .max(255, "Invalid email length.")
+      .trim()
+      .toLowerCase()
+      .optional()
+      .describe("The email address used for authentication."),
     password: z
       .string({ required_error: "Password is required." })
       .min(1, "Password is required.")
@@ -20,16 +28,32 @@ const signinSchema = z
         "Optional flag that, if true, only verifies credentials without starting a new session."
       ),
   })
+  .refine((data) => Boolean(data.login || data.email), {
+    message: "Email is required.",
+    path: ["email"],
+  })
   .strict("Invalid signin payload structure.");
 
 const signinCodeRequestSchema = z
   .object({
-    login: z
-      .string({ required_error: "Username or email is required." })
-      .min(3, "Invalid username or email length.")
-      .max(255, "Invalid username or email length.")
+    email: z
+      .email("Invalid email format.")
+      .max(255, "Invalid email length.")
       .trim()
-      .describe("The username or email address used to request a login code."),
+      .toLowerCase()
+      .optional()
+      .describe("The email address used to request a login code."),
+    login: z
+      .email("Invalid email format.")
+      .max(255, "Invalid email length.")
+      .trim()
+      .toLowerCase()
+      .optional()
+      .describe("The email address used to request a login code."),
+  })
+  .refine((data) => Boolean(data.login || data.email), {
+    message: "Email is required.",
+    path: ["email"],
   })
   .strict("Invalid signin code request payload structure.");
 
@@ -42,18 +66,30 @@ const signinCodeVerifySchema = z
       .trim()
       .regex(/^\d{6}$/, "Invalid code format.")
       .describe("The one-time code sent to the user's email."),
-    login: z
-      .string({ required_error: "Username or email is required." })
-      .min(3, "Invalid username or email length.")
-      .max(255, "Invalid username or email length.")
+    email: z
+      .email("Invalid email format.")
+      .max(255, "Invalid email length.")
       .trim()
-      .describe("The username or email address used to verify a login code."),
+      .toLowerCase()
+      .optional()
+      .describe("The email address used to verify a login code."),
+    login: z
+      .email("Invalid email format.")
+      .max(255, "Invalid email length.")
+      .trim()
+      .toLowerCase()
+      .optional()
+      .describe("The email address used to verify a login code."),
     verify_only: z
       .boolean()
       .optional()
       .describe(
         "Optional flag that, if true, only verifies credentials without starting a new session."
       ),
+  })
+  .refine((data) => Boolean(data.login || data.email), {
+    message: "Email is required.",
+    path: ["email"],
   })
   .strict("Invalid signin code verification payload structure.");
 

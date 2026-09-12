@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { User, Lock, Eye, EyeOff, Mail, Shield } from "lucide-react";
+import { Lock, Eye, EyeOff, Mail, Shield } from "lucide-react";
 import { getTranslations, LocaleKey } from "@/app/(public)/auth/_i18n";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useRouter } from "next/navigation";
@@ -225,7 +225,7 @@ export function SignIn({
     const trimmedLogin = (customLogin ?? loginValue).trim();
 
     if (!trimmedLogin) {
-      setError("Por favor, informe seu e-mail ou usuário.");
+      setError("Por favor, informe seu e-mail.");
       return;
     }
 
@@ -245,7 +245,7 @@ export function SignIn({
     const trimmedLogin = loginInput.trim();
 
     if (!trimmedLogin || !codeInput) {
-      setError("Por favor, informe seu e-mail/usuário e o código.");
+      setError("Por favor, informe seu e-mail e o código.");
       return;
     }
 
@@ -384,7 +384,7 @@ export function SignIn({
   const handleTopCodeClick = async () => {
     const trimmed = loginValue.trim();
     if (!trimmed) {
-      setError("Por favor, informe seu e-mail ou usuário.");
+      setError("Por favor, informe seu e-mail.");
       return;
     }
     switchToCode();
@@ -409,10 +409,12 @@ export function SignIn({
             </label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                <User className="text-brand-secondary-400 h-4 w-4 dark:text-neutral-500" />
+                <Mail className="text-brand-secondary-400 h-4 w-4 dark:text-neutral-500" />
               </div>
               <input
-                type="text"
+                type="email"
+                autoComplete="email"
+                autoCapitalize="none"
                 value={loginValue}
                 onChange={(e) => handleLoginChange(e.target.value)}
                 placeholder={t.signIn.usernamePlaceholder}
