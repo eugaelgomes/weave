@@ -31,7 +31,7 @@ class OnboardingRepository extends BaseRepository {
           jsonb_set(COALESCE(onboarding_state, '{}'::jsonb), '{step}', ${stepValue}::jsonb),
           '{completed_steps}', (COALESCE(onboarding_state->'completed_steps', '[]'::jsonb) - ${stepKeyToAppend}::text) || ${appendValue}::jsonb
       )
-      WHERE user_id = ${userId}
+      WHERE user_id = ${userId}::uuid
     `;
   }
 
