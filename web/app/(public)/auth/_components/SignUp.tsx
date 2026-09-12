@@ -246,7 +246,13 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const hasAnyAlternative = activeSocialButtonsCount > 0 || showSaml;
 
   const gridColsClass =
-    activeSocialButtonsCount === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2";
+    activeSocialButtonsCount === 1
+      ? "grid-cols-1"
+      : activeSocialButtonsCount === 2
+        ? "grid-cols-1 sm:grid-cols-2"
+        : activeSocialButtonsCount === 3
+          ? "grid-cols-1 sm:grid-cols-3"
+          : "grid-cols-1 sm:grid-cols-2";
 
   return (
     <div className="flex w-full flex-col px-6 py-4 sm:px-8">
