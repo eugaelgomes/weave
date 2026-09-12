@@ -18,7 +18,7 @@ export const esES = {
     verifyCodeButton: "Entrar con codigo",
     orLoginWith: "o",
     loginWithCode: "Código",
-    loginWithSso: "Continuar con SAML SSO",
+    loginWithSso: "SAML SSO",
     backToPassword: "Usar contraseña",
     codeRequestError: "No fue posible enviar el codigo de inicio de sesion. Intenta de nuevo.",
     invalidCode: "Codigo invalido o expirado. Intenta de nuevo.",

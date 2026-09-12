@@ -18,7 +18,7 @@ export const enUS = {
     verifyCodeButton: "Sign in with code",
     orLoginWith: "or",
     loginWithCode: "Code",
-    loginWithSso: "Continue with SAML SSO",
+    loginWithSso: "SAML SSO",
     backToPassword: "Use password",
     codeRequestError: "Could not send the sign-in code. Please try again.",
     invalidCode: "Invalid or expired code. Please try again.",

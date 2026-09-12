@@ -18,7 +18,7 @@ export const ptBR = {
     verifyCodeButton: "Entrar com código",
     orLoginWith: "ou",
     loginWithCode: "Código",
-    loginWithSso: "Continuar com SAML SSO",
+    loginWithSso: "SAML SSO",
     backToPassword: "Usar senha",
     codeRequestError: "Nao foi possivel enviar o codigo de login. Tente novamente.",
     invalidCode: "Codigo invalido ou expirado. Tente novamente.",
