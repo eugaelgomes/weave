@@ -316,7 +316,7 @@ class UsersRepository extends BaseRepository {
    *
    * @param {string} userId - Target user UUID.
    * @param {import('@prisma/client').PrismaClient | import('@prisma/client').Prisma.TransactionClient} [client=prisma] - Transaction or client instance.
-   * @returns {Promise<{ avatar_url: string|null, created_at: Date, email: string, name: string, user_id: string, username: string } | null>} User record or null.
+   * @returns {Promise<{ avatar_url: string|null, created_at: Date, email: string, email_verified: boolean, name: string, onboarding_state: Record<string, unknown>, user_id: string, user_preference: Record<string, unknown>, username: string } | null>} User record or null.
    */
   async getUserById(userId, client = prisma) {
     return await client.users.findFirst({
@@ -324,8 +324,11 @@ class UsersRepository extends BaseRepository {
         avatar_url: true,
         created_at: true,
         email: true,
+        email_verified: true,
         name: true,
+        onboarding_state: true,
         user_id: true,
+        user_preference: true,
         username: true,
       },
       where: {

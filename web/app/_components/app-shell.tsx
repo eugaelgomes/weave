@@ -12,7 +12,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const hasRedirected = useRef(false);
-  const isOnboardingPath = pathname === "/onboarding" || pathname.startsWith("/onboarding/");
+  const isOnboardingPath =
+    pathname === "/account/onboarding" ||
+    pathname.startsWith("/account/onboarding/") ||
+    pathname === "/onboarding" ||
+    pathname.startsWith("/onboarding/");
   const onboardingComplete = user?.onboarding_state?.step === "COMPLETED";
 
   useEffect(() => {
@@ -37,16 +41,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       !hasRedirected.current
     ) {
       hasRedirected.current = true;
-      router.replace("/onboarding");
+      router.replace("/account/onboarding");
     }
   }, [authenticated, isOnboardingPath, loading, onboardingComplete, router, user]);
 
   if (loading || !authenticated || (authenticated && !onboardingComplete && !isOnboardingPath)) {
     return <GlobalLoading className="h-screen min-h-screen" />;
-  }
-
-  if (isOnboardingPath) {
-    return children;
   }
 
   return (

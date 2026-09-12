@@ -265,7 +265,7 @@ class UsersController extends BaseController {
   async getProfile(req, res, next) {
     try {
       this._validateAuthentication(req, res, next);
-      const user = await this.signinRepository.findUserByUsername(req.user.username);
+      const user = await this.credentialsRepository.findUserByUsername(req.user.username);
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -297,6 +297,23 @@ class UsersController extends BaseController {
           current_plan_usage: planUsage,
           onboarding_state: user.onboarding_state || {},
           usage_preference: normalizeAppPreferences(user.user_preference || {}),
+          user_organization: {
+            active_modules: protectedOrg?.active_modules || {
+              agent_house: true,
+              calendar: true,
+              notes: true,
+              projects: true,
+              weave_flow: true,
+            },
+            default_area: defaultArea,
+            id: protectedOrg?.id || null,
+            logo_url: protectedOrg?.logo_url || null,
+            member_role: protectedOrg?.member_role || null,
+            member_since: protectedOrg?.member_since || null,
+            name: protectedOrg?.name || null,
+            public_id: protectedOrg?.public_id || null,
+            unique_name: protectedOrg?.unique_name || null,
+          },
           user_profile: {
             avatar_url: protectedUser.avatar_url,
             birth_date: protectedUser.birth_date,
@@ -314,23 +331,6 @@ class UsersController extends BaseController {
             private_profile: protectedUser.private_profile,
             theme_mode: protectedUser.theme_mode,
           },
-          user_workspace: {
-            active_modules: protectedOrg?.active_modules || {
-              agent_house: true,
-              calendar: true,
-              notes: true,
-              projects: true,
-              weave_flow: true,
-            },
-            default_area: defaultArea,
-            id: protectedOrg?.id || null,
-            logo_url: protectedOrg?.logo_url || null,
-            member_role: protectedOrg?.member_role || null,
-            member_since: protectedOrg?.member_since || null,
-            name: protectedOrg?.name || null,
-            public_id: protectedOrg?.public_id || null,
-            unique_name: protectedOrg?.unique_name || null,
-          },
         },
       });
     } catch (error) {
@@ -341,7 +341,7 @@ class UsersController extends BaseController {
 
   async updateProfile(req, res, next) {
     try {
-      const currentUser = await this.signinRepository.findUserByUsername(req.user.username);
+      const currentUser = await this.credentialsRepository.findUserByUsername(req.user.username);
 
       if (!currentUser) {
         return res.status(404).json({ message: "User not found" });

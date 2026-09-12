@@ -170,10 +170,10 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
       <SetProfileSettings
         locale={locale}
         onSkip={() =>
-          router.push(user?.org_public_id ? `/${user.org_public_id}/home` : "/onboarding")
+          router.push(user?.org_public_id ? `/${user.org_public_id}/home` : "/account/onboarding")
         }
         onComplete={() =>
-          router.push(user?.org_public_id ? `/${user.org_public_id}/home` : "/onboarding")
+          router.push(user?.org_public_id ? `/${user.org_public_id}/home` : "/account/onboarding")
         }
       />
     );
@@ -301,7 +301,7 @@ export function ConfirmCreateAccount({ onNavigate, email, pendingAuth, locale = 
                     type="button"
                     onClick={() =>
                       router.push(
-                        user?.org_public_id ? `/${user.org_public_id}/home` : "/onboarding"
+                        user?.org_public_id ? `/${user.org_public_id}/home` : "/account/onboarding"
                       )
                     }
                     className="border-brand-secondary-200 text-brand-secondary-700 hover:bg-brand-secondary-100 w-full rounded-md border bg-white px-4 py-1.5 text-sm font-medium transition-colors"

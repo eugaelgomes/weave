@@ -2,14 +2,14 @@ const { prisma } = require("@theweave/database");
 const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
 const WorkspacesRepository = require("@/modules/workspaces/repositories/base.repository");
 const OnboardingRepository = require("../repositories/onboarding.repository");
-const queueController = require("@theweave/database");
+const { normalizeAppPreferences } = require("@/modules/users/utils/normalize");
 
 class OnboardingService {
   /**
    * Processes the first onboarding step (Profile Setup)
    */
   async processProfileStep(userId, profileData) {
-    const { name, username, timezone } = profileData;
+    const { name, username, timezone, theme_mode, usage_preference } = profileData;
 
     // Check if user already accepted terms
     const user = await SearchUsersRepository.findById(userId);
@@ -42,6 +42,20 @@ class OnboardingService {
 
       if (typeof timezone === "string" && timezone.trim()) {
         profileUpdates.timezone = timezone.trim();
+      }
+
+      if (theme_mode) {
+        profileUpdates.theme_mode = theme_mode;
+      }
+
+      if (usage_preference) {
+        profileUpdates.user_preference = normalizeAppPreferences({
+          ...user.user_preference,
+          language: {
+            ...user.user_preference?.language,
+            ...usage_preference.language,
+          },
+        });
       }
 
       if (Object.keys(profileUpdates).length > 0) {
@@ -109,32 +123,18 @@ class OnboardingService {
         client
       );
 
+      // Workspace setup is the final user-facing onboarding step.
+      await OnboardingRepository.appendOnboardingStep(userId, "COMPLETED", "intro", client);
+
       return { workspaceId: workspaceIdToJoin };
     });
   }
 
-  /**
-   * Completes the onboarding flow and dispatches welcome email
-   */
+  /** Completes the onboarding flow. */
   async completeOnboarding(userId) {
     await prisma.$transaction(async (client) => {
       await OnboardingRepository.appendOnboardingStep(userId, "COMPLETED", "intro", client);
     });
-
-    const user = await SearchUsersRepository.findById(userId);
-
-    // Dispatch welcome email
-    if (user && user.email) {
-      queueController
-        .addJob("emails_queue", {
-          email: user.email,
-          type: "welcome_message",
-          userName: user.name,
-          username: user.username,
-        })
-        .catch((err) => console.error("Failed to enqueue welcome message:", err));
-    }
-
     return { message: "Onboarding finalized", success: true };
   }
 }

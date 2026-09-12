@@ -18,8 +18,6 @@ export const WorkspaceSwitcher = () => {
   const [loading, setLoading] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
 
-
-
   const containerRef = useRef<HTMLDivElement>(null);
 
   const activeOrgName = user?.user_organization?.name || user?.org_name || "";
@@ -72,8 +70,6 @@ export const WorkspaceSwitcher = () => {
       setSwitchingId(null);
     }
   };
-
-
 
   if (!activeOrgName && !activeOrgUniqueName) {
     return null;
@@ -195,7 +191,7 @@ export const WorkspaceSwitcher = () => {
                 type="button"
                 onClick={() => {
                   setIsOpen(false);
-                  window.location.href = "/onboarding?step=2";
+                  window.location.href = "/account/onboarding?step=2";
                 }}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium text-gray-600 transition-colors hover:bg-black/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
               >
@@ -206,8 +202,6 @@ export const WorkspaceSwitcher = () => {
           </div>
         )}
       </div>
-
-
     </>
   );
 };

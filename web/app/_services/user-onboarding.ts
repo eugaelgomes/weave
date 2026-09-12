@@ -4,6 +4,14 @@ export interface OnboardingProfileData {
   name?: string;
   username?: string;
   timezone?: string;
+  theme_mode?: "LIGHT" | "DARK";
+  usage_preference?: {
+    language?: {
+      interface?: "pt-BR" | "en-US" | "es-ES";
+      dateFormat?: "DD/MM/YYYY" | "YYYY-MM-DD";
+      timeFormat?: "12h" | "24h";
+    };
+  };
 }
 
 export interface OnboardingWorkspaceData {
@@ -20,7 +28,8 @@ export interface OnboardingWorkspaceResponse {
 }
 
 export const submitOnboardingProfile = async (data: OnboardingProfileData): Promise<void> => {
-  await apiClient.post(API_ENDPOINTS.ONBOARDING_STEP_ONE, data);
+  const response = await apiClient.post(API_ENDPOINTS.ONBOARDING_STEP_ONE, data);
+  await handleResponse(response);
 };
 
 export const submitOnboardingWorkspace = async (

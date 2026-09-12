@@ -73,6 +73,14 @@ class OnboardingRepository extends BaseRepository {
       data.timezone = profileData.timezone || null;
     }
 
+    if (profileData.theme_mode !== undefined) {
+      data.theme_mode = profileData.theme_mode;
+    }
+
+    if (profileData.user_preference !== undefined) {
+      data.user_preference = profileData.user_preference;
+    }
+
     if (Object.keys(data).length === 0) {
       return await client.users.findUnique({ where: { user_id: userId } });
     }

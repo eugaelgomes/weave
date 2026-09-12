@@ -18,9 +18,21 @@ const usernameValidator = z
   .regex(usernameRegex, "Only letters, numbers, ., -, or _ are allowed.")
   .toLowerCase();
 
+const preferencesValidator = z.object({
+  language: z
+    .object({
+      dateFormat: z.enum(["DD/MM/YYYY", "YYYY-MM-DD"]).optional(),
+      interface: z.enum(["pt-BR", "en-US", "es-ES"]).optional(),
+      timeFormat: z.enum(["12h", "24h"]).optional(),
+    })
+    .optional(),
+});
+
 const submitStepOneSchema = z.object({
   name: nameValidator.optional(),
+  theme_mode: z.enum(["LIGHT", "DARK"]).optional(),
   timezone: z.string().optional(),
+  usage_preference: preferencesValidator.optional(),
   username: usernameValidator.optional(),
 });
 
