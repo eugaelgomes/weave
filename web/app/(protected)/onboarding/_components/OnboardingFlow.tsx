@@ -220,8 +220,8 @@ export function OnboardingFlow() {
   );
 
   return (
-    <main className="flex min-h-[calc(100dvh-5rem)] w-full items-center justify-center p-4 sm:p-6 lg:p-10">
-      <div className="w-full max-w-4xl space-y-6">
+    <main className="mx-2 flex h-full min-h-0 w-auto flex-1 flex-col overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 lg:p-8">
+      <div className="mx-auto my-auto w-full max-w-4xl space-y-5 sm:space-y-6 py-2 sm:py-4">
         {/* Superior Horizontal Stepper Overview */}
         <nav
           aria-label="Etapas do onboarding"
@@ -597,7 +597,7 @@ export function OnboardingFlow() {
             </div>
 
             {/* Live Interactive Preview Column */}
-            <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between rounded-xl border border-neutral-200/70 bg-neutral-50/50 p-5 dark:border-white/5 dark:bg-white/[0.02]">
+            <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between rounded-xl border border-neutral-200/70 bg-neutral-50/50 p-5 dark:border-white/5 dark:bg-white/[0.02] self-start lg:sticky lg:top-4">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-neutral-200/60 dark:border-white/5">
                   <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
