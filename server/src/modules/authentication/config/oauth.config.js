@@ -2,17 +2,19 @@ const { getBackendUrl } = require("@/utils/url.util");
 
 /**
  * Evaluates whether an authentication provider is enabled based on its env flag and credentials.
+ * Only returns true if the environment variable is strictly equal to "true" (case-insensitive)
+ * and required credentials are present. If omitted or anything else, returns false.
  *
  * @param {string | undefined} envValue - Flag from process.env (e.g. GOOGLE_AUTH_ENABLED)
- * @param {unknown} hasCredentials - Truthy check for client credentials
+ * @param {unknown} [hasCredentials=true] - Truthy check for client credentials
  * @returns {boolean}
  */
-function isAuthFlagEnabled(envValue, hasCredentials) {
-  if (envValue === undefined || envValue === null || envValue === "") {
-    return Boolean(hasCredentials);
-  }
-  const normalized = String(envValue).trim().toLowerCase();
-  if (normalized === "false" || normalized === "0") {
+function isAuthFlagEnabled(envValue, hasCredentials = true) {
+  if (
+    String(envValue ?? "")
+      .trim()
+      .toLowerCase() !== "true"
+  ) {
     return false;
   }
   return Boolean(hasCredentials);
