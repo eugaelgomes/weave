@@ -34,7 +34,8 @@ async function send_code({ code, email, localeHint, name }) {
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
       html,
-      subject: t(locale, "verificationCode.subject"),
+      priority: "high",
+      subject: `${t(locale, "verificationCode.subject")} (${code})`,
       text,
       to: email,
     });

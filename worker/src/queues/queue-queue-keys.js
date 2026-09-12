@@ -14,6 +14,10 @@ function getEmailQueueRedisKey() {
   return process.env.REDIS_EMAIL_QUEUE_KEY || "weave:emails:queue";
 }
 
+function getTransactionalEmailQueueRedisKey() {
+  return process.env.REDIS_TRANSACTIONAL_EMAIL_QUEUE_KEY || "weave:emails:transactional:queue";
+}
+
 /**
  * @returns {string}
  */
@@ -83,5 +87,6 @@ module.exports = {
   getPlanUsageDelayedQueueRedisKey,
   getPlanUsageQueueRedisKey,
   getTracingEventsQueueRedisKey,
+  getTransactionalEmailQueueRedisKey,
   PLAN_USAGE_RETRY_INTERVAL_MS,
 };

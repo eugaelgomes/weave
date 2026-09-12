@@ -3,6 +3,7 @@ import { redis } from "./client";
 import { getRequestId } from "../context";
 import {
   getEmailQueueRedisKey,
+  getTransactionalEmailQueueRedisKey,
   getDomainVerifyQueueRedisKey,
   getPlanUsageQueueRedisKey,
   getBackupExportQueueRedisKey,
@@ -21,9 +22,15 @@ export async function enqueueRedisListJob(listKey: string, jobBody: Record<strin
   }
 }
 
-export async function enqueueEmailJob(emailPayload: any, requestId?: string) {
+export async function enqueueEmailJob(
+  emailPayload: any,
+  requestId?: string,
+  { priority = "normal" }: { priority?: "high" | "normal" } = {}
+) {
   const finalRequestId = requestId || getRequestId();
-  await enqueueRedisListJob(getEmailQueueRedisKey(), {
+  const queueKey = priority === "high" ? getTransactionalEmailQueueRedisKey() : getEmailQueueRedisKey();
+
+  await enqueueRedisListJob(queueKey, {
     payload: emailPayload,
     queuedAt: new Date().toISOString(),
     requestId: finalRequestId,

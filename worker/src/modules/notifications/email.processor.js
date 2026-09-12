@@ -1,12 +1,25 @@
 const { redisConsumer: redis } = require("@theweave/database");
-const { getEmailQueueRedisKey } = require("../../queues/queue-queue-keys");
+const {
+  getEmailQueueRedisKey,
+  getTransactionalEmailQueueRedisKey,
+} = require("../../queues/queue-queue-keys");
 const { createMailService } = require("../../mail/sender");
 const { logger } = require("@theweave/database");
+
+const DEFAULT_CONCURRENCY = 5;
+const MAX_CONCURRENCY = 5;
+
+function getConcurrency() {
+  const configured = Number.parseInt(process.env.EMAIL_DELIVERY_CONCURRENCY, 10);
+  if (!Number.isInteger(configured)) return DEFAULT_CONCURRENCY;
+  return Math.min(Math.max(configured, 1), MAX_CONCURRENCY);
+}
 
 class EmailProcessor {
   constructor() {
     this.mailService = createMailService();
     this.isRunning = false;
+    this.consumers = [];
   }
 
   async verifyTransport() {
@@ -18,19 +31,32 @@ class EmailProcessor {
     await this.verifyTransport();
     this.isRunning = true;
 
-    const queueName = getEmailQueueRedisKey();
-    logger.info(`[Email Processor] Listening for jobs on list: ${queueName}`);
+    const queueNames = [getTransactionalEmailQueueRedisKey(), getEmailQueueRedisKey()];
+    const concurrency = getConcurrency();
+    this.consumers = Array.from({ length: concurrency }, () => redis.duplicate());
 
+    logger.info("[Email Processor] Listening for jobs", { concurrency, queueNames });
+
+    for (const consumer of this.consumers) {
+      this.consume(consumer, queueNames).catch((error) => {
+        logger.error("[Email Processor] Consumer stopped unexpectedly", { error });
+      });
+    }
+  }
+
+  async consume(consumer, queueNames) {
     while (this.isRunning) {
       try {
-        // block waiting for a job
-        const result = await redis.blpop(queueName, 5);
+        // Transactional login and verification codes are checked first.
+        const result = await consumer.blpop(queueNames, 5);
 
         if (result) {
-          const [, jobDataStr] = result;
+          const [queueName, jobDataStr] = result;
+          logger.debug("[Email Processor] Dequeued email", { queueName });
           await this.processJob(JSON.parse(jobDataStr));
         }
       } catch (error) {
+        if (!this.isRunning) break;
         logger.error("[Email Processor] Error waiting for jobs or processing", { error });
         // small timeout to avoid tight loop on errors
         await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -60,6 +86,10 @@ class EmailProcessor {
 
   stop() {
     this.isRunning = false;
+    for (const consumer of this.consumers) {
+      consumer.disconnect();
+    }
+    this.consumers = [];
   }
 }
 

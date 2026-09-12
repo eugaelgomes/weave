@@ -2,6 +2,7 @@
  * Default fallback keys for system queues.
  */
 export const DEFAULT_EMAIL_QUEUE_KEY = "weave:emails:queue";
+export const DEFAULT_TRANSACTIONAL_EMAIL_QUEUE_KEY = "weave:emails:transactional:queue";
 export const DEFAULT_BACKUP_EXPORT_QUEUE_KEY = "weave:backups:export:queue";
 export const DEFAULT_DOMAIN_VERIFY_QUEUE_KEY = "weave:domains:verify:queue";
 export const DEFAULT_PLAN_USAGE_QUEUE_KEY = "weave:plans:usage:queue";
@@ -16,6 +17,10 @@ export const DEFAULT_TRACING_EVENTS_QUEUE_KEY = "weave:tracing:events:queue";
 
 export function getEmailQueueRedisKey(): string {
   return process.env.REDIS_EMAIL_QUEUE_KEY || DEFAULT_EMAIL_QUEUE_KEY;
+}
+
+export function getTransactionalEmailQueueRedisKey(): string {
+  return process.env.REDIS_TRANSACTIONAL_EMAIL_QUEUE_KEY || DEFAULT_TRANSACTIONAL_EMAIL_QUEUE_KEY;
 }
 
 export function getBackupExportQueueRedisKey(): string {
@@ -67,6 +72,7 @@ export const REDIS_QUEUE_KEYS = Object.freeze({
   get BACKUP_EXPORT() { return getBackupExportQueueRedisKey(); },
   get DOMAIN_VERIFY() { return getDomainVerifyQueueRedisKey(); },
   get EMAIL() { return getEmailQueueRedisKey(); },
+  get TRANSACTIONAL_EMAIL() { return getTransactionalEmailQueueRedisKey(); },
   get ENGINE_LLM_REQUEST() { return getEngineLlmRequestQueueRedisKey(); },
   get ENGINE_LLM_RESPONSE_PREFIX() { return getEngineLlmResponsePrefixRedisKey(); },
   get ENGINE_PROACTIVE_RESPONSE() { return getEngineProactiveResponseQueueRedisKey(); },

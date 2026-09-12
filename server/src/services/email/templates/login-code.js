@@ -1,14 +1,15 @@
 const { MailService } = require("@/services/email/config");
 const { buildMailTemplate, escapeHtml } = require("@/services/email/mail-template");
-const { getUserEmailLocale, t } = require("@/services/email/i18n");
+const { getUserEmailLocale, resolveEmailLocale, t } = require("@/services/email/i18n");
 
 /**
  * @param {string} email
  * @param {string} code
  * @param {string} name
+ * @param {string} [localeHint]
  */
-async function mail_login_code(email, code, name) {
-  const locale = await getUserEmailLocale({ email });
+async function mail_login_code(email, code, name, localeHint) {
+  const locale = localeHint ? resolveEmailLocale(localeHint) : await getUserEmailLocale({ email });
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
   const loginUrl = `${frontendUrl}/auth/?view=signin&login=${encodeURIComponent(
     email
@@ -39,7 +40,8 @@ async function mail_login_code(email, code, name) {
     await MailService().sendMail({
       from: process.env.EMAIL_FROM,
       html,
-      subject: t(locale, "loginCode.subject"),
+      priority: "high",
+      subject: `${t(locale, "loginCode.subject")} (${code})`,
       text,
       to: email,
     });

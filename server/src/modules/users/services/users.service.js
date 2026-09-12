@@ -244,6 +244,7 @@ class UsersService {
     const emailResult = await send_code({
       code: activationCode,
       email: result.email,
+      localeHint: defaultAppPreferences.language.interface,
       name: result.userName,
     });
 
@@ -283,6 +284,8 @@ class UsersService {
     return await send_code({
       code: activationCode,
       email: user.email,
+      localeHint:
+        user.user_preference?.language?.interface || defaultAppPreferences.language.interface,
       name: user.name,
     });
   }

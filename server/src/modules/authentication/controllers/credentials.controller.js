@@ -175,7 +175,8 @@ class CredentialsController extends AuthBaseController {
       const emailResult = await mail_login_code(
         user.email,
         code,
-        user.user_name || user.name || user.username
+        user.user_name || user.name || user.username,
+        user.user_preference?.language?.interface
       );
 
       if (!emailResult.success) {

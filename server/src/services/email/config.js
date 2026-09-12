@@ -39,6 +39,7 @@ function MailService() {
         cc,
         bcc,
         replyTo,
+        priority = "normal",
       } = mailOptions;
 
       const sender = normalizeSenderFrom(from);
@@ -67,7 +68,7 @@ function MailService() {
       };
 
       try {
-        return await enqueueEmailJob(payload);
+        return await enqueueEmailJob(payload, undefined, { priority });
       } catch (error) {
         console.error("Erro ao enfileirar email no Redis:", error);
         throw new Error("Erro ao enfileirar email");
