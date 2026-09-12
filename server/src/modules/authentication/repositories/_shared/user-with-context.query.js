@@ -19,7 +19,9 @@ function buildUserWithContextQuery(whereClause) {
       (
         SELECT row_to_json(workspace_data)
         FROM (
-          SELECT wm.workspace_id AS workspace_id, wm.role_id AS workspace_member_role_id,
+          SELECT wm.workspace_id AS workspace_id,
+                 (SELECT wmr.role_id FROM workspace_member_roles wmr WHERE wmr.workspace_member_id = wm.id LIMIT 1) AS workspace_member_role_id,
+                 wm.created_at AS workspace_member_since,
                  w.unique_name AS workspace_unique_name, w.public_id AS workspace_public_id,
                  w.workspace_name, w.logo_url AS workspace_logo_url
           FROM workspace_members wm
