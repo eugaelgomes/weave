@@ -372,7 +372,7 @@ export const SamlSsoDiscoverRequestSchema = z.object({
 export const SamlSsoDiscoverResponseSchema = z.object({
   success: z.boolean(),
   requires_sso: z.boolean().optional(),
-  organization_id: z.string().uuid().optional(),
+  organization_id: z.uuid().optional(),
   provider: z.string().optional(),
 });
 
