@@ -201,11 +201,6 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
     }
   };
 
-  const handleCodeSignup = () => {
-    const login = trimmedEmail && EMAIL_REGEX.test(trimmedEmail) ? trimmedEmail : undefined;
-    onNavigate("signin", login ? { login } : undefined);
-  };
-
   const handleSamlSso = async () => {
     if (emailError) {
       setError(emailError);
@@ -237,12 +232,9 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const showGoogle = isProviderEnabled("google");
   const showGithub = isProviderEnabled("github");
   const showMicrosoft = isProviderEnabled("microsoft");
-  const showCode = isProviderEnabled("code");
   const showSaml = isProviderEnabled("saml");
 
-  const activeSocialButtonsCount = [showGoogle, showGithub, showMicrosoft, showCode].filter(
-    Boolean
-  ).length;
+  const activeSocialButtonsCount = [showGoogle, showGithub, showMicrosoft].filter(Boolean).length;
   const hasAnyAlternative = activeSocialButtonsCount > 0 || showSaml;
 
   const gridColsClass =
@@ -250,9 +242,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
       ? "grid-cols-1"
       : activeSocialButtonsCount === 2
         ? "grid-cols-1 sm:grid-cols-2"
-        : activeSocialButtonsCount === 3
-          ? "grid-cols-1 sm:grid-cols-3"
-          : "grid-cols-1 sm:grid-cols-2";
+        : "grid-cols-1 sm:grid-cols-3";
 
   return (
     <div className="flex w-full flex-col px-6 py-4 sm:px-8">
@@ -394,17 +384,6 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
                 >
                   <MicrosoftIcon className="h-4 w-4" />
                   Microsoft
-                </button>
-              )}
-
-              {showCode && (
-                <button
-                  type="button"
-                  onClick={handleCodeSignup}
-                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
-                >
-                  <Mail className="text-brand-secondary-600 h-4 w-4" />
-                  {t.signIn.loginWithCode}
                 </button>
               )}
             </div>

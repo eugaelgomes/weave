@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { consumeInvitePostLoginPath } from "@/app/_utils/post-login-redirect";
 
 type AuthMode = "password" | "code";
-type PasswordStep = "login" | "password";
 
 interface Props {
   onNavigate: (
@@ -72,7 +71,6 @@ export function SignIn({
 }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<AuthMode>(initialMode ?? (initialCode ? "code" : "password"));
-  const [passwordStep, setPasswordStep] = useState<PasswordStep>("login");
   const [loginValue, setLoginValue] = useState(initialLogin);
   const [password, setPassword] = useState("");
   const [codeArray, setCodeArray] = useState<string[]>(() => {
@@ -223,8 +221,8 @@ export function SignIn({
     goToPostLogin();
   }
 
-  async function handleRequestCode() {
-    const trimmedLogin = loginValue.trim();
+  async function handleRequestCode(customLogin?: string) {
+    const trimmedLogin = (customLogin ?? loginValue).trim();
 
     if (!trimmedLogin) {
       setError("Por favor, informe seu e-mail ou usuário.");
@@ -293,16 +291,6 @@ export function SignIn({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (mode === "password" && passwordStep === "login") {
-      if (!loginValue?.trim()) {
-        setError("Por favor, informe seu e-mail ou usuário.");
-        return;
-      }
-
-      setPasswordStep("password");
-      setShowPassword(false);
-      return;
-    }
 
     setIsLoading(true);
 
@@ -326,7 +314,6 @@ export function SignIn({
   const switchToPassword = () => {
     setMode("password");
     setError(null);
-    setPasswordStep("login");
   };
 
   const switchToCode = () => {
@@ -341,9 +328,6 @@ export function SignIn({
     setLoginValue(value);
     setCodeRequested(false);
     setInfoMessage(null);
-    if (mode === "password") {
-      setPasswordStep("login");
-    }
   };
 
   const handleCodeChange = (index: number, value: string) => {
@@ -374,9 +358,7 @@ export function SignIn({
 
   const primaryButtonLabel =
     mode === "password"
-      ? passwordStep === "login"
-        ? t.signIn.continueButton
-        : t.signIn.submitButton
+      ? t.signIn.submitButton
       : codeRequested
         ? t.signIn.verifyCodeButton
         : t.signIn.sendCodeButton;
@@ -386,12 +368,10 @@ export function SignIn({
   const showGoogle = isProviderEnabled("google");
   const showGithub = isProviderEnabled("github");
   const showMicrosoft = isProviderEnabled("microsoft");
-  const showCode = isProviderEnabled("code") && mode !== "code";
+  const showCode = isProviderEnabled("code");
   const showSaml = isProviderEnabled("saml");
 
-  const activeSocialButtonsCount = [showGoogle, showGithub, showMicrosoft, showCode].filter(
-    Boolean
-  ).length;
+  const activeSocialButtonsCount = [showGoogle, showGithub, showMicrosoft].filter(Boolean).length;
   const hasAnyAlternative = activeSocialButtonsCount > 0 || showSaml;
 
   const gridColsClass =
@@ -399,9 +379,22 @@ export function SignIn({
       ? "grid-cols-1"
       : activeSocialButtonsCount === 2
         ? "grid-cols-1 sm:grid-cols-2"
-        : activeSocialButtonsCount === 3
-          ? "grid-cols-1 sm:grid-cols-3"
-          : "grid-cols-1 sm:grid-cols-2";
+        : "grid-cols-1 sm:grid-cols-3";
+
+  const handleTopCodeClick = async () => {
+    const trimmed = loginValue.trim();
+    if (!trimmed) {
+      setError("Por favor, informe seu e-mail ou usuário.");
+      return;
+    }
+    switchToCode();
+    setIsLoading(true);
+    try {
+      await handleRequestCode(trimmed);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex w-full flex-col px-6 py-2 sm:px-8">
@@ -430,12 +423,19 @@ export function SignIn({
           </div>
 
           {!isCodeMode ? (
-            passwordStep === "password" && (
+            <>
               <div>
-                <div className="flex items-center justify-between">
+                <div className="mb-1.5 flex items-center justify-between">
                   <label className="block text-xs text-neutral-700 dark:text-neutral-300">
                     {t.signIn.passwordLabel}
                   </label>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate("forgot")}
+                    className="text-brand-secondary-500 text-xs transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+                  >
+                    {t.signIn.forgotPassword}
+                  </button>
                 </div>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -458,7 +458,36 @@ export function SignIn({
                   </button>
                 </div>
               </div>
-            )
+
+              {showCode ? (
+                <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="dark:border-surface-dark-border-strong flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:scale-[1.01] hover:bg-neutral-100 active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
+                  >
+                    {isLoading ? "Entrando..." : primaryButtonLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleTopCodeClick}
+                    disabled={isLoading}
+                    className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-semibold shadow-sm transition-all hover:scale-[1.01] hover:bg-neutral-50 active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  >
+                    <Mail className="text-brand-secondary-500 h-4 w-4 dark:text-neutral-400" />
+                    {t.signIn.sendCodeButton}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="dark:border-surface-dark-border-strong mt-1 flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:scale-[1.01] hover:bg-neutral-100 active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  {isLoading ? "Entrando..." : primaryButtonLabel}
+                </button>
+              )}
+            </>
           ) : (
             <div className="space-y-2 pt-1">
               <div>
@@ -505,44 +534,16 @@ export function SignIn({
                     {t.confirmAccount.resendButton}
                   </button>
                 )}
-                {!codeRequested && (
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="dark:border-surface-dark-border-strong rounded-md border border-neutral-300 bg-white px-4 py-1.5 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-100 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
-                  >
-                    {isLoading ? "Enviando..." : primaryButtonLabel}
-                  </button>
-                )}
               </div>
-            </div>
-          )}
 
-          {!isCodeMode && passwordStep === "password" ? (
-            <div className="mt-1 flex flex-col justify-between gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => onNavigate("forgot")}
-                className="border-brand-secondary-200 text-brand-secondary-500 bg-white py-1.5 text-sm transition-colors hover:text-neutral-900 sm:w-auto dark:bg-[#1d1d1b] dark:hover:text-neutral-100"
-              >
-                {t.signIn.forgotPassword}
-              </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="dark:border-surface-dark-border-strong flex max-w-[80px] flex-1 items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:scale-[1.01] hover:bg-neutral-100 active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
+                className="dark:border-surface-dark-border-strong mt-2 flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:scale-[1.01] hover:bg-neutral-100 active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
               >
-                {isLoading ? "Entrando..." : primaryButtonLabel}
+                {isLoading ? "Processando..." : primaryButtonLabel}
               </button>
             </div>
-          ) : isCodeMode && !codeRequested ? null : (
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="dark:border-surface-dark-border-strong flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:scale-[1.01] hover:bg-neutral-100 active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
-            >
-              {isLoading ? "Entrando..." : primaryButtonLabel}
-            </button>
           )}
 
           {infoMessage && (
@@ -616,17 +617,6 @@ export function SignIn({
                 >
                   <MicrosoftIcon className="h-4 w-4" />
                   Microsoft
-                </button>
-              )}
-
-              {showCode && (
-                <button
-                  type="button"
-                  onClick={switchToCode}
-                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-                >
-                  <Mail className="text-brand-secondary-600 h-4 w-4" />
-                  {t.signIn.loginWithCode}
                 </button>
               )}
             </div>
