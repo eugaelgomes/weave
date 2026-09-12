@@ -26,6 +26,8 @@ import {
   type ActivateAccountPayload,
   type LoginResponse,
   type SamlSsoDiscoverResponse,
+  getAuthProvidersService,
+  type AuthProvidersConfig,
 } from "../_services/authentication/auth-service";
 import { setUnauthorizedHandler } from "../_services/session-invalidation";
 import { ApiError } from "../_services/api-error";
@@ -93,6 +95,13 @@ type AuthContextType = {
   resetSenha: (token: string, password: string) => Promise<{ success: boolean; message?: string }>;
   deleteUserPermanently: () => Promise<{ success: boolean; message?: string }>;
   switchOrganization: (organizationId: string) => Promise<{ success: boolean; message?: string }>;
+
+  // Providers Configuration
+  providers: AuthProvidersConfig | null;
+  providersLoading: boolean;
+  isProviderEnabled: (
+    provider: "google" | "github" | "microsoft" | "saml" | "code" | "credentials"
+  ) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -100,6 +109,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [providers, setProviders] = useState<AuthProvidersConfig | null>(null);
+  const [providersLoading, setProvidersLoading] = useState(true);
   const { setTheme } = useTheme();
 
   const authenticated = !!user;
@@ -136,6 +147,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return next;
     });
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadProviders = async () => {
+      try {
+        const data = await getAuthProvidersService();
+        if (isMounted) {
+          setProviders(data);
+        }
+      } catch (error) {
+        logClientError("auth.loadProviders", error);
+      } finally {
+        if (isMounted) {
+          setProvidersLoading(false);
+        }
+      }
+    };
+    loadProviders();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const isProviderEnabled = useCallback(
+    (provider: "google" | "github" | "microsoft" | "saml" | "code" | "credentials"): boolean => {
+      if (provider === "credentials") return true;
+      if (!providers) return false;
+      if (provider === "saml") return Boolean(providers.saml);
+      if (provider === "code") return Boolean(providers.code);
+      return Boolean(providers.oauth?.includes(provider));
+    },
+    [providers]
+  );
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
@@ -490,6 +534,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetSenha,
         deleteUserPermanently,
         switchOrganization,
+        providers,
+        providersLoading,
+        isProviderEnabled,
       }}
     >
       {children}

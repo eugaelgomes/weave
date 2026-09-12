@@ -54,6 +54,7 @@ export const API_CONFIG = {
 // Endpoints da API
 export const API_ENDPOINTS = {
   // Auth
+  AUTH_PROVIDERS: "/auth/providers",
   SIGNIN: "/auth/signin",
   SIGNIN_CODE_REQUEST: "/auth/signin/code/request",
   SIGNIN_CODE_VERIFY: "/auth/signin/code/verify",

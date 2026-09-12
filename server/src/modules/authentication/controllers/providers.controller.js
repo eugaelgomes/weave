@@ -1,18 +1,19 @@
-const systemSettings = require("@/modules/workspaces/services/system-settings.cache");
+const { getOauthConfig, isAuthFlagEnabled } = require("../config/oauth.config");
 
 class ProvidersController {
   async listProviders(req, res) {
     try {
-      const oauth = await systemSettings.getOauthConfig();
+      const oauth = getOauthConfig();
 
       const enabledOauth = ["google", "github", "microsoft"].filter(
         (provider) => oauth?.[provider]?.enabled && oauth?.[provider]?.client_id
       );
 
       return res.status(200).json({
+        code: isAuthFlagEnabled(process.env.EMAIL_CODE_AUTH_ENABLED, true),
         credentials: true,
         oauth: enabledOauth,
-        saml: true,
+        saml: isAuthFlagEnabled(process.env.SAML_AUTH_ENABLED, true),
       });
     } catch (error) {
       console.error("Error listing auth providers:", error);

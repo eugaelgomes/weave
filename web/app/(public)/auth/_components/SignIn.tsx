@@ -52,6 +52,17 @@ function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function MicrosoftIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
+      <path fill="#f25022" d="M1 1h10v10H1z" />
+      <path fill="#7fba00" d="M13 1h10v10H13z" />
+      <path fill="#04a1f4" d="M1 13h10v10H1z" />
+      <path fill="#ffb900" d="M13 13h10v10H13z" />
+    </svg>
+  );
+}
+
 export function SignIn({
   onNavigate,
   locale = "pt-br",
@@ -81,8 +92,10 @@ export function SignIn({
     requestLoginCode,
     loginWithGoogle,
     loginWithGithub,
+    loginWithMicrosoft,
     discoverSamlSso,
     startSamlSsoLogin,
+    isProviderEnabled,
   } = useAuth();
   const router = useRouter();
   const autoSubmitRef = useRef(false);
@@ -370,6 +383,26 @@ export function SignIn({
 
   const isCodeMode = mode === "code";
 
+  const showGoogle = isProviderEnabled("google");
+  const showGithub = isProviderEnabled("github");
+  const showMicrosoft = isProviderEnabled("microsoft");
+  const showCode = isProviderEnabled("code") && mode !== "code";
+  const showSaml = isProviderEnabled("saml");
+
+  const activeSocialButtonsCount = [showGoogle, showGithub, showMicrosoft, showCode].filter(
+    Boolean
+  ).length;
+  const hasAnyAlternative = activeSocialButtonsCount > 0 || showSaml;
+
+  const gridColsClass =
+    activeSocialButtonsCount === 1
+      ? "grid-cols-1"
+      : activeSocialButtonsCount === 2
+        ? "grid-cols-1 sm:grid-cols-2"
+        : activeSocialButtonsCount === 3
+          ? "grid-cols-1 sm:grid-cols-3"
+          : "grid-cols-2 sm:grid-cols-4";
+
   return (
     <div className="flex w-full flex-col px-6 py-2 sm:px-8">
       <div className="mt-1">
@@ -390,7 +423,7 @@ export function SignIn({
                 value={loginValue}
                 onChange={(e) => handleLoginChange(e.target.value)}
                 placeholder={t.signIn.usernamePlaceholder}
-                className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-neutral-400 dark:border-surface-dark-border-strong w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none dark:bg-[#252525] dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-500"
+                className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 dark:border-surface-dark-border-strong w-full rounded-md border bg-white py-1.5 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:ring-neutral-400 focus:outline-none dark:bg-[#252525] dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-500"
                 disabled={isLoading}
               />
             </div>
@@ -413,7 +446,7 @@ export function SignIn({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={t.signIn.passwordPlaceholder}
-                    className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 focus:ring-neutral-400 dark:border-surface-dark-border-strong w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none dark:bg-[#252525] dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-500"
+                    className="border-brand-secondary-200 text-brand-secondary-900 placeholder:text-brand-secondary-400 dark:border-surface-dark-border-strong w-full rounded-md border bg-white py-1.5 pr-10 pl-10 text-sm transition-colors focus:ring-2 focus:ring-neutral-400 focus:outline-none dark:bg-[#252525] dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-500"
                     disabled={isLoading}
                   />
                   <button
@@ -447,7 +480,7 @@ export function SignIn({
                       onChange={(e) => handleCodeChange(index, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(index, e)}
                       aria-label={`${t.signIn.codeInputLabel} ${index + 1}`}
-                      className="border-brand-secondary-200 text-brand-secondary-900 focus:border-neutral-500 focus:ring-neutral-500/15 dark:border-surface-dark-border-strong h-9 w-9 rounded-md border bg-white text-center text-sm font-semibold transition-colors focus:ring-2 focus:outline-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:focus:border-neutral-400"
+                      className="border-brand-secondary-200 text-brand-secondary-900 dark:border-surface-dark-border-strong h-9 w-9 rounded-md border bg-white text-center text-sm font-semibold transition-colors focus:border-neutral-500 focus:ring-2 focus:ring-neutral-500/15 focus:outline-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:focus:border-neutral-400"
                       disabled={isLoading}
                     />
                   ))}
@@ -458,7 +491,7 @@ export function SignIn({
                 <button
                   type="button"
                   onClick={switchToPassword}
-                  className="text-brand-secondary-600 hover:text-neutral-900 px-1 py-1 text-xs font-medium transition-colors dark:text-neutral-400 dark:hover:text-neutral-100"
+                  className="text-brand-secondary-600 px-1 py-1 text-xs font-medium transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
                 >
                   {t.signIn.backToPassword}
                 </button>
@@ -467,7 +500,7 @@ export function SignIn({
                     type="button"
                     onClick={() => void handleRequestCode()}
                     disabled={isLoading}
-                    className="text-brand-secondary-600 hover:text-neutral-900 px-1 py-1 text-xs font-medium transition-colors disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
+                    className="text-brand-secondary-600 px-1 py-1 text-xs font-medium transition-colors hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
                   >
                     {t.confirmAccount.resendButton}
                   </button>
@@ -476,7 +509,7 @@ export function SignIn({
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="rounded-md border border-neutral-300 bg-white px-4 py-1.5 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-100 disabled:pointer-events-none disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
+                    className="dark:border-surface-dark-border-strong rounded-md border border-neutral-300 bg-white px-4 py-1.5 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-100 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
                   >
                     {isLoading ? "Enviando..." : primaryButtonLabel}
                   </button>
@@ -490,14 +523,14 @@ export function SignIn({
               <button
                 type="button"
                 onClick={() => onNavigate("forgot")}
-                className="border-brand-secondary-200 text-brand-secondary-500 hover:text-neutral-900 bg-white py-1.5 text-sm transition-colors sm:w-auto dark:bg-[#1d1d1b] dark:hover:text-neutral-100"
+                className="border-brand-secondary-200 text-brand-secondary-500 bg-white py-1.5 text-sm transition-colors hover:text-neutral-900 sm:w-auto dark:bg-[#1d1d1b] dark:hover:text-neutral-100"
               >
                 {t.signIn.forgotPassword}
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex max-w-[80px] flex-1 items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:bg-neutral-100 hover:scale-[1.01] active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
+                className="dark:border-surface-dark-border-strong flex max-w-[80px] flex-1 items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:scale-[1.01] hover:bg-neutral-100 active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
               >
                 {isLoading ? "Entrando..." : primaryButtonLabel}
               </button>
@@ -506,7 +539,7 @@ export function SignIn({
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:bg-neutral-100 hover:scale-[1.01] active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
+              className="dark:border-surface-dark-border-strong flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:scale-[1.01] hover:bg-neutral-100 active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
             >
               {isLoading ? "Entrando..." : primaryButtonLabel}
             </button>
@@ -538,58 +571,83 @@ export function SignIn({
         </form>
       </div>
 
-      <div className="mt-2 flex flex-col items-center">
-        <div className="relative mb-3.5 w-full">
-          <div className="absolute inset-0 flex items-center">
-            <div className="border-brand-secondary-200 dark:border-surface-dark-border w-full border-t"></div>
+      {hasAnyAlternative && (
+        <div className="mt-2 flex flex-col items-center">
+          <div className="relative mb-3.5 w-full">
+            <div className="absolute inset-0 flex items-center">
+              <div className="border-brand-secondary-200 dark:border-surface-dark-border w-full border-t"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="text-brand-secondary-500 bg-white px-2 dark:bg-[#1d1d1b] dark:text-neutral-400">
+                {t.signIn.orLoginWith}
+              </span>
+            </div>
           </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="text-brand-secondary-500 bg-white px-2 dark:bg-[#1d1d1b] dark:text-neutral-400">
-              {t.signIn.orLoginWith}
-            </span>
-          </div>
+
+          {activeSocialButtonsCount > 0 && (
+            <div className={`grid w-full gap-2 ${gridColsClass}`}>
+              {showGoogle && (
+                <button
+                  type="button"
+                  onClick={loginWithGoogle}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                >
+                  <GoogleIcon className="h-4 w-4" />
+                  Google
+                </button>
+              )}
+
+              {showGithub && (
+                <button
+                  type="button"
+                  onClick={loginWithGithub}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                >
+                  <GitHubIcon className="h-4 w-4" />
+                  GitHub
+                </button>
+              )}
+
+              {showMicrosoft && (
+                <button
+                  type="button"
+                  onClick={loginWithMicrosoft}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                >
+                  <MicrosoftIcon className="h-4 w-4" />
+                  Microsoft
+                </button>
+              )}
+
+              {showCode && (
+                <button
+                  type="button"
+                  onClick={switchToCode}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                >
+                  <Mail className="text-brand-secondary-600 h-4 w-4" />
+                  {t.signIn.loginWithCode}
+                </button>
+              )}
+            </div>
+          )}
+
+          {showSaml && (
+            <div className="mt-2 w-full">
+              <button
+                type="button"
+                onClick={handleSamlSso}
+                className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+              >
+                <Shield className="text-brand-secondary-600 h-4 w-4" />
+                {t.signIn.loginWithSso}
+              </button>
+            </div>
+          )}
         </div>
+      )}
 
-        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
-          <button
-            type="button"
-            onClick={loginWithGoogle}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-          >
-            <GoogleIcon className="h-4 w-4" />
-            Google
-          </button>
-
-          <button
-            type="button"
-            onClick={loginWithGithub}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-          >
-            <GitHubIcon className="h-4 w-4" />
-            GitHub
-          </button>
-
-          <button
-            type="button"
-            onClick={switchToCode}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-          >
-            <Mail className="text-brand-secondary-600 h-4 w-4" />
-            {t.signIn.loginWithCode}
-          </button>
-        </div>
-
-        <div className="mt-2 w-full">
-          <button
-            type="button"
-            onClick={handleSamlSso}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-          >
-            <Shield className="text-brand-secondary-600 h-4 w-4" />
-            {t.signIn.loginWithSso}
-          </button>
-        </div>
-
+      <div className="flex flex-col items-center">
         <button
           onClick={() => onNavigate("signup")}
           className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-3 text-xs font-medium transition-colors duration-200 dark:text-neutral-400 dark:hover:text-neutral-200"

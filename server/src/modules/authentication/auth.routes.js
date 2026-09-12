@@ -50,8 +50,15 @@ router.post(
 );
 
 // ── Social OAuth ──
+router.get("/signin/sso/google", GoogleController.googleAuth.bind(GoogleController));
 router.get("/oauth/google", GoogleController.googleAuth.bind(GoogleController));
 
+router.get(
+  "/signin/sso/google/callback",
+  authLimiter,
+  validate(oauthCallbackSchema, "query"),
+  GoogleController.googleCallback.bind(GoogleController)
+);
 router.get(
   "/oauth/google/callback",
   authLimiter,
@@ -59,8 +66,15 @@ router.get(
   GoogleController.googleCallback.bind(GoogleController)
 );
 
+router.get("/signin/sso/github", GithubController.githubAuth.bind(GithubController));
 router.get("/oauth/github", GithubController.githubAuth.bind(GithubController));
 
+router.get(
+  "/signin/sso/github/callback",
+  authLimiter,
+  validate(oauthCallbackSchema, "query"),
+  GithubController.githubCallback.bind(GithubController)
+);
 router.get(
   "/oauth/github/callback",
   authLimiter,
@@ -68,8 +82,15 @@ router.get(
   GithubController.githubCallback.bind(GithubController)
 );
 
+router.get("/signin/sso/microsoft", MicrosoftController.microsoftAuth.bind(MicrosoftController));
 router.get("/oauth/microsoft", MicrosoftController.microsoftAuth.bind(MicrosoftController));
 
+router.get(
+  "/signin/sso/microsoft/callback",
+  authLimiter,
+  validate(oauthCallbackSchema, "query"),
+  MicrosoftController.microsoftCallback.bind(MicrosoftController)
+);
 router.get(
   "/oauth/microsoft/callback",
   authLimiter,

@@ -8,8 +8,7 @@ const AuthRepository = require("../../repositories/auth.repository");
 
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
-const systemSettings = require("@/modules/workspaces/services/system-settings.cache");
-const { getBackendUrl } = require("@/utils/url.util");
+const { getOauthConfig } = require("../../config/oauth.config");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
@@ -19,14 +18,13 @@ const issueOauthState = oauthState.issueOauthState;
  */
 class GithubOauthController extends AuthBaseController {
   async githubAuth(req, res) {
-    const oauth = await systemSettings.getOauthConfig();
-    const github = oauth?.github;
+    const { github } = getOauthConfig();
 
     if (!github?.enabled || !github?.client_id) {
       return res.status(404).json({ error: "GitHub authentication is not configured." });
     }
 
-    const redirectUri = `${getBackendUrl()}/api/v1/auth/oauth/github/callback`;
+    const redirectUri = github.redirect_uri;
     const state = issueOauthState({ provider: "github", req, res });
     const url = `https://github.com/login/oauth/authorize?client_id=${github.client_id}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${encodeURIComponent(state)}`;
 
@@ -37,8 +35,7 @@ class GithubOauthController extends AuthBaseController {
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
 
     try {
-      const oauth = await systemSettings.getOauthConfig();
-      const github = oauth?.github;
+      const { github } = getOauthConfig();
 
       if (!github?.enabled || !github?.client_id || !github?.client_secret) {
         throw new Error("GitHub authentication is not correctly configured.");
@@ -65,7 +62,7 @@ class GithubOauthController extends AuthBaseController {
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
-      const redirectUri = `${getBackendUrl()}/api/v1/auth/oauth/github/callback`;
+      const redirectUri = github.redirect_uri;
 
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",

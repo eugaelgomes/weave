@@ -15,6 +15,7 @@ import type {
   SamlSsoDiscoverRequest,
   SamlSsoDiscoverResponse,
   User,
+  AuthProvidersConfig,
 } from "./auth.types";
 import {
   LoginCodeRequestSchema,
@@ -149,4 +150,11 @@ export const initiateGithubLogin = (): void => {
 
 export const initiateMicrosoftLogin = (): void => {
   window.location.href = `${API_BASE_URL}${API_ENDPOINTS.MICROSOFT_AUTH}`;
+};
+
+export const getAuthProvidersService = async (): Promise<AuthProvidersConfig> => {
+  const res = await apiClient.get(API_ENDPOINTS.AUTH_PROVIDERS);
+  return await handleResponse<AuthProvidersConfig>(res, {
+    skipSessionInvalidationOn401: true,
+  });
 };

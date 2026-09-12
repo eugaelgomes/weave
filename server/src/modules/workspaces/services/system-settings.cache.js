@@ -48,8 +48,8 @@ class SystemSettingsCache {
   }
 
   async getOauthConfig() {
-    await this.load();
-    return this.settings?.oauth_config || {};
+    const { getOauthConfig } = require("@/modules/authentication/config/oauth.config");
+    return getOauthConfig();
   }
 
   async getAiGlobalConfig() {

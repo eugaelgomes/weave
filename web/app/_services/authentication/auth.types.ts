@@ -62,3 +62,10 @@ export type UserFieldAvailability = {
 };
 
 export type UserAvailabilityMap = Record<UserUniqueField, UserFieldAvailability>;
+
+export interface AuthProvidersConfig {
+  credentials: boolean;
+  code: boolean;
+  oauth: ("google" | "github" | "microsoft" | string)[];
+  saml: boolean;
+}

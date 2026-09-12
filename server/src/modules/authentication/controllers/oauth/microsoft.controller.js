@@ -8,8 +8,7 @@ const AuthRepository = require("../../repositories/auth.repository");
 
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
-const systemSettings = require("@/modules/workspaces/services/system-settings.cache");
-const { getBackendUrl } = require("@/utils/url.util");
+const { getOauthConfig } = require("../../config/oauth.config");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
@@ -19,15 +18,14 @@ const issueOauthState = oauthState.issueOauthState;
  */
 class MicrosoftOauthController extends AuthBaseController {
   async microsoftAuth(req, res) {
-    const oauth = await systemSettings.getOauthConfig();
-    const microsoft = oauth?.microsoft;
+    const { microsoft } = getOauthConfig();
 
     if (!microsoft?.enabled || !microsoft?.client_id) {
       return res.status(404).json({ error: "Microsoft authentication is not configured." });
     }
 
     const tenantId = microsoft.tenant_id || "common";
-    const redirectUri = `${getBackendUrl()}/api/v1/auth/oauth/microsoft/callback`;
+    const redirectUri = microsoft.redirect_uri;
     const state = issueOauthState({ provider: "microsoft", req, res });
 
     const url = `https://login.microsoftonline.com/${encodeURIComponent(tenantId)}/oauth2/v2.0/authorize?client_id=${microsoft.client_id}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent("openid profile email User.Read")}&state=${encodeURIComponent(state)}`;
@@ -38,8 +36,7 @@ class MicrosoftOauthController extends AuthBaseController {
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
 
     try {
-      const oauth = await systemSettings.getOauthConfig();
-      const microsoft = oauth?.microsoft;
+      const { microsoft } = getOauthConfig();
 
       if (!microsoft?.enabled || !microsoft?.client_id || !microsoft?.client_secret) {
         throw new Error("Microsoft authentication is not correctly configured.");
@@ -68,7 +65,7 @@ class MicrosoftOauthController extends AuthBaseController {
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
-      const redirectUri = `${getBackendUrl()}/api/v1/auth/oauth/microsoft/callback`;
+      const redirectUri = microsoft.redirect_uri;
       const tokenPayload = new URLSearchParams({
         client_id: microsoft.client_id,
         client_secret: microsoft.client_secret,

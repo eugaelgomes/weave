@@ -8,8 +8,7 @@ const AuthRepository = require("../../repositories/auth.repository");
 
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
-const systemSettings = require("@/modules/workspaces/services/system-settings.cache");
-const { getBackendUrl } = require("@/utils/url.util");
+const { getOauthConfig } = require("../../config/oauth.config");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
@@ -19,14 +18,13 @@ const issueOauthState = oauthState.issueOauthState;
  */
 class GoogleOauthController extends AuthBaseController {
   async googleAuth(req, res) {
-    const oauth = await systemSettings.getOauthConfig();
-    const google = oauth?.google;
+    const { google } = getOauthConfig();
 
     if (!google?.enabled || !google?.client_id) {
       return res.status(404).json({ error: "Google authentication is not configured." });
     }
 
-    const redirectUri = `${getBackendUrl()}/api/v1/auth/oauth/google/callback`;
+    const redirectUri = google.redirect_uri;
     const state = issueOauthState({ provider: "google", req, res });
 
     const url =
@@ -50,8 +48,7 @@ class GoogleOauthController extends AuthBaseController {
     });
 
     try {
-      const oauth = await systemSettings.getOauthConfig();
-      const google = oauth?.google;
+      const { google } = getOauthConfig();
 
       if (!google?.enabled || !google?.client_id || !google?.client_secret) {
         throw new Error("Google authentication is not correctly configured.");
@@ -79,7 +76,7 @@ class GoogleOauthController extends AuthBaseController {
         return res.redirect(`${frontendURL}/?error=missing_auth_code`);
       }
 
-      const redirectUri = `${getBackendUrl()}/api/v1/auth/oauth/google/callback`;
+      const redirectUri = google.redirect_uri;
       const params = new URLSearchParams();
       params.append("client_id", google.client_id);
       params.append("client_secret", google.client_secret);

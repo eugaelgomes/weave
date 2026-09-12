@@ -71,7 +71,7 @@ function TermsModal({
               onAccept();
               onClose();
             }}
-            className="rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-100 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
+            className="dark:border-surface-dark-border-strong rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-100 dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
           >
             {t.signUp.termsModalAccept}
           </button>
@@ -112,6 +112,17 @@ function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function MicrosoftIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
+      <path fill="#f25022" d="M1 1h10v10H1z" />
+      <path fill="#7fba00" d="M13 1h10v10H13z" />
+      <path fill="#04a1f4" d="M1 13h10v10H1z" />
+      <path fill="#ffb900" d="M13 13h10v10H13z" />
+    </svg>
+  );
+}
+
 export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const [email, setEmail] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -121,8 +132,15 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
   const [showFieldErrors, setShowFieldErrors] = useState(false);
 
   const t = getTranslations(locale);
-  const { createUser, discoverSamlSso, loginWithGoogle, loginWithGithub, startSamlSsoLogin } =
-    useAuth();
+  const {
+    createUser,
+    discoverSamlSso,
+    loginWithGoogle,
+    loginWithGithub,
+    loginWithMicrosoft,
+    startSamlSsoLogin,
+    isProviderEnabled,
+  } = useAuth();
 
   useEffect(() => {
     if (error) {
@@ -216,42 +234,72 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
     }
   };
 
+  const showGoogle = isProviderEnabled("google");
+  const showGithub = isProviderEnabled("github");
+  const showMicrosoft = isProviderEnabled("microsoft");
+  const showCode = isProviderEnabled("code");
+  const showSaml = isProviderEnabled("saml");
+
+  const activeSocialButtonsCount = [showGoogle, showGithub, showMicrosoft, showCode].filter(
+    Boolean
+  ).length;
+  const hasAnyAlternative = activeSocialButtonsCount > 0 || showSaml;
+
+  const gridColsClass =
+    activeSocialButtonsCount === 1
+      ? "grid-cols-1"
+      : activeSocialButtonsCount === 2
+        ? "grid-cols-1 sm:grid-cols-2"
+        : activeSocialButtonsCount === 3
+          ? "grid-cols-1 sm:grid-cols-3"
+          : "grid-cols-2 sm:grid-cols-4";
+
   return (
-    <div className="flex w-full flex-col px-6 py-2 sm:px-8">
+    <div className="flex w-full flex-col px-6 py-4 sm:px-8">
       <TermsModal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
-        onAccept={() => setAcceptTerms(true)}
+        onAccept={() => {
+          setAcceptTerms(true);
+          setShowTermsModal(false);
+        }}
         locale={locale}
       />
-      <div className="mt-1">
-        <form className="space-y-2" onSubmit={handleSubmit} autoComplete="off">
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Mail className="text-brand-secondary-400 h-4 w-4" />
+      <div className="w-full">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-brand-secondary-700 block text-xs font-semibold dark:text-neutral-300">
+              {t.signUp.emailLabel}
+            </label>
+            <div className="relative mt-1">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Mail className="text-brand-secondary-400 h-4 w-4 dark:text-neutral-500" />
+              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(null);
+                }}
+                placeholder={t.signUp.emailPlaceholder}
+                className={getInputClassName(Boolean(showFieldErrors && emailError))}
+                disabled={isLoading}
+              />
             </div>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t.signUp.emailPlaceholder}
-              autoComplete="off"
-              className={getInputClassName(Boolean(showFieldErrors && emailError))}
-              disabled={isLoading}
-            />
+            {showFieldErrors && emailError && (
+              <p className="mt-1 text-xs text-red-500">{emailError}</p>
+            )}
           </div>
-          {showFieldErrors && emailError && (
-            <p className="px-1 text-xs text-red-600">{emailError}</p>
-          )}
 
-          <div className="mt-2 flex flex-col justify-between gap-2 sm:mt-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col items-center justify-between gap-4 pt-1 sm:flex-row">
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="terms"
                 checked={acceptTerms}
                 onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="border-brand-secondary-300 text-neutral-700 focus:ring-neutral-400 h-4 w-4 rounded"
+                className="border-brand-secondary-300 h-4 w-4 rounded text-neutral-700 focus:ring-neutral-400"
               />
               <label htmlFor="terms" className="text-brand-secondary-500 text-xs leading-tight">
                 {t.signUp.termsText1}
@@ -275,7 +323,7 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:bg-neutral-100 hover:scale-[1.02] active:scale-95 disabled:pointer-events-none disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800 sm:w-[150px]"
+              className="dark:border-surface-dark-border-strong flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-1.5 text-sm font-semibold text-neutral-800 shadow-sm transition-all hover:scale-[1.02] hover:bg-neutral-100 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:w-[150px] dark:bg-[#252525] dark:text-neutral-100 dark:hover:bg-neutral-800"
             >
               {isLoading ? "Continuando..." : t.signUp.continueButton}
             </button>
@@ -301,58 +349,83 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
         </form>
       </div>
 
-      <div className="mt-5 flex flex-col items-center">
-        <div className="relative mb-3.5 w-full">
-          <div className="absolute inset-0 flex items-center">
-            <div className="border-brand-secondary-200 w-full border-t"></div>
+      {hasAnyAlternative && (
+        <div className="mt-5 flex flex-col items-center">
+          <div className="relative mb-3.5 w-full">
+            <div className="absolute inset-0 flex items-center">
+              <div className="border-brand-secondary-200 w-full border-t"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="text-brand-secondary-500 bg-white px-2">
+                {t.signUp.orRegisterWith}
+              </span>
+            </div>
           </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="text-brand-secondary-500 bg-white px-2">
-              {t.signUp.orRegisterWith}
-            </span>
-          </div>
+
+          {activeSocialButtonsCount > 0 && (
+            <div className={`grid w-full gap-2 ${gridColsClass}`}>
+              {showGoogle && (
+                <button
+                  type="button"
+                  onClick={loginWithGoogle}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+                >
+                  <GoogleIcon className="h-4 w-4" />
+                  Google
+                </button>
+              )}
+
+              {showGithub && (
+                <button
+                  type="button"
+                  onClick={loginWithGithub}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+                >
+                  <GitHubIcon className="h-4 w-4" />
+                  GitHub
+                </button>
+              )}
+
+              {showMicrosoft && (
+                <button
+                  type="button"
+                  onClick={loginWithMicrosoft}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+                >
+                  <MicrosoftIcon className="h-4 w-4" />
+                  Microsoft
+                </button>
+              )}
+
+              {showCode && (
+                <button
+                  type="button"
+                  onClick={handleCodeSignup}
+                  className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+                >
+                  <Mail className="text-brand-secondary-600 h-4 w-4" />
+                  {t.signIn.loginWithCode}
+                </button>
+              )}
+            </div>
+          )}
+
+          {showSaml && (
+            <div className="mt-2 w-full">
+              <button
+                type="button"
+                onClick={handleSamlSso}
+                className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
+              >
+                <Shield className="text-brand-secondary-600 h-4 w-4" />
+                {t.signIn.loginWithSso}
+              </button>
+            </div>
+          )}
         </div>
+      )}
 
-        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
-          <button
-            type="button"
-            onClick={loginWithGoogle}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
-          >
-            <GoogleIcon className="h-4 w-4" />
-            Google
-          </button>
-
-          <button
-            type="button"
-            onClick={loginWithGithub}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
-          >
-            <GitHubIcon className="h-4 w-4" />
-            GitHub
-          </button>
-
-          <button
-            type="button"
-            onClick={handleCodeSignup}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
-          >
-            <Mail className="text-brand-secondary-600 h-4 w-4" />
-            {t.signIn.loginWithCode}
-          </button>
-        </div>
-
-        <div className="mt-2 w-full">
-          <button
-            type="button"
-            onClick={handleSamlSso}
-            className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99]"
-          >
-            <Shield className="text-brand-secondary-600 h-4 w-4" />
-            {t.signIn.loginWithSso}
-          </button>
-        </div>
-
+      <div className="flex flex-col items-center">
         <button
           onClick={() => onNavigate("signin")}
           className="text-brand-secondary-500 hover:text-brand-secondary-700 mt-5 text-xs font-medium transition-colors duration-200"
