@@ -18,6 +18,7 @@ export interface OnboardingWorkspaceData {
   workspace_name: string;
   unique_name: string;
   invite_token?: string;
+  workspace_role?: string;
 }
 
 export interface OnboardingWorkspaceResponse {
