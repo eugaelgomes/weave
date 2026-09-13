@@ -21,7 +21,7 @@ import {
 import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";
 import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
-import { OrganizationProvider } from "@/app/_contexts/organization-context";
+import { OrganizationProvider } from "@/app/_contexts/workspace-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
 import { routes } from "@/app/_utils/routes";
 
@@ -38,7 +38,7 @@ type WorkspaceNavItem = WorkspaceNavLeaf & {
 };
 
 function isStandaloneOrganizationPath(pathname: string): boolean {
-  return pathname.includes("/organization/create") || pathname.includes("/organization/dashboard");
+  return pathname.includes("/workspace/create") || pathname.includes("/workspace/dashboard");
 }
 
 function collectPathMatchers(
@@ -110,37 +110,37 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
       {
         icon: Settings,
         label: t.nav.general,
-        href: routes.organization.general(),
+        href: routes.workspace.general(),
         type: "workspaceSettings",
       },
       {
         icon: CreditCard,
         label: t.nav.plans,
-        href: routes.organization.plans(),
+        href: routes.workspace.plans(),
         type: "workspacePlans",
       },
       {
         icon: Zap,
         label: t.nav.integrations,
-        href: routes.organization.integrations(),
+        href: routes.workspace.integrations(),
         type: "workspaceIntegrations",
       },
       {
         icon: Users,
         label: t.nav.members,
-        href: routes.organization.membersList(),
+        href: routes.workspace.membersList(),
         type: "workspaceMembers",
         subItems: [
           {
             icon: Users,
             label: t.nav.list,
-            href: routes.organization.membersList(),
+            href: routes.workspace.membersList(),
             type: "workspaceMembers",
           },
           {
             icon: MessageSquare,
             label: t.nav.invites,
-            href: routes.organization.membersInvites(),
+            href: routes.workspace.membersInvites(),
             type: "workspaceInvites",
           },
         ],
@@ -148,20 +148,20 @@ function OrganizationLayoutContent({ children }: { children: React.ReactNode }) 
       {
         icon: Workflow,
         label: t.nav.areas,
-        href: routes.organization.areas(),
+        href: routes.workspace.areas(),
         type: "workspaceAreas",
       },
       {
         icon: Network,
         label: t.nav.projects,
-        href: routes.organization.projects(),
+        href: routes.workspace.projects(),
         type: "workspaceProjects",
       },
       {
         icon: PenLine,
         label: t.nav.editor,
-        href: routes.organization.editor(),
-        matchPaths: [routes.organization.about()],
+        href: routes.workspace.editor(),
+        matchPaths: [routes.workspace.about()],
         type: "workspaceEditor",
       },
     ],

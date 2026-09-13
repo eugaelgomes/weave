@@ -11,17 +11,17 @@ const STATE_TYP = "slack-oauth-install";
  * Issues a short-lived signed JWT for Slack OAuth `state` (workspace install flow).
  *
  * @param {object} params
- * @param {string} params.organizationId
+ * @param {string} params.workspaceId
  * @param {string} params.userId
  * @returns {string}
  */
-function issueSlackInstallState({ organizationId, userId }) {
+function issueSlackInstallState({ workspaceId, userId }) {
   return jwt.sign(
     {
       nonce: crypto.randomBytes(16).toString("hex"),
-      organizationId,
       userId,
       weaveTyp: STATE_TYP,
+      workspaceId,
     },
     getSecretKey(),
     { algorithm: "HS256", expiresIn: STATE_TTL_SEC }
@@ -32,7 +32,7 @@ function issueSlackInstallState({ organizationId, userId }) {
  * Verifies and decodes Slack OAuth install state.
  *
  * @param {string} stateToken
- * @returns {{ organizationId: string, userId: string }|null}
+ * @returns {{ workspaceId: string, userId: string }|null}
  */
 function verifySlackInstallState(stateToken) {
   if (!stateToken || typeof stateToken !== "string") {
@@ -43,10 +43,10 @@ function verifySlackInstallState(stateToken) {
       algorithms: ["HS256"],
     });
     if (decoded?.weaveTyp !== STATE_TYP) return null;
-    const organizationId = decoded?.organizationId;
+    const workspaceId = decoded?.workspaceId;
     const userId = decoded?.userId;
-    if (!organizationId || !userId) return null;
-    return { organizationId: String(organizationId), userId: String(userId) };
+    if (!workspaceId || !userId) return null;
+    return { userId: String(userId), workspaceId: String(workspaceId) };
   } catch {
     return null;
   }

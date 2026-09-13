@@ -5,7 +5,7 @@ export const TRACING_EVENTS_QUEUE_KEY = "weave:tracing:events:queue";
 
 export interface TraceContext {
   traceId: string;
-  organizationId: string;
+  workspaceId: string;
   userId?: string | null;
   projectId?: string | null;
   sessionId?: string | null;
@@ -29,7 +29,7 @@ export class Tracer {
     await this.emitEvent("trace_start", {
       id: traceId,
       name,
-      organization_id: context.organizationId,
+      workspace_id: context.workspaceId,
       project_id: context.projectId,
       session_id: context.sessionId,
       start_time: now,
@@ -54,7 +54,7 @@ export class Tracer {
       end_time: new Date().toISOString(),
       id: traceId,
       metadata: options.error ? { error: options.error } : {},
-      organization_id: context.organizationId,
+      workspace_id: context.workspaceId,
       status: options.status || "success",
       total_cost: options.totalCost || 0,
       total_tokens: options.totalTokens || 0,
@@ -74,7 +74,7 @@ export class Tracer {
       id: spanId,
       input,
       name,
-      organization_id: context.organizationId,
+      workspace_id: context.workspaceId,
       parent_span_id: context.parentSpanId || null,
       span_type: spanType,
       start_time: now,
@@ -105,7 +105,7 @@ export class Tracer {
       id: spanId,
       metadata: options.metadata || {},
       model: options.model || null,
-      organization_id: context.organizationId,
+      workspace_id: context.workspaceId,
       output: options.output || {},
       prompt_tokens: options.prompt_tokens || 0,
       status: options.status || "success",

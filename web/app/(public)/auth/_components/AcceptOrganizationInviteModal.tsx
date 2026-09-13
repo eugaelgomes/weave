@@ -17,7 +17,7 @@ import {
   acceptInvite,
   previewOrganizationInvite,
   type OrganizationInvitePreview,
-} from "@/app/_services/organization";
+} from "@/app/_services/workspace";
 import { ApiError } from "@/app/_services/api-error";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
@@ -60,7 +60,7 @@ function formatInviteLoadError(error: unknown, fallback: string): string {
 }
 
 function buildInviteGreeting(t: TranslationKeys, preview: OrganizationInvitePreview): string {
-  const org = preview.org_name?.trim() || "Weave";
+  const org = preview.workspace_name?.trim() || "Weave";
   const name = inviteDisplayName(preview);
   if (name) {
     return t.acceptOrganizationInvite.greetingWithName
@@ -193,7 +193,7 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
   }, [username]);
 
   const postLoginAreasPath = (areaId?: string | null) =>
-    areaId ? `/organization/areas?areaId=${encodeURIComponent(areaId)}` : "/organization/areas";
+    areaId ? `/workspace/areas?areaId=${encodeURIComponent(areaId)}` : "/workspace/areas";
 
   const handleAcceptExisting = async () => {
     setFormError(null);
@@ -204,8 +204,8 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
       if (authenticated) {
         setSuccess(t.acceptOrganizationInvite.successExisting);
         setTimeout(() => {
-          window.location.href = user?.org_public_id
-            ? `/${user.org_public_id}/home`
+          window.location.href = user?.workspace_public_id
+            ? `/${user.workspace_public_id}/home`
             : user?.public_id
               ? `/${user.public_id}/home`
               : "/home";
@@ -263,8 +263,8 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
       // Tenta login automático
       const result = await login(trimmedUsername, capturedPassword);
       if (result.success) {
-        window.location.href = user?.org_public_id
-          ? `/${user.org_public_id}/home`
+        window.location.href = user?.workspace_public_id
+          ? `/${user.workspace_public_id}/home`
           : user?.public_id
             ? `/${user.public_id}/home`
             : "/home";
@@ -300,10 +300,10 @@ export function AcceptOrganizationInviteModal({ isOpen, token, onClose, onSucces
       <div className="mt-1">
         <div className="border-brand-secondary-100 mb-3 border-b pb-3">
           <div className="mb-2 flex justify-center">
-            {!loading && !loadError && preview?.org_logo_url ? (
+            {!loading && !loadError && preview?.workspace_logo_url ? (
               <img
-                src={preview.org_logo_url}
-                alt={preview.org_name || "Logo"}
+                src={preview.workspace_logo_url}
+                alt={preview.workspace_name || "Logo"}
                 className="h-10 w-10 rounded-full object-cover shadow-sm ring-1 ring-neutral-200"
               />
             ) : (

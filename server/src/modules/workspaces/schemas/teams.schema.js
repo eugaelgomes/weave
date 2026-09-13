@@ -27,65 +27,35 @@ const updateTeamMemberSchema = z.object({
 /**
  * Validates the request body for creating a new team.
  */
-const createTeamSchema = z.object({
-  description: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .describe("A detailed description of the team."),
-  parent_team_id: z
-    .string()
-    .uuid("Invalid parent team ID")
-    .optional()
-    .nullable()
-    .describe("The universally unique identifier of the parent team, if this is a sub-team."),
-  properties: z
-    .record(z.any())
-    .optional()
-    .nullable()
-    .describe("A configuration object for custom team properties."),
-  slug: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .describe("A URL-friendly identifier string for the team."),
-  team_name: z
-    .string()
-    .trim()
-    .min(1, "team_name is required")
-    .describe("The display name of the team."),
-});
+const createTeamSchema = z
+  .object({
+    area_name: z.string().trim().min(1).optional(),
+    description: z.string().trim().optional().nullable(),
+    name: z.string().trim().min(1).optional(),
+    parent_area_id: z.string().uuid("Invalid parent area ID").optional().nullable(),
+    parent_team_id: z.string().uuid("Invalid parent team ID").optional().nullable(),
+    properties: z.record(z.any()).optional().nullable(),
+    slug: z.string().trim().optional().nullable(),
+    team_name: z.string().trim().min(1).optional(),
+  })
+  .refine((data) => Boolean(data.team_name || data.name || data.area_name), {
+    message: "team_name or area_name is required",
+    path: ["team_name"],
+  });
 
 /**
  * Validates the request body for updating an team.
  */
 const updateTeamSchema = z.object({
   active: z.boolean().optional().describe("Indicates whether the team is active."),
-  description: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .describe("A detailed description of the team."),
-  parent_team_id: z
-    .string()
-    .uuid("Invalid parent team ID")
-    .optional()
-    .nullable()
-    .describe("The universally unique identifier of the parent team, if this is a sub-team."),
-  properties: z
-    .record(z.any())
-    .optional()
-    .describe("A configuration object for custom team properties."),
-  slug: z.string().trim().optional().describe("A URL-friendly identifier string for the team."),
-  team_name: z
-    .string()
-    .trim()
-    .min(1, "team_name cannot be empty")
-    .optional()
-    .describe("The display name of the team."),
+  area_name: z.string().trim().min(1).optional(),
+  description: z.string().trim().optional().nullable(),
+  name: z.string().trim().min(1).optional(),
+  parent_area_id: z.string().uuid("Invalid parent area ID").optional().nullable(),
+  parent_team_id: z.string().uuid("Invalid parent team ID").optional().nullable(),
+  properties: z.record(z.any()).optional().nullable(),
+  slug: z.string().trim().optional(),
+  team_name: z.string().trim().min(1).optional(),
 });
 
 /**
@@ -94,30 +64,45 @@ const updateTeamSchema = z.object({
 const teamResponseSchema = z
   .object({
     active: z.boolean().optional(),
+    color: z.string().nullable().optional(),
     created_at: z.union([z.string(), z.date()]).optional(),
     created_by: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
+    icon: z.any().optional(),
     id: z.string(),
+    name: z.string().optional(),
     parent_team_id: z.string().nullable().optional(),
     properties: z.any().optional(),
+    public_id: z.string().optional(),
     slug: z.string().nullable().optional(),
-    team_name: z.string(),
+    team_name: z.string().optional(),
     updated_at: z.union([z.string(), z.date()]).optional(),
+    visibility: z.string().optional(),
     workspace_id: z.string(),
   })
-  .transform((team) => ({
-    active: team.active,
-    created_at: team.created_at,
-    created_by: team.created_by,
-    description: team.description,
-    id: team.id,
-    parent_team_id: team.parent_team_id,
-    properties: team.properties || {},
-    slug: team.slug,
-    team_name: team.team_name,
-    updated_at: team.updated_at,
-    workspace_id: team.workspace_id,
-  }));
+  .transform((team) => {
+    const teamName = team.team_name || team.name || "";
+    return {
+      active: team.active ?? true,
+      area_name: teamName,
+      color: team.color || null,
+      created_at: team.created_at,
+      created_by: team.created_by,
+      description: team.description || "",
+      icon: team.icon || {},
+      id: team.id,
+      name: teamName,
+      parent_area_id: team.parent_team_id || null,
+      parent_team_id: team.parent_team_id || null,
+      properties: team.properties || {},
+      public_id: team.public_id,
+      slug: team.slug,
+      team_name: teamName,
+      updated_at: team.updated_at,
+      visibility: team.visibility,
+      workspace_id: team.workspace_id,
+    };
+  });
 
 module.exports = {
   addTeamMemberSchema,

@@ -1,14 +1,14 @@
 import React from "react";
 import Link from "next/link";
-import { type Organization, type OrganizationProperties } from "@/app/_services/organization";
-import { type OrganizationStats } from "@/app/_contexts/organization-context";
+import { type Organization, type OrganizationProperties } from "@/app/_services/workspace";
+import { type OrganizationStats } from "@/app/_contexts/workspace-context";
 import { Settings, Bell, Layers, ShieldAlert, MapPin, Network } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
-import { Toggle, Select } from "@/app/(protected)/organization/general/_components/form-primitives";
+import { Toggle, Select } from "./form-primitives";
 import {
   type OnDirectPropertyChange,
   type OnNestedPropertyChange,
-} from "@/app/(protected)/organization/general/_components/settings-types";
+} from "./settings-types";
 
 interface SettingsFormProps {
   localProps: OrganizationProperties;
@@ -17,7 +17,7 @@ interface SettingsFormProps {
   handleNestedPropertyChange: OnNestedPropertyChange;
   handleDeleteOrganization: () => void;
   isDeleting: boolean;
-  organization: Organization | null;
+  workspace: Organization | null;
   stats: OrganizationStats;
 }
 
@@ -28,10 +28,10 @@ export function SettingsForm({
   handleNestedPropertyChange,
   handleDeleteOrganization,
   isDeleting,
-  organization,
+  workspace,
 }: SettingsFormProps) {
   const { t } = useLanguage();
-  const address = organization?.address as
+  const address = workspace?.address as
     | {
         street?: string;
         city?: string;
@@ -46,12 +46,12 @@ export function SettingsForm({
         <section className="dark:border-surface-dark-border-muted space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:bg-[#1d1d1b]/20">
           <h2 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             <Settings size={12} className="text-amber-500" />
-            {t.organizationGeneral.settingsSectionTitle}
+            {t.workspaceGeneral.settingsSectionTitle}
           </h2>
 
           <div className="space-y-4">
             <Select
-              label={t.organizationGeneral.defaultLanguage}
+              label={t.workspaceGeneral.defaultLanguage}
               value={localProps.language || "pt-BR"}
               onChange={(value) => handleDirectPropertyChange("language", value)}
               options={[
@@ -62,7 +62,7 @@ export function SettingsForm({
               disabled={!userIsOwner}
             />
             <Select
-              label={t.organizationGeneral.timezone}
+              label={t.workspaceGeneral.timezone}
               value={localProps.timezone || "America/Sao_Paulo"}
               onChange={(value) => handleDirectPropertyChange("timezone", value)}
               options={[
@@ -74,8 +74,8 @@ export function SettingsForm({
             />
             <div className="pt-2">
               <Toggle
-                label={t.organizationGeneral.allowPublicNotes}
-                description={t.organizationGeneral.allowPublicNotesHint}
+                label={t.workspaceGeneral.allowPublicNotes}
+                description={t.workspaceGeneral.allowPublicNotesHint}
                 checked={localProps?.allowPublicNotes || false}
                 onChange={(checked) => handleDirectPropertyChange("allowPublicNotes", checked)}
                 disabled={!userIsOwner}
@@ -87,35 +87,35 @@ export function SettingsForm({
         <section className="dark:border-surface-dark-border-muted space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:bg-[#1d1d1b]/20">
           <h2 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             <MapPin size={12} className="text-amber-500" />
-            {t.organizationGeneral.locationSectionTitle}
+            {t.workspaceGeneral.locationSectionTitle}
           </h2>
           <div className="space-y-3 text-[11px] text-neutral-500">
             {address ? (
               <>
                 <div className="dark:border-surface-dark-border-strong flex justify-between border-b border-neutral-100 py-2">
-                  <span>{t.organizationGeneral.addressLabel}</span>
+                  <span>{t.workspaceGeneral.addressLabel}</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {address.street || "-"}
                   </span>
                 </div>
                 <div className="dark:border-surface-dark-border-strong flex justify-between border-b border-neutral-100 py-2">
-                  <span>{t.organizationGeneral.cityStateLabel}</span>
+                  <span>{t.workspaceGeneral.cityStateLabel}</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {address.city ? `${address.city}, ${address.state}` : "-"}
                   </span>
                 </div>
                 <div className="dark:border-surface-dark-border-strong flex justify-between border-b border-neutral-100 py-2">
-                  <span>{t.organizationGeneral.countryLabel}</span>
+                  <span>{t.workspaceGeneral.countryLabel}</span>
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {address.country || "-"}
                   </span>
                 </div>
               </>
             ) : (
-              <p className="italic">{t.organizationGeneral.noAddress}</p>
+              <p className="italic">{t.workspaceGeneral.noAddress}</p>
             )}
             <div className="mt-3 rounded-md bg-neutral-100/50 p-2.5 text-[10px] dark:bg-[#1d1d1b]/50">
-              {t.organizationGeneral.addressBillingHint}
+              {t.workspaceGeneral.addressBillingHint}
             </div>
           </div>
         </section>
@@ -125,26 +125,26 @@ export function SettingsForm({
         <section className="dark:border-surface-dark-border-muted space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:bg-[#1d1d1b]/20">
           <h2 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             <Layers size={12} className="text-amber-500" />
-            {t.organizationGeneral.featuresSectionTitle}
+            {t.workspaceGeneral.featuresSectionTitle}
           </h2>
           <div className="space-y-1 divide-y divide-neutral-100/50 dark:divide-neutral-800/50">
             <Toggle
-              label={t.organizationGeneral.featureAiAgent}
-              description={t.organizationGeneral.featureAiAgentHint}
+              label={t.workspaceGeneral.featureAiAgent}
+              description={t.workspaceGeneral.featureAiAgentHint}
               checked={localProps?.features?.aiAgent || false}
               onChange={(checked) => handleNestedPropertyChange("features", "aiAgent", checked)}
               disabled={!userIsOwner}
             />
             <Toggle
-              label={t.organizationGeneral.featureBackup}
-              description={t.organizationGeneral.featureBackupHint}
+              label={t.workspaceGeneral.featureBackup}
+              description={t.workspaceGeneral.featureBackupHint}
               checked={localProps?.features?.backup || false}
               onChange={(checked) => handleNestedPropertyChange("features", "backup", checked)}
               disabled={!userIsOwner}
             />
             <Toggle
-              label={t.organizationGeneral.featureCollaboration}
-              description={t.organizationGeneral.featureCollaborationHint}
+              label={t.workspaceGeneral.featureCollaboration}
+              description={t.workspaceGeneral.featureCollaborationHint}
               checked={localProps?.features?.collaboration || false}
               onChange={(checked) =>
                 handleNestedPropertyChange("features", "collaboration", checked)
@@ -157,12 +157,12 @@ export function SettingsForm({
         <section className="dark:border-surface-dark-border-muted space-y-3 rounded-md border border-neutral-100 bg-neutral-50/30 p-4 dark:bg-[#1d1d1b]/20">
           <h2 className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
             <Bell size={12} className="text-amber-500" />
-            {t.organizationGeneral.notificationsSectionTitle}
+            {t.workspaceGeneral.notificationsSectionTitle}
           </h2>
           <div className="space-y-3">
             <div className="space-y-1 divide-y divide-neutral-100/50 dark:divide-neutral-800/50">
               <Toggle
-                label={t.organizationGeneral.notificationEmail}
+                label={t.workspaceGeneral.notificationEmail}
                 checked={localProps?.notifications?.email || false}
                 onChange={(checked) =>
                   handleNestedPropertyChange("notifications", "email", checked)
@@ -170,7 +170,7 @@ export function SettingsForm({
                 disabled={!userIsOwner}
               />
               <Toggle
-                label={t.organizationGeneral.notificationPush}
+                label={t.workspaceGeneral.notificationPush}
                 checked={localProps?.notifications?.push || false}
                 onChange={(checked) => handleNestedPropertyChange("notifications", "push", checked)}
                 disabled={!userIsOwner}
@@ -178,13 +178,13 @@ export function SettingsForm({
             </div>
             <div className="pt-2">
               <Select
-                label={t.organizationGeneral.digestFrequency}
+                label={t.workspaceGeneral.digestFrequency}
                 value={localProps?.notifications?.digest || "weekly"}
                 onChange={(value) => handleNestedPropertyChange("notifications", "digest", value)}
                 options={[
-                  { label: t.organizationGeneral.digestDaily, value: "daily" },
-                  { label: t.organizationGeneral.digestWeekly, value: "weekly" },
-                  { label: t.organizationGeneral.digestMonthly, value: "monthly" },
+                  { label: t.workspaceGeneral.digestDaily, value: "daily" },
+                  { label: t.workspaceGeneral.digestWeekly, value: "weekly" },
+                  { label: t.workspaceGeneral.digestMonthly, value: "monthly" },
                 ]}
                 disabled={!userIsOwner}
               />
@@ -198,19 +198,19 @@ export function SettingsForm({
           <div className="mb-2">
             <h2 className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-red-600 dark:text-red-400">
               <ShieldAlert size={12} />
-              {t.organizationGeneral.dangerZoneTitle}
+              {t.workspaceGeneral.dangerZoneTitle}
             </h2>
             <p className="text-[11px] text-red-500/80 dark:text-red-400/80">
-              {t.organizationGeneral.dangerZoneHint}
+              {t.workspaceGeneral.dangerZoneHint}
             </p>
           </div>
 
           <div className="flex items-center justify-between rounded-md border border-red-200/50 bg-white/50 p-3 dark:border-red-900/30 dark:bg-[#1d1d1b]/50">
             <div>
               <h4 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200">
-                {t.organizationGeneral.deleteOrgTitle}
+                {t.workspaceGeneral.deleteOrgTitle}
               </h4>
-              <p className="text-[10px] text-neutral-500">{t.organizationGeneral.deleteOrgHint}</p>
+              <p className="text-[10px] text-neutral-500">{t.workspaceGeneral.deleteOrgHint}</p>
             </div>
             <button
               type="button"
@@ -218,7 +218,7 @@ export function SettingsForm({
               disabled={isDeleting}
               className="rounded-md bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-red-700 disabled:opacity-50"
             >
-              {isDeleting ? t.organizationGeneral.deleting : t.organizationGeneral.deleteOrgButton}
+              {isDeleting ? t.workspaceGeneral.deleting : t.workspaceGeneral.deleteOrgButton}
             </button>
           </div>
         </section>

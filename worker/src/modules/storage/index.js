@@ -29,7 +29,7 @@ class SpacesService {
     ORGANIZATIONS: {
       BANNER: "banner",
       LOGO: "logo",
-      ROOT: "organizations",
+      ROOT: "workspaces",
     },
     PROJECTS: {
       FILES: "files",
@@ -384,28 +384,28 @@ class SpacesService {
 
   // ========================================
   // Organization Assets (logo, banner)
-  // Estrutura: organizations/{orgId}/{logo|banner}/{arquivo}
+  // Estrutura: workspaces/{orgId}/{logo|banner}/{arquivo}
   // ========================================
 
-  async uploadOrganizationLogo(fileBuffer, mimeType, organizationId) {
+  async uploadOrganizationLogo(fileBuffer, mimeType, workspaceId) {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const fileName = `org-${organizationId}-logo${ext}`;
+    const fileName = `org-${workspaceId}-logo${ext}`;
     const folderPath = this.buildKey(
       ORGANIZATIONS.ROOT,
-      String(organizationId),
+      String(workspaceId),
       ORGANIZATIONS.LOGO
     );
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
   }
 
-  async uploadOrganizationBanner(fileBuffer, mimeType, organizationId) {
+  async uploadOrganizationBanner(fileBuffer, mimeType, workspaceId) {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const fileName = `org-${organizationId}-banner${ext}`;
+    const fileName = `org-${workspaceId}-banner${ext}`;
     const folderPath = this.buildKey(
       ORGANIZATIONS.ROOT,
-      String(organizationId),
+      String(workspaceId),
       ORGANIZATIONS.BANNER
     );
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);

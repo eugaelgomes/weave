@@ -4,7 +4,7 @@ const {
   backup,
   notifications,
   notes,
-  organizations,
+  workspaces,
   plans,
   tracing,
   "weave-ai": weaveAi,
@@ -58,8 +58,8 @@ function initializeJobs() {
   // notes
   registerJob("note_embedding", notes.embedding);
 
-  // organizations
-  registerJob("domain_verification", organizations.domainVerification);
+  // workspaces
+  registerJob("domain_verification", workspaces.domainVerification);
 
   // plans
   registerJob("plans_cycle", plans.cycle);

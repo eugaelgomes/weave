@@ -283,7 +283,7 @@ function TaskNoteModalInner() {
   }, [
     projectId,
     stageId,
-    user?.org_id,
+    user?.workspace_id,
     getProjectStages,
     getProjectTags,
     getCollaborators,
@@ -514,7 +514,7 @@ function TaskNoteModalInner() {
       try {
         if (newProjectId === "") {
           await saveAndApply({ project_id: null });
-          await loadTaskPriorities({ orgId: note.associated_organization?.id });
+          await loadTaskPriorities({ orgId: note.associated_workspace?.id });
         } else {
           if (addNoteToProject) {
             await addNoteToProject(newProjectId, note.id);

@@ -42,7 +42,7 @@ export type {
 export interface BackendUserData {
   profile: BackendProfile;
   settings?: BackendSettings;
-  organization?: BackendOrganization;
+  workspace?: BackendOrganization;
   current_plan?: any;
   current_plan_usage?: any;
   usage_preference?: Record<string, unknown>;

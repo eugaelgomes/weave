@@ -1,18 +1,18 @@
 const BaseRepository = require("./base.repository");
 
 /**
- * Read queries for Slack OAuth installations (`organization_slack_integrations`).
+ * Read queries for Slack OAuth installations (`workspace_slack_integrations`).
  */
 class ReadSlackIntegrationsRepository extends BaseRepository {
   /**
-   * @param {string} organizationId
+   * @param {string} workspaceId
    * @returns {Promise<object|undefined>}
    */
-  async findActiveByOrganizationId(organizationId) {
+  async findActiveByOrganizationId(workspaceId) {
     const rows = await this.executeQuery(
       `SELECT
          id,
-         organization_id,
+         workspace_id,
          slack_team_id,
          slack_team_name,
          bot_user_id,
@@ -26,10 +26,10 @@ class ReadSlackIntegrationsRepository extends BaseRepository {
          deleted,
          created_at,
          updated_at
-       FROM organization_slack_integrations
-       WHERE organization_id = $1::uuid AND deleted = false
+       FROM workspace_slack_integrations
+       WHERE workspace_id = $1::uuid AND deleted = false
        LIMIT 1`,
-      [organizationId]
+      [workspaceId]
     );
     return rows[0];
   }

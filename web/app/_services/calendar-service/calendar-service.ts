@@ -99,12 +99,12 @@ export function subscribeGoogleCalendarUpdates(onUpdate: () => void): () => void
 export async function fetchInternalCalendarEvents(
   from?: string,
   to?: string,
-  organizationId?: string
+  workspaceId?: string
 ): Promise<InternalCalendarEvent[]> {
   const params = new URLSearchParams();
   if (from) params.set("from", from);
   if (to) params.set("to", to);
-  if (organizationId) params.set("organization_id", organizationId);
+  if (workspaceId) params.set("workspace_id", workspaceId);
 
   const query = params.toString() ? `?${params.toString()}` : "";
   const res = await apiClient.get(`${API_ENDPOINTS.CALENDAR_EVENTS}${query}`);

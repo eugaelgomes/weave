@@ -5,7 +5,7 @@ export const ApiTokenSchema = z
     id: z.string(),
     name: z.string(),
     key_prefix: z.string(),
-    organization_id: z.string().nullable().optional(),
+    workspace_id: z.string().nullable().optional(),
     scopes: z.array(z.string()),
     expires_at: z.string().nullable(),
     revoked_at: z.string().nullable().optional(),

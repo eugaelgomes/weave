@@ -5,16 +5,16 @@ import { Building2, Trash2, RefreshCw, Plus, Activity } from "lucide-react";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { WorkspacePageShell } from "@/app/(protected)/organization/_components/workspace-page-shell";
-import { OrganizationImageEditModal } from "@/app/(protected)/organization/general/_components/organization-image-edit-modal";
-import { SettingsForm } from "@/app/(protected)/organization/general/_components/settings-form";
-import { WorkspaceOverview } from "@/app/(protected)/organization/general/_components/header";
-import { useOrganizationSettingsPage } from "@/app/(protected)/organization/general/_hooks/use-organization-settings-page";
-import { AreasSection } from "@/app/(protected)/organization/general/_components/areas-section";
+import { OrganizationImageEditModal } from "./_components/organization-image-edit-modal";
+import { SettingsForm } from "./_components/settings-form";
+import { WorkspaceOverview } from "./_components/header";
+import { useOrganizationSettingsPage } from "./_hooks/use-organization-settings-page";
+import { AreasSection } from "./_components/areas-section";
 
 const WorkspacePage = () => {
   const { t } = useLanguage();
   const {
-    organization,
+    workspace,
     loading,
     hasOrganization,
     stats,
@@ -40,13 +40,13 @@ const WorkspacePage = () => {
   React.useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash === "#organization/image/logo") {
+      if (hash === "#workspace/image/logo") {
         setEditingImage("logo");
         setIsEditingInfo(false);
-      } else if (hash === "#organization/image/banner") {
+      } else if (hash === "#workspace/image/banner") {
         setEditingImage("banner");
         setIsEditingInfo(false);
-      } else if (hash === "#organization/info/edit") {
+      } else if (hash === "#workspace/info/edit") {
         setIsEditingInfo(true);
         setEditingImage(null);
       } else {
@@ -59,19 +59,19 @@ const WorkspacePage = () => {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, [setEditingImage, setIsEditingInfo]);
 
-  if (!hasOrganization && !organization?.deleted) {
+  if (!hasOrganization && !workspace?.deleted) {
     return (
-      <WorkspacePageShell description={t.organizationGeneral.description}>
+      <WorkspacePageShell description={t.workspaceGeneral.description}>
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center justify-center py-4">
           <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm w-full max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:bg-[#1d1d1b]">
             <div className="dark:ring-surface-dark-border-strong mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-neutral-50 shadow-sm ring-1 ring-neutral-200 dark:bg-[#1d1d1b]">
               <Building2 className="h-10 w-10 text-neutral-400" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-              {t.organizationGeneral.emptyTitle}
+              {t.workspaceGeneral.emptyTitle}
             </h1>
             <p className="mx-auto mt-3 max-w-sm text-neutral-600 dark:text-neutral-400">
-              {t.organizationGeneral.emptyBody}
+              {t.workspaceGeneral.emptyBody}
             </p>
             <button
               type="button"
@@ -84,7 +84,7 @@ const WorkspacePage = () => {
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              {t.organizationGeneral.createWorkspace}
+              {t.workspaceGeneral.createWorkspace}
             </button>
           </div>
         </div>
@@ -92,26 +92,26 @@ const WorkspacePage = () => {
     );
   }
 
-  if (organization?.deleted) {
+  if (workspace?.deleted) {
     return (
-      <WorkspacePageShell description={t.organizationGeneral.description}>
+      <WorkspacePageShell description={t.workspaceGeneral.description}>
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col items-center justify-center py-4">
           <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm w-full max-w-md rounded-md border border-neutral-200 bg-white p-8 text-center shadow-sm dark:bg-[#1d1d1b]">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-md bg-red-100 dark:bg-red-900/20">
               <Trash2 className="h-10 w-10 text-red-600 dark:text-red-400" />
             </div>
             <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-              {t.organizationGeneral.deletedTitle}
+              {t.workspaceGeneral.deletedTitle}
             </h1>
             <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-              {t.organizationGeneral.deletedBody}
+              {t.workspaceGeneral.deletedBody}
             </p>
             <button
               type="button"
               onClick={handleRestoreOrganization}
               className="bg-brand-primary-500 mt-6 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600 dark:hover:bg-yellow-600"
             >
-              <RefreshCw className="h-4 w-4" /> {t.organizationGeneral.restoreOrganization}
+              <RefreshCw className="h-4 w-4" /> {t.workspaceGeneral.restoreOrganization}
             </button>
           </div>
         </div>
@@ -120,10 +120,10 @@ const WorkspacePage = () => {
   }
 
   return (
-    <WorkspacePageShell description={t.organizationGeneral.description}>
+    <WorkspacePageShell description={t.workspaceGeneral.description}>
       <div className="fade-in animate-in min-h-0 w-full min-w-0 flex-1 space-y-2 duration-500">
         <WorkspaceOverview
-          workspace={organization}
+          workspace={workspace}
           userIsOwner={userIsOwner}
           setEditingImage={setEditingImage}
           setIsEditingInfo={setIsEditingInfo}
@@ -136,7 +136,7 @@ const WorkspacePage = () => {
         <div>
           <SettingsForm
             localProps={localProps}
-            organization={organization}
+            workspace={workspace}
             stats={stats}
             userIsOwner={userIsOwner}
             handleDirectPropertyChange={handleDirectPropertyChange}
@@ -153,8 +153,8 @@ const WorkspacePage = () => {
           title={editingImage === "logo" ? "Editar Logo" : "Editar Banner"}
           currentUrl={
             editingImage === "logo"
-              ? getStorageUrl(organization?.logo_url || "")
-              : getStorageUrl(organization?.banner_url || "")
+              ? getStorageUrl(workspace?.logo_url || "")
+              : getStorageUrl(workspace?.banner_url || "")
           }
           onClose={() => {
             window.history.replaceState(

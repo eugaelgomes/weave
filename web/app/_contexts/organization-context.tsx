@@ -42,7 +42,7 @@ import {
   type UpdateAreaMemberInput,
   type OrganizationMembersData,
   type OrgWorkspaceRole,
-} from "../_services/organization";
+} from "../_services/workspace";
 
 export type {
   OrganizationArea,
@@ -52,7 +52,7 @@ export type {
   OrganizationAreaProperties,
   OrganizationMembersData,
   OrgWorkspaceRole,
-} from "../_services/organization";
+} from "../_services/workspace";
 
 export interface OrganizationStats {
   totalMembers: number;
@@ -64,9 +64,9 @@ export interface OrganizationStats {
 
 export interface OrganizationContextType {
   // Estado
-  organization: Organization | null;
+  workspace: Organization | null;
   members: OrganizationMember[];
-  memberStats: Omit<OrganizationMembersData, "list_org_members"> | null;
+  memberStats: Omit<OrganizationMembersData, "list_workspace_members"> | null;
   invites: OrganizationInvite[];
   areas: OrganizationArea[];
   areaMembers: Record<string, OrganizationAreaMember[]>;
@@ -82,8 +82,8 @@ export interface OrganizationContextType {
   // CRUD Organização
   fetchOrganizationData: () => Promise<void>; // Busca Org + Membros + Convites
   refreshOrganization: () => Promise<void>;
-  createOrganization: (organizationData: CreateOrganizationData) => Promise<Organization | null>;
-  updateOrganization: (organizationData: UpdateOrganizationData) => Promise<Organization | null>;
+  createOrganization: (workspaceData: CreateOrganizationData) => Promise<Organization | null>;
+  updateOrganization: (workspaceData: UpdateOrganizationData) => Promise<Organization | null>;
   uploadLogo: (file: File) => Promise<Organization | null>;
   uploadBanner: (file: File) => Promise<Organization | null>;
   updateProperties: (properties: OrganizationProperties) => Promise<Organization | null>;
@@ -141,11 +141,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const { user } = useAuth();
 
   // Estados
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [workspace, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [memberStats, setMemberStats] = useState<Omit<
     OrganizationMembersData,
-    "list_org_members"
+    "list_workspace_members"
   > | null>(null);
   const [invites, setInvites] = useState<OrganizationInvite[]>([]);
   const [areas, setAreas] = useState<OrganizationArea[]>([]);
@@ -180,7 +180,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
           fetchInvitesService(),
         ]);
         if (membersData) {
-          setMembers(membersData.list_org_members);
+          setMembers(membersData.list_workspace_members);
           setMemberStats({
             count: membersData.count,
             count_by_role: membersData.count_by_role,
@@ -206,7 +206,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     } catch (err: unknown) {
       console.error("Erro ao buscar dados da organização:", err);
       setInitialFetchDone(true);
-      // Não setamos organization como null aqui imediatamente se for um erro de rede temporário,
+      // Não setamos workspace como null aqui imediatamente se for um erro de rede temporário,
       // mas se for 404 o service já retorna null.
       if (err instanceof Error) {
         setError(err.message);
@@ -223,12 +223,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // 2. CRIAR ORGANIZAÇÃO
   const createOrganization = useCallback(
-    async (organizationData: CreateOrganizationData): Promise<Organization | null> => {
+    async (workspaceData: CreateOrganizationData): Promise<Organization | null> => {
       if (!user?.id) return null;
       setLoading(true);
       setError(null);
       try {
-        const newOrg = await createOrganizationService(organizationData, user.id);
+        const newOrg = await createOrganizationService(workspaceData, user.id);
         setOrganization(newOrg);
         // Ao criar, o criador é o único membro/dono
         await fetchOrganizationData(); // Recarrega tudo para garantir consistência
@@ -245,11 +245,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // 3. ATUALIZAR ORGANIZAÇÃO
   const updateOrganization = useCallback(
-    async (organizationData: UpdateOrganizationData): Promise<Organization | null> => {
+    async (workspaceData: UpdateOrganizationData): Promise<Organization | null> => {
       setLoading(true);
       setError(null);
       try {
-        const updatedOrg = await updateOrganizationService(organizationData);
+        const updatedOrg = await updateOrganizationService(workspaceData);
         setOrganization(updatedOrg);
         return updatedOrg;
       } catch (err: unknown) {
@@ -359,7 +359,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         await addMemberDirectlyService(memberId, role);
         const updatedMembers = await fetchMembersService();
         if (updatedMembers) {
-          setMembers(updatedMembers.list_org_members);
+          setMembers(updatedMembers.list_workspace_members);
           setMemberStats({
             count: updatedMembers.count,
             count_by_role: updatedMembers.count_by_role,
@@ -466,7 +466,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   // 6.1 GESTÃO DE ÁREAS
   const fetchAreas = useCallback(
     async (force = false): Promise<OrganizationArea[]> => {
-      if (!organization?.id) {
+      if (!workspace?.id) {
         setAreas([]);
         setAreasFetched(false);
         return [];
@@ -492,7 +492,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         setAreasLoading(false);
       }
     },
-    [organization?.id, areasFetched, areas]
+    [workspace?.id, areasFetched, areas]
   );
 
   const getAreaById = useCallback(
@@ -683,7 +683,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // 7. DADOS DERIVADOS E STATS
   const getStats = useCallback((): OrganizationStats => {
-    if (!organization) {
+    if (!workspace) {
       return {
         totalMembers: 0,
         totalProjects: 0,
@@ -694,7 +694,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
 
     // Calcula stats baseados nos estados de members e invites
-    const properties = organization.properties || {};
+    const properties = workspace.properties || {};
     const features = properties.features || {};
     const featuresEnabled = Object.values(features).filter(Boolean).length;
 
@@ -709,7 +709,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       totalInvited: invites.length,
       featuresEnabled,
     };
-  }, [organization, members, invites]);
+  }, [workspace, members, invites]);
 
   // Verifica permissões baseando-se no ID do usuário na lista de membros atualizada
   const getMemberRole = useCallback(
@@ -724,11 +724,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const isOwner = useCallback(
     (userId: string): boolean => {
       // Check rápido na prop owner da organização
-      if (organization?.user_id === userId) return true;
+      if (workspace?.user_id === userId) return true;
       // Fallback para lista de membros
       return getMemberRole(userId) === "SUPER_ADMIN";
     },
-    [organization, getMemberRole]
+    [workspace, getMemberRole]
   );
 
   const isAdmin = useCallback(
@@ -754,25 +754,25 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     [isOwner, isAdmin]
   );
 
-  // 8. INITIAL LOAD — só busca se o usuário tem org_id (vem do login/me)
+  // 8. INITIAL LOAD — só busca se o usuário tem workspace_id (vem do login/me)
   useEffect(() => {
-    if (user?.id && user.org_id && !initialFetchDone && !loading) {
+    if (user?.id && user.workspace_id && !initialFetchDone && !loading) {
       fetchOrganizationData();
-    } else if (user?.id && !user.org_id) {
+    } else if (user?.id && !user.workspace_id) {
       setInitialFetchDone(true);
     }
-  }, [user?.id, user?.org_id, initialFetchDone, loading, fetchOrganizationData]);
+  }, [user?.id, user?.workspace_id, initialFetchDone, loading, fetchOrganizationData]);
 
   useEffect(() => {
-    if (organization?.id && !areasFetched) {
+    if (workspace?.id && !areasFetched) {
       fetchAreas().catch(() => {});
     }
-  }, [organization?.id, areasFetched, fetchAreas]);
+  }, [workspace?.id, areasFetched, fetchAreas]);
 
-  const hasOrganization = organization !== null && !organization.deleted;
+  const hasOrganization = workspace !== null && !workspace.deleted;
 
   const value: OrganizationContextType = {
-    organization,
+    workspace,
     members,
     memberStats,
     invites,

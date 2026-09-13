@@ -33,13 +33,13 @@ function requireOrgPermission(permission) {
 
       if (!permissions || !permissions.includes(permission)) {
         return res.status(403).json({
-          code: "ORG_FORBIDDEN",
+          code: "WORKSPACE_FORBIDDEN",
           error: "Insufficient workspace permissions",
           success: false,
         });
       }
 
-      req.organizationContext = workspace;
+      req.workspaceContext = workspace;
       return next();
     } catch (err) {
       console.error("[requireOrgPermission]", err);

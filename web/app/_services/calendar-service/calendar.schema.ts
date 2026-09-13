@@ -46,7 +46,7 @@ export const SyncStatusSchema = z.enum(["SYNCED", "PENDING", "FAILED", "OUT_OF_S
 
 export const InternalCalendarEventSchema = z.object({
   id: z.string(),
-  organization_id: z.string().nullable().optional(),
+  workspace_id: z.string().nullable().optional(),
   creator_id: z.string(),
   title: z.string(),
   description: z.string().nullable().optional(),
@@ -80,7 +80,7 @@ export const CreateInternalCalendarEventPayloadSchema = z.object({
   is_all_day: z.boolean().optional(),
   create_google_meet: z.boolean().optional(),
   attendees: z.array(z.string()).optional(),
-  organization_id: z.string().optional(),
+  workspace_id: z.string().optional(),
   note_id: z.string().optional(),
   project_id: z.string().optional(),
   is_from_note: z.boolean().optional(),

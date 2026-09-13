@@ -83,12 +83,12 @@ class SprintContextBuilder {
     const rows = await executeQuery(
       `SELECT
         p.id::text, p.title, p.description, p.status, p.methodology,
-        p.properties, p.organization_id::text,
+        p.properties, p.workspace_id::text,
         u.name AS owner_name, u.user_id::text AS owner_id,
-        o.org_name AS organization_name
+        o.workspace_name AS workspace_name
       FROM projects p
       INNER JOIN users u ON u.user_id = p.user_id
-      LEFT JOIN organizations o ON o.id = p.organization_id AND o.deleted = false
+      LEFT JOIN workspaces o ON o.id = p.workspace_id AND o.deleted = false
       WHERE p.id = $1 AND p.deleted = false`,
       [projectId]
     );
@@ -308,8 +308,8 @@ class SprintContextBuilder {
     parts.push(`- **ID**: ${project.id}`);
     parts.push(`- **Status**: ${project.status || "OPEN"}`);
     parts.push(`- **Methodology**: ${project.methodology || "N/A"}`);
-    if (project.organization_name) {
-      parts.push(`- **Organization**: ${project.organization_name}`);
+    if (project.workspace_name) {
+      parts.push(`- **Organization**: ${project.workspace_name}`);
     }
     if (project.description) {
       parts.push(`- **Description**: ${project.description}`);

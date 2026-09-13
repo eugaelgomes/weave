@@ -1,9 +1,9 @@
 /**
- * Mirrors weave-api `ORG_ROLES` / `validRoles` and invite `PROJECT_MEMBER_ROLES`
- * (see members.controller.js, organization-role-policy.js).
+ * Mirrors weave-api `WORKSPACE_ROLES` / `validRoles` and invite `PROJECT_MEMBER_ROLES`
+ * (see members.controller.js, workspace-role-policy.js).
  */
 
-export const ORG_WORKSPACE_ROLES = [
+export const WORKSPACE_WORKSPACE_ROLES = [
   "SUPER_ADMIN",
   "ADMIN",
   "BILLING_MANAGER",
@@ -11,7 +11,7 @@ export const ORG_WORKSPACE_ROLES = [
   "GUEST",
 ] as const;
 
-export type OrgWorkspaceRole = (typeof ORG_WORKSPACE_ROLES)[number];
+export type OrgWorkspaceRole = (typeof WORKSPACE_WORKSPACE_ROLES)[number];
 
 export const PROJECT_MEMBER_ROLES = [
   "PROJECT_MANAGER",
@@ -40,7 +40,7 @@ export function normalizeOrgRoleForUi(role: string | null | undefined): OrgRoleU
 }
 
 export function isOrgWorkspaceRole(value: string): value is OrgWorkspaceRole {
-  return (ORG_WORKSPACE_ROLES as readonly string[]).includes(value);
+  return (WORKSPACE_WORKSPACE_ROLES as readonly string[]).includes(value);
 }
 
 export function isProjectMemberRoleForInvite(value: string): value is ProjectMemberRoleForInvite {

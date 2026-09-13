@@ -57,26 +57,26 @@ class DomainVerificationProcessor {
   }
 
   async processJob(job) {
-    const organizationId = job?.organizationId;
+    const workspaceId = job?.workspaceId;
     const domainName = job?.domainName;
     const requestedByUserId = job?.requestedByUserId;
     const retryCount = Number(job?.retryCount || 0);
 
-    if (!organizationId || !domainName) {
-      logger.warn("Skipping domain verification job without organizationId or domainName");
+    if (!workspaceId || !domainName) {
+      logger.warn("Skipping domain verification job without workspaceId or domainName");
       return;
     }
 
-    const domain = await this.findActiveDomain(organizationId, domainName);
+    const domain = await this.findActiveDomain(workspaceId, domainName);
     if (!domain) {
-      logger.warn("Domain not found for verification job", { domainName, organizationId });
+      logger.warn("Domain not found for verification job", { domainName, workspaceId });
       return;
     }
 
     if (domain.status === "VERIFIED") {
       logger.debug("Domain already verified, skipping verification job", {
         domainName,
-        organizationId,
+        workspaceId,
       });
       return;
     }
@@ -89,28 +89,28 @@ class DomainVerificationProcessor {
     if (!isVerified) {
       await this.scheduleRetry({
         domainName,
-        organizationId,
+        workspaceId,
         requestedByUserId,
         retryCount: retryCount + 1,
       });
       logger.info("Domain DNS token not found, retry scheduled", {
         checkedHosts,
         domainName,
-        organizationId,
+        workspaceId,
         retryCount: retryCount + 1,
       });
       return;
     }
 
-    await this.markDomainAsVerified(organizationId, domainName);
+    await this.markDomainAsVerified(workspaceId, domainName);
     await this.promoteRequesterToSuperAdminIfAllowed({
-      organizationId,
+      workspaceId,
       requestedByUserId,
     });
 
     logger.info("Domain verified by worker", {
       domainName,
-      organizationId,
+      workspaceId,
       retryCount,
     });
   }
@@ -140,25 +140,25 @@ class DomainVerificationProcessor {
     await redis.zadd(this.delayedQueueName, runAt, JSON.stringify(job));
   }
 
-  async findActiveDomain(organizationId, domainName) {
+  async findActiveDomain(workspaceId, domainName) {
     const query = `
       SELECT domains
-      FROM organization_settings
-      WHERE organization_id = $1 AND deleted = false
+      FROM workspace_settings
+      WHERE workspace_id = $1 AND deleted = false
     `;
-    const results = await executeQuery(query, [organizationId]);
+    const results = await executeQuery(query, [workspaceId]);
     if (!results[0]) return null;
     const domains = results[0].domains || [];
     return domains.find((d) => d.domain_name === domainName) || null;
   }
 
-  async markDomainAsVerified(organizationId, domainName) {
+  async markDomainAsVerified(workspaceId, domainName) {
     const query = `
       SELECT domains
-      FROM organization_settings
-      WHERE organization_id = $1 AND deleted = false
+      FROM workspace_settings
+      WHERE workspace_id = $1 AND deleted = false
     `;
-    const results = await executeQuery(query, [organizationId]);
+    const results = await executeQuery(query, [workspaceId]);
     if (!results[0]) return;
     const domains = results[0].domains || [];
     const index = domains.findIndex((d) => d.domain_name === domainName);
@@ -168,54 +168,54 @@ class DomainVerificationProcessor {
     domains[index].verified_at = new Date().toISOString();
 
     const updateQuery = `
-      UPDATE organization_settings
+      UPDATE workspace_settings
       SET domains = $2::jsonb, updated_at = NOW()
-      WHERE organization_id = $1 AND deleted = false
+      WHERE workspace_id = $1 AND deleted = false
     `;
-    await executeQuery(updateQuery, [organizationId, JSON.stringify(domains)]);
+    await executeQuery(updateQuery, [workspaceId, JSON.stringify(domains)]);
   }
 
-  async promoteRequesterToSuperAdminIfAllowed({ organizationId, requestedByUserId }) {
+  async promoteRequesterToSuperAdminIfAllowed({ workspaceId, requestedByUserId }) {
     if (!requestedByUserId) return;
 
     const roleQuery = `
       SELECT role
-      FROM organization_members
-      WHERE organization_id = $1
+      FROM workspace_members
+      WHERE workspace_id = $1
         AND user_id = $2
         AND area_id IS NULL
         AND deleted = false
       LIMIT 1;
     `;
 
-    const roleResult = await executeQuery(roleQuery, [organizationId, requestedByUserId]);
+    const roleResult = await executeQuery(roleQuery, [workspaceId, requestedByUserId]);
 
     const currentRole = roleResult[0]?.role;
     if (!currentRole || currentRole === "SUPER_ADMIN") return;
 
     const superAdminCountQuery = `
       SELECT COUNT(*)::int AS total
-      FROM organization_members
-      WHERE organization_id = $1
+      FROM workspace_members
+      WHERE workspace_id = $1
         AND area_id IS NULL
         AND role = 'SUPER_ADMIN'
         AND deleted = false
         AND suspended = false;
     `;
-    const countResult = await executeQuery(superAdminCountQuery, [organizationId]);
+    const countResult = await executeQuery(superAdminCountQuery, [workspaceId]);
     const currentSuperAdmins = countResult[0]?.total || 0;
     if (currentSuperAdmins >= 3) return;
 
     await executeQuery(
       `
-        UPDATE organization_members
+        UPDATE workspace_members
         SET role = 'SUPER_ADMIN',
             updated_at = NOW()
-        WHERE organization_id = $1
+        WHERE workspace_id = $1
           AND user_id = $2
           AND area_id IS NULL;
       `,
-      [organizationId, requestedByUserId]
+      [workspaceId, requestedByUserId]
     );
   }
 

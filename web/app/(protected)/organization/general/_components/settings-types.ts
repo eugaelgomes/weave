@@ -1,10 +1,10 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import type { Organization, OrganizationProperties } from "@/app/_services/organization";
+import type { Organization, OrganizationProperties } from "@/app/_services/workspace";
 
 export type EditableImage = "logo" | "banner";
 
 export interface OrganizationInfoFormData {
-  org_name: string;
+  workspace_name: string;
   unique_name: string;
   slogan: string;
 }

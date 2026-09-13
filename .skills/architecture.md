@@ -62,8 +62,8 @@ The Weave platform is a distributed, event-driven monorepo containing five prima
 - `worker/` and `llm/` automatic context wrappers MUST ingest `job.requestId` into `requestContext` (`AsyncLocalStorage`) so all logs and traces remain bound across process boundaries.
 
 ### 2. Multi-Tenant Isolation
-- All database queries, cache keys, and queue payloads MUST enforce multi-tenant scoping (`organizationId`, `workspaceId`).
-- Never perform global database mutations or tool executions without validating caller organization boundaries.
+- All database queries, cache keys, and queue payloads MUST enforce multi-tenant scoping (`workspaceId`, `workspaceId`).
+- Never perform global database mutations or tool executions without validating caller workspace boundaries.
 
 ### 3. API & Queue Payload Contract Governance
 - Treat API payloads, Redis queue envelopes, and database schemas as strict versioned contracts.

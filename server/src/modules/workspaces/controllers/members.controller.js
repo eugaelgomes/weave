@@ -188,7 +188,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         count_by_role: countByRole,
         count_by_status: countByStatus,
         current_page: parsedPage,
-        list_org_members: parsedMembers,
+        list_workspace_members: parsedMembers,
         list_workspace_members: parsedMembers,
         total_count: totalCount,
         total_pages: totalPages,

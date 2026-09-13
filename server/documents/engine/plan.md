@@ -44,7 +44,7 @@ Tabela principal — só metadados e referências. **Nenhum campo de conteúdo p
 | `project_id`         | `uuid NOT NULL`                              | Projeto que gerou o raciocínio                 |
 | `sprint_id`          | `uuid NOT NULL`                              | Sprint associada                               |
 | `report_config_id`   | `uuid NULL`                                  | Config de AI report que disparou               |
-| `organization_id`    | `uuid NULL`                                  | Organização (para escopo)                      |
+| `workspace_id`    | `uuid NULL`                                  | Organização (para escopo)                      |
 | `triggered_by`       | `uuid NOT NULL`                              | Usuário/owner que disparou                     |
 | `reasoning_type`     | `weave_engine_reasoning_type NOT NULL`       | Tipo do raciocínio (enum)                      |
 | `title`              | `varchar(255) NOT NULL`                      | Título (ex: "Sprint 3 - Daily Standup")        |
@@ -167,9 +167,9 @@ CREATE INDEX idx_reasonings_status_pending
   WHERE deleted = false AND status IN ('pending', 'processing');
 
 -- Por organização
-CREATE INDEX idx_reasonings_organization
-  ON public.weave_engine_reasonings(organization_id, created_at DESC)
-  WHERE deleted = false AND organization_id IS NOT NULL;
+CREATE INDEX idx_reasonings_workspace
+  ON public.weave_engine_reasonings(workspace_id, created_at DESC)
+  WHERE deleted = false AND workspace_id IS NOT NULL;
 
 -- Job de limpeza por expiração
 CREATE INDEX idx_reasonings_expires_at

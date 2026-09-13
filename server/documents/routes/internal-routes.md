@@ -14,7 +14,7 @@ Mounted by index under `/api/v1`.
 - Applies origin guard (with skip rules for webhooks/SSO paths).
 - Exposes `GET /_internal/challenge`.
 - Applies `verifyInternalWebChallenge` for protected internal traffic.
-- Mounts all module routes (auth, users, notes, projects, organizations, etc.).
+- Mounts all module routes (auth, users, notes, projects, workspaces, etc.).
 
 ## Security notes
 

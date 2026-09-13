@@ -45,17 +45,17 @@ export const routes = {
     tools: () => `/agent-house/tools/`,
   },
 
-  organization: {
-    general: () => `/organization/general/`,
-    create: () => `/organization/create/`,
-    plans: () => `/organization/plans/`,
-    integrations: () => `/organization/integrations/`,
-    membersList: () => `/organization/members/list/`,
-    membersInvites: () => `/organization/members/invites/`,
-    areas: () => `/organization/areas/`,
-    projects: () => `/organization/projects/`,
-    editor: () => `/organization/editor/`,
-    about: () => `/organization/about/`,
+  workspace: {
+    general: () => `/workspace/general/`,
+    create: () => `/workspace/create/`,
+    plans: () => `/workspace/plans/`,
+    integrations: () => `/workspace/integrations/`,
+    membersList: () => `/workspace/members/list/`,
+    membersInvites: () => `/workspace/members/invites/`,
+    areas: () => `/workspace/areas/`,
+    projects: () => `/workspace/projects/`,
+    editor: () => `/workspace/editor/`,
+    about: () => `/workspace/about/`,
   },
 
   settings: {

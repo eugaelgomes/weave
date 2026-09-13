@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useOrganization } from "@/app/_contexts/organization-context";
+import { useOrganization } from "@/app/_contexts/workspace-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
-import type { InviteMemberData } from "@/app/_services/organization";
+import type { InviteMemberData } from "@/app/_services/workspace";
 import { Plus, Search } from "lucide-react";
 import { WorkspacePageShell } from "@/app/(protected)/organization/_components/workspace-page-shell";
-import { MemberWorkspaceRoleBadge } from "@/app/(protected)/organization/members/_components/member-workspace-role-badge";
-import { OrganizationInviteModal } from "@/app/(protected)/organization/members/_components/organization-invite-modal";
+import { MemberWorkspaceRoleBadge } from "../_components/member-workspace-role-badge";
+import { OrganizationInviteModal } from "../_components/organization-invite-modal";
 import { usePlanUsage } from "@/app/_contexts/plan-usage-context";
 
 export default function InvitesPage() {
@@ -42,7 +42,7 @@ export default function InvitesPage() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash === "#organization/invite") {
+      if (hash === "#workspace/invite") {
         setShowInviteModal(true);
       } else {
         setShowInviteModal(false);
@@ -67,18 +67,18 @@ export default function InvitesPage() {
     try {
       const result = await inviteMember(payload);
       if (!result.success) {
-        showFeedback("error", result.message || t.organizationMembers.inviteError);
+        showFeedback("error", result.message || t.workspaceMembers.inviteError);
         return;
       }
       showFeedback(
         "success",
-        t.organizationMembers.inviteSuccess.replace("{email}", payload.email)
+        t.workspaceMembers.inviteSuccess.replace("{email}", payload.email)
       );
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
       window.dispatchEvent(new HashChangeEvent("hashchange"));
       setShowInviteModal(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t.organizationMembers.inviteError;
+      const msg = err instanceof Error ? err.message : t.workspaceMembers.inviteError;
       showFeedback("error", msg);
     } finally {
       setLoadingAction(false);
@@ -90,12 +90,12 @@ export default function InvitesPage() {
     try {
       const ok = await cancelInvite(inviteId);
       if (!ok) {
-        showFeedback("error", t.organizationMembers.cancelInviteError);
+        showFeedback("error", t.workspaceMembers.cancelInviteError);
         return;
       }
-      showFeedback("success", t.organizationMembers.cancelInviteSuccess);
+      showFeedback("success", t.workspaceMembers.cancelInviteSuccess);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t.organizationMembers.cancelInviteError;
+      const msg = err instanceof Error ? err.message : t.workspaceMembers.cancelInviteError;
       showFeedback("error", msg);
     } finally {
       setLoadingAction(false);
@@ -115,13 +115,13 @@ export default function InvitesPage() {
   if (!hasOrganization) {
     return (
       <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
-        {t.organizationMembers.emptyState}
+        {t.workspaceMembers.emptyState}
       </div>
     );
   }
 
   return (
-    <WorkspacePageShell description={t.organizationMembers.invitesPageDescription}>
+    <WorkspacePageShell description={t.workspaceMembers.invitesPageDescription}>
       <div className="mx-auto min-h-0 w-full flex-1 space-y-3">
         {status ? (
           <div
@@ -140,7 +140,7 @@ export default function InvitesPage() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-[200px] flex-1">
               <label className="mb-1.5 block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-                {t.organizationMembers.invitesSearchLabel}
+                {t.workspaceMembers.invitesSearchLabel}
               </label>
               <div className="relative">
                 <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
@@ -148,9 +148,9 @@ export default function InvitesPage() {
                   type="search"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={t.organizationMembers.invitesSearchPlaceholder}
+                  placeholder={t.workspaceMembers.invitesSearchPlaceholder}
                   className={searchInputClass}
-                  aria-label={t.organizationMembers.invitesSearchLabel}
+                  aria-label={t.workspaceMembers.invitesSearchLabel}
                 />
               </div>
             </div>
@@ -158,18 +158,18 @@ export default function InvitesPage() {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.hash = "#organization/invite";
+                  window.location.hash = "#workspace/invite";
                 }}
                 className="bg-brand-primary-500 flex shrink-0 items-center justify-center gap-2 self-stretch rounded-md px-3 py-2 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-[0.98] sm:self-auto sm:py-1.5"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="whitespace-nowrap">{t.organizationMembers.inviteMember}</span>
+                <span className="whitespace-nowrap">{t.workspaceMembers.inviteMember}</span>
               </button>
             ) : null}
           </div>
 
           <p className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
-            {t.organizationMembers.invitesPendingSection}
+            {t.workspaceMembers.invitesPendingSection}
           </p>
 
           <div className="dark:border-surface-dark-border overflow-hidden rounded-md border border-neutral-200">
@@ -178,13 +178,13 @@ export default function InvitesPage() {
                 <thead className="bg-neutral-50/50 dark:bg-[#1d1d1b]/50">
                   <tr>
                     <th className="px-3 py-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                      {t.organizationMembers.invitesEmailColumn}
+                      {t.workspaceMembers.invitesEmailColumn}
                     </th>
                     <th className="px-3 py-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                      {t.organizationMembers.invitesAccessColumn}
+                      {t.workspaceMembers.invitesAccessColumn}
                     </th>
                     <th className="px-3 py-2 text-right text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                      {t.organizationMembers.tableActions}
+                      {t.workspaceMembers.tableActions}
                     </th>
                   </tr>
                 </thead>
@@ -196,8 +196,8 @@ export default function InvitesPage() {
                         className="px-3 py-6 text-center text-xs text-neutral-500 dark:text-neutral-400"
                       >
                         {(invites?.length ?? 0) === 0
-                          ? t.organizationMembers.invitesEmptyState
-                          : t.organizationMembers.invitesSearchNoMatch}
+                          ? t.workspaceMembers.invitesEmptyState
+                          : t.workspaceMembers.invitesSearchNoMatch}
                       </td>
                     </tr>
                   ) : (
@@ -219,9 +219,9 @@ export default function InvitesPage() {
                               onClick={() => handleCancelInvite(invite.invite_id)}
                               disabled={loadingAction}
                               className="text-xs font-medium text-red-600 transition-colors hover:text-red-700 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
-                              title={t.organizationMembers.invitesCancelInviteTitle}
+                              title={t.workspaceMembers.invitesCancelInviteTitle}
                             >
-                              {t.organizationMembers.cancel}
+                              {t.workspaceMembers.cancel}
                             </button>
                           ) : null}
                         </td>

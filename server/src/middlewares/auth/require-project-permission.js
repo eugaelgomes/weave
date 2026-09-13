@@ -11,7 +11,7 @@ const {
  *
  * Access is granted when:
  * - User owns the project
- * - User has org-wide project access (ACCESS_ALL_ORG_PROJECTS)
+ * - User has org-wide project access (ACCESS_ALL_WORKSPACE_PROJECTS)
  * - User is a project member whose role grants the requested permission
  *
  * This middleware expects `verifyToken` to have run before it.
@@ -48,7 +48,7 @@ function requireProjectPermission(permission) {
         project = memberRows[0];
       } else {
         const membership = await baseRepository.getActiveWorkspaceWithMembership(userId);
-        if (membership?.id && membership.permissions?.includes("access_all_org_projects")) {
+        if (membership?.id && membership.permissions?.includes("access_all_workspace_projects")) {
           const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
             projectId,
             membership.id
@@ -77,7 +77,7 @@ function requireProjectPermission(permission) {
       }
 
       const membership = await baseRepository.getActiveWorkspaceWithMembership(userId);
-      if (membership?.id && membership.permissions?.includes("access_all_org_projects")) {
+      if (membership?.id && membership.permissions?.includes("access_all_workspace_projects")) {
         const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
           projectId,
           membership.id

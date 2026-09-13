@@ -52,7 +52,7 @@ class AppError extends Error {
    * @param {string} message
    * @param {string} [code]
    */
-  static forbidden(message, code = ERROR_CODES.ORG_FORBIDDEN) {
+  static forbidden(message, code = ERROR_CODES.WORKSPACE_FORBIDDEN) {
     return new AppError(code, message, 403);
   }
 

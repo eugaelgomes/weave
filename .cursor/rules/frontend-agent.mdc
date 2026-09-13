@@ -38,7 +38,7 @@ app/_services/
 ├── notes-service/
 ├── notes-comments-service/
 ├── projects-service/
-├── organization/
+├── workspace/
 ├── notifications/
 ├── ai-agent-service/       # chat, models, agents
 ├── calendar-service/

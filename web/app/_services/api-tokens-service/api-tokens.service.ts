@@ -27,7 +27,7 @@ export const createApiToken = async (data: {
   name: string;
   scopes: string[];
   expiresAt: string | null;
-  organizationId?: string | null;
+  workspaceId?: string | null;
 }): Promise<ApiTokenCreateResponse> => {
   const response = await apiClient.post(API_ENDPOINTS.API_TOKENS_CREATE, data);
   const raw = await handleResponse<unknown>(response);

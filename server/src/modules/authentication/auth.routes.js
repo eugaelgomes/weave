@@ -106,7 +106,7 @@ router.post(
   SamlController.discoverSso.bind(SamlController)
 );
 
-router.get("/sso/saml/:organizationId/login", SamlController.samlLogin.bind(SamlController));
+router.get("/sso/saml/:workspaceId/login", SamlController.samlLogin.bind(SamlController));
 
 router.post(
   "/sso/saml/acs",

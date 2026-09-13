@@ -3,7 +3,7 @@ name: Workspace search and share
 overview: "Isolar descoberta de utilizadores e partilha (notas/projetos/IA) pela mesma regra: utilizadores só interagem com quem partilha o mesmo contexto de workspace (membros ativos de organização), ou ambos fora de qualquer workspace."
 todos:
   - id: scope-module
-    content: Adicionar workspace-user-scope (getActiveOrganizationIdsForUser + usersMayInteract) com JSDoc e queries alinhadas a organization_members
+    content: Adicionar workspace-user-scope (getActiveOrganizationIdsForUser + usersMayInteract) com JSDoc e queries alinhadas a workspace_members
     status: completed
   - id: search-filter
     content: Filtrar searchUsers(searchTerm, searcherUserId) no repositório + controller
@@ -21,7 +21,7 @@ isProject: false
 
 ## Regra de negócio (única fonte de verdade)
 
-- Considerar **membria ativa de workspace** como qualquer linha em `organization_members` com `deleted = false`, `status = 'ACTIVE'`, `suspended = false`, e obter o conjunto **`organization_id` distintos** para o utilizador (inclui linhas com `area_id` preenchido ou `NULL`, para não tratar incorretamente quem só tem área).
+- Considerar **membria ativa de workspace** como qualquer linha em `workspace_members` com `deleted = false`, `status = 'ACTIVE'`, `suspended = false`, e obter o conjunto **`workspace_id` distintos** para o utilizador (inclui linhas com `area_id` preenchido ou `NULL`, para não tratar incorretamente quem só tem área).
 - **`usersMayInteract(actorUserId, targetUserId)`** (assíncrono):
   - `orgA` = conjunto de orgs do actor; `orgB` = do target.
   - Se **ambos** os conjuntos são vazios → **permitido** (dois utilizadores “pessoais”, fora de workspace).
@@ -38,7 +38,7 @@ Criar um módulo pequeno com JSDoc, por exemplo:
 
 Funções:
 
-- `getActiveOrganizationIdsForUser(userId)` → `Promise<string[]>` (query única, `SELECT DISTINCT organization_id ...`).
+- `getActiveOrganizationIdsForUser(userId)` → `Promise<string[]>` (query única, `SELECT DISTINCT workspace_id ...`).
 - `usersMayInteract(actorUserId, targetUserId)` → `Promise<boolean>` (duas queries ou uma query com join, conforme preferência de legibilidade).
 
 Não expor PII; só UUIDs e lógica booleana.
@@ -70,7 +70,7 @@ Convém extrair um helper único (ex. `assertUsersMayInteractOr403(actorId, targ
 
 ## 4. Fora de âmbito (comportamento intencional)
 
-- **Convites de organização por e-mail** em [`members.controller.js`](weave-api/src/modules/organizations/controllers/members.controller.js) continuam a ser fluxo de entrada no workspace; não são “busca global” de utilizadores.
+- **Convites de organização por e-mail** em [`members.controller.js`](weave-api/src/modules/workspaces/controllers/members.controller.js) continuam a ser fluxo de entrada no workspace; não são “busca global” de utilizadores.
 - **`findByUsernameOrEmail`** / registo / OAuth: não alterar salvo se no futuro houver requisito explícito.
 
 ## 5. Front-end

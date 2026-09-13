@@ -218,8 +218,8 @@ export function SignUp({ onNavigate, locale = "pt-br" }: Props) {
     try {
       const discovery = await discoverSamlSso(trimmedEmail);
 
-      if (discovery.success && discovery.requires_sso && discovery.organization_id) {
-        startSamlSsoLogin(discovery.organization_id);
+      if (discovery.success && discovery.requires_sso && discovery.workspace_id) {
+        startSamlSsoLogin(discovery.workspace_id);
         return;
       }
 

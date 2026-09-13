@@ -1,4 +1,5 @@
 const { AppError, fromUnknown, ERROR_CODES } = require("@/errors");
+const { prisma } = require("@theweave/database");
 const spacesService = require("@/services/storage.service");
 const teamsRepository = require("@/modules/workspaces/repositories/teams.repository");
 const {
@@ -14,8 +15,8 @@ const WORKSPACE_PERMISSIONS = Object.freeze({
   MANAGE_BRAND: "manage_brand",
   MANAGE_DOMAINS: "manage_domains",
   MANAGE_MEMBERS: "manage_members",
-  MANAGE_ORG_LIFECYCLE: "manage_org_lifecycle",
   MANAGE_WEAVE_AI: "manage_weave_ai",
+  MANAGE_WORKSPACE_LIFECYCLE: "manage_workspace_lifecycle",
   VIEW_MEMBER_DIRECTORY: "view_member_directory",
 });
 /**
@@ -407,11 +408,60 @@ class WorkspacesController extends WorkspacesBaseController {
   }
 
   async updateWorkspaceProperties(req, res, next) {
-    return next(
-      AppError.badRequest(
-        "Workspace properties column has been removed. Use workspace settings fields instead."
-      )
-    );
+    try {
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace) {
+        throw AppError.notFound("Workspace not found");
+      }
+
+      if (
+        !this._ensureWorkspacePermission(
+          currentWorkspace,
+          this._workspacePermissions.MANAGE_BRAND,
+          res
+        )
+      ) {
+        return;
+      }
+
+      const updates = req.body.properties || req.body.settings || req.body || {};
+      const currentSettings =
+        typeof currentWorkspace.settings === "object" && currentWorkspace.settings !== null
+          ? currentWorkspace.settings
+          : {};
+      const updatedSettings = { ...currentSettings, ...updates };
+
+      await prisma.workspace_settings.upsert({
+        create: {
+          preferences: updatedSettings,
+          workspace_id: currentWorkspace.id,
+        },
+        update: {
+          preferences: updatedSettings,
+          updated_at: new Date(),
+        },
+        where: { workspace_id: currentWorkspace.id },
+      });
+
+      const formatted = workspaceResponseSchema.parse({
+        ...currentWorkspace,
+        properties: updatedSettings,
+        settings: updatedSettings,
+      });
+
+      res.status(200).json({
+        data: formatted,
+        organization_data: formatted,
+        status: "OK",
+        success: true,
+      });
+    } catch (error) {
+      console.error("Error updating workspace properties:", error);
+      return next(fromUnknown(error));
+    }
   }
 
   async deleteWorkspace(req, res, next) {
@@ -427,7 +477,7 @@ class WorkspacesController extends WorkspacesBaseController {
       if (
         !this._ensureWorkspacePermission(
           currentWorkspace,
-          this._workspacePermissions.MANAGE_ORG_LIFECYCLE,
+          this._workspacePermissions.MANAGE_WORKSPACE_LIFECYCLE,
           res
         )
       )
@@ -484,7 +534,7 @@ class WorkspacesController extends WorkspacesBaseController {
       if (
         !this._ensureWorkspacePermission(
           workspaceWithRole,
-          this._workspacePermissions.MANAGE_ORG_LIFECYCLE,
+          this._workspacePermissions.MANAGE_WORKSPACE_LIFECYCLE,
           res
         )
       )

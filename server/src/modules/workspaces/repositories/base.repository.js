@@ -29,6 +29,7 @@ class WorkspaceBaseRepository {
             users_workspaces_user_idTousers: {
               select: { avatar_url: true, email: true, name: true, username: true },
             },
+            workspace_settings: true,
           },
         },
       },
@@ -60,7 +61,7 @@ class WorkspaceBaseRepository {
       "manage_brand",
       "manage_domains",
       "manage_members",
-      "manage_org_lifecycle",
+      "manage_workspace_lifecycle",
       "manage_weave_ai",
       "view_member_directory",
     ];
@@ -68,6 +69,20 @@ class WorkspaceBaseRepository {
     const effectivePermissions = isOwner
       ? Array.from(new Set([...permissions, ...allPermissions]))
       : permissions;
+
+    const wsSettings = workspace.workspace_settings;
+    const combinedSettings = wsSettings
+      ? {
+          ...(typeof wsSettings.preferences === "object" && wsSettings.preferences !== null
+            ? wsSettings.preferences
+            : {}),
+          branding: wsSettings.branding || {},
+          domains: wsSettings.domains || {},
+          integrations: wsSettings.integrations || {},
+          saml: wsSettings.saml || {},
+          tracing: wsSettings.tracing || {},
+        }
+      : {};
 
     return {
       ...workspace,
@@ -85,6 +100,8 @@ class WorkspaceBaseRepository {
       plan_snapshot: workspace.plans?.details,
       plan_value: workspace.plans?.plan_value,
       plans: undefined,
+      properties: combinedSettings,
+      settings: combinedSettings,
       username: workspace.users_workspaces_user_idTousers?.username,
       users_workspaces_user_idTousers: undefined,
     };
@@ -405,9 +422,19 @@ class WorkspaceBaseRepository {
     logo_url,
     banner_url,
     description,
-    deleted,
+    settingsOrDeleted,
+    deletedArg,
     client = prisma
   ) {
+    let settings = undefined;
+    let deleted = false;
+    if (typeof settingsOrDeleted === "boolean") {
+      deleted = settingsOrDeleted;
+    } else {
+      settings = settingsOrDeleted;
+      deleted = typeof deletedArg === "boolean" ? deletedArg : false;
+    }
+
     const hasAccess = await client.workspaces.findFirst({
       where: {
         id: workspace_id,
@@ -433,6 +460,20 @@ class WorkspaceBaseRepository {
     });
 
     if (!hasAccess) return null;
+
+    if (settings && typeof settings === "object") {
+      await client.workspace_settings.upsert({
+        create: {
+          preferences: settings,
+          workspace_id,
+        },
+        update: {
+          preferences: settings,
+          updated_at: new Date(),
+        },
+        where: { workspace_id },
+      });
+    }
 
     return client.workspaces.update({
       data: {

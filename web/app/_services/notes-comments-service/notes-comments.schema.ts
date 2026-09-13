@@ -22,7 +22,7 @@ export const NoteCommentSchema = z.object({
   id: z.string(),
   note_id: z.string(),
   user_id: z.string(),
-  org_id: z.string().nullable().optional(),
+  workspace_id: z.string().nullable().optional(),
   content: NoteCommentContentSchema,
   files: z.array(NoteCommentFileSchema),
   parent_id: z.string().nullable().optional(),

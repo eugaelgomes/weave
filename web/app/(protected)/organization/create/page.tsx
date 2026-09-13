@@ -9,9 +9,9 @@ import {
   fetchOrganizationCreationStepOne,
   OrganizationBusinessRole,
   saveOrganizationCreationStepOne,
-} from "@/app/_services/organization";
+} from "@/app/_services/workspace";
 import { WorkspaceHeader } from "@/app/(protected)/_components/ui/headers/workspace-header";
-import { useOrganization } from "@/app/_contexts/organization-context";
+import { useOrganization } from "@/app/_contexts/workspace-context";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
 const ROLE_LABELS: Record<OrganizationBusinessRole, string> = {
@@ -39,9 +39,9 @@ const FALLBACK_ROLE_OPTIONS: OrganizationBusinessRole[] = [
 ];
 
 type StepOneForm = {
-  org_name: string;
+  workspace_name: string;
   unique_name: string;
-  organization_role: OrganizationBusinessRole;
+  workspace_role: OrganizationBusinessRole;
   description: string;
   default_locale: string;
   country: string;
@@ -49,9 +49,9 @@ type StepOneForm = {
 };
 
 const DEFAULT_FORM: StepOneForm = {
-  org_name: "",
+  workspace_name: "",
   unique_name: "",
-  organization_role: "TECHNOLOGY",
+  workspace_role: "TECHNOLOGY",
   description: "",
   default_locale: "en-US",
   country: "",
@@ -103,7 +103,7 @@ export default function OrganizationCreatePage() {
   const router = useRouter();
   const params = useParams();
 
-  const { refreshOrganization, uploadLogo, organization } = useOrganization();
+  const { refreshOrganization, uploadLogo, workspace } = useOrganization();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -116,9 +116,9 @@ export default function OrganizationCreatePage() {
   const canComplete = useMemo(
     () =>
       Boolean(
-        form.org_name.trim() &&
+        form.workspace_name.trim() &&
         form.unique_name.trim() &&
-        form.organization_role &&
+        form.workspace_role &&
         form.default_locale.trim() &&
         form.country.trim() &&
         form.language.trim()
@@ -130,35 +130,35 @@ export default function OrganizationCreatePage() {
     const load = async () => {
       try {
         const response = await fetchOrganizationCreationStepOne();
-        const organization = response.organization;
+        const workspace = response.workspace;
         const availableRoles = (response.role_options || response.available_roles || []).filter(
           (role): role is OrganizationBusinessRole => FALLBACK_ROLE_OPTIONS.includes(role)
         );
         const resolvedRoleOptions = availableRoles.length ? availableRoles : FALLBACK_ROLE_OPTIONS;
 
         setRoleOptions(resolvedRoleOptions);
-        const completedSteps = organization?.settings?.creation_steps?.completed_steps || [];
+        const completedSteps = workspace?.settings?.creation_steps?.completed_steps || [];
         setStepOneCompleted(Array.isArray(completedSteps) && completedSteps.includes("step_1"));
-        if (organization) {
-          const roleFromSettings = organization.settings?.organization_role;
+        if (workspace) {
+          const roleFromSettings = workspace.settings?.workspace_role;
           const resolvedRole = FALLBACK_ROLE_OPTIONS.includes(roleFromSettings)
             ? roleFromSettings
             : resolvedRoleOptions[0];
 
           setForm((prev) => ({
             ...prev,
-            org_name: organization.org_name || "",
-            unique_name: organization.unique_name || "",
-            description: organization.description || "",
-            organization_role: resolvedRole || prev.organization_role,
-            default_locale: organization.default_locale || prev.default_locale,
-            country: organization.country || "",
-            language: organization.settings?.language || prev.language,
+            workspace_name: workspace.workspace_name || "",
+            unique_name: workspace.unique_name || "",
+            description: workspace.description || "",
+            workspace_role: resolvedRole || prev.workspace_role,
+            default_locale: workspace.default_locale || prev.default_locale,
+            country: workspace.country || "",
+            language: workspace.settings?.language || prev.language,
           }));
         } else {
           setForm((prev) => ({
             ...prev,
-            organization_role: resolvedRoleOptions[0] || prev.organization_role,
+            workspace_role: resolvedRoleOptions[0] || prev.workspace_role,
           }));
         }
       } catch (error) {
@@ -175,7 +175,7 @@ export default function OrganizationCreatePage() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!organization?.id) {
+    if (!workspace?.id) {
       toast.error("Salve o passo 1 pelo menos uma vez para enviar o logo.");
       return;
     }
@@ -213,9 +213,9 @@ export default function OrganizationCreatePage() {
     setSaving(true);
     try {
       await saveOrganizationCreationStepOne({
-        org_name: form.org_name,
+        workspace_name: form.workspace_name,
         unique_name: form.unique_name,
-        organization_role: form.organization_role,
+        workspace_role: form.workspace_role,
         description: form.description || undefined,
         default_locale: form.default_locale || null,
         country: form.country ? form.country.toUpperCase() : null,
@@ -242,7 +242,7 @@ export default function OrganizationCreatePage() {
       await refreshOrganization();
       toast.success("Etapa 1 concluida");
       setStepOneCompleted(true);
-      router.push(`/organization/general`);
+      router.push(`/workspace/general`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao concluir etapa 1");
     } finally {
@@ -319,8 +319,8 @@ export default function OrganizationCreatePage() {
                 <input
                   className={inputFieldClass}
                   placeholder="Acme Inc."
-                  value={form.org_name}
-                  onChange={handleFieldChange("org_name")}
+                  value={form.workspace_name}
+                  onChange={handleFieldChange("workspace_name")}
                   required
                 />
               </div>
@@ -341,9 +341,9 @@ export default function OrganizationCreatePage() {
 
             <div className="dark:border-surface-dark-border flex flex-wrap items-start gap-3 rounded-md border border-neutral-200 p-3">
               <div className="dark:border-surface-dark-border relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50 dark:bg-[#1d1d1b]">
-                {organization?.logo_url ? (
+                {workspace?.logo_url ? (
                   <img
-                    src={getStorageUrl(organization.logo_url)}
+                    src={getStorageUrl(workspace.logo_url)}
                     alt=""
                     className="h-full w-full object-cover"
                   />
@@ -367,7 +367,7 @@ export default function OrganizationCreatePage() {
                 />
                 <button
                   type="button"
-                  disabled={logoUploading || !organization?.id}
+                  disabled={logoUploading || !workspace?.id}
                   onClick={() => logoInputRef.current?.click()}
                   className="dark:border-surface-dark-border-strong inline-flex w-fit items-center gap-1 rounded-md border border-neutral-300 px-2 py-2 text-xs font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
@@ -391,8 +391,8 @@ export default function OrganizationCreatePage() {
               <select
                 aria-label="Organization role"
                 className={inputFieldClass}
-                value={form.organization_role}
-                onChange={handleFieldChange("organization_role")}
+                value={form.workspace_role}
+                onChange={handleFieldChange("workspace_role")}
                 required
               >
                 {roleOptions.map((role) => (

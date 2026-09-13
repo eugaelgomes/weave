@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useApiTokens } from "@/app/_contexts/api-tokens-context";
-import { useOrganization } from "@/app/_contexts/organization-context";
+import { useOrganization } from "@/app/_contexts/workspace-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { apiClient, API_ENDPOINTS } from "@/app/_services/api-methods";
@@ -147,7 +147,7 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
 export function SettingsApiTokens() {
   const { t } = useLanguage();
   const { apiTokens, scopesInfo, loadingTokens, generateApiToken, revokeToken } = useApiTokens();
-  const { organization } = useOrganization();
+  const { workspace } = useOrganization();
 
   // Estados de UI
   const [isCreating, setIsCreating] = useState(false);
@@ -215,7 +215,7 @@ export function SettingsApiTokens() {
       expiresAtDate = date.toISOString();
     }
 
-    const orgId = organization?.id || null;
+    const orgId = workspace?.id || null;
 
     const result = await generateApiToken(newTokenName, selectedScopes, expiresAtDate);
     if (result.success && result.data?.token) {

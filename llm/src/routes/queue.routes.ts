@@ -127,19 +127,19 @@ class LlmQueueProcessor {
     const startedAt = Date.now();
     const queueLatencyMs = createdAt ? Date.now() - new Date(createdAt).getTime() : null;
 
-    const organizationId =
-      (payload.organizationId as string) ||
-      ((payload.context as Record<string, unknown>)?.organizationId as string) ||
+    const workspaceId =
+      (payload.workspaceId as string) ||
+      ((payload.context as Record<string, unknown>)?.workspaceId as string) ||
       "";
 
     const traceContext = {
-      organizationId,
+      workspaceId,
       sessionId: (payload.sessionId as string) || null,
       traceId: requestId || "",
       userId: (payload.userId as string) || null,
     };
 
-    if (organizationId && requestId) {
+    if (workspaceId && requestId) {
       await Tracer.startTrace(traceContext, taskType);
     }
 
@@ -158,7 +158,7 @@ class LlmQueueProcessor {
         taskType,
       });
 
-      if (organizationId && requestId) {
+      if (workspaceId && requestId) {
         await Tracer.endTrace(traceContext.traceId, traceContext, {
           status: "success",
           totalCost: (data as any)?.usage?.totalCost || 0,
@@ -175,7 +175,7 @@ class LlmQueueProcessor {
         taskType,
       });
 
-      if (organizationId && requestId) {
+      if (workspaceId && requestId) {
         await Tracer.endTrace(traceContext.traceId, traceContext, {
           error: normalizedError.message,
           status: "error",
@@ -275,9 +275,9 @@ class LlmQueueProcessor {
               redis.publish(`stream:${requestId}`, JSON.stringify({ chunk })).catch(() => {});
             }
           },
-          organizationId:
-            (payload.organizationId as string) ||
-            ((payload.context as Record<string, unknown>)?.organizationId as string) ||
+          workspaceId:
+            (payload.workspaceId as string) ||
+            ((payload.context as Record<string, unknown>)?.workspaceId as string) ||
             null,
           provider: (payload.provider as string) || "openai",
           thinking: (payload.thinking as AgenticExecutionContext["thinking"]) || undefined,

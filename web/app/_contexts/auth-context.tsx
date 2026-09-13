@@ -34,7 +34,7 @@ import { ApiError } from "../_services/api-error";
 import { mergeUsageDetails } from "../_services/plans-service/plan-usage-service";
 import { logClientError } from "../_utils/client-logger";
 import { useTheme } from "./theme-context";
-import { switchOrganizationApi } from "../_services/organization";
+import { switchOrganizationApi } from "../_services/workspace";
 
 /** Consumer-facing user model — import from this module in UI; do not import auth-service types directly. */
 export type { User };
@@ -69,7 +69,7 @@ type AuthContextType = {
   requestLoginCode: (login: string) => Promise<{ success: boolean; message?: string }>;
   loginWithCode: (payload: { login: string; code: string }) => Promise<LoginResult>;
   discoverSamlSso: (email: string) => Promise<SamlSsoDiscoverResponse>;
-  startSamlSsoLogin: (organizationId: string) => void;
+  startSamlSsoLogin: (workspaceId: string) => void;
   loginWithGoogle: () => void;
   loginWithGithub: () => void;
   loginWithMicrosoft: () => void;
@@ -94,7 +94,7 @@ type AuthContextType = {
   recoverPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
   resetSenha: (token: string, password: string) => Promise<{ success: boolean; message?: string }>;
   deleteUserPermanently: () => Promise<{ success: boolean; message?: string }>;
-  switchOrganization: (organizationId: string) => Promise<{ success: boolean; message?: string }>;
+  switchOrganization: (workspaceId: string) => Promise<{ success: boolean; message?: string }>;
 
   // Providers Configuration
   providers: AuthProvidersConfig | null;
@@ -361,8 +361,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const startSamlSsoLogin = (organizationId: string) => {
-    startSamlSsoLoginService(organizationId);
+  const startSamlSsoLogin = (workspaceId: string) => {
+    startSamlSsoLoginService(workspaceId);
   };
 
   const loginWithGoogle = () => {
@@ -489,21 +489,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const switchOrganization = async (organizationId: string) => {
+  const switchOrganization = async (workspaceId: string) => {
     try {
-      const ok = await switchOrganizationApi(organizationId);
+      const ok = await switchOrganizationApi(workspaceId);
       if (ok) {
         const freshUser = await refreshUser();
-        if (freshUser?.user_organization?.public_id) {
-          window.location.href = `/${freshUser.user_organization.public_id}/new`;
-        } else if (freshUser?.user_organization?.unique_name) {
-          window.location.href = `/${freshUser.user_organization.unique_name}/new`;
+        if (freshUser?.user_workspace?.public_id) {
+          window.location.href = `/${freshUser.user_workspace.public_id}/new`;
+        } else if (freshUser?.user_workspace?.unique_name) {
+          window.location.href = `/${freshUser.user_workspace.unique_name}/new`;
         } else {
           window.location.href = "/";
         }
         return { success: true };
       }
-      return { success: false, message: "Failed to switch organization" };
+      return { success: false, message: "Failed to switch workspace" };
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
     }

@@ -119,7 +119,7 @@ export const ProjectSchema = z
   .object({
     id: z.string(),
     user_id: z.string(),
-    org_id: z.string().nullable().optional(),
+    workspace_id: z.string().nullable().optional(),
     parent_project_id: z.string().nullable().optional(),
     public_id: z.string().nullable().optional(),
 
@@ -141,7 +141,7 @@ export const ProjectSchema = z
     stages: z.array(ProjectStageSchema).optional(),
     subprojects: z.array(SubProjectSchema).optional(),
     stages_count: z.number().optional(),
-    organization: z
+    workspace: z
       .object({
         id: z.string(),
         name: z.string(),

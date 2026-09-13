@@ -12,7 +12,7 @@ todos:
     content: Adicionar asyncHandler e registrar no app.js para promises não tratadas
     status: completed
   - id: migrate-critical
-    content: "Migrar vazamentos críticos: password, organizations, tags, api-tokens, weave-ai routes/chat"
+    content: "Migrar vazamentos críticos: password, workspaces, tags, api-tokens, weave-ai routes/chat"
     status: completed
   - id: migrate-bases
     content: Refatorar _handleError das bases users/notes/projects/backup para AppError + next(fromUnknown)
@@ -49,7 +49,7 @@ Hoje coexistem **3 padrões** que se contradizem:
 | Padrão | Exemplo | Risco |
 |--------|---------|-------|
 | `next(error)` sem mapear | tags, api-tokens, notifications | Mensagem crua do Postgres no JSON |
-| `catch` com `error.message` | [`password.controller.js`](weave-api/src/modules/password/password.controller.js), [`organizations.controller.js`](weave-api/src/modules/organizations/controllers/organizations.controller.js) | 400/500 com texto interno |
+| `catch` com `error.message` | [`password.controller.js`](weave-api/src/modules/password/password.controller.js), [`workspaces.controller.js`](weave-api/src/modules/workspaces/controllers/workspaces.controller.js) | 400/500 com texto interno |
 | `_handleError` por string | [`users/base.controller.js`](weave-api/src/modules/users/controllers/base.controller.js) (bom no 500), [`notes/base.controller.js`](weave-api/src/modules/notes/controllers/base.controller.js) (cai em `next(error)`) | Inconsistente |
 
 O front já tem redação parcial em [`weave-app/app/_services/api-error.ts`](weave-app/app/_services/api-error.ts) (`getSafeApiErrorMessage`, `buildApiError`), mas **não substitui** a necessidade de o backend não enviar lixo — qualquer cliente (mobile, integrações) receberia o vazamento.
@@ -94,7 +94,7 @@ Tudo relacionado à API de erros fica em **inglês**:
 | JSDoc e docs (`error-handler.md`, `codes.js`) | Inglês |
 | Logs do servidor | Inglês preferencial para mensagens estruturadas; detalhes técnicos do PG/stack podem permanecer como vierem do driver |
 
-**Migração:** módulos hoje em PT (ex.: notes `"Nota não encontrada"`, organizations `"Erro ao criar área"`, weave-ai multer) são convertidos **na mesma PR** em que passam a usar `AppError` — não deixar PT legado convivendo com o novo contrato.
+**Migração:** módulos hoje em PT (ex.: notes `"Nota não encontrada"`, workspaces `"Erro ao criar área"`, weave-ai multer) são convertidos **na mesma PR** em que passam a usar `AppError` — não deixar PT legado convivendo com o novo contrato.
 
 **Front:** i18n de UX continua no weave-app (`api-error.ts` / locales); o backend envia `code` + `message` em inglês como fallback; o front pode ignorar `message` e traduzir por `code` numa fase posterior.
 
@@ -170,7 +170,7 @@ Atualizar [`weave-api/documents/middlewares/error-handler.md`](weave-api/documen
 
 Arquivo [`weave-api/src/errors/codes.js`](weave-api/src/errors/codes.js) — enum/documentação dos códigos já usados no repo + novos genéricos:
 
-- Existentes a preservar: `USER_UNIQUE_CONFLICT`, `PLAN_LIMIT_EXCEEDED`, `EMAIL_NOT_VERIFIED`, `NOTE_CONFLICT`, `CHAT_*`, `ORG_FORBIDDEN`, `INTERNAL_ERROR`, etc.
+- Existentes a preservar: `USER_UNIQUE_CONFLICT`, `PLAN_LIMIT_EXCEEDED`, `EMAIL_NOT_VERIFIED`, `NOTE_CONFLICT`, `CHAT_*`, `WORKSPACE_FORBIDDEN`, `INTERNAL_ERROR`, etc.
 - Novos genéricos: `VALIDATION_ERROR`, `RESOURCE_NOT_FOUND`, `AUTH_REQUIRED`, `ROUTE_NOT_FOUND`.
 
 ---
@@ -184,7 +184,7 @@ Não fazer big-bang em ~40 controllers. Ordem sugerida:
 | Arquivo | Ação |
 |---------|------|
 | [`password.controller.js`](weave-api/src/modules/password/password.controller.js) | Remover `error: error.message` no 500; `next(fromUnknown(err))` |
-| [`organizations.controller.js`](weave-api/src/modules/organizations/controllers/organizations.controller.js), [`creation-steps.controller.js`](weave-api/src/modules/organizations/controllers/creation-steps.controller.js), [`areas.controller.js`](weave-api/src/modules/organizations/controllers/areas.controller.js) | Substituir `error.message` por `AppError` ou `next(fromUnknown)` |
+| [`workspaces.controller.js`](weave-api/src/modules/workspaces/controllers/workspaces.controller.js), [`creation-steps.controller.js`](weave-api/src/modules/workspaces/controllers/creation-steps.controller.js), [`areas.controller.js`](weave-api/src/modules/workspaces/controllers/areas.controller.js) | Substituir `error.message` por `AppError` ou `next(fromUnknown)` |
 | [`tags.controller.js`](weave-api/src/modules/tags/controllers/tags.controller.js), api-tokens, notifications, calendar-events, task-priorities | Trocar `next(error)` cru por mapeamento |
 | [`weave-ai.routes.js`](weave-api/src/modules/weave-ai/weave-ai.routes.js) | Multer: mensagens fixas em inglês por tipo (`LIMIT_FILE_SIZE`, invalid file type) |
 | [`chat.controller.js`](weave-api/src/modules/weave-ai/controllers/chat.controller.js) | `_normalizeApiError`: nunca repassar `error.message` de falhas internas em prod |

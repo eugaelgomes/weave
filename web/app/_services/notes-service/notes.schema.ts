@@ -57,7 +57,7 @@ export const NotePropertiesSchema = z.object({
 // --- Tags & Priorities ---
 export const TagSchema = z.object({
   id: z.string(),
-  org_id: z.string(),
+  workspace_id: z.string(),
   name: z.string(),
   color: z.string(),
   created_by: z.string(),
@@ -70,7 +70,7 @@ export const TagSchema = z.object({
 
 export const TaskPrioritySchema = z.object({
   id: z.string(),
-  org_id: z.string(),
+  workspace_id: z.string(),
   name: z.string(),
   color: z.string(),
   level: z.number(),
@@ -177,7 +177,7 @@ export const NoteSchema = z.object({
     .nullable()
     .optional(),
 
-  associated_organization: z
+  associated_workspace: z
     .object({
       id: z.string(),
       name: z.string(),

@@ -36,7 +36,7 @@ const API_SCOPES = [
     name: "Read Profile",
   },
   {
-    description: "Allows viewing organizational data and members.",
+    description: "Allows viewing workspaceal data and members.",
     id: SCOPES.ORGANIZATIONS_READ,
     name: "Read Workspaces",
   },

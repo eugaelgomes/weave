@@ -76,11 +76,11 @@ class DueDateReminderProcessor {
           u.name AS owner_name,
           u.user_preference AS owner_preference,
           p.properties AS project_properties,
-          o.settings AS org_settings
+          o.settings AS workspace_settings
         FROM notes n
         INNER JOIN users u ON n.user_id = u.user_id
         LEFT JOIN projects p ON n.project_id = p.id AND p.deleted = false
-        LEFT JOIN organizations o ON p.organization_id = o.id AND o.deleted = false
+        LEFT JOIN workspaces o ON p.workspace_id = o.id AND o.deleted = false
         WHERE n.deleted = false
           AND n.due_date IS NOT NULL
           AND (n.due_date AT TIME ZONE 'UTC')::date =
@@ -118,9 +118,9 @@ class DueDateReminderProcessor {
     }
 
     const orgSettings =
-      typeof note.org_settings === "string"
-        ? JSON.parse(note.org_settings)
-        : note.org_settings || {};
+      typeof note.workspace_settings === "string"
+        ? JSON.parse(note.workspace_settings)
+        : note.workspace_settings || {};
     const orgTimezone = orgSettings.default_timezone || "UTC";
 
     const recipients = [];

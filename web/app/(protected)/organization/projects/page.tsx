@@ -82,7 +82,7 @@ const ProjectsManagementPage = () => {
 
   return (
     <WorkspacePageShell
-      description={t.organizationProjects.description}
+      description={t.workspaceProjects.description}
       rightContent={
         <div className="flex items-center gap-1.5">
           <button

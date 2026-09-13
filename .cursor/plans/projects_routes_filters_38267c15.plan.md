@@ -90,7 +90,7 @@ Filtros suportados (todos opcionais, validados em [projects.validators.js](weave
 - `ownership` (`owned|collaborating|all`, default `all`).
 - `owner_user_id` (UUID).
 - `collaborator_user_id` (UUID — projetos onde este user é membro).
-- `organization_id` (UUID — sobrepõe o auto-scope quando o caller tem `ACCESS_ALL_ORG_PROJECTS`).
+- `workspace_id` (UUID — sobrepõe o auto-scope quando o caller tem `ACCESS_ALL_WORKSPACE_PROJECTS`).
 - `parent_only` (bool, default `true`).
 - `has_parent` (bool — força só subprojetos quando `true`).
 - `created_from`, `created_to` (ISO timestamptz).
@@ -106,7 +106,7 @@ Filtros suportados (todos opcionais, validados em [projects.validators.js](weave
 
 Implementação:
 
-- Adicionar `getAllProjectsFiltered(scope, filters, pagination, sort)` em [projects-read.repository.js](weave-api/src/modules/projects/repositories/projects-read.repository.js) — usa `WITH base AS (...)` + `COUNT(*) OVER()` para devolver `total` numa única query, e mantém o `JOIN` de `users/organizations/project_members` atual.
+- Adicionar `getAllProjectsFiltered(scope, filters, pagination, sort)` em [projects-read.repository.js](weave-api/src/modules/projects/repositories/projects-read.repository.js) — usa `WITH base AS (...)` + `COUNT(*) OVER()` para devolver `total` numa única query, e mantém o `JOIN` de `users/workspaces/project_members` atual.
 - Mantém os dois caminhos atuais (org-wide vs user-scope) reaproveitando o mesmo `whereClause` builder usado em `getProjectStats`.
 
 ### 5.2. `GET /api/v1/projects/:id`
@@ -215,7 +215,7 @@ Adicionar uma migration `db_structure_docs/migrations/projects_filters_indexes.s
 
 - `CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status) WHERE deleted = false;`
 - `CREATE INDEX IF NOT EXISTS idx_projects_methodology ON projects(methodology) WHERE deleted = false;`
-- `CREATE INDEX IF NOT EXISTS idx_projects_org_active ON projects(organization_id, active) WHERE deleted = false;`
+- `CREATE INDEX IF NOT EXISTS idx_projects_workspace_active ON projects(workspace_id, active) WHERE deleted = false;`
 - `CREATE INDEX IF NOT EXISTS idx_projects_parent ON projects(parent_project_id) WHERE deleted = false;`
 - `CREATE INDEX IF NOT EXISTS idx_projects_dates ON projects(start_date, target_end_date) WHERE deleted = false;`
 - `CREATE INDEX IF NOT EXISTS idx_projects_properties_gin ON projects USING gin (properties jsonb_path_ops);` (acelera `properties @> '{"priority":"alta"}'` e `properties->'tags' ?| ...`).

@@ -49,7 +49,7 @@ export class SpacesService {
     ORGANIZATIONS: {
       BANNER: "banner",
       LOGO: "logo",
-      ROOT: "organizations",
+      ROOT: "workspaces",
     },
     WORKSPACES: {
       BANNER: "banner",
@@ -553,14 +553,14 @@ export class SpacesService {
   public async uploadOrganizationLogo(
     fileBuffer: Buffer,
     mimeType: string,
-    organizationId: string | number
+    workspaceId: string | number
   ): Promise<UploadResult> {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const fileName = `org-${organizationId}-logo${ext}`;
+    const fileName = `org-${workspaceId}-logo${ext}`;
     const folderPath = this.buildKey(
       ORGANIZATIONS.ROOT,
-      String(organizationId),
+      String(workspaceId),
       ORGANIZATIONS.LOGO
     );
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
@@ -569,14 +569,14 @@ export class SpacesService {
   public async uploadOrganizationBanner(
     fileBuffer: Buffer,
     mimeType: string,
-    organizationId: string | number
+    workspaceId: string | number
   ): Promise<UploadResult> {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const fileName = `org-${organizationId}-banner${ext}`;
+    const fileName = `org-${workspaceId}-banner${ext}`;
     const folderPath = this.buildKey(
       ORGANIZATIONS.ROOT,
-      String(organizationId),
+      String(workspaceId),
       ORGANIZATIONS.BANNER
     );
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);

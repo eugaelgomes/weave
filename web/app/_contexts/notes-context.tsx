@@ -69,9 +69,9 @@ export interface NoteOverview {
   stage_name?: string | null;
   stage_color?: string | null;
   parent_id?: string | null;
-  organization_id?: string | null;
-  organization_name?: string | null;
-  organization_logo_url?: string | null;
+  workspace_id?: string | null;
+  workspace_name?: string | null;
+  workspace_logo_url?: string | null;
   resolved_tags?: { id: string; name: string; color: string }[];
   /** Task-level done flag when API sends it (list may omit). */
   done?: boolean;
@@ -240,9 +240,9 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       stage_name: assoc?.stage_name ?? null,
       stage_color: assoc?.stage_color ?? null,
       parent_id: note.parent_id ?? null,
-      organization_id: note.associated_organization?.id ?? null,
-      organization_name: note.associated_organization?.name ?? null,
-      organization_logo_url: getStorageUrl(note.associated_organization?.logo_url || ""),
+      workspace_id: note.associated_workspace?.id ?? null,
+      workspace_name: note.associated_workspace?.name ?? null,
+      workspace_logo_url: getStorageUrl(note.associated_workspace?.logo_url || ""),
       resolved_tags: Array.isArray(note.resolved_tags)
         ? note.resolved_tags.map((tag) => ({
             id: String(tag.id),

@@ -123,6 +123,7 @@ const workspaceResponseSchema = z
       unique_name: data.unique_name || null,
       user_id: data.user_id,
       workspace_name: data.workspace_name,
+      workspace_name: data.workspace_name,
     },
     owners: [
       {
@@ -133,6 +134,7 @@ const workspaceResponseSchema = z
         username: data.username || null,
       },
     ],
+    properties: data.settings || {},
     settings: data.settings || {},
     updated_at: data.updated_at,
   }));

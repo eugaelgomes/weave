@@ -3,5 +3,5 @@
  */
 export interface ExecutionContext {
   userId: string | number;
-  organizationId?: string | number | null;
+  workspaceId?: string | number | null;
 }

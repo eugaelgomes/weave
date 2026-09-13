@@ -22,10 +22,10 @@ class SamlController extends AuthBaseController {
 
       if (orgSettings && orgSettings.saml && orgSettings.saml.enabled) {
         return res.status(200).json({
-          organization_id: orgSettings.organization_id,
           provider: orgSettings.saml.provider,
           requires_sso: true,
           success: true,
+          workspace_id: orgSettings.workspace_id,
         });
       }
 
@@ -40,13 +40,13 @@ class SamlController extends AuthBaseController {
   }
 
   /**
-   * GET /api/v1/auth/sso/saml/:organizationId/login
+   * GET /api/v1/auth/sso/saml/:workspaceId/login
    * Initiates SAML login by redirecting the user to the IdP.
    */
   async samlLogin(req, res) {
     try {
-      const { organizationId } = req.params;
-      const orgSettings = await settingsRepository.getSettings(organizationId);
+      const { workspaceId } = req.params;
+      const orgSettings = await settingsRepository.getSettings(workspaceId);
       const frontendURL = getFrontendUrl();
 
       if (!orgSettings || !orgSettings.saml || !orgSettings.saml.enabled) {
@@ -54,7 +54,7 @@ class SamlController extends AuthBaseController {
       }
 
       const saml = SamlService.createInstance(orgSettings);
-      const relayState = organizationId;
+      const relayState = workspaceId;
       const authUrl = await SamlService.getAuthorizeUrl(saml, relayState);
 
       return res.redirect(authUrl);
@@ -74,14 +74,14 @@ class SamlController extends AuthBaseController {
     let phase = "validation";
     try {
       const { SAMLResponse, RelayState } = req.body;
-      const organizationId = RelayState;
+      const workspaceId = RelayState;
 
-      if (!SAMLResponse || !organizationId) {
-        console.error("Missing SAMLResponse or RelayState (organizationId)");
+      if (!SAMLResponse || !workspaceId) {
+        console.error("Missing SAMLResponse or RelayState (workspaceId)");
         return res.redirect(`${frontendURL}/auth?error=sso_invalid_response`);
       }
 
-      const orgSettings = await settingsRepository.getSettings(organizationId);
+      const orgSettings = await settingsRepository.getSettings(workspaceId);
       if (!orgSettings || !orgSettings.saml || !orgSettings.saml.enabled) {
         return res.redirect(`${frontendURL}/auth?error=invalid_sso_config`);
       }

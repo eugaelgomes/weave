@@ -15,7 +15,7 @@ export const formatDate = (date: string | Date | null | undefined) => {
 
 /**
  * Formata nomes de funções/roles vindos do backend para exibição na UI.
- * Ex: "org_admin" -> "Administrador" ou "ADMIN" -> "Admin"
+ * Ex: "workspace_admin" -> "Administrador" ou "ADMIN" -> "Admin"
  */
 export const formatRoleName = (role: string | undefined | null): string => {
   if (!role) return "Membro";

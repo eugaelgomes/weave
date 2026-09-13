@@ -219,6 +219,7 @@ export const UserSchema = z.object({
   usage_details: UsageDetailsSchema,
 
   org_default_area: BackendOrgDefaultAreaFieldsSchema.nullable().optional(),
+  workspace_default_area: BackendOrgDefaultAreaFieldsSchema.nullable().optional(),
   onboarding_state: z
     .object({
       step: z.string().optional(),
@@ -254,8 +255,10 @@ export const BackendOrganizationSchema = z.object({
   unique_name: z.string().nullable().optional(),
   name: z.string().nullable().optional(), // Login response and Me response slightly differ
   org_name: z.string().nullable().optional(),
+  workspace_name: z.string().nullable().optional(),
   logo_url: z.string().nullable().optional(),
   org_logo_url: z.string().nullable().optional(),
+  workspace_logo_url: z.string().nullable().optional(),
   role: z
     .union([z.string(), z.array(z.string())])
     .nullable()
@@ -268,8 +271,13 @@ export const BackendOrganizationSchema = z.object({
     .union([z.string(), z.array(z.string())])
     .nullable()
     .optional(),
+  workspace_member_role: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
   member_since: z.string().nullable().optional(),
   org_member_since: z.string().nullable().optional(),
+  workspace_member_since: z.string().nullable().optional(),
   public_id: z.string().nullable().optional(),
 });
 
@@ -433,7 +441,7 @@ export const SamlSsoDiscoverRequestSchema = z.object({
 export const SamlSsoDiscoverResponseSchema = z.object({
   success: z.boolean(),
   requires_sso: z.boolean().optional(),
-  organization_id: z.uuid().optional(),
+  workspace_id: z.uuid().optional(),
   provider: z.string().optional(),
 });
 

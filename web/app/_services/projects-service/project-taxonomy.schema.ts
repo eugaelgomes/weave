@@ -4,7 +4,7 @@ export const ProjectTagSchema = z
   .object({
     id: z.string(),
     project_id: z.string().nullable().optional(),
-    org_id: z.string().nullable().optional(),
+    workspace_id: z.string().nullable().optional(),
     name: z.string(),
     color_hex: z.string().nullable(),
     user_id: z.string().optional(),
@@ -20,7 +20,7 @@ export const TaskPrioritySchema = z
   .object({
     id: z.string(),
     project_id: z.string().nullable().optional(),
-    org_id: z.string().nullable().optional(),
+    workspace_id: z.string().nullable().optional(),
     name: z.string(),
     color_hex: z.string().nullable(),
     sort_order: z.number(),

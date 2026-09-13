@@ -11,7 +11,7 @@ import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-s
 import { ApiTokensProvider } from "@/app/_contexts/api-tokens-context";
 import { BackupProvider } from "@/app/_contexts/backup-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
-import { OrganizationProvider } from "@/app/_contexts/organization-context";
+import { OrganizationProvider } from "@/app/_contexts/workspace-context";
 import { useParams } from "next/navigation";
 import { routes } from "@/app/_utils/routes";
 

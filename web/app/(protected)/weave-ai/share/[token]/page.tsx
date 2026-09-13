@@ -95,7 +95,7 @@ export default function SharedChatPreviewPage() {
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             {locale === "en-US"
-              ? "Someone from your organization shared an AI context with you."
+              ? "Someone from your workspace shared an AI context with you."
               : "Alguém da sua organização compartilhou um contexto de IA com você."}
           </p>
         </div>

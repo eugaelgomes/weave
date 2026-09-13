@@ -23,7 +23,7 @@ function applyInviteRedirect(
 }
 
 /**
- * Legacy org invites used /organization/accept-invite/?token=...
+ * Legacy org invites used /workspace/accept-invite/?token=...
  * Redirects to /auth/?invite_token=... (canonical accept-invite landing).
  */
 export function proxy(request: NextRequest) {
@@ -66,9 +66,9 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/projects/") ||
     pathname === "/calendar" ||
     pathname.startsWith("/calendar/") ||
-    pathname === "/organization/projects" ||
-    pathname.startsWith("/organization/projects/") ||
-    pathname === "/organization/dashboard"
+    pathname === "/workspace/projects" ||
+    pathname.startsWith("/workspace/projects/") ||
+    pathname === "/workspace/dashboard"
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/chat";
@@ -86,8 +86,8 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/organization/accept-invite",
-    "/organization/accept-invite/",
+    "/workspace/accept-invite",
+    "/workspace/accept-invite/",
     "/auth",
     "/auth/",
     "/auth/reset-password",
@@ -95,8 +95,8 @@ export const config = {
     "/notes/:path*",
     "/projects/:path*",
     "/calendar/:path*",
-    "/organization/projects/:path*",
-    "/organization/dashboard",
+    "/workspace/projects/:path*",
+    "/workspace/dashboard",
     "/:path*/home",
   ],
 };

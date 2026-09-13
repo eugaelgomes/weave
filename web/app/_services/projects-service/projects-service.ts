@@ -208,7 +208,7 @@ export interface SubProject {
 export interface Project {
   id: string;
   user_id: string;
-  org_id?: string | null;
+  workspace_id?: string | null;
   parent_project_id?: string | null;
   public_id?: string | null;
 
@@ -229,7 +229,7 @@ export interface Project {
   stages?: ProjectStage[];
   subprojects?: SubProject[];
   stages_count?: number;
-  organization?: {
+  workspace?: {
     id: string;
     name: string;
     unique_name?: string | null;
@@ -247,7 +247,7 @@ export interface CreateProjectData {
   status?: ProjectStatus;
   methodology?: "scrum" | "kanban";
   properties?: Omit<ProjectProperties, "progress">;
-  org_id?: string;
+  workspace_id?: string;
   parent_project_id?: string;
 }
 

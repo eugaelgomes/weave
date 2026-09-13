@@ -136,9 +136,9 @@ export interface ProjectOverview {
   /** Present when list/detail includes `stages`; root list often omits stages. */
   stagesCount?: number;
   subprojectsCount?: number;
-  organization_id?: string;
-  organization_name?: string;
-  organization_logo_url?: string;
+  workspace_id?: string;
+  workspace_name?: string;
+  workspace_logo_url?: string;
 }
 
 export interface ProjectsStats {
@@ -368,9 +368,9 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
               ? project.stages.length
               : 0,
         subprojectsCount: Array.isArray(project.subprojects) ? project.subprojects.length : 0,
-        organization_id: project.organization?.id ?? project.org_id ?? undefined,
-        organization_name: project.organization?.name ?? undefined,
-        organization_logo_url: getStorageUrl(project.organization?.logo_url || ""),
+        workspace_id: project.workspace?.id ?? project.workspace_id ?? undefined,
+        workspace_name: project.workspace?.name ?? undefined,
+        workspace_logo_url: getStorageUrl(project.workspace?.logo_url || ""),
       }));
 
       setProjectsOverview(overview);

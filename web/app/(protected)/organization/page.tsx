@@ -5,5 +5,5 @@ export default async function OrganizationIndexPage({
 }: {
   params: Promise<Record<string, never>>;
 }) {
-  redirect(`/organization/general`);
+  redirect(`/workspace/general`);
 }

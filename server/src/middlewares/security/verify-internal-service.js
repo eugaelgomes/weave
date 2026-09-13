@@ -21,7 +21,7 @@ const verifyInternalService = (req, res, next) => {
   // Populate req.user so that MCP Server can correctly establish context
   req.user = {
     id: userId,
-    organizationId: orgId || null,
+    workspaceId: orgId || null,
   };
 
   next();

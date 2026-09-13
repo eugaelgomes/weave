@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
           "/calendar/",
           "/notifications/",
           "/weave-ai/",
-          "/organization/",
+          "/workspace/",
           "/api/",
           "/_next/",
         ],

@@ -2,24 +2,24 @@
 
 import { useCallback, useMemo } from "react";
 import { useAuth } from "./auth-context";
-import { useOrganization } from "./organization-context";
+import { useOrganization } from "./workspace-context";
 import {
-  ORG_PERMISSIONS,
+  WORKSPACE_PERMISSIONS,
   type OrgPermission,
   orgRoleHasPermission,
   normalizeOrgRole,
 } from "@/app/_utils/org-permissions";
 
 export type { OrgPermission } from "@/app/_utils/org-permissions";
-export { ORG_PERMISSIONS };
+export { WORKSPACE_PERMISSIONS };
 
 /**
- * Organization permission checks aligned with weave-api `organization-role-policy.js`.
+ * Organization permission checks aligned with weave-api `workspace-role-policy.js`.
  * Prefer `members`-based role when loaded; fall back to `user.workspace_member_role` from `/me`.
  */
 export function useOrgPermissions() {
   const { user } = useAuth();
-  const { getMemberRole, organization } = useOrganization();
+  const { getMemberRole, workspace } = useOrganization();
 
   const resolvedRole = useMemo(() => {
     if (!user?.id) return null;
@@ -40,16 +40,16 @@ export function useOrgPermissions() {
 
   const isSuperAdminForCurrentUser = useMemo(() => {
     if (!user?.id) return false;
-    if (organization?.user_id === user.id) return true;
+    if (workspace?.user_id === user.id) return true;
     return resolvedRole === "SUPER_ADMIN";
-  }, [organization?.user_id, resolvedRole, user?.id]);
+  }, [workspace?.user_id, resolvedRole, user?.id]);
 
-  const canManageMembers = useCallback(() => can(ORG_PERMISSIONS.MANAGE_MEMBERS), [can]);
-  const canManageAreas = useCallback(() => can(ORG_PERMISSIONS.MANAGE_AREAS), [can]);
-  const canManageBrand = useCallback(() => can(ORG_PERMISSIONS.MANAGE_BRAND), [can]);
-  const canManageDomains = useCallback(() => can(ORG_PERMISSIONS.MANAGE_DOMAINS), [can]);
-  const canManageOrgLifecycle = useCallback(() => can(ORG_PERMISSIONS.MANAGE_ORG_LIFECYCLE), [can]);
-  const canManageWeaveAi = useCallback(() => can(ORG_PERMISSIONS.MANAGE_WEAVE_AI), [can]);
+  const canManageMembers = useCallback(() => can(WORKSPACE_PERMISSIONS.MANAGE_MEMBERS), [can]);
+  const canManageAreas = useCallback(() => can(WORKSPACE_PERMISSIONS.MANAGE_AREAS), [can]);
+  const canManageBrand = useCallback(() => can(WORKSPACE_PERMISSIONS.MANAGE_BRAND), [can]);
+  const canManageDomains = useCallback(() => can(WORKSPACE_PERMISSIONS.MANAGE_DOMAINS), [can]);
+  const canManageOrgLifecycle = useCallback(() => can(WORKSPACE_PERMISSIONS.MANAGE_WORKSPACE_LIFECYCLE), [can]);
+  const canManageWeaveAi = useCallback(() => can(WORKSPACE_PERMISSIONS.MANAGE_WEAVE_AI), [can]);
 
   return {
     resolvedRole,

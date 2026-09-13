@@ -107,8 +107,8 @@ export const discoverSamlSso = async (
   return parsed.data;
 };
 
-export const startSamlSsoLogin = (organizationId: string): void => {
-  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.SAML_SSO_LOGIN(organizationId)}`;
+export const startSamlSsoLogin = (workspaceId: string): void => {
+  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.SAML_SSO_LOGIN(workspaceId)}`;
 };
 
 export const logout = async (): Promise<void> => {

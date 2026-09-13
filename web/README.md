@@ -79,7 +79,7 @@ Authenticated-only providers mount after the user is signed in.
 | `/notes`, `/notes/[public_id]`                 | Protected | Notes (public id in URL)     |
 | `/projects/[public_id]/tasks/[public_note_id]` | Protected | Task alias → `/notes/...`    |
 | `/projects`, `/projects/*`                     | Protected | Projects                     |
-| `/organization/*`                              | Protected | Organization admin and areas |
+| `/workspace/*`                              | Protected | Organization admin and areas |
 | `/settings/*`                                  | Protected | User and workspace settings  |
 | `/weave-ai/*`                                  | Protected | AI chat and agents           |
 | `/notifications/*`                             | Protected | Notifications                |

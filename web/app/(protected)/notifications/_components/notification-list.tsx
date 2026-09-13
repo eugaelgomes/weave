@@ -27,7 +27,7 @@ const getNotificationIcon = (type: NotificationType) => {
       return <AlertCircle className="h-4 w-4 text-red-500" />;
     case "system_update":
       return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-    case "organization_invite":
+    case "workspace_invite":
     case "project_invite":
       return <UserPlus className="h-4 w-4 text-blue-500" />;
     case "note_shared":

@@ -16,7 +16,7 @@ The `server/src/` workspace is organized into clear domain boundary directories:
 - `src/errors/`: Custom error hierarchy (`AppError`, `ValidationError`, `UnauthorizedError`) and global Express error middleware.
 - `src/instrument.js`: Sentry initialization, performance monitoring, and tracing setup.
 - `src/middlewares/`: Global & route-level Express middlewares (Auth, Rate Limiting, Request ID tracing, Zod Validation).
-- `src/modules/`: Domain-driven feature modules (e.g., `authentication`, `users`, `workspaces`, `organizations`, `projects`, `notes`, `webhooks`, `agent-house`).
+- `src/modules/`: Domain-driven feature modules (e.g., `authentication`, `users`, `workspaces`, `workspaces`, `projects`, `notes`, `webhooks`, `agent-house`).
 - `src/routes/`: Global HTTP router aggregators linking modules and system endpoints.
 - `src/services/`: Shared integration wrappers (S3/storage, Redis pub/sub, external APIs, OAuth adapters).
 - `src/utils/`: Pure helper functions and generic utilities.
@@ -43,12 +43,12 @@ Each domain module under `src/modules/` MUST adhere to a clear layered architect
 
 ### 2. Model Context Protocol (MCP) Integration
 - Expose agent capabilities via standardized MCP tools, resources, and prompts over supported transports (e.g., SSE, stdio).
-- Ensure all MCP tool executions apply strict tenant isolation (`organizationId`, `workspaceId`) and permission checks matching the REST API standards.
+- Ensure all MCP tool executions apply strict tenant isolation (`workspaceId`, `workspaceId`) and permission checks matching the REST API standards.
 
 ### 3. Authentication & Session Management
 - Validate Access Tokens (JWT) using the central `auth.middleware`.
 - Support secure Refresh Token rotation workflows and store refresh state safely.
-- Inject authenticated context (`req.user`, `req.organizationId`) consistently via request middleware. Never trust unverified client-provided user IDs.
+- Inject authenticated context (`req.user`, `req.workspaceId`) consistently via request middleware. Never trust unverified client-provided user IDs.
 
 ### 4. Standard Response Envelope & Error Handling
 - Standardize REST JSON responses:

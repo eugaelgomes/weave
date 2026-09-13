@@ -135,10 +135,10 @@ export {
   type InviteMemberData,
   type OrgWorkspaceRole,
   type ProjectMemberRoleForInvite,
-  ORG_WORKSPACE_ROLES,
+  WORKSPACE_WORKSPACE_ROLES,
   PROJECT_MEMBER_ROLES,
   normalizeOrgRoleForUi,
-} from "./organization";
+} from "./workspace";
 
 // Backup Services
 export * from "./backup-service/backup-service";

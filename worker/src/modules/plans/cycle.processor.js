@@ -51,7 +51,7 @@ class PlansCycleProcessor {
             id,
             plan_id,
             user_id,
-            organization_id,
+            workspace_id,
             usage_details,
             subscriber_type,
             subscriber_id,
@@ -96,7 +96,7 @@ class PlansCycleProcessor {
             id,
             plan_id,
             user_id,
-            organization_id,
+            workspace_id,
             usage_details,
             lifetime_stats,
             subscriber_type,
@@ -142,7 +142,7 @@ class PlansCycleProcessor {
             (
               plan_usage_id,
               user_id,
-              organization_id,
+              workspace_id,
               plan_id,
               period_start,
               period_end,
@@ -160,7 +160,7 @@ class PlansCycleProcessor {
         [
           current.id,
           current.user_id,
-          current.organization_id,
+          current.workspace_id,
           current.plan_id,
           periodStart,
           periodEnd,
@@ -410,7 +410,7 @@ class PlansCycleProcessor {
         ]);
       } else {
         await client.query(
-          `UPDATE organizations SET plan_id = $1, updated_at = NOW() WHERE id = $2`,
+          `UPDATE workspaces SET plan_id = $1, updated_at = NOW() WHERE id = $2`,
           [freePlan.plan_id, subscriberId]
         );
       }

@@ -2,7 +2,7 @@
 
 **Weave** started as a collaborative project management (with an AI proactive engine) and note-taking platform. As the project evolved, so did its purpose — it has since grown into a **modular platform for building, orchestrating, and running custom AI Agents**.
 
-Built around an extensible multi-module architecture, the system lets users and organizations assemble AI capabilities tailored to their own needs — connecting tools, knowledge bases, LLMs, and autonomous workflows.
+Built around an extensible multi-module architecture, the system lets users and workspaces assemble AI capabilities tailored to their own needs — connecting tools, knowledge bases, LLMs, and autonomous workflows.
 
 ---
 

@@ -47,7 +47,7 @@ const jwtPayloadSchema = z.object({
     .string()
     .nullable()
     .describe(
-      "The user's role ID within the workspace, determining their organizational permissions."
+      "The user's role ID within the workspace, determining their workspaceal permissions."
     ),
   workspace_unique_name: z
     .string()

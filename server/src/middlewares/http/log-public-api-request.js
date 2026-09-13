@@ -44,7 +44,7 @@ function logPublicApiRequest(req, res, next) {
       statusCode: res.statusCode,
       userAgent: req.headers["user-agent"] ?? null,
       userId: req.user?.userId ?? null,
-      workspaceId: req.user?.organizationId ?? null,
+      workspaceId: req.user?.workspaceId ?? null,
     }).catch((err) => {
       // Never break the response for a logging failure.
       console.error("[PublicApiLog] Failed to insert request log:", err.message);

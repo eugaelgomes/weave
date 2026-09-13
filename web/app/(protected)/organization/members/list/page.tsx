@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useOrganization } from "@/app/_contexts/organization-context";
+import { useOrganization } from "@/app/_contexts/workspace-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import type {
   InviteMemberData,
   OrganizationMember,
   OrgWorkspaceRole,
-} from "@/app/_services/organization";
-import { ORG_WORKSPACE_ROLES } from "@/app/_services/organization";
+} from "@/app/_services/workspace";
+import { WORKSPACE_WORKSPACE_ROLES } from "@/app/_services/workspace";
 import Image from "next/image";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -29,8 +29,8 @@ import {
 import { WorkspacePageShell } from "@/app/(protected)/organization/_components/workspace-page-shell";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { cn } from "@/lib/utils";
-import { MemberWorkspaceRoleBadge } from "@/app/(protected)/organization/members/_components/member-workspace-role-badge";
-import { OrganizationInviteModal } from "@/app/(protected)/organization/members/_components/organization-invite-modal";
+import { MemberWorkspaceRoleBadge } from "../_components/member-workspace-role-badge";
+import { OrganizationInviteModal } from "../_components/organization-invite-modal";
 
 const MEMBERSHIP_STATUSES: OrganizationMember["membership"]["status"][] = ["active", "pending"];
 
@@ -169,7 +169,7 @@ const RoleManageModal = ({
   const [role, setRole] = useState<OrgWorkspaceRole>("MEMBER");
 
   const roleOptions = React.useMemo(
-    () => ORG_WORKSPACE_ROLES.filter((r) => assignSuperAdmin || r !== "SUPER_ADMIN"),
+    () => WORKSPACE_WORKSPACE_ROLES.filter((r) => assignSuperAdmin || r !== "SUPER_ADMIN"),
     [assignSuperAdmin]
   );
 
@@ -184,7 +184,7 @@ const RoleManageModal = ({
     "w-full appearance-none rounded-md border border-neutral-200 px-3 py-1.5 text-[12px] font-medium h-8 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200";
 
   const workspaceRoleLabel = (r: OrgWorkspaceRole): string => {
-    const o = t.organizationMembers;
+    const o = t.workspaceMembers;
     switch (r) {
       case "SUPER_ADMIN":
         return o.superAdmin;
@@ -207,7 +207,7 @@ const RoleManageModal = ({
     <ModalBase
       isOpen={isOpen}
       onClose={onClose}
-      title={t.organizationMembers.manageRoleTitle}
+      title={t.workspaceMembers.manageRoleTitle}
       footer={
         <>
           <button
@@ -215,7 +215,7 @@ const RoleManageModal = ({
             onClick={onClose}
             className="px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
           >
-            {t.organizationMembers.cancel}
+            {t.workspaceMembers.cancel}
           </button>
           <button
             type="button"
@@ -223,7 +223,7 @@ const RoleManageModal = ({
             disabled={loading || role === currentMember.membership?.role}
             className="bg-brand-primary-500 rounded-md px-3 py-1.5 text-[11px] font-bold text-black hover:bg-amber-600 disabled:opacity-50"
           >
-            {loading ? t.organizationMembers.saving : t.organizationMembers.saveChanges}
+            {loading ? t.workspaceMembers.saving : t.workspaceMembers.saveChanges}
           </button>
         </>
       }
@@ -240,13 +240,13 @@ const RoleManageModal = ({
         </div>
         <div>
           <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.newLevel}
+            {t.workspaceMembers.newLevel}
           </label>
           <div className="relative">
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as OrgWorkspaceRole)}
-              aria-label={t.organizationMembers.newLevel}
+              aria-label={t.workspaceMembers.newLevel}
               className={inputClass}
             >
               {roleOptions.map((r) => (
@@ -258,7 +258,7 @@ const RoleManageModal = ({
             <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
           </div>
           <p className="mt-2 text-[10px] text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.roleChangeWarning}
+            {t.workspaceMembers.roleChangeWarning}
           </p>
         </div>
       </div>
@@ -303,10 +303,10 @@ export default function MembersPage() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      setShowInviteModal(hash === "#organization/invite");
+      setShowInviteModal(hash === "#workspace/invite");
 
       // Clear member edit/remove if hash changes from them (optional enhancement, but keeping simple for now)
-      if (hash === "#organization/member/edit") {
+      if (hash === "#workspace/member/edit") {
         // we need the member, so setting it purely from hash is hard without ID
       }
     };
@@ -339,7 +339,7 @@ export default function MembersPage() {
   }, [members]);
 
   const roleFilterOptions = React.useMemo((): FilterSelectOption[] => {
-    const o = t.organizationMembers;
+    const o = t.workspaceMembers;
     const labels: Record<OrgWorkspaceRole, string> = {
       SUPER_ADMIN: o.superAdmin,
       ADMIN: o.adminRole,
@@ -347,13 +347,13 @@ export default function MembersPage() {
       MEMBER: o.member,
       GUEST: o.guest,
     };
-    return ORG_WORKSPACE_ROLES.map((r) => ({ value: r, label: labels[r] }));
+    return WORKSPACE_WORKSPACE_ROLES.map((r) => ({ value: r, label: labels[r] }));
   }, [t]);
 
   const statusFilterOptions = React.useMemo((): FilterSelectOption[] => {
     const labels: Record<OrganizationMember["membership"]["status"], string> = {
-      active: t.organizationMembers.membershipStatusActive,
-      pending: t.organizationMembers.membershipStatusPending,
+      active: t.workspaceMembers.membershipStatusActive,
+      pending: t.workspaceMembers.membershipStatusPending,
     };
     return MEMBERSHIP_STATUSES.map((s) => ({ value: s, label: labels[s] }));
   }, [t]);
@@ -368,18 +368,18 @@ export default function MembersPage() {
     try {
       const result = await inviteMember(payload);
       if (!result.success) {
-        showFeedback("error", result.message || t.organizationMembers.inviteError);
+        showFeedback("error", result.message || t.workspaceMembers.inviteError);
         return;
       }
       showFeedback(
         "success",
-        t.organizationMembers.inviteSuccess.replace("{email}", payload.email)
+        t.workspaceMembers.inviteSuccess.replace("{email}", payload.email)
       );
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
       window.dispatchEvent(new HashChangeEvent("hashchange"));
       setShowInviteModal(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t.organizationMembers.inviteError;
+      const msg = err instanceof Error ? err.message : t.workspaceMembers.inviteError;
       showFeedback("error", msg);
     } finally {
       setLoadingAction(false);
@@ -390,10 +390,10 @@ export default function MembersPage() {
     setLoadingAction(true);
     try {
       await updateMemberRole(memberId, newRole);
-      showFeedback("success", t.organizationMembers.roleUpdateSuccess);
+      showFeedback("success", t.workspaceMembers.roleUpdateSuccess);
       setMemberToEdit(null);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t.organizationMembers.roleUpdateError;
+      const msg = err instanceof Error ? err.message : t.workspaceMembers.roleUpdateError;
       showFeedback("error", msg);
     } finally {
       setLoadingAction(false);
@@ -405,10 +405,10 @@ export default function MembersPage() {
     setLoadingAction(true);
     try {
       await removeMember(memberToRemove.id);
-      showFeedback("success", t.organizationMembers.removeSuccess);
+      showFeedback("success", t.workspaceMembers.removeSuccess);
       setMemberToRemove(null);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t.organizationMembers.removeError;
+      const msg = err instanceof Error ? err.message : t.workspaceMembers.removeError;
       showFeedback("error", msg);
     } finally {
       setLoadingAction(false);
@@ -418,7 +418,7 @@ export default function MembersPage() {
   if (!hasOrganization) {
     return (
       <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
-        {t.organizationMembers.emptyState}
+        {t.workspaceMembers.emptyState}
       </div>
     );
   }
@@ -461,7 +461,7 @@ export default function MembersPage() {
     "w-full rounded-md border border-neutral-200 bg-transparent py-1.5 pr-3 pl-8 text-[12px] font-medium h-8 transition-all outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 dark:border-surface-dark-border-strong dark:text-neutral-200";
 
   return (
-    <WorkspacePageShell description={t.organizationMembers.description}>
+    <WorkspacePageShell description={t.workspaceMembers.description}>
       <div className="mx-auto min-h-0 w-full flex-1 space-y-3">
         {status ? (
           <div
@@ -480,16 +480,16 @@ export default function MembersPage() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-[200px] flex-1">
               <label className="mb-1.5 block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-                {t.organizationMembers.filterSearchLabel}
+                {t.workspaceMembers.filterSearchLabel}
               </label>
               <div className="relative">
                 <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
                 <input
-                  placeholder={t.organizationMembers.searchPlaceholder}
+                  placeholder={t.workspaceMembers.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={searchInputClass}
-                  aria-label={t.organizationMembers.filterSearchLabel}
+                  aria-label={t.workspaceMembers.filterSearchLabel}
                 />
               </div>
             </div>
@@ -497,50 +497,50 @@ export default function MembersPage() {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.hash = "#organization/invite";
+                  window.location.hash = "#workspace/invite";
                 }}
                 className="bg-brand-primary-500 flex shrink-0 items-center justify-center gap-2 self-stretch rounded-md px-3 py-2 text-xs font-semibold text-neutral-950 shadow-sm transition-all hover:bg-yellow-600 active:scale-[0.98] sm:self-auto sm:py-1.5"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="whitespace-nowrap">{t.organizationMembers.inviteMember}</span>
+                <span className="whitespace-nowrap">{t.workspaceMembers.inviteMember}</span>
               </button>
             ) : null}
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <FilterSelect
-              label={t.organizationMembers.filterRoleLabel}
+              label={t.workspaceMembers.filterRoleLabel}
               icon={Filter}
               value={filterRole}
               onChange={setFilterRole}
-              placeholder={t.organizationMembers.filterRolePlaceholder}
+              placeholder={t.workspaceMembers.filterRolePlaceholder}
               options={roleFilterOptions}
             />
             <FilterSelect
-              label={t.organizationMembers.filterStatusLabel}
+              label={t.workspaceMembers.filterStatusLabel}
               icon={Activity}
               value={filterStatus}
               onChange={setFilterStatus}
-              placeholder={t.organizationMembers.filterStatusPlaceholder}
+              placeholder={t.workspaceMembers.filterStatusPlaceholder}
               options={statusFilterOptions}
             />
             {areaFilterOptions.length > 0 ? (
               <FilterSelect
-                label={t.organizationMembers.filterAreaLabel}
+                label={t.workspaceMembers.filterAreaLabel}
                 icon={Layers3}
                 value={filterArea}
                 onChange={setFilterArea}
-                placeholder={t.organizationMembers.filterAreaPlaceholder}
+                placeholder={t.workspaceMembers.filterAreaPlaceholder}
                 options={areaFilterOptions}
               />
             ) : null}
             {availableProjects.length > 0 ? (
               <FilterSelect
-                label={t.organizationMembers.filterProjectLabel}
+                label={t.workspaceMembers.filterProjectLabel}
                 icon={FolderKanban}
                 value={filterProject}
                 onChange={setFilterProject}
-                placeholder={t.organizationMembers.filterProjectPlaceholder}
+                placeholder={t.workspaceMembers.filterProjectPlaceholder}
                 options={availableProjects.map((p) => ({ value: p, label: p }))}
               />
             ) : null}
@@ -553,7 +553,7 @@ export default function MembersPage() {
                 onClick={clearFilters}
                 className="text-[10px] font-medium text-neutral-500 underline transition-colors hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200"
               >
-                {t.organizationMembers.filterClear}
+                {t.workspaceMembers.filterClear}
               </button>
             </div>
           ) : null}
@@ -565,19 +565,19 @@ export default function MembersPage() {
               <thead className="bg-neutral-50/50 dark:bg-[#1d1d1b]/50">
                 <tr>
                   <th className="px-3 py-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                    {t.organizationMembers.tableUser}
+                    {t.workspaceMembers.tableUser}
                   </th>
                   <th className="px-3 py-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                    {t.organizationMembers.tableAreaColumn}
+                    {t.workspaceMembers.tableAreaColumn}
                   </th>
                   <th className="px-3 py-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                    {t.organizationMembers.tableProjectsColumn}
+                    {t.workspaceMembers.tableProjectsColumn}
                   </th>
                   <th className="px-3 py-2 text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                    {t.organizationMembers.tableStatusColumn}
+                    {t.workspaceMembers.tableStatusColumn}
                   </th>
                   <th className="px-3 py-2 text-right text-[10px] font-bold tracking-wider text-neutral-500 dark:text-neutral-400">
-                    {t.organizationMembers.tableActions}
+                    {t.workspaceMembers.tableActions}
                   </th>
                 </tr>
               </thead>
@@ -602,11 +602,11 @@ export default function MembersPage() {
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-neutral-900 dark:text-white">
                               <span className="truncate">
-                                {member.name || t.organizationMembers.tableUser}
+                                {member.name || t.workspaceMembers.tableUser}
                               </span>
                               {isCurrentUser ? (
                                 <span className="dark:text-brand-primary-500 shrink-0 rounded bg-yellow-100 px-1 py-0.5 text-[9px] text-yellow-800 dark:bg-yellow-900/30">
-                                  {t.organizationMembers.you}
+                                  {t.workspaceMembers.you}
                                 </span>
                               ) : null}
                             </div>
@@ -651,8 +651,8 @@ export default function MembersPage() {
                           <MemberWorkspaceRoleBadge role={member.membership?.role || "MEMBER"} />
                           <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
                             {member.membership?.status === "active"
-                              ? t.organizationMembers.membershipStatusActive
-                              : t.organizationMembers.membershipStatusPending}
+                              ? t.workspaceMembers.membershipStatusActive
+                              : t.workspaceMembers.membershipStatusPending}
                           </span>
                         </div>
                       </td>
@@ -663,10 +663,10 @@ export default function MembersPage() {
                               type="button"
                               onClick={() => {
                                 setMemberToEdit(member);
-                                window.location.hash = `#organization/member/edit`;
+                                window.location.hash = `#workspace/member/edit`;
                               }}
                               className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20"
-                              title={t.organizationMembers.editRoleTitle}
+                              title={t.workspaceMembers.editRoleTitle}
                             >
                               <Edit2 className="h-3.5 w-3.5" />
                             </button>
@@ -674,10 +674,10 @@ export default function MembersPage() {
                               type="button"
                               onClick={() => {
                                 setMemberToRemove(member);
-                                window.location.hash = `#organization/member/remove`;
+                                window.location.hash = `#workspace/member/remove`;
                               }}
                               className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
-                              title={t.organizationMembers.removeMemberTitle}
+                              title={t.workspaceMembers.removeMemberTitle}
                             >
                               <UserMinus className="h-3.5 w-3.5" />
                             </button>
@@ -725,7 +725,7 @@ export default function MembersPage() {
           window.dispatchEvent(new HashChangeEvent("hashchange"));
           setMemberToRemove(null);
         }}
-        title={t.organizationMembers.removeMemberTitle}
+        title={t.workspaceMembers.removeMemberTitle}
         footer={
           <>
             <button
@@ -741,7 +741,7 @@ export default function MembersPage() {
               }}
               className="px-3 py-1.5 text-xs text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
             >
-              {t.organizationMembers.cancel}
+              {t.workspaceMembers.cancel}
             </button>
             <button
               type="button"
@@ -750,8 +750,8 @@ export default function MembersPage() {
               className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
             >
               {loadingAction
-                ? t.organizationMembers.removing
-                : t.organizationMembers.removeAccessConfirmButton}
+                ? t.workspaceMembers.removing
+                : t.workspaceMembers.removeAccessConfirmButton}
             </button>
           </>
         }
@@ -759,7 +759,7 @@ export default function MembersPage() {
         <div className="flex flex-col items-center p-3 text-center">
           <ShieldAlert className="mb-3 h-10 w-10 text-red-500" />
           <p className="text-xs text-neutral-600 dark:text-neutral-400">
-            {t.organizationMembers.removeAccessQuestion.replace(
+            {t.workspaceMembers.removeAccessQuestion.replace(
               "{name}",
               memberToRemove?.name || memberToRemove?.email || "—"
             )}

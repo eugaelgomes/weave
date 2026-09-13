@@ -52,11 +52,11 @@ const jsonLd = {
       name: siteTitle,
       description: siteDescription,
       inLanguage: "en-US",
-      publisher: { "@id": `${siteOrigin}/#organization` },
+      publisher: { "@id": `${siteOrigin}/#workspace` },
     },
     {
       "@type": "Organization",
-      "@id": `${siteOrigin}/#organization`,
+      "@id": `${siteOrigin}/#workspace`,
       name: "Weave",
       url: siteOrigin,
       logo: `${siteOrigin}/weave.png`,
@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     "intelligent",
     "team",
     "productivity",
-    "organization",
+    "workspace",
     "collaboration",
     "ai",
     "weave ai",
@@ -279,7 +279,7 @@ export default function RootLayout({
                 "color: gray; font-family: monospace;"
               );
               console.log(
-                "%c⚠️ Stop!\\n\\n%cThis is a browser feature intended for developers.\\nIf someone told you to copy and paste something here, it is a scam and will give them access to your account and organization data.",
+                "%c⚠️ Stop!\\n\\n%cThis is a browser feature intended for developers.\\nIf someone told you to copy and paste something here, it is a scam and will give them access to your account and workspace data.",
                 "color: red; font-size: 24px; font-weight: bold;",
                 "color: inherit; font-size: 14px;"
               );

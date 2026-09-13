@@ -1,12 +1,12 @@
 # Slack integration
 
-**Canonical reference** for Slack OAuth, database migration, environment variables, and REST paths. Organization Slack settings use the **active organization** (no `:orgId` in the path); see [organizations-routes.md](organizations-routes.md#slack-and-organization-scope).
+**Canonical reference** for Slack OAuth, database migration, environment variables, and REST paths. Organization Slack settings use the **active workspace** (no `:orgId` in the path); see [workspaces-routes.md](workspaces-routes.md#slack-and-workspace-scope).
 
 ## Database
 
 Migration file (run **once per environment**):
 
-`db_structure_docs/migrations/2026-05-09_create_organization_slack_integrations.sql`
+`db_structure_docs/migrations/2026-05-09_create_workspace_slack_integrations.sql`
 
 There is no `npm run migrate` in this repo; apply SQL manually (same pattern as other files under `db_structure_docs/migrations/`).
 
@@ -16,7 +16,7 @@ From the monorepo root (adjust connection string or host/user/db to match your `
 
 ```bash
 # If you use a single URL:
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f weave-api/db_structure_docs/migrations/2026-05-09_create_organization_slack_integrations.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f weave-api/db_structure_docs/migrations/2026-05-09_create_workspace_slack_integrations.sql
 ```
 
 Or with discrete variables:
@@ -27,7 +27,7 @@ export PGPORT="${DATABASE_SERVICE_PORT:-5432}"
 export PGUSER="$DATABASE_USERNAME"
 export PGPASSWORD="$DATABASE_PASSWORD"
 export PGDATABASE="$DATABASE_NAME"
-psql -v ON_ERROR_STOP=1 -f weave-api/db_structure_docs/migrations/2026-05-09_create_organization_slack_integrations.sql
+psql -v ON_ERROR_STOP=1 -f weave-api/db_structure_docs/migrations/2026-05-09_create_workspace_slack_integrations.sql
 ```
 
 For a **from-scratch** bootstrap you may also fold this table into `new_structure_db.sql` later; incremental installs only need the migration file above.
@@ -70,7 +70,7 @@ For a **from-scratch** bootstrap you may also fold this table into `new_structur
 
 ### OAuth & Events (under `/integrations/slack`)
 
-- `GET /integrations/slack/install` — authenticated; requires workspace permission `MANAGE_ORG_LIFECYCLE`; redirects to Slack.
+- `GET /integrations/slack/install` — authenticated; requires workspace permission `MANAGE_WORKSPACE_LIFECYCLE`; redirects to Slack.
 - `GET /integrations/slack/oauth/callback` — public; exchanges code; persists bot token per **active** workspace.
 - `POST /integrations/slack/events` — public; Slack Events API (signature required).
 - `POST /integrations/slack/interactivity` — public; reserved for Block Kit (signature required).
@@ -85,4 +85,4 @@ Requires same workspace permission via controller checks:
 
 ## Notifications
 
-When a note collaborator is added and the note resolves to an organization (`scope_organization_id`), the API may post a short message to the configured default Slack channel (`slack-notify.service`).
+When a note collaborator is added and the note resolves to an workspace (`scope_workspace_id`), the API may post a short message to the configured default Slack channel (`slack-notify.service`).

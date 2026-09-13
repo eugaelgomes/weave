@@ -6,12 +6,12 @@ Manages task priority CRUD for project scope and legacy org scope.
 
 ## Base paths
 
-Mounted in internal router under both `/projects`, `/organizations`, and `/task-priorities` contexts.
+Mounted in internal router under both `/projects`, `/workspaces`, and `/task-priorities` contexts.
 
 ## Main endpoints
 
 - Project scope: `/:project_id/create-priority`, `/:project_id/task-priorities`, `/:project_id/task-priorities/:priority_id`
-- Legacy org scope: `/:org_id/task-priorities`, `/:org_id/task-priorities/:priority_id`
+- Legacy org scope: `/:workspace_id/task-priorities`, `/:workspace_id/task-priorities/:priority_id`
 
 ## Middleware and security notes
 

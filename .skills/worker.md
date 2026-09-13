@@ -14,7 +14,7 @@ The `worker/src/` directory is organized into the following components:
 - `src/database/`: Database connection wrappers and pool management via `@theweave/database`.
 - `src/instrument.js`: Sentry error monitoring and performance tracking initialization.
 - `src/mail/`: Email templates, SMTP/Resend provider adapters, and layout formatters.
-- `src/modules/`: Domain-specific background job processors (e.g., `backup`, `export`, `markdown`, `notes`, `notifications`, `organizations`, `plans`, `storage`, `tracing`, `weave-ai`).
+- `src/modules/`: Domain-specific background job processors (e.g., `backup`, `export`, `markdown`, `notes`, `notifications`, `workspaces`, `plans`, `storage`, `tracing`, `weave-ai`).
 - `src/queues/`: Queue key constants and Redis queue connection wrappers.
 - `src/utils/`: Generic helper functions and formatting utilities.
 - `src/app.js`: Central job registration registry and lifecycle orchestrator (`registerJob`, `initializeJobs`, `startAllJobs`, `stopAllJobs`).

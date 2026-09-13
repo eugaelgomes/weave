@@ -27,7 +27,7 @@ export class MCPClient {
       const sseUrl = new URL("/api/service/v1/mcp/sse", apiUrl).toString();
 
       const headers = {
-        "x-weave-org-id": String(this.executionContext.organizationId || ""),
+        "x-weave-org-id": String(this.executionContext.workspaceId || ""),
         "x-weave-user-id": String(this.executionContext.userId || ""),
       };
 
@@ -108,7 +108,7 @@ const clientsPool = new Map<string, MCPClient>();
  * For now, we instantiate a new client, but can pool them to improve performance.
  */
 export async function getMCPClient(executionContext: ExecutionContext): Promise<MCPClient> {
-  const key = `${executionContext.userId}-${executionContext.organizationId || "none"}`;
+  const key = `${executionContext.userId}-${executionContext.workspaceId || "none"}`;
   if (clientsPool.has(key)) {
     return clientsPool.get(key) as MCPClient;
   }

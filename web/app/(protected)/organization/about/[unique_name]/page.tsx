@@ -5,5 +5,5 @@ type AboutRedirectPageProps = {
 };
 
 export default async function OrganizationAboutRedirectPage({ params }: AboutRedirectPageProps) {
-  redirect(`/organization/editor`);
+  redirect(`/workspace/editor`);
 }

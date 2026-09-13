@@ -10,7 +10,7 @@ class PDFService {
         doc.on("data", (chunk) => chunks.push(chunk));
         doc.on("end", () => resolve(Buffer.concat(chunks)));
 
-        const orgName = note.associated_organization?.name;
+        const orgName = note.associated_workspace?.name;
         const projectName = note.associated_project?.name;
 
         if (orgName || projectName) {

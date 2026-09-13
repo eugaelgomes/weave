@@ -47,14 +47,14 @@ export function resolveLegacyAuthInviteRedirect(
 }
 
 /**
- * Maps /organization/accept-invite?token= to canonical /auth/?invite_token=.
+ * Maps /workspace/accept-invite?token= to canonical /auth/?invite_token=.
  */
 export function resolveOrganizationAcceptInviteRedirect(
   pathname: string,
   token: string | null
 ): InviteAuthRedirectResult | null {
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
-  if (normalizedPath !== "/organization/accept-invite") {
+  if (normalizedPath !== "/workspace/accept-invite") {
     return null;
   }
 

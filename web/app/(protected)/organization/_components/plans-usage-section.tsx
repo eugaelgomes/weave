@@ -5,18 +5,18 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CreditCard } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
-import { type Organization, type OrganizationProperties } from "@/app/_services/organization";
-import { type OrganizationStats } from "@/app/_contexts/organization-context";
+import { type Organization, type OrganizationProperties } from "@/app/_services/workspace";
+import { type OrganizationStats } from "@/app/_contexts/workspace-context";
 
 type PlansUsageSectionProps = {
-  organization: Organization | null;
+  workspace: Organization | null;
   stats: OrganizationStats;
   localProps: OrganizationProperties;
   userIsOwner: boolean;
 };
 
 export function PlansUsageSection({
-  organization,
+  workspace,
   stats,
   localProps,
   userIsOwner,
@@ -24,9 +24,9 @@ export function PlansUsageSection({
   const { t } = useLanguage();
   const params = useParams();
 
-  const currentPlan = organization?.plan_name || "Free";
-  const planValue = organization?.plan_value || 0;
-  const currency = organization?.currency || "BRL";
+  const currentPlan = workspace?.plan_name || "Free";
+  const planValue = workspace?.plan_value || 0;
+  const currency = workspace?.currency || "BRL";
 
   const memberLimit =
     localProps.maxMembers && localProps.maxMembers > 0 ? localProps.maxMembers : 50;
@@ -36,30 +36,30 @@ export function PlansUsageSection({
   const projectPercent = Math.min((stats.totalProjects / projectLimit) * 100, 100);
 
   const billingPeriod =
-    organization?.billing_cycle === "monthly"
-      ? t.organizationPlans.billingMonthly
-      : t.organizationPlans.billingYearly;
+    workspace?.billing_cycle === "monthly"
+      ? t.workspacePlans.billingMonthly
+      : t.workspacePlans.billingYearly;
 
   return (
     <section className="dark:border-surface-dark-border dark:shadow-surface-dark-sm rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
       <h2 className="mb-6 flex items-center gap-2 text-base font-semibold text-neutral-900 dark:text-neutral-100">
         <CreditCard className="h-5 w-5 text-neutral-500" />
-        {t.organizationPlans.sectionTitle}
+        {t.workspacePlans.sectionTitle}
       </h2>
 
       <div className="dark:border-surface-dark-border-strong mb-6 rounded-md border border-neutral-100 bg-neutral-50 p-4 dark:bg-[#1d1d1b]/50">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-semibold text-neutral-900 dark:text-neutral-100">
-              {t.organizationPlans.currentPlan.replace("{plan}", currentPlan)}
+              {t.workspacePlans.currentPlan.replace("{plan}", currentPlan)}
             </p>
             <p className="text-xs text-neutral-500">
               {planValue > 0
-                ? t.organizationPlans.paidPlan
+                ? t.workspacePlans.paidPlan
                     .replace("{currency}", currency)
                     .replace("{value}", planValue.toFixed(2))
                     .replace("{period}", billingPeriod)
-                : t.organizationPlans.freePlan}
+                : t.workspacePlans.freePlan}
             </p>
           </div>
           {userIsOwner ? (
@@ -67,7 +67,7 @@ export function PlansUsageSection({
               href={`/settings/plans`}
               className="bg-brand-yellow text-brand-navy hover:bg-brand-orange rounded-md px-3 py-1.5 text-xs font-semibold transition-colors"
             >
-              {t.organizationPlans.manageSubscription}
+              {t.workspacePlans.manageSubscription}
             </Link>
           ) : null}
         </div>
@@ -77,7 +77,7 @@ export function PlansUsageSection({
         <div>
           <div className="mb-2 flex justify-between text-xs">
             <span className="text-neutral-600 dark:text-neutral-400">
-              {t.organizationPlans.membersUsage}
+              {t.workspacePlans.membersUsage}
             </span>
             <span className="font-medium text-neutral-900 dark:text-neutral-100">
               {stats.totalMembers} / {memberLimit}
@@ -93,7 +93,7 @@ export function PlansUsageSection({
         <div>
           <div className="mb-2 flex justify-between text-xs">
             <span className="text-neutral-600 dark:text-neutral-400">
-              {t.organizationPlans.projectsUsage}
+              {t.workspacePlans.projectsUsage}
             </span>
             <span className="font-medium text-neutral-900 dark:text-neutral-100">
               {stats.totalProjects} / {projectLimit}

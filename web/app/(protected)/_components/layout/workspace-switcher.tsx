@@ -8,7 +8,7 @@ import {
   fetchMyOrganizations,
   type UserWorkspaceSummary,
   createOrganization,
-} from "@/app/_services/organization";
+} from "@/app/_services/workspace";
 import { cn } from "@/lib/utils";
 
 export const WorkspaceSwitcher = () => {
@@ -20,10 +20,10 @@ export const WorkspaceSwitcher = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const activeOrgName = user?.user_organization?.name || user?.org_name || "";
-  const activeOrgUniqueName = user?.user_organization?.unique_name || user?.org_unique_name || "";
-  const activeOrgLogo = user?.user_organization?.logo_url || user?.org_logo_url || null;
-  const activeOrgId = user?.user_organization?.id || user?.org_id || null;
+  const activeOrgName = user?.user_workspace?.name || user?.workspace_name || "";
+  const activeOrgUniqueName = user?.user_workspace?.unique_name || user?.workspace_unique_name || "";
+  const activeOrgLogo = user?.user_workspace?.logo_url || user?.workspace_logo_url || null;
+  const activeOrgId = user?.user_workspace?.id || user?.workspace_id || null;
 
   const loadWorkspaces = useCallback(async () => {
     setLoading(true);
@@ -151,20 +151,20 @@ export const WorkspaceSwitcher = () => {
                         {ws.logo_url ? (
                           <Image
                             src={ws.logo_url}
-                            alt={ws.org_name || ws.unique_name}
+                            alt={ws.workspace_name || ws.unique_name}
                             width={20}
                             height={20}
                             className="h-5 w-5 shrink-0 rounded object-contain"
                           />
                         ) : (
                           <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-gray-100 text-xs font-bold text-gray-700 dark:bg-neutral-800 dark:text-gray-300">
-                            {(ws.org_name || ws.unique_name || "O").charAt(0).toUpperCase()}
+                            {(ws.workspace_name || ws.unique_name || "O").charAt(0).toUpperCase()}
                           </div>
                         )}
 
                         <div className="flex min-w-0 flex-col">
                           <span className="truncate font-medium text-gray-900 dark:text-gray-100">
-                            {ws.org_name}
+                            {ws.workspace_name}
                           </span>
                           <span className="truncate text-[10px] text-gray-400 dark:text-gray-500">
                             @{ws.unique_name}

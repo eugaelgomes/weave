@@ -1,8 +1,8 @@
 import React from "react";
 import { Building2, Camera, Edit3, Clock, MapPin, X } from "lucide-react";
 import getStorageUrl from "@/app/_utils/get-storage-url";
-import { Input } from "@/app/(protected)/organization/general/_components/form-primitives";
-import type { WorkspaceOverviewProps } from "@/app/(protected)/organization/general/_components/settings-types";
+import { Input } from "./form-primitives";
+import type { WorkspaceOverviewProps } from "./settings-types";
 
 const textareaFocus =
   "w-full rounded-md text-[12px] font-medium transition-all outline-none py-1.5 border border-neutral-200 bg-white px-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 dark:border-surface-dark-border-strong dark:bg-[#1d1d1b] dark:text-neutral-200";
@@ -87,7 +87,7 @@ const OrganizationHeroCard = ({
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-lg font-bold text-neutral-900 dark:text-white">
-            {workspace?.org_name}
+            {workspace?.workspace_name}
             {workspace?.unique_name && (
               <span className="text-xs font-medium text-neutral-400">@{workspace.unique_name}</span>
             )}
@@ -194,8 +194,8 @@ const EditOrganizationInfoModal = ({
         <form onSubmit={onSubmit} className="space-y-4">
           <Input
             label="Nome da Organização"
-            value={formData.org_name}
-            onChange={(value) => setFormData((current) => ({ ...current, org_name: value }))}
+            value={formData.workspace_name}
+            onChange={(value) => setFormData((current) => ({ ...current, workspace_name: value }))}
             placeholder="Ex: Acme Corp"
           />
           <Input
@@ -260,13 +260,13 @@ export function WorkspaceOverview({
         workspace={workspace}
         userIsOwner={userIsOwner}
         onEditLogo={() => {
-          window.location.hash = "#organization/image/logo";
+          window.location.hash = "#workspace/image/logo";
         }}
         onEditBanner={() => {
-          window.location.hash = "#organization/image/banner";
+          window.location.hash = "#workspace/image/banner";
         }}
         onOpenEditModal={() => {
-          window.location.hash = "#organization/info/edit";
+          window.location.hash = "#workspace/info/edit";
         }}
       />
 

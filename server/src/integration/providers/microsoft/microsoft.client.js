@@ -41,7 +41,7 @@ class MicrosoftClient {
       count: 1,
       messages: [
         {
-          from: { emailAddress: { address: "user@organization.com", name: "Microsoft 365 User" } },
+          from: { emailAddress: { address: "user@workspace.com", name: "Microsoft 365 User" } },
           id: `mail_${Date.now()}_1`,
           receivedDateTime: new Date().toISOString(),
           subject: search ? `RE: ${search}` : "Quarterly Financial Sync",

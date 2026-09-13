@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/app/_contexts/language-context";
-import { normalizeOrgRoleForUi, type OrgRoleUiKey } from "@/app/_services/organization";
+import { normalizeOrgRoleForUi, type OrgRoleUiKey } from "@/app/_services/workspace";
 
 type Props = { role: string };
 
@@ -18,11 +18,11 @@ export function MemberWorkspaceRoleBadge({ role }: Props) {
       "bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-neutral-800/50 dark:border-surface-dark-border",
   };
   const labels: Record<OrgRoleUiKey, string> = {
-    super_admin: t.organizationMembers.superAdmin,
-    admin: t.organizationMembers.adminRole,
-    billing_manager: t.organizationMembers.billingManager,
-    member: t.organizationMembers.member,
-    guest: t.organizationMembers.guest,
+    super_admin: t.workspaceMembers.superAdmin,
+    admin: t.workspaceMembers.adminRole,
+    billing_manager: t.workspaceMembers.billingManager,
+    member: t.workspaceMembers.member,
+    guest: t.workspaceMembers.guest,
   };
 
   return (

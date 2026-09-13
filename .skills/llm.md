@@ -63,7 +63,7 @@ All LLM provider interactions MUST pass through normalized adapters in `src/prov
 
 ### 4. Observability & Token Metrics
 - Track token usage and estimated costs using the `Tracer` helper.
-- Record start and end trace events with `organizationId`, `userId`, `sessionId`, and `traceId`.
+- Record start and end trace events with `workspaceId`, `userId`, `sessionId`, and `traceId`.
 
 ### 5. Dead Letter Queue & Error Normalization
 - Jobs failing after maximum attempts (`ENGINE_JOB_MAX_RETRIES`) MUST be pushed to the Dead Letter Queue (`weave:engine:llm:dead-letter`).

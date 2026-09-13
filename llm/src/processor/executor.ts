@@ -272,9 +272,9 @@ export async function executeTask({
     iterations++;
 
     let llmSpanId: string | undefined;
-    if (executionContext.traceId && executionContext.organizationId) {
+    if (executionContext.traceId && executionContext.workspaceId) {
       llmSpanId = await Tracer.startSpan(
-        { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
+        { workspaceId: executionContext.workspaceId, traceId: executionContext.traceId },
         `llm_call:${model}`,
         "llm",
         { model }
@@ -299,18 +299,18 @@ export async function executeTask({
         aiMessage = (await chatModel.invoke(messages)) as AIMessage;
       }
 
-      if (llmSpanId && executionContext.traceId && executionContext.organizationId) {
+      if (llmSpanId && executionContext.traceId && executionContext.workspaceId) {
         await Tracer.endSpan(
           llmSpanId,
-          { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
+          { workspaceId: executionContext.workspaceId, traceId: executionContext.traceId },
           { completion_tokens: aiMessage.usage_metadata?.output_tokens || 0, status: "success" }
         );
       }
     } catch (err: unknown) {
-      if (llmSpanId && executionContext.traceId && executionContext.organizationId) {
+      if (llmSpanId && executionContext.traceId && executionContext.workspaceId) {
         await Tracer.endSpan(
           llmSpanId,
-          { organizationId: executionContext.organizationId, traceId: executionContext.traceId },
+          { workspaceId: executionContext.workspaceId, traceId: executionContext.traceId },
           { error_message: (err as Error).message, status: "error" }
         );
       }
@@ -331,10 +331,10 @@ export async function executeTask({
             }
 
             let spanId: string | undefined;
-            if (executionContext.traceId && executionContext.organizationId) {
+            if (executionContext.traceId && executionContext.workspaceId) {
               spanId = await Tracer.startSpan(
                 {
-                  organizationId: executionContext.organizationId,
+                  workspaceId: executionContext.workspaceId,
                   traceId: executionContext.traceId,
                 },
                 tc.name,
@@ -356,11 +356,11 @@ export async function executeTask({
                   success: true,
                   type: "action_state",
                 });
-              if (spanId && executionContext.traceId && executionContext.organizationId) {
+              if (spanId && executionContext.traceId && executionContext.workspaceId) {
                 await Tracer.endSpan(
                   spanId,
                   {
-                    organizationId: executionContext.organizationId,
+                    workspaceId: executionContext.workspaceId,
                     traceId: executionContext.traceId,
                   },
                   { output: result, status: "success" }
@@ -376,11 +376,11 @@ export async function executeTask({
                   success: false,
                   type: "action_state",
                 });
-              if (spanId && executionContext.traceId && executionContext.organizationId) {
+              if (spanId && executionContext.traceId && executionContext.workspaceId) {
                 await Tracer.endSpan(
                   spanId,
                   {
-                    organizationId: executionContext.organizationId,
+                    workspaceId: executionContext.workspaceId,
                     traceId: executionContext.traceId,
                   },
                   { error_message: errorMessage, status: "error" }

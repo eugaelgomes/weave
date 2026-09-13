@@ -69,7 +69,7 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
         const internalId = results[0].id;
         if (req.params.id === id) req.params.id = internalId;
         if (req.params.orgId === id) req.params.orgId = internalId;
-        if (req.params.org_id === id) req.params.org_id = internalId;
+        if (req.params.workspace_id === id) req.params.workspace_id = internalId;
       }
     }
     next();

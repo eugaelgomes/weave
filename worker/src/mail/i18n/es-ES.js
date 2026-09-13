@@ -38,7 +38,7 @@ module.exports = {
   "common.greetingFallback": "usuario",
   "common.newEmail": "Nuevo email",
   "common.note": "Nota",
-  "common.organization": "Organizacion",
+  "common.workspace": "Organizacion",
 
   "common.project": "Proyecto",
   "common.role": "Rol",
@@ -78,9 +78,9 @@ module.exports = {
   "dueReminder.untitled": "Nota",
   "invite.cta": "Aceptar invitacion",
   "invite.info": "Esta invitacion expira en 7 dias.",
-  "invite.intro": "{inviterName} le invito a unirse a {organizationName}.",
+  "invite.intro": "{inviterName} le invito a unirse a {workspaceName}.",
   "invite.preheader": "Invitacion para unirse a una organizacion.",
-  "invite.subject": "Invitacion a {organizationName} - Weave",
+  "invite.subject": "Invitacion a {workspaceName} - Weave",
 
   "invite.subtitle": "Invitacion a organizacion",
   "invite.title": "Ha sido invitado(a)",
@@ -93,10 +93,10 @@ module.exports = {
   "inviteAccepted.intro1": "Su acceso fue confirmado y ya puede usar Weave.",
   "inviteAccepted.intro2": "Centralice planificacion, ejecucion y colaboracion en un solo lugar.",
   "inviteAccepted.preheader": "Invitacion aceptada correctamente.",
-  "inviteAccepted.subject": "Bienvenido a {organizationName} - Weave",
+  "inviteAccepted.subject": "Bienvenido a {workspaceName} - Weave",
 
   "inviteAccepted.subtitle": "Su cuenta esta lista",
-  "inviteAccepted.title": "Bienvenido(a) a {organizationName}",
+  "inviteAccepted.title": "Bienvenido(a) a {workspaceName}",
   "project.cta": "Abrir proyectos",
   "project.footer": "Recibio este correo porque fue anadido a un proyecto en Weave.",
   "project.intro": "{addedByName} le anadio como colaborador(a) al proyecto siguiente.",

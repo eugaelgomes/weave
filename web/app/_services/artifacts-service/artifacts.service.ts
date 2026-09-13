@@ -6,7 +6,7 @@ export interface Artifact {
   content: any[];
   type: string;
   sessionId: string;
-  organizationId: string;
+  workspaceId: string;
   userId: string;
   createdAt: string;
   updatedAt: string;

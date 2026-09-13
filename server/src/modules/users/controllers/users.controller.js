@@ -620,8 +620,8 @@ class UsersController extends BaseController {
             joined_at: workspace.joined_at,
             logo_url: presigned.logo_url || null,
             member_role: workspace.member_role,
-            org_name: workspace.workspace_name,
             unique_name: workspace.unique_name,
+            workspace_name: workspace.workspace_name,
             workspace_name: workspace.workspace_name,
           };
         })
@@ -641,7 +641,7 @@ class UsersController extends BaseController {
     try {
       const userId = this._validateAuthentication(req);
 
-      const workspaceId = req.body.workspaceId || req.body.organizationId;
+      const workspaceId = req.body.workspaceId || req.body.workspaceId;
       if (!workspaceId) {
         return res.status(400).json({ error: "workspaceId is required", success: false });
       }
@@ -691,8 +691,8 @@ class UsersController extends BaseController {
           id: workspace.id,
           member_role: role,
           name: workspace.workspace_name,
-          org_name: workspace.workspace_name,
           unique_name: workspace.unique_name,
+          workspace_name: workspace.workspace_name,
           workspace_name: workspace.workspace_name,
         },
       });

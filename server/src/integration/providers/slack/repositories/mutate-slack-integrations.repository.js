@@ -1,14 +1,14 @@
 const BaseRepository = require("./base.repository");
 
 /**
- * Mutation queries for Slack OAuth installations (`organization_slack_integrations`).
+ * Mutation queries for Slack OAuth installations (`workspace_slack_integrations`).
  */
 class MutateSlackIntegrationsRepository extends BaseRepository {
   /**
    * Upserts installation for an workspace (one row per org).
    *
    * @param {object} params
-   * @param {string} params.organizationId
+   * @param {string} params.workspaceId
    * @param {string} params.slackTeamId
    * @param {string|null} params.slackTeamName
    * @param {string|null} params.botUserId
@@ -19,7 +19,7 @@ class MutateSlackIntegrationsRepository extends BaseRepository {
    * @returns {Promise<object>}
    */
   async upsertInstallation({
-    organizationId,
+    workspaceId,
     slackTeamId,
     slackTeamName,
     botUserId,
@@ -29,8 +29,8 @@ class MutateSlackIntegrationsRepository extends BaseRepository {
     installedByUserId,
   }) {
     const rows = await this.executeQuery(
-      `INSERT INTO organization_slack_integrations (
-         organization_id,
+      `INSERT INTO workspace_slack_integrations (
+         workspace_id,
          slack_team_id,
          slack_team_name,
          bot_user_id,
@@ -55,7 +55,7 @@ class MutateSlackIntegrationsRepository extends BaseRepository {
          false,
          NULL
        )
-       ON CONFLICT (organization_id)
+       ON CONFLICT (workspace_id)
        DO UPDATE SET
          slack_team_id = EXCLUDED.slack_team_id,
          slack_team_name = EXCLUDED.slack_team_name,
@@ -70,7 +70,7 @@ class MutateSlackIntegrationsRepository extends BaseRepository {
          updated_at = CURRENT_TIMESTAMP
        RETURNING *`,
       [
-        organizationId,
+        workspaceId,
         slackTeamId,
         slackTeamName,
         botUserId,
@@ -84,33 +84,33 @@ class MutateSlackIntegrationsRepository extends BaseRepository {
   }
 
   /**
-   * @param {string} organizationId
+   * @param {string} workspaceId
    * @param {string|null} channelId
    * @param {string|null} channelName
    */
-  async updateDefaultChannel(organizationId, channelId, channelName) {
+  async updateDefaultChannel(workspaceId, channelId, channelName) {
     await this.rowCount(
-      `UPDATE organization_slack_integrations
+      `UPDATE workspace_slack_integrations
        SET default_channel_id = $2,
            default_channel_name = $3,
            updated_at = CURRENT_TIMESTAMP
-       WHERE organization_id = $1::uuid AND deleted = false`,
-      [organizationId, channelId, channelName]
+       WHERE workspace_id = $1::uuid AND deleted = false`,
+      [workspaceId, channelId, channelName]
     );
   }
 
   /**
    * Soft-delete integration for an workspace.
-   * @param {string} organizationId
+   * @param {string} workspaceId
    */
-  async softDeleteByOrganizationId(organizationId) {
+  async softDeleteByOrganizationId(workspaceId) {
     await this.rowCount(
-      `UPDATE organization_slack_integrations
+      `UPDATE workspace_slack_integrations
        SET is_active = false,
            deleted = true,
            updated_at = CURRENT_TIMESTAMP
-       WHERE organization_id = $1::uuid`,
-      [organizationId]
+       WHERE workspace_id = $1::uuid`,
+      [workspaceId]
     );
   }
 }

@@ -21,7 +21,7 @@ type ApiTokensContextType = {
     name: string,
     scopes: string[],
     expiresAt: string | null,
-    organizationId?: string | null
+    workspaceId?: string | null
   ) => Promise<{ success: boolean; data?: ApiToken; message?: string }>;
   revokeToken: (id: string) => Promise<{ success: boolean; message?: string }>;
 };
@@ -64,10 +64,10 @@ export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     name: string,
     scopes: string[],
     expiresAt: string | null,
-    organizationId?: string | null
+    workspaceId?: string | null
   ) => {
     try {
-      const response = await createApiToken({ name, scopes, expiresAt, organizationId });
+      const response = await createApiToken({ name, scopes, expiresAt, workspaceId });
       const fullTokenRecord = {
         ...response.record,
         token: response.token, // store plain token so UI can display it once

@@ -9,7 +9,7 @@ import {
 import getStorageUrl from "@/app/_utils/get-storage-url";
 
 export {
-  ORG_WORKSPACE_ROLES,
+  WORKSPACE_WORKSPACE_ROLES,
   PROJECT_MEMBER_ROLES,
   normalizeOrgRoleForUi,
   isOrgWorkspaceRole,
@@ -116,7 +116,7 @@ export interface OrganizationAreaProperties {
 
 export interface OrganizationArea {
   id: string;
-  organization_id: string;
+  workspace_id: string;
   parent_area_id: string | null;
   area_name: string;
   slug?: string;
@@ -131,7 +131,7 @@ export interface OrganizationArea {
 export type OrganizationAreaMemberRole = "manager" | "editor" | "viewer";
 
 export interface OrganizationAreaMember {
-  organization_id: string;
+  workspace_id: string;
   area_id: string;
   user_id: string;
   role: OrganizationAreaMemberRole | string;
@@ -209,7 +209,7 @@ export interface Owner {
 export interface Organization {
   id: string;
   user_id: string;
-  org_name: string;
+  workspace_name: string;
   unique_name: string;
   logo_url?: string | null;
   banner_url?: string | null;
@@ -238,7 +238,7 @@ export interface Organization {
 }
 
 export interface CreateOrganizationData {
-  org_name: string;
+  workspace_name: string;
   unique_name?: string;
   logo_url?: string;
   banner_url?: string;
@@ -258,9 +258,9 @@ export type OrganizationBusinessRole =
   | "OTHER";
 
 export interface OrganizationStepOneData {
-  org_name: string;
+  workspace_name: string;
   unique_name: string;
-  organization_role: OrganizationBusinessRole;
+  workspace_role: OrganizationBusinessRole;
   description?: string;
   logo_url?: string | null;
   default_locale?: string | null;
@@ -274,11 +274,11 @@ export interface OrganizationStepOneResponse {
   optional_fields?: string[];
   role_options?: OrganizationBusinessRole[];
   available_roles?: OrganizationBusinessRole[];
-  organization: Organization | null;
+  workspace: Organization | null;
 }
 
 export interface UpdateOrganizationData {
-  org_name?: string;
+  workspace_name?: string;
   unique_name?: string;
   logo_url?: string | null;
   banner_url?: string | null;
@@ -305,8 +305,8 @@ export interface AcceptInviteData {
 }
 
 export interface OrganizationInvitePreview {
-  org_name: string;
-  org_logo_url?: string | null;
+  workspace_name: string;
+  workspace_logo_url?: string | null;
   email: string;
   role: string;
   expires_at: string;
@@ -319,7 +319,7 @@ export interface OrganizationInvitePreview {
 
 /** Payload in `data` from POST invites/accept (matches API members.controller acceptInvite). */
 export interface AcceptInviteResponse {
-  organization: {
+  workspace: {
     id: string;
     name: string;
   };
@@ -376,7 +376,7 @@ const transformBackendArea = (payload: any): OrganizationArea => {
 
   const area: OrganizationArea = {
     id: payload.id,
-    organization_id: payload.organization_id,
+    workspace_id: payload.workspace_id,
     parent_area_id: payload.parent_area_id ?? null,
     area_name: payload.area_name,
     slug: payload.slug,
@@ -395,7 +395,7 @@ const transformBackendArea = (payload: any): OrganizationArea => {
 
 /**
  * Busca a organização.
- * Se userId for passado, envia como query param: /organizations?userId=...
+ * Se userId for passado, envia como query param: /workspaces?userId=...
  */
 export const fetchOrganization = async (userId?: string): Promise<Organization | null> => {
   try {
@@ -407,7 +407,7 @@ export const fetchOrganization = async (userId?: string): Promise<Organization |
     const response = await apiClient.get(url);
     const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
-    const orgPayload = data.organization_data || data.data;
+    const orgPayload = data.workspace_data || data.data;
     if ((data.status === "OK" || data.success) && orgPayload) {
       return transformBackendOrganization(asUnknown(orgPayload));
     }
@@ -430,26 +430,26 @@ export const fetchOrganization = async (userId?: string): Promise<Organization |
  * userId injetado no corpo da requisição.
  */
 export const createOrganization = async (
-  organizationData: CreateOrganizationData,
+  workspaceData: CreateOrganizationData,
   userId?: string
 ): Promise<Organization> => {
   // Mescla os dados da organização com o userId
-  const payload = { ...organizationData, userId };
+  const payload = { ...workspaceData, userId };
 
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS, payload);
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
   const isSuccess = data.status === "OK" || data.success === true;
-  const organizationPayload =
-    data.data && typeof data.data === "object" && "organization" in data.data
-      ? data.data.organization
+  const workspacePayload =
+    data.data && typeof data.data === "object" && "workspace" in data.data
+      ? data.data.workspace
       : data.data;
 
-  if (!isSuccess || !organizationPayload) {
+  if (!isSuccess || !workspacePayload) {
     throw new Error(orgApiErrorMessage(data, "Erro ao criar organização"));
   }
 
-  return transformBackendOrganization(asUnknown(organizationPayload));
+  return transformBackendOrganization(asUnknown(workspacePayload));
 };
 
 export const fetchOrganizationCreationStepOne = async (): Promise<OrganizationStepOneResponse> => {
@@ -458,11 +458,11 @@ export const fetchOrganizationCreationStepOne = async (): Promise<OrganizationSt
 
   if ((data.status === "OK" || data.success) && data.data) {
     const body = asUnknown<
-      Omit<OrganizationStepOneResponse, "organization"> & { organization?: unknown }
+      Omit<OrganizationStepOneResponse, "workspace"> & { workspace?: unknown }
     >(data.data);
     return {
       ...body,
-      organization: body.organization ? transformBackendOrganization(body.organization) : null,
+      workspace: body.workspace ? transformBackendOrganization(body.workspace) : null,
     };
   }
 
@@ -477,11 +477,11 @@ export const saveOrganizationCreationStepOne = async (
 
   if ((data.status === "OK" || data.success) && data.data) {
     const body = asUnknown<
-      Omit<OrganizationStepOneResponse, "organization"> & { organization?: unknown }
+      Omit<OrganizationStepOneResponse, "workspace"> & { workspace?: unknown }
     >(data.data);
     return {
       ...body,
-      organization: body.organization ? transformBackendOrganization(body.organization) : null,
+      workspace: body.workspace ? transformBackendOrganization(body.workspace) : null,
     };
   }
 
@@ -498,11 +498,11 @@ export const completeOrganizationCreationStepOne =
 
     if ((data.status === "OK" || data.success) && data.data) {
       const body = asUnknown<
-        Omit<OrganizationStepOneResponse, "organization"> & { organization?: unknown }
+        Omit<OrganizationStepOneResponse, "workspace"> & { workspace?: unknown }
       >(data.data);
       return {
         ...body,
-        organization: body.organization ? transformBackendOrganization(body.organization) : null,
+        workspace: body.workspace ? transformBackendOrganization(body.workspace) : null,
       };
     }
 
@@ -514,10 +514,10 @@ export const completeOrganizationCreationStepOne =
  * userId injetado no corpo da requisição.
  */
 export const updateOrganization = async (
-  organizationData: UpdateOrganizationData,
+  workspaceData: UpdateOrganizationData,
   userId?: string
 ): Promise<Organization> => {
-  const payload = { ...organizationData, userId };
+  const payload = { ...workspaceData, userId };
 
   const response = await apiClient.put(API_ENDPOINTS.ORGANIZATIONS, payload);
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
@@ -725,7 +725,7 @@ export interface OrganizationMembersData {
   count: number;
   count_by_role: Record<string, number>;
   count_by_status: Record<string, number>;
-  list_org_members: OrganizationMember[];
+  list_workspace_members: OrganizationMember[];
 }
 
 export const fetchOrganizationMembers = async (
@@ -740,9 +740,9 @@ export const fetchOrganizationMembers = async (
     const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
     const membersRaw =
-      data.list_org_members ||
       data.list_workspace_members ||
-      (data.data as any)?.list_org_members ||
+      data.list_workspace_members ||
+      (data.data as any)?.list_workspace_members ||
       (data.data as any)?.list_workspace_members;
 
     if ((data.status === "OK" || data.success) && membersRaw) {
@@ -757,7 +757,7 @@ export const fetchOrganizationMembers = async (
         count,
         count_by_role: recordNumbers(data.count_by_role || (data.data as any)?.count_by_role),
         count_by_status: recordNumbers(data.count_by_status || (data.data as any)?.count_by_status),
-        list_org_members: (membersRaw as Array<{ member_data: OrganizationMember }>).map(
+        list_workspace_members: (membersRaw as Array<{ member_data: OrganizationMember }>).map(
           (item) => item.member_data
         ),
       };
@@ -777,7 +777,7 @@ export const addMemberDirectly = async (
   const normalized =
     typeof role === "string" ? (role.trim().toUpperCase() as OrgWorkspaceRole) : role;
   if (!isOrgWorkspaceRole(normalized)) {
-    throw new Error("Invalid organization role");
+    throw new Error("Invalid workspace role");
   }
   const payload = { memberId, role: normalized, userId };
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_MEMBERS, payload);
@@ -867,8 +867,8 @@ export const previewOrganizationInvite = async (
   }
 
   const previewData = data.data as any;
-  if (previewData.org_logo_url) {
-    previewData.org_logo_url = getStorageUrl(previewData.org_logo_url);
+  if (previewData.workspace_logo_url) {
+    previewData.workspace_logo_url = getStorageUrl(previewData.workspace_logo_url);
   }
 
   return asUnknown<OrganizationInvitePreview>(previewData);
@@ -920,7 +920,7 @@ export const updateMemberRole = async (
   const normalized =
     typeof role === "string" ? (role.trim().toUpperCase() as OrgWorkspaceRole) : role;
   if (!isOrgWorkspaceRole(normalized)) {
-    throw new Error("Invalid organization role");
+    throw new Error("Invalid workspace role");
   }
 
   const response = await apiClient.patch(url, { role: normalized, userId });
@@ -953,13 +953,13 @@ export const uploadOrganizationLogo = async (
   });
 
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
-  const logoBody = asUnknown<{ organization?: unknown } | null | undefined>(data.data);
+  const logoBody = asUnknown<{ workspace?: unknown } | null | undefined>(data.data);
 
-  if (!data.success || !logoBody?.organization) {
+  if (!data.success || !logoBody?.workspace) {
     throw new Error(orgApiErrorMessage(data, "Erro ao fazer upload do logo"));
   }
 
-  return transformBackendOrganization(logoBody.organization);
+  return transformBackendOrganization(logoBody.workspace);
 };
 
 /**
@@ -980,13 +980,13 @@ export const uploadOrganizationBanner = async (
   });
 
   const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
-  const bannerBody = asUnknown<{ organization?: unknown } | null | undefined>(data.data);
+  const bannerBody = asUnknown<{ workspace?: unknown } | null | undefined>(data.data);
 
-  if (!data.success || !bannerBody?.organization) {
+  if (!data.success || !bannerBody?.workspace) {
     throw new Error(orgApiErrorMessage(data, "Erro ao fazer upload do banner"));
   }
 
-  return transformBackendOrganization(bannerBody.organization);
+  return transformBackendOrganization(bannerBody.workspace);
 };
 
 // --- Domínios ---
@@ -1066,8 +1066,8 @@ export const deleteDomain = async (domainId: string, userId?: string): Promise<v
 
 export interface UserWorkspaceSummary {
   id: string;
-  org_name: string;
-  workspace_name?: string;
+  workspace_name: string;
+  org_name?: string;
   unique_name: string;
   logo_url: string | null;
   member_role: string;
@@ -1083,7 +1083,7 @@ export const fetchMyOrganizations = async (): Promise<UserWorkspaceSummary[]> =>
     if (data.data && Array.isArray(data.data)) {
       return data.data.map((item: any) => ({
         ...item,
-        org_name: item.org_name || item.workspace_name || "",
+        org_name: item.workspace_name || item.org_name || "",
         workspace_name: item.workspace_name || item.org_name || "",
       }));
     }
@@ -1094,10 +1094,10 @@ export const fetchMyOrganizations = async (): Promise<UserWorkspaceSummary[]> =>
   }
 };
 
-export const switchOrganizationApi = async (organizationId: string): Promise<boolean> => {
+export const switchOrganizationApi = async (workspaceId: string): Promise<boolean> => {
   const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_SWITCH, {
-    organizationId,
-    workspaceId: organizationId,
+    organizationId: workspaceId,
+    workspaceId,
   });
   const data = await handleResponse<{ success?: boolean }>(response);
   return data.success === true;

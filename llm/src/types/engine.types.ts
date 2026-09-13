@@ -21,7 +21,7 @@ export interface AgenticExecutionContext {
   /** User ID for MCP context. */
   userId?: string | null;
   /** Organization ID for MCP context. */
-  organizationId?: string | null;
+  workspaceId?: string | null;
   /** Active trace ID for tracing integration. */
   traceId?: string;
 }

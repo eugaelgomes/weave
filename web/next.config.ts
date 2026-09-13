@@ -131,6 +131,15 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  async rewrites() {
+    return [
+      {
+        source: "/workspace/:path*",
+        destination: "/organization/:path*",
+      },
+    ];
+  },
+
   // Headers de segurança globais
   async headers() {
     const baseHeaders = [

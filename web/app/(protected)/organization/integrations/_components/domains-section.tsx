@@ -10,8 +10,8 @@ import {
   verifyDomain,
   deleteDomain,
   type OrganizationDomain,
-} from "@/app/_services/organization";
-import { Badge } from "@/app/(protected)/organization/general/_components/form-primitives";
+} from "@/app/_services/workspace";
+import { Badge } from "../../general/_components/form-primitives";
 
 const domainInputFocus = "outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500";
 
@@ -30,7 +30,7 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
       const data = await fetchDomains();
       setDomains(data);
     } catch {
-      toast.error(t.organizationIntegrations.domainsLoadError);
+      toast.error(t.workspaceIntegrations.domainsLoadError);
     } finally {
       setLoading(false);
     }
@@ -47,12 +47,12 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
     try {
       setIsAdding(true);
       const created = await createDomain(newDomain);
-      toast.success(t.organizationIntegrations.domainAdded);
+      toast.success(t.workspaceIntegrations.domainAdded);
       setDomains([...domains, created]);
       setNewDomain("");
     } catch (error: unknown) {
       const msg =
-        error instanceof Error ? error.message : t.organizationIntegrations.domainAddError;
+        error instanceof Error ? error.message : t.workspaceIntegrations.domainAddError;
       toast.error(msg);
     } finally {
       setIsAdding(false);
@@ -67,13 +67,13 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
       setDomains(domains.map((d) => (d.id === domain.id ? updated : d)));
 
       if (updated.status === "VERIFIED") {
-        toast.success(t.organizationIntegrations.domainVerified);
+        toast.success(t.workspaceIntegrations.domainVerified);
       } else {
-        toast.error(t.organizationIntegrations.domainVerifyFailed);
+        toast.error(t.workspaceIntegrations.domainVerifyFailed);
       }
     } catch (error: unknown) {
       const msg =
-        error instanceof Error ? error.message : t.organizationIntegrations.domainVerifyError;
+        error instanceof Error ? error.message : t.workspaceIntegrations.domainVerifyError;
       toast.error(msg);
     } finally {
       setVerifyingId(null);
@@ -81,14 +81,14 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
   };
 
   const handleDelete = async (domainId: string) => {
-    if (!confirm(t.organizationIntegrations.domainDeleteConfirm)) return;
+    if (!confirm(t.workspaceIntegrations.domainDeleteConfirm)) return;
     try {
       setDeletingId(domainId);
       await deleteDomain(domainId);
       setDomains(domains.filter((d) => d.id !== domainId));
-      toast.success(t.organizationIntegrations.domainRemoved);
+      toast.success(t.workspaceIntegrations.domainRemoved);
     } catch {
-      toast.error(t.organizationIntegrations.domainRemoveError);
+      toast.error(t.workspaceIntegrations.domainRemoveError);
     } finally {
       setDeletingId(null);
     }
@@ -96,7 +96,7 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(t.organizationIntegrations.copied);
+    toast.success(t.workspaceIntegrations.copied);
   };
 
   return (
@@ -104,14 +104,14 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
       <div className="mb-4 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-[10px] font-bold tracking-wider text-neutral-900 uppercase dark:text-neutral-100">
           <Globe className="h-4 w-4 text-amber-500" />
-          {t.organizationIntegrations.domainsTitle}
+          {t.workspaceIntegrations.domainsTitle}
         </h2>
         {userIsOwner ? (
           <button
             type="button"
             onClick={loadDomains}
             className="rounded-full p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            title={t.organizationIntegrations.reloadDomains}
+            title={t.workspaceIntegrations.reloadDomains}
           >
             <RefreshCw className={`h-4 w-4 text-neutral-500 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -125,7 +125,7 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
               type="text"
               value={newDomain}
               onChange={(e) => setNewDomain(e.target.value)}
-              placeholder={t.organizationIntegrations.domainPlaceholder}
+              placeholder={t.workspaceIntegrations.domainPlaceholder}
               className={`dark:border-surface-dark-border h-8 flex-1 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium text-neutral-900 transition-all dark:bg-[#1d1d1b] dark:text-neutral-200 ${domainInputFocus}`}
               disabled={isAdding}
             />
@@ -139,7 +139,7 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              {t.organizationIntegrations.addDomain}
+              {t.workspaceIntegrations.addDomain}
             </button>
           </form>
         ) : null}
@@ -147,7 +147,7 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
         <div className="space-y-4">
           {domains.length === 0 && !loading ? (
             <p className="py-4 text-center text-sm text-neutral-500 italic">
-              {t.organizationIntegrations.domainsEmpty}
+              {t.workspaceIntegrations.domainsEmpty}
             </p>
           ) : (
             domains.map((domain) => (
@@ -162,13 +162,13 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
                         {domain.domain_name}
                       </h3>
                       {domain.status === "VERIFIED" ? (
-                        <Badge color="green">{t.organizationIntegrations.statusVerified}</Badge>
+                        <Badge color="green">{t.workspaceIntegrations.statusVerified}</Badge>
                       ) : (
-                        <Badge color="yellow">{t.organizationIntegrations.statusPending}</Badge>
+                        <Badge color="yellow">{t.workspaceIntegrations.statusPending}</Badge>
                       )}
                     </div>
                     <p className="mt-1 text-xs text-neutral-500">
-                      {t.organizationIntegrations.addedOn.replace(
+                      {t.workspaceIntegrations.addedOn.replace(
                         "{date}",
                         new Date(domain.created_at).toLocaleDateString()
                       )}
@@ -185,8 +185,8 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
                           className="text-xs font-medium text-neutral-600 underline hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
                         >
                           {verifyingId === domain.id
-                            ? t.organizationIntegrations.verifying
-                            : t.organizationIntegrations.verifyDns}
+                            ? t.workspaceIntegrations.verifying
+                            : t.workspaceIntegrations.verifyDns}
                         </button>
                       ) : null}
                       <button
@@ -209,19 +209,19 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
                   <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/30 dark:bg-amber-950/20">
                     <div className="mb-2 flex items-start gap-2 text-xs text-amber-800 dark:text-amber-200">
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      <p>{t.organizationIntegrations.dnsHint}</p>
+                      <p>{t.workspaceIntegrations.dnsHint}</p>
                     </div>
                     <div className="grid gap-2 text-xs md:grid-cols-2">
                       <div className="rounded-md bg-white p-2 dark:bg-black/20">
                         <span className="mb-1 block text-[10px] text-neutral-500 uppercase">
-                          {t.organizationIntegrations.dnsHostLabel}
+                          {t.workspaceIntegrations.dnsHostLabel}
                         </span>
                         <div className="flex items-center justify-between font-mono font-medium">
                           <span>_weave-challenge</span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard("_weave-challenge")}
-                            aria-label={t.organizationIntegrations.copyHost}
+                            aria-label={t.workspaceIntegrations.copyHost}
                           >
                             <Copy className="h-3 w-3 text-neutral-400 hover:text-neutral-600" />
                           </button>
@@ -229,14 +229,14 @@ export function DomainsSection({ userIsOwner }: { userIsOwner: boolean }) {
                       </div>
                       <div className="rounded-md bg-white p-2 dark:bg-black/20">
                         <span className="mb-1 block text-[10px] text-neutral-500 uppercase">
-                          {t.organizationIntegrations.dnsValueLabel}
+                          {t.workspaceIntegrations.dnsValueLabel}
                         </span>
                         <div className="flex items-center justify-between truncate font-mono font-medium">
                           <span className="mr-2 truncate">{domain.verification_token}</span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(domain.verification_token)}
-                            aria-label={t.organizationIntegrations.copyValue}
+                            aria-label={t.workspaceIntegrations.copyValue}
                           >
                             <Copy className="h-3 w-3 text-neutral-400 hover:text-neutral-600" />
                           </button>

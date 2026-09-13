@@ -8,8 +8,8 @@ import type {
   OrganizationArea,
   OrgWorkspaceRole,
   ProjectMemberRoleForInvite,
-} from "@/app/_services/organization";
-import { ORG_WORKSPACE_ROLES, PROJECT_MEMBER_ROLES } from "@/app/_services/organization";
+} from "@/app/_services/workspace";
+import { WORKSPACE_WORKSPACE_ROLES, PROJECT_MEMBER_ROLES } from "@/app/_services/workspace";
 import { emailLocalPartContainsPlus } from "@/app/_utils/email-rules";
 import { X, Mail, ChevronDown, User, Layers3 } from "lucide-react";
 
@@ -52,7 +52,7 @@ function ModalBase({ isOpen, onClose, title, children, footer }: ModalBaseProps)
 }
 
 function workspaceRoleLabel(t: TranslationKeys, role: OrgWorkspaceRole): string {
-  const o = t.organizationMembers;
+  const o = t.workspaceMembers;
   switch (role) {
     case "SUPER_ADMIN":
       return o.superAdmin;
@@ -70,7 +70,7 @@ function workspaceRoleLabel(t: TranslationKeys, role: OrgWorkspaceRole): string 
 }
 
 function projectMemberRoleLabel(t: TranslationKeys, role: ProjectMemberRoleForInvite): string {
-  const o = t.organizationMembers;
+  const o = t.workspaceMembers;
   switch (role) {
     case "PROJECT_MANAGER":
       return o.projectMemberRoleProjectManager;
@@ -112,7 +112,7 @@ export function OrganizationInviteModal({
     useState<ProjectMemberRoleForInvite>("CONTRIBUTOR");
 
   const workspaceRoleOptions = useMemo(() => {
-    return ORG_WORKSPACE_ROLES.filter((r) => showSuperAdminWorkspaceRole || r !== "SUPER_ADMIN");
+    return WORKSPACE_WORKSPACE_ROLES.filter((r) => showSuperAdminWorkspaceRole || r !== "SUPER_ADMIN");
   }, [showSuperAdminWorkspaceRole]);
 
   /** Workspace admins do not need a project-level role in an area invite. */
@@ -165,7 +165,7 @@ export function OrganizationInviteModal({
 
   const inviteEmailPlusError =
     email.trim().length > 0 && emailLocalPartContainsPlus(email)
-      ? t.organizationMembers.inviteEmailPlusAliasNotAllowed
+      ? t.workspaceMembers.inviteEmailPlusAliasNotAllowed
       : null;
 
   const inputClass =
@@ -175,7 +175,7 @@ export function OrganizationInviteModal({
     <ModalBase
       isOpen={isOpen}
       onClose={onClose}
-      title={t.organizationMembers.inviteModalTitle}
+      title={t.workspaceMembers.inviteModalTitle}
       footer={
         <>
           <button
@@ -183,7 +183,7 @@ export function OrganizationInviteModal({
             onClick={onClose}
             className="px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
-            {t.organizationMembers.cancel}
+            {t.workspaceMembers.cancel}
           </button>
           <button
             type="button"
@@ -191,7 +191,7 @@ export function OrganizationInviteModal({
             disabled={loading || !canSubmit}
             className="bg-brand-primary-500 rounded-md px-3 py-1.5 text-xs font-semibold text-black hover:bg-yellow-600 disabled:opacity-50"
           >
-            {loading ? t.organizationMembers.sending : t.organizationMembers.sendInvite}
+            {loading ? t.workspaceMembers.sending : t.workspaceMembers.sendInvite}
           </button>
         </>
       }
@@ -199,7 +199,7 @@ export function OrganizationInviteModal({
       <div className="space-y-4">
         <div>
           <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.inviteeFullName}
+            {t.workspaceMembers.inviteeFullName}
           </label>
           <div className="relative">
             <User className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
@@ -207,7 +207,7 @@ export function OrganizationInviteModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={t.organizationMembers.inviteNamePlaceholder}
+              placeholder={t.workspaceMembers.inviteNamePlaceholder}
               autoComplete="off"
               className={`${inputClass} pr-2 pl-8`}
               data-1p-ignore
@@ -216,7 +216,7 @@ export function OrganizationInviteModal({
         </div>
         <div>
           <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.userEmail}
+            {t.workspaceMembers.userEmail}
           </label>
           <div className="relative">
             <Mail className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
@@ -224,7 +224,7 @@ export function OrganizationInviteModal({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={t.organizationMembers.inviteEmailPlaceholder}
+              placeholder={t.workspaceMembers.inviteEmailPlaceholder}
               autoComplete="off"
               className={`${inputClass} pr-2 pl-8`}
               data-1p-ignore
@@ -238,13 +238,13 @@ export function OrganizationInviteModal({
         </div>
         <div>
           <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-            {t.organizationMembers.accessLevel}
+            {t.workspaceMembers.accessLevel}
           </label>
           <div className="relative">
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as OrgWorkspaceRole)}
-              aria-label={t.organizationMembers.accessLevel}
+              aria-label={t.workspaceMembers.accessLevel}
               className={`${inputClass} appearance-none px-3`}
             >
               {workspaceRoleOptions.map((r) => (
@@ -261,7 +261,7 @@ export function OrganizationInviteModal({
           <>
             <div>
               <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-                {t.organizationMembers.areaRequired}
+                {t.workspaceMembers.areaRequired}
               </label>
               {hasAreas ? (
                 <div className="relative">
@@ -269,7 +269,7 @@ export function OrganizationInviteModal({
                   <select
                     value={areaId}
                     onChange={(e) => setAreaId(e.target.value)}
-                    aria-label={t.organizationMembers.areaRequired}
+                    aria-label={t.workspaceMembers.areaRequired}
                     className={`${inputClass} appearance-none py-1.5 pr-8 pl-8`}
                   >
                     {areas.map((a) => (
@@ -282,14 +282,14 @@ export function OrganizationInviteModal({
                 </div>
               ) : (
                 <p className="text-[10px] font-medium text-amber-700 dark:text-amber-400">
-                  {t.organizationMembers.areaInviteNoAreas}
+                  {t.workspaceMembers.areaInviteNoAreas}
                 </p>
               )}
             </div>
             {areaId && (
               <div>
                 <label className="mb-1 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
-                  {t.organizationMembers.areaRoleLabel}
+                  {t.workspaceMembers.areaRoleLabel}
                 </label>
                 <div className="relative">
                   <select
@@ -297,7 +297,7 @@ export function OrganizationInviteModal({
                     onChange={(e) =>
                       setProjectMemberRole(e.target.value as ProjectMemberRoleForInvite)
                     }
-                    aria-label={t.organizationMembers.areaRoleLabel}
+                    aria-label={t.workspaceMembers.areaRoleLabel}
                     className={`${inputClass} appearance-none px-3`}
                   >
                     {PROJECT_MEMBER_ROLES.map((r) => (
@@ -309,7 +309,7 @@ export function OrganizationInviteModal({
                   <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
                 </div>
                 <p className="mt-1.5 text-[10px] leading-snug text-neutral-500 dark:text-neutral-400">
-                  {t.organizationMembers.projectRoleInAreaHint}
+                  {t.workspaceMembers.projectRoleInAreaHint}
                 </p>
               </div>
             )}
@@ -317,7 +317,7 @@ export function OrganizationInviteModal({
         ) : (
           <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-900/30 dark:bg-yellow-900/10">
             <p className="text-[10px] leading-snug text-yellow-800 dark:text-yellow-500">
-              {t.organizationMembers.inviteAdminAreaNoProjectRole}
+              {t.workspaceMembers.inviteAdminAreaNoProjectRole}
             </p>
           </div>
         )}

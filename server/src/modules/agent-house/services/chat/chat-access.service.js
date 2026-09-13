@@ -20,7 +20,7 @@
 class ChatAccessService {
   /**
    * Asserts that a user has mutation access to a note, checking ownership, collaboration,
-   * or organizational scoping. Returns the resolved internal note UUID.
+   * or workspaceal scoping. Returns the resolved internal note UUID.
    *
    * @param {string} userId - The ID of the user requesting access.
    * @param {string} noteId - The internal UUID or public note ID to verify.

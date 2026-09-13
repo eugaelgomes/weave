@@ -11,7 +11,7 @@ const authRoutes = require("@/modules/authentication/auth.routes");
 const userRoutes = require("@/modules/users/users.routes");
 
 const backupRoutes = require("@/modules/backup/backup.routes");
-const organizationsRoutes = require("@/modules/workspaces/workspaces.routes");
+const workspacesRoutes = require("@/modules/workspaces/workspaces.routes");
 const plansRoutes = require("@/modules/plans/plans.routes");
 const notificationsRoutes = require("@/modules/messenger/notifications.routes");
 
@@ -121,8 +121,8 @@ const slackRoutes = require("@/integration/providers/slack/slack.routes");
 const routeRegistry = [
   { basePath: "/auth", handler: authRoutes },
   { basePath: "/backup", handler: backupRoutes },
-  { basePath: "/workspaces", handler: organizationsRoutes },
-  { basePath: "/organizations", handler: organizationsRoutes },
+  { basePath: "/workspaces", handler: workspacesRoutes },
+  { basePath: "/organizations", handler: workspacesRoutes },
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/users", handler: userRoutes },
   { basePath: "/weave-ai", handler: agentHouseRoutes },

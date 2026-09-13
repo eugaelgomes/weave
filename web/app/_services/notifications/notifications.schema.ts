@@ -3,8 +3,8 @@ import { z } from "zod";
 export const NotificationTypeSchema = z.enum([
   "system_alert",
   "system_update",
-  "organization_invite",
-  "organization_action",
+  "workspace_invite",
+  "workspace_action",
   "project_invite",
   "project_action",
   "note_shared",
@@ -14,7 +14,7 @@ export const NotificationTypeSchema = z.enum([
 ]);
 
 export const NotificationEntityTypeSchema = z.enum([
-  "organization",
+  "workspace",
   "project",
   "note",
   "job",

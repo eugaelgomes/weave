@@ -15,7 +15,7 @@ export const backendProfileEmailToUser = (email: BackendProfile["email"]): User[
 
 export const mapOrgDefaultAreaToUser = (
   area: OrgDefaultArea | null | undefined
-): User["org_default_area"] => {
+): User["workspace_default_area"] => {
   if (area == null) return undefined;
   return {
     id: area.id ?? undefined,
@@ -30,11 +30,11 @@ export const mapOrgDefaultAreaToUser = (
 
 /**
  * Single Source of Truth for converting Backend data to Frontend User Model.
- * Accepts partial structures (e.g. updateProfile might not return organization).
+ * Accepts partial structures (e.g. updateProfile might not return workspace).
  * @deprecated - Kept for reference, but currently unused
  */
 export const _mapBackendDataToUser = (data: BackendUserData): User => {
-  const { profile, settings, organization, current_plan, current_plan_usage } = data;
+  const { profile, settings, workspace, current_plan, current_plan_usage } = data;
 
   return {
     // Profile
@@ -55,14 +55,14 @@ export const _mapBackendDataToUser = (data: BackendUserData): User => {
     auth_with_google: settings?.auth_with_google ?? undefined,
 
     // Organization (Optional)
-    org_id: organization?.id,
-    org_public_id: organization?.public_id,
-    org_name: organization?.org_name,
+    workspace_id: workspace?.id,
+    workspace_public_id: workspace?.public_id,
+    workspace_name: workspace?.workspace_name,
 
-    org_unique_name: organization?.unique_name,
-    org_logo_url: normalizeStorageUrl(organization?.org_logo_url),
-    org_member_role: organization?.org_member_role,
-    org_member_since: organization?.org_member_since,
+    workspace_unique_name: workspace?.unique_name,
+    workspace_logo_url: normalizeStorageUrl(workspace?.workspace_logo_url),
+    workspace_member_role: workspace?.workspace_member_role,
+    workspace_member_since: workspace?.workspace_member_since,
 
     // Plan (Optional)
     plan_id: current_plan?.id,
@@ -122,7 +122,7 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     org_member_since: workspace?.member_since ?? undefined,
     org_default_area: mapOrgDefaultAreaToUser(workspace?.default_area ?? undefined),
 
-    user_workspace: workspace
+    user_organization: workspace
       ? {
           id: workspace.id,
           unique_name: workspace.unique_name,
@@ -134,7 +134,7 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
           default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
         }
       : undefined,
-    user_organization: workspace
+    user_workspace: workspace
       ? {
           id: workspace.id,
           unique_name: workspace.unique_name,
@@ -200,7 +200,7 @@ export const mapMeResponseToUser = (data: BackendMeResponse): User => {
     org_member_since: workspace?.member_since ?? undefined,
     org_default_area: mapOrgDefaultAreaToUser(workspace?.default_area ?? undefined),
 
-    user_workspace: workspace
+    user_organization: workspace
       ? {
           id: workspace.id,
           unique_name: workspace.unique_name,
@@ -213,7 +213,7 @@ export const mapMeResponseToUser = (data: BackendMeResponse): User => {
           default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
         }
       : undefined,
-    user_organization: workspace
+    user_workspace: workspace
       ? {
           id: workspace.id,
           unique_name: workspace.unique_name,

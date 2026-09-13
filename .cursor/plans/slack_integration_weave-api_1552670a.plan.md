@@ -24,7 +24,7 @@ Criar uma integração **Slack App (OAuth bot)** no `weave-api` para:
 Criar migration SQL nova em `weave-api/db_structure_docs/migrations/`:
 - Tabela sugerida: `slack_installations`
   - `id uuid PK`
-  - `organization_id uuid NOT NULL` (FK)
+  - `workspace_id uuid NOT NULL` (FK)
   - `installed_by_user_id uuid NULL` (FK)
   - `team_id text NOT NULL` (workspace)
   - `team_name text NULL`
@@ -34,7 +34,7 @@ Criar migration SQL nova em `weave-api/db_structure_docs/migrations/`:
   - `scope text NULL`
   - `default_channel_id text NULL` (opcional para v1)
   - `deleted bool default false`, `created_at`, `updated_at`, `deleted_at` (mesmo padrão)
-  - unique index: `(organization_id)` e/ou `(team_id)` conforme regra de negócio
+  - unique index: `(workspace_id)` e/ou `(team_id)` conforme regra de negócio
 
 > Observação: hoje não existe camada de criptografia de tokens; no plano v1 vamos armazenar `bot_token` no banco e restringir acesso via repos + RBAC. Se vocês quiserem, dá para adicionar criptografia simétrica com `SECRET_KEY` como hardening numa iteração seguinte.
 

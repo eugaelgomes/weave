@@ -33,7 +33,7 @@ const getNotificationIcon = (type: NotificationType) => {
       return AlertCircle;
     case "system_update":
       return CheckCircle2;
-    case "organization_invite":
+    case "workspace_invite":
     case "project_invite":
       return UserPlus;
     case "note_shared":
@@ -53,7 +53,7 @@ const getIconColor = (type: NotificationType) => {
       return "text-red-500";
     case "system_update":
       return "text-green-500";
-    case "organization_invite":
+    case "workspace_invite":
     case "project_invite":
       return "text-blue-500";
     case "note_shared":

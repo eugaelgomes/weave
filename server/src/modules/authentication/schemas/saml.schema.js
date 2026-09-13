@@ -1,7 +1,8 @@
 const { z } = require("zod");
 
 const ssoDiscoverSchema = z.object({
-  email: z.string({ required_error: "Email is required." })
+  email: z
+    .string({ required_error: "Email is required." })
     .email("Invalid email format.")
     .trim()
     .describe("Email to check for enterprise SSO requirements."),
@@ -9,7 +10,7 @@ const ssoDiscoverSchema = z.object({
 
 const samlAcsCallbackSchema = z.object({
   RelayState: z
-    .string({ required_error: "RelayState (organizationId) is required." })
+    .string({ required_error: "RelayState (workspaceId) is required." })
     .uuid("RelayState must be a valid workspace UUID.")
     .describe("The relay state parameter, representing the workspace UUID."),
   SAMLResponse: z

@@ -5,5 +5,5 @@ export default async function OrganizationMembersIndexPage({
 }: {
   params: Promise<Record<string, never>>;
 }) {
-  redirect(`/organization/members/list`);
+  redirect(`/workspace/members/list`);
 }

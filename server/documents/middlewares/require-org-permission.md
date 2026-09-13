@@ -2,7 +2,7 @@
 
 ## What it does
 
-Ensures the authenticated user has an active organization membership with a required permission.
+Ensures the authenticated user has an active workspace membership with a required permission.
 
 ## Inputs and outputs
 
@@ -12,10 +12,10 @@ Ensures the authenticated user has an active organization membership with a requ
 ## Important rules
 
 - Must run after `verifyToken` (depends on `req.user.userId`).
-- Loads active organization membership from repository.
+- Loads active workspace membership from repository.
 - Uses role policy to validate permission.
-- On success, attaches `req.organizationContext`.
+- On success, attaches `req.workspaceContext`.
 
 ## Typical usage
 
-Used on organization-sensitive endpoints (admin, governance, settings, role-restricted actions).
+Used on workspace-sensitive endpoints (admin, governance, settings, role-restricted actions).

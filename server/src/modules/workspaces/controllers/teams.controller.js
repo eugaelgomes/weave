@@ -93,13 +93,15 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       }
 
       const teams = await this.teamsRepository.listWorkspaceTeams(workspace.id);
+      const parsedTeams = z.array(teamResponseSchema).parse(teams);
 
       res.status(200).json({
-        data: {
-          count: teams.length,
-          teams: z.array(teamResponseSchema).parse(teams),
-        },
+        areas: parsedTeams,
+        count: teams.length,
+        data: parsedTeams,
+        status: "OK",
         success: true,
+        teams: parsedTeams,
         workspace_id: workspace.id,
       });
     } catch (error) {
@@ -125,7 +127,14 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         throw AppError.notFound("Team not found");
       }
 
-      res.status(200).json({ data: teamResponseSchema.parse(team), success: true });
+      const parsed = teamResponseSchema.parse(team);
+      res.status(200).json({
+        area: parsed,
+        data: parsed,
+        status: "OK",
+        success: true,
+        team: parsed,
+      });
     } catch (error) {
       console.error("Error fetching team:", error);
       return next(fromUnknown(error));
@@ -142,7 +151,9 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         throw AppError.notFound("Workspace not found");
       }
 
-      const { team_name, parent_team_id = null, slug, description, properties } = req.body;
+      const rawName = req.body.team_name || req.body.area_name || req.body.name;
+      const parent_team_id = req.body.parent_team_id ?? req.body.parent_area_id ?? null;
+      const { slug, description, properties } = req.body;
 
       const isSubArea = parent_team_id !== null && parent_team_id !== undefined;
       const canWorkspaceStructure = this._canManageWorkspaceStructure(workspace);
@@ -167,7 +178,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         }
       }
 
-      const normalizedSlug = this._normalizeSlug(team_name, slug);
+      const normalizedSlug = this._normalizeSlug(rawName, slug);
       if (!normalizedSlug) {
         throw AppError.badRequest("Invalid team slug");
       }
@@ -179,17 +190,21 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       const newTeam = await this.teamsRepository.createTeam({
         createdBy: userId,
         description: description?.trim() || "Team description here",
-        name: team_name.trim(),
+        name: rawName.trim(),
         parentTeamId: parent_team_id || null,
         properties: normalizedProperties,
         slug: uniqueSlug,
         workspaceId: workspace.id,
       });
 
+      const parsedNewTeam = teamResponseSchema.parse(newTeam);
       res.status(201).json({
-        data: teamResponseSchema.parse(newTeam),
+        area: parsedNewTeam,
+        data: parsedNewTeam,
         message: "Team created successfully",
+        status: "OK",
         success: true,
+        team: parsedNewTeam,
       });
     } catch (error) {
       console.error("Error creating team:", error);
@@ -209,7 +224,6 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
 
       const { teamId } = req.params;
       const existingTeam = await this.teamsRepository.getTeamById(teamId, workspace.id);
-
       if (!existingTeam) {
         throw AppError.notFound("Team not found");
       }
@@ -223,12 +237,14 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         return;
       }
 
-      const { team_name, slug, description, properties, active, parent_team_id } = req.body;
+      const rawName = req.body.team_name || req.body.area_name || req.body.name;
+      const parent_team_id = req.body.parent_team_id ?? req.body.parent_area_id;
+      const { slug, description, properties, active } = req.body;
 
       const updates = {};
 
-      if (team_name !== undefined) {
-        updates.team_name = team_name.trim();
+      if (rawName !== undefined) {
+        updates.name = rawName.trim();
       }
 
       if (description !== undefined) {
@@ -253,8 +269,8 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         updates.parent_team_id = parent_team_id || null;
       }
 
-      if (slug !== undefined || updates.team_name) {
-        const baseSlug = this._normalizeSlug(updates.team_name || existingTeam.team_name, slug);
+      if (slug !== undefined || rawName !== undefined) {
+        const baseSlug = this._normalizeSlug(rawName || existingTeam.name, slug);
         if (!baseSlug) {
           throw AppError.badRequest("Invalid slug");
         }
@@ -264,11 +280,15 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
       }
 
       const updatedTeam = await this.teamsRepository.updateTeam(teamId, workspace.id, updates);
+      const parsedUpdatedTeam = teamResponseSchema.parse(updatedTeam);
 
       res.status(200).json({
-        data: teamResponseSchema.parse(updatedTeam),
+        area: parsedUpdatedTeam,
+        data: parsedUpdatedTeam,
         message: "Team updated successfully",
+        status: "OK",
         success: true,
+        team: parsedUpdatedTeam,
       });
     } catch (error) {
       console.error("Error updating team:", error);
@@ -336,6 +356,8 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
           members,
           members_count: members.length,
         },
+        members,
+        status: "OK",
         success: true,
         team_id: teamId,
       });

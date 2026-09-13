@@ -56,18 +56,18 @@ const NAV_ITEMS: NavItemConfig[] = [
   { id: "audio", label: "Audio", icon: AudioLines, path: "/weave-ai/audio" },
   { id: "images", label: "Images", icon: ImageIcon, path: "/weave-ai/images" },
   { id: "codex", label: "Codex", icon: SquareTerminal, path: "/weave-flow" },
-  { id: "api-keys", label: "API Keys", icon: KeyRound, path: "/organization/integrations" },
-  { id: "usage", label: "Usage", icon: TrendingUp, path: "/organization/plans" },
+  { id: "api-keys", label: "API Keys", icon: KeyRound, path: "/workspace/integrations" },
+  { id: "usage", label: "Usage", icon: TrendingUp, path: "/workspace/plans" },
   { id: "logs", label: "Logs", icon: Logs, path: "/logs" },
   { id: "batches", label: "Batches", icon: Braces, path: "/batches" },
   { id: "storage", label: "Storage", icon: Database, path: "/documents" },
   { id: "plugins", label: "Plugins", icon: Orbit, path: "/weave-ai/tools" },
-  { id: "settings", label: "Settings", icon: Settings, path: "/organization/settings" },
+  { id: "settings", label: "Settings", icon: Settings, path: "/workspace/settings" },
   { id: "more", label: "More", icon: MoreHorizontal, isMore: true },
 ];
 
 const MORE_OPTIONS = [
-  { label: "Membros & Usuários", path: "/organization/members/list", icon: UsersRound },
+  { label: "Membros & Usuários", path: "/workspace/members/list", icon: UsersRound },
   { label: "Provedores & LLMs", path: "/weave-ai/llms", icon: ServerCog },
   { label: "Suporte & Docs", path: SUPPORT_URL, icon: HelpCircle, external: true },
 ];

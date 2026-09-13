@@ -361,7 +361,7 @@ const enUS: TranslationKeys = {
 
   settings: {
     title: "Account Settings",
-    description: "Manage your personal data, organization, and security preferences.",
+    description: "Manage your personal data, workspace, and security preferences.",
     passwordChangeHint: "To change your password, fill in all password fields.",
     passwordMismatch: "New password and confirmation do not match.",
     passwordTooShort: "New password must be at least 6 characters.",
@@ -389,14 +389,14 @@ const enUS: TranslationKeys = {
     help: "Help",
   },
 
-  organizationGeneral: {
-    description: "Manage your organization profile and workspace settings.",
+  workspaceGeneral: {
+    description: "Manage your workspace profile and workspace settings.",
     emptyTitle: "Welcome to Weave",
     emptyBody:
       "Create your first workspace to start managing projects and collaborating with your team.",
     createWorkspace: "Create Workspace",
     deletedTitle: "Organization Deleted",
-    deletedBody: "This organization is scheduled for permanent deletion in 30 days.",
+    deletedBody: "This workspace is scheduled for permanent deletion in 30 days.",
     restoreOrganization: "Restore Organization",
     settingsSectionTitle: "General",
     defaultLanguage: "Default Language",
@@ -427,13 +427,13 @@ const enUS: TranslationKeys = {
     dangerZoneTitle: "Danger Zone",
     dangerZoneHint: "Actions in this area may be irreversible or cause temporary data loss.",
     deleteOrgTitle: "Delete Organization",
-    deleteOrgHint: "This will mark the organization for deletion in 30 days.",
+    deleteOrgHint: "This will mark the workspace for deletion in 30 days.",
     deleteOrgButton: "Delete",
     deleting: "Deleting...",
   },
 
-  organizationPlans: {
-    description: "View your organization plan and usage limits.",
+  workspacePlans: {
+    description: "View your workspace plan and usage limits.",
     sectionTitle: "Plan & Usage",
     currentPlan: "Current Plan: {plan}",
     paidPlan: "{currency} {value} / {period}",
@@ -445,7 +445,7 @@ const enUS: TranslationKeys = {
     projectsUsage: "Active Projects",
   },
 
-  organizationIntegrations: {
+  workspaceIntegrations: {
     description: "Connect external tools and manage custom domains.",
     sectionTitle: "Integrations",
     activeIntegration: "Active integration",
@@ -478,25 +478,25 @@ const enUS: TranslationKeys = {
     copyValue: "Copy verification value",
   },
 
-  organizationAreas: {
-    description: "Map teams and areas in your organization hierarchy.",
+  workspaceAreas: {
+    description: "Map teams and areas in your workspace hierarchy.",
     emptyTitle: "Structure not found",
-    emptyBody: "Set up your organization to view the squad map.",
+    emptyBody: "Set up your workspace to view the squad map.",
     loadingMap: "Mapping hierarchy…",
   },
 
-  organizationProjects: {
-    description: "Consolidated view of organization projects.",
+  workspaceProjects: {
+    description: "Consolidated view of workspace projects.",
   },
 
-  organizationEditor: {
+  workspaceEditor: {
     title: "About {name}",
-    fallbackOrgName: "the organization",
+    fallbackOrgName: "the workspace",
     description: "Edit how your workspace appears to members and visitors.",
-    body: "This area will be expanded with workspace profile details. For now, use General and the other sections to manage your organization.",
+    body: "This area will be expanded with workspace profile details. For now, use General and the other sections to manage your workspace.",
   },
 
-  organizationMembers: {
+  workspaceMembers: {
     title: "Team Management",
     description: "View and control member permissions.",
     inviteMember: "Invite Member",
@@ -544,7 +544,7 @@ const enUS: TranslationKeys = {
     saving: "Saving...",
     removeMemberTitle: "Remove Member",
     removeConfirmation:
-      "Are you sure you want to remove {name} from the organization? They will lose access to all internal projects and tasks.",
+      "Are you sure you want to remove {name} from the workspace? They will lose access to all internal projects and tasks.",
     yesRemove: "Yes, remove member",
     removing: "Removing...",
     emptyState: "Create a workspace to manage members.",
@@ -552,7 +552,7 @@ const enUS: TranslationKeys = {
     inviteError: "Error sending invite.",
     roleUpdateSuccess: "Role updated successfully.",
     roleUpdateError: "Error updating permission.",
-    removeSuccess: "Member removed from the organization.",
+    removeSuccess: "Member removed from the workspace.",
     removeError: "Error removing member.",
     filterSearchLabel: "Search",
     filterRoleLabel: "Access level",
@@ -571,7 +571,7 @@ const enUS: TranslationKeys = {
     membershipStatusPending: "Pending",
     removeAccessConfirmButton: "Yes, remove",
     removeAccessQuestion:
-      "Are you sure you want to remove {name} from the organization? They will lose access to all projects and data.",
+      "Are you sure you want to remove {name} from the workspace? They will lose access to all projects and data.",
     inviteNamePlaceholder: "Name",
     inviteEmailPlaceholder: "name@example.com",
     inviteEmailPlusAliasNotAllowed:
@@ -612,7 +612,7 @@ const enUS: TranslationKeys = {
     showPassword: "Show password",
     hidePassword: "Hide password",
     successExisting:
-      "Invite accepted! We sent a confirmation email. Sign in with the invited email and your password — you'll be taken to your organization's areas.",
+      "Invite accepted! We sent a confirmation email. Sign in with the invited email and your password — you'll be taken to your workspace's areas.",
     successCreatedLoginElse:
       "Account created and invite accepted. Sign in with your username and password on the next screen.",
     acceptError: "Could not accept invite.",
@@ -624,11 +624,11 @@ const enUS: TranslationKeys = {
     calendar: "— plan your schedule.",
     notifications: "— stay updated.",
     settings: "— manage your profile and app experience.",
-    workspace: "— manage your organization settings.",
+    workspace: "— manage your workspace settings.",
     workspaceMembers: "— manage team members and roles.",
     workspaceInvites: "— review and manage pending invites.",
     workspaceAreas: "— organize teams and areas.",
-    workspaceProjects: "— view organization projects.",
+    workspaceProjects: "— view workspace projects.",
     workspacePlans: "— monitor plan and usage limits.",
     workspaceIntegrations: "— connect tools and custom domains.",
     workspaceEditor: "— edit your public workspace page.",

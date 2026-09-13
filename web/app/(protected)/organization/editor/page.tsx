@@ -9,17 +9,17 @@ export default function OrganizationEditorPage() {
   const { t } = useLanguage();
 
   return (
-    <WorkspacePageShell description={t.organizationEditor.description}>
+    <WorkspacePageShell description={t.workspaceEditor.description}>
       <div className="mx-auto w-full max-w-2xl">
         <div className="dark:border-surface-dark-border dark:shadow-surface-dark-sm rounded-md border border-neutral-200 bg-white p-6 shadow-sm dark:bg-[#1d1d1b]">
           <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-            {t.organizationEditor.title.replace(
+            {t.workspaceEditor.title.replace(
               "{name}",
-              user?.org_name ?? t.organizationEditor.fallbackOrgName
+              user?.workspace_name ?? t.workspaceEditor.fallbackOrgName
             )}
           </h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            {t.organizationEditor.body}
+            {t.workspaceEditor.body}
           </p>
         </div>
       </div>

@@ -67,7 +67,7 @@ class AiReportSchedulerProcessor {
         ps.workable_days AS sprint_workable_days,
         p.title AS project_title,
         p.user_id AS project_owner_id,
-        p.organization_id AS organization_id
+        p.workspace_id AS workspace_id
       FROM project_ai_report_configs rc
       INNER JOIN projects p ON p.id = rc.project_id AND p.deleted = false
       LEFT JOIN project_sprints ps ON ps.id = rc.current_sprint_id AND ps.deleted = false

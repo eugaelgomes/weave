@@ -15,7 +15,7 @@ Simple and direct documentation for route composition and route modules in `weav
 - `src/modules/password/password.routes.js` -> `password-routes.md`
 - `src/modules/notes/notes.routes.js` -> `notes-routes.md`
 - `src/modules/projects/projects.routes.js` -> `projects-routes.md`
-- `src/modules/organizations/organizations.routes.js` -> `organizations-routes.md`
+- `src/modules/workspaces/workspaces.routes.js` -> `workspaces-routes.md`
 - `src/modules/plans/plans.routes.js` -> `plans-routes.md`
 - `src/modules/backup/backup.routes.js` -> `backup-routes.md`
 - `src/modules/notifications/notifications.routes.js` -> `notifications-routes.md`

@@ -48,7 +48,7 @@ flowchart TB
 ## 1. Carrossel de Tarefas — [`notes-carousel.tsx`](weave-app/app/(protected)/home/_components/notes-carousel.tsx)
 
 ### Remover
-- Bloco `organization_name` / logo (linhas ~210–225).
+- Bloco `workspace_name` / logo (linhas ~210–225).
 - Bloco intermediário com `FolderKanban` + link `ExternalLink` (~227–258).
 - Chip de `status` técnico (ex. `visible`) — não agrega valor no resumo da Home.
 - Import/link `ExternalLink` e mapa `projectPublicIdByProjectId` se ficarem sem uso.
@@ -89,14 +89,14 @@ Posicionar **imediatamente acima** do rodapé, com `mt-auto` ou ordem flex no fo
 - Reduzir `min-h-[176px]` para `min-h-[148px]`.
 - Card com `bg-neutral-50` / dark fixo — sem tint por cor da nota.
 
-**API/contexto:** manter campos `organization_*` em [`notes-context.tsx`](weave-app/app/_contexts/notes-context.tsx) — só não renderizar na Home.
+**API/contexto:** manter campos `workspace_*` em [`notes-context.tsx`](weave-app/app/_contexts/notes-context.tsx) — só não renderizar na Home.
 
 ---
 
 ## 2. Carrossel de Projetos — [`project-carousel.tsx`](weave-app/app/(protected)/home/_components/project-carousel.tsx)
 
 ### Remover
-- Bloco `organization_name` / logo (~227–242).
+- Bloco `workspace_name` / logo (~227–242).
 
 ### Simplificar sinais Weave Engine
 Hoje há bolinha + badge de ações + badge “Novo” **debaixo do título**.

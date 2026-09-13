@@ -390,7 +390,7 @@ const esES: TranslationKeys = {
     help: "Ayuda",
   },
 
-  organizationGeneral: {
+  workspaceGeneral: {
     description: "Gestiona el perfil de la organización y la configuración del workspace.",
     emptyTitle: "Bienvenido a Weave",
     emptyBody:
@@ -434,7 +434,7 @@ const esES: TranslationKeys = {
     deleting: "Eliminando...",
   },
 
-  organizationPlans: {
+  workspacePlans: {
     description: "Consulta el plan y los límites de uso de la organización.",
     sectionTitle: "Plan y uso",
     currentPlan: "Plan actual: {plan}",
@@ -447,7 +447,7 @@ const esES: TranslationKeys = {
     projectsUsage: "Proyectos activos",
   },
 
-  organizationIntegrations: {
+  workspaceIntegrations: {
     description: "Conecta herramientas externas y gestiona dominios personalizados.",
     sectionTitle: "Integraciones",
     activeIntegration: "Integración activa",
@@ -480,25 +480,25 @@ const esES: TranslationKeys = {
     copyValue: "Copiar valor de verificación",
   },
 
-  organizationAreas: {
+  workspaceAreas: {
     description: "Mapea equipos y áreas en la jerarquía de la organización.",
     emptyTitle: "Estructura no encontrada",
     emptyBody: "Configura tu organización para ver el mapa de squads.",
     loadingMap: "Mapeando jerarquía…",
   },
 
-  organizationProjects: {
+  workspaceProjects: {
     description: "Vista consolidada de los proyectos de la organización.",
   },
 
-  organizationEditor: {
+  workspaceEditor: {
     title: "Sobre {name}",
     fallbackOrgName: "la organización",
     description: "Edita cómo aparece tu workspace para miembros y visitantes.",
     body: "Esta área se ampliará con los detalles del perfil del workspace. Por ahora, usa General y las demás secciones para gestionar tu organización.",
   },
 
-  organizationMembers: {
+  workspaceMembers: {
     title: "Gestión de Equipo",
     description: "Visualiza y controla los permisos de los miembros.",
     inviteMember: "Invitar Miembro",

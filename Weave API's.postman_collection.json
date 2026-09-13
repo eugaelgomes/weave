@@ -1885,9 +1885,9 @@
               }
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/domains",
+              "raw": "{{rota_base}}/workspaces/domains",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "domains"]
+              "path": ["workspaces", "domains"]
             }
           },
           "response": []
@@ -1905,9 +1905,9 @@
               "raw": "{\n    \"domain_name\": \"gaelgomes.dev\"\n}"
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/domains",
+              "raw": "{{rota_base}}/workspaces/domains",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "domains"]
+              "path": ["workspaces", "domains"]
             }
           },
           "response": []
@@ -1922,9 +1922,9 @@
               "raw": "{\n    \"domain_name\": \"gaelgomes.dev\"\n}"
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/domains/:domainsId/verify",
+              "raw": "{{rota_base}}/workspaces/domains/:domainsId/verify",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "domains", ":domainsId", "verify"],
+              "path": ["workspaces", "domains", ":domainsId", "verify"],
               "variable": [
                 {
                   "key": "domainsId",
@@ -1945,9 +1945,9 @@
               "raw": "{\n    \"domain_name\": \"gaelgomes.dev\"\n}"
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/domains/:domainsId/sso",
+              "raw": "{{rota_base}}/workspaces/domains/:domainsId/sso",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "domains", ":domainsId", "sso"],
+              "path": ["workspaces", "domains", ":domainsId", "sso"],
               "variable": [
                 {
                   "key": "domainsId",
@@ -2005,9 +2005,9 @@
               ]
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/invites/accept",
+              "raw": "{{rota_base}}/workspaces/invites/accept",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "invites", "accept"],
+              "path": ["workspaces", "invites", "accept"],
               "query": [
                 {
                   "key": "token",
@@ -2032,9 +2032,9 @@
               "raw": "{\r\n  \"message\": \"Crie um projeto para fidelização de cliente\",\r\n  \"provider\": \"gemini\",\r\n  \"allowEdit\": true,\r\n  \"useCase\": \"create_project\"\r\n  \r\n}\r\n"
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/members",
+              "raw": "{{rota_base}}/workspaces/members",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "members"]
+              "path": ["workspaces", "members"]
             }
           },
           "response": []
@@ -2060,9 +2060,9 @@
               }
             },
             "url": {
-              "raw": "{{Prod URL}}/organizations/invites",
+              "raw": "{{Prod URL}}/workspaces/invites",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "invites"]
+              "path": ["workspaces", "invites"]
             }
           },
           "response": []
@@ -2077,9 +2077,9 @@
               "raw": "{\r\n  \"message\": \"Crie um projeto para fidelização de cliente\",\r\n  \"provider\": \"gemini\",\r\n  \"allowEdit\": true,\r\n  \"useCase\": \"create_project\"\r\n  \r\n}\r\n"
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/members",
+              "raw": "{{rota_base}}/workspaces/members",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "members"]
+              "path": ["workspaces", "members"]
             }
           },
           "response": []
@@ -2090,9 +2090,9 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{rota_base}}/organizations/:inviteId",
+              "raw": "{{rota_base}}/workspaces/:inviteId",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", ":inviteId"],
+              "path": ["workspaces", ":inviteId"],
               "variable": [
                 {
                   "key": "inviteId",
@@ -2109,9 +2109,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{rota_base}}/organizations/invites",
+              "raw": "{{rota_base}}/workspaces/invites",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "invites"]
+              "path": ["workspaces", "invites"]
             }
           },
           "response": []
@@ -2129,9 +2129,9 @@
               "raw": ""
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/organization-projects",
+              "raw": "{{rota_base}}/workspaces/workspace-projects",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "organization-projects"]
+              "path": ["workspaces", "workspace-projects"]
             }
           },
           "response": []
@@ -2151,9 +2151,9 @@
               }
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/invites/",
+              "raw": "{{rota_base}}/workspaces/invites/",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "invites"]
+              "path": ["workspaces", "invites"]
             }
           },
           "response": []
@@ -2164,9 +2164,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{rota_base}}/organizations",
+              "raw": "{{rota_base}}/workspaces",
               "host": ["{{rota_base}}"],
-              "path": ["organizations"]
+              "path": ["workspaces"]
             }
           },
           "response": []
@@ -2178,7 +2178,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"org_name\": \"The Mester Of The Sea\",\r\n  \"unique_name\": \"tmots\",\r\n  \"description\": \"Descrição da minha organização\"\r\n}",
+              "raw": "{\r\n  \"workspace_name\": \"The Mester Of The Sea\",\r\n  \"unique_name\": \"tmots\",\r\n  \"description\": \"Descrição da minha organização\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2186,9 +2186,9 @@
               }
             },
             "url": {
-              "raw": "{{rota_base}}/organizations",
+              "raw": "{{rota_base}}/workspaces",
               "host": ["{{rota_base}}"],
-              "path": ["organizations"]
+              "path": ["workspaces"]
             }
           },
           "response": []
@@ -2200,7 +2200,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"org_id\": \"24f17b6a-2480-4f0d-a842-8cea7562254b\",\r\n  \"org_name\": \"Weave Company\",\r\n  \"unique_name\": \"weave\",\r\n  \"description\": \"Aplicação ara gestão de projetos!\",\r\n  \"logo_url\": \"\",\r\n  \"banner_url\": \"\",\r\n  \"org_domains\": [\"weavenotes.app\", \"notes.gaelgomes.dev\"],\r\n  \"properties\": {\r\n    \"theme\": \"dark\",\r\n    \"language\": \"pt-BR\",\r\n    \"timezone\": \"America/Sao_Paulo\",\r\n    \"allowPublicNotes\": true,\r\n    \"maxMembers\": 50,\r\n    \"maxProjects\": 10,\r\n    \"features\": {\r\n      \"aiAgent\": true,\r\n      \"backup\": true,\r\n      \"collaboration\": true,\r\n      \"passwordManager\": false\r\n    },\r\n    \"branding\": {\r\n      \"primaryColor\": \"#3b82f6\",\r\n      \"secondaryColor\": \"#1e40af\",\r\n      \"customDomain\": \"myorg.example.com\"\r\n    },\r\n    \"notifications\": {\r\n      \"email\": true,\r\n      \"push\": true,\r\n      \"digest\": \"daily\"\r\n    }\r\n  }\r\n}",
+              "raw": "{\r\n  \"workspace_id\": \"24f17b6a-2480-4f0d-a842-8cea7562254b\",\r\n  \"workspace_name\": \"Weave Company\",\r\n  \"unique_name\": \"weave\",\r\n  \"description\": \"Aplicação ara gestão de projetos!\",\r\n  \"logo_url\": \"\",\r\n  \"banner_url\": \"\",\r\n  \"workspace_domains\": [\"weavenotes.app\", \"notes.gaelgomes.dev\"],\r\n  \"properties\": {\r\n    \"theme\": \"dark\",\r\n    \"language\": \"pt-BR\",\r\n    \"timezone\": \"America/Sao_Paulo\",\r\n    \"allowPublicNotes\": true,\r\n    \"maxMembers\": 50,\r\n    \"maxProjects\": 10,\r\n    \"features\": {\r\n      \"aiAgent\": true,\r\n      \"backup\": true,\r\n      \"collaboration\": true,\r\n      \"passwordManager\": false\r\n    },\r\n    \"branding\": {\r\n      \"primaryColor\": \"#3b82f6\",\r\n      \"secondaryColor\": \"#1e40af\",\r\n      \"customDomain\": \"myorg.example.com\"\r\n    },\r\n    \"notifications\": {\r\n      \"email\": true,\r\n      \"push\": true,\r\n      \"digest\": \"daily\"\r\n    }\r\n  }\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2208,9 +2208,9 @@
               }
             },
             "url": {
-              "raw": "{{rota_base}}/organizations",
+              "raw": "{{rota_base}}/workspaces",
               "host": ["{{rota_base}}"],
-              "path": ["organizations"]
+              "path": ["workspaces"]
             }
           },
           "response": []
@@ -2221,9 +2221,9 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{rota_base}}/organizations/properties",
+              "raw": "{{rota_base}}/workspaces/properties",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "properties"]
+              "path": ["workspaces", "properties"]
             }
           },
           "response": []
@@ -2234,9 +2234,9 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{rota_base}}/organizations",
+              "raw": "{{rota_base}}/workspaces",
               "host": ["{{rota_base}}"],
-              "path": ["organizations"]
+              "path": ["workspaces"]
             }
           },
           "response": []
@@ -2258,9 +2258,9 @@
               ]
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/logo",
+              "raw": "{{rota_base}}/workspaces/logo",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "logo"]
+              "path": ["workspaces", "logo"]
             }
           },
           "response": []
@@ -2282,9 +2282,9 @@
               ]
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/banner",
+              "raw": "{{rota_base}}/workspaces/banner",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "banner"]
+              "path": ["workspaces", "banner"]
             }
           },
           "response": []
@@ -2315,9 +2315,9 @@
               "raw": "\r\n{\r\n    \"login\": \"gaelgomes\",\r\n    \"password\": \"Teste@321\"\r\n}\r\n"
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/areas",
+              "raw": "{{rota_base}}/workspaces/areas",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "areas"]
+              "path": ["workspaces", "areas"]
             }
           },
           "response": []
@@ -2350,9 +2350,9 @@
               }
             },
             "url": {
-              "raw": "{{rota_base}}/organizations/areas",
+              "raw": "{{rota_base}}/workspaces/areas",
               "host": ["{{rota_base}}"],
-              "path": ["organizations", "areas"]
+              "path": ["workspaces", "areas"]
             }
           },
           "response": []
@@ -2543,7 +2543,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"token_teste\",\n    \"organizationId\": \"a5a01a32-0b9c-43f5-9d25-eb844469807b\",\n    \"scopes\": [\"notes:read\"],\n    \"expiresAt\": \"2027-06-01T00:00:00Z\"\n}",
+              "raw": "{\n    \"name\": \"token_teste\",\n    \"workspaceId\": \"a5a01a32-0b9c-43f5-9d25-eb844469807b\",\n    \"scopes\": [\"notes:read\"],\n    \"expiresAt\": \"2027-06-01T00:00:00Z\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -25,7 +25,7 @@ import {
   type OrganizationAreaMember,
   type OrganizationMember,
   type OrganizationAreaMemberRole,
-} from "@/app/_contexts/organization-context";
+} from "@/app/_contexts/workspace-context";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { WorkspacePageShell } from "@/app/(protected)/organization/_components/workspace-page-shell";
@@ -125,7 +125,7 @@ export function AreasSection() {
   const pathname = usePathname();
 
   const {
-    organization,
+    workspace,
     hasOrganization,
     areas,
     areasLoading,
@@ -134,7 +134,7 @@ export function AreasSection() {
     fetchAreaMembers: fetchAreaMembersFromContext,
     areaMembers,
     areaMembersLoading,
-    members: organizationMembers,
+    members: workspaceMembers,
     createArea,
     updateArea,
     deleteArea,
@@ -209,10 +209,10 @@ export function AreasSection() {
   );
 
   const availableMembers = useMemo(() => {
-    if (!organizationMembers.length) return [];
+    if (!workspaceMembers.length) return [];
     const assignedIds = new Set(membersForSelected.map((member) => member.user_id));
-    return organizationMembers.filter((member) => !assignedIds.has(member.id));
-  }, [organizationMembers, membersForSelected]);
+    return workspaceMembers.filter((member) => !assignedIds.has(member.id));
+  }, [workspaceMembers, membersForSelected]);
 
   useEffect(() => {
     setShowAddMemberForm(false);
@@ -424,10 +424,10 @@ export function AreasSection() {
           <div className="dark:border-surface-dark-border flex flex-col items-center gap-2 rounded-md border border-neutral-200 bg-white p-2 dark:bg-[#1d1d1b]">
             <Layers3 className="h-10 w-10 text-neutral-300 dark:text-neutral-700" />
             <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
-              {t.organizationAreas.emptyTitle}
+              {t.workspaceAreas.emptyTitle}
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              {t.organizationAreas.emptyBody}
+              {t.workspaceAreas.emptyBody}
             </p>
           </div>
         </div>
@@ -448,12 +448,12 @@ export function AreasSection() {
           <div className="dark:border-surface-dark-border flex flex-1 items-center justify-center rounded-md border border-neutral-100 bg-white shadow-sm dark:bg-[#1d1d1b]">
             <div className="flex flex-col items-center gap-2 text-neutral-500 dark:text-neutral-400">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <p className="text-xs font-medium">{t.organizationAreas.loadingMap}</p>
+              <p className="text-xs font-medium">{t.workspaceAreas.loadingMap}</p>
             </div>
           </div>
         ) : !areas.length ? (
           <EmptyAreasState
-            orgName={organization?.org_name}
+            orgName={workspace?.workspace_name}
             onRefresh={handleRefreshAreas}
             onCreate={() => handleOpenCreateArea(null)}
             refreshing={areasLoading}
@@ -485,7 +485,7 @@ export function AreasSection() {
                     ·
                   </span>
                   <span className="min-w-0 truncate text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                    {organization?.org_name ?? "—"}
+                    {workspace?.workspace_name ?? "—"}
                   </span>
                 </div>
                 <button

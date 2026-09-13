@@ -277,8 +277,8 @@ export function SignIn({
     try {
       const discovery = await discoverSamlSso(loginValue.trim());
 
-      if (discovery.success && discovery.requires_sso && discovery.organization_id) {
-        startSamlSsoLogin(discovery.organization_id);
+      if (discovery.success && discovery.requires_sso && discovery.workspace_id) {
+        startSamlSsoLogin(discovery.workspace_id);
         return;
       }
 

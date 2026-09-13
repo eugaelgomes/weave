@@ -16,11 +16,11 @@ Valida se um usuario tem permissao para acessar um arquivo do storage com base n
   - `user-owned` (backups, images, profile)
   - `note`
   - `project`
-  - `organization`
+  - `workspace`
 - Quando necessario, consulta banco para validar colaboracao/membership:
   - `note_collaborators`
   - `project_members`
-  - `organization_members`
+  - `workspace_members`
 
 ## Regras importantes
 

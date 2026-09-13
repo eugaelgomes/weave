@@ -33,18 +33,18 @@ class SlackOauthController extends WorkspacesBaseController {
       if (
         !this._workspaceRoleHasPermission(
           workspace,
-          this._workspacePermissions.MANAGE_ORG_LIFECYCLE
+          this._workspacePermissions.MANAGE_WORKSPACE_LIFECYCLE
         )
       ) {
         return res.status(403).json({
-          code: "ORG_FORBIDDEN",
+          code: "WORKSPACE_FORBIDDEN",
           error: "Insufficient workspace permissions",
         });
       }
 
       const state = issueSlackInstallState({
-        organizationId: String(workspace.id),
         userId: String(userId),
+        workspaceId: String(workspace.id),
       });
       const url = SlackClient.buildAuthorizeUrl({ state });
       return res.redirect(url);
@@ -98,10 +98,10 @@ class SlackOauthController extends WorkspacesBaseController {
         botAccessToken: botToken,
         botUserId: data.bot_user_id ? String(data.bot_user_id) : null,
         installedByUserId: decoded.userId,
-        organizationId: decoded.organizationId,
         scopes: data.scope ? String(data.scope) : null,
         slackTeamId: String(data.team.id),
         slackTeamName: data.team.name ? String(data.team.name) : null,
+        workspaceId: decoded.workspaceId,
       });
 
       return res.redirect(`${FRONTEND_URL}/app/settings/integrations?slack=connected`);

@@ -9,7 +9,7 @@ const SAMPLE_UUID = "078ce37f-ba69-4038-942e-a375f9580c4a";
 
 test("resolveOrganizationAcceptInviteRedirect maps token to invite_token", () => {
   const result = resolveOrganizationAcceptInviteRedirect(
-    "/organization/accept-invite",
+    "/workspace/accept-invite",
     SAMPLE_UUID
   );
   assert.deepEqual(result, {

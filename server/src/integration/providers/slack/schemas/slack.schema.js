@@ -20,10 +20,10 @@ const setDefaultChannelSchema = z
       .trim()
       .optional()
       .describe("The default Slack channel identifier in snake_case format."),
-    organization_id: z
+    workspace_id: z
       .string()
       .trim()
-      .min(1, "organization_id is required")
+      .min(1, "workspace_id is required")
       .describe("The unique identifier of the workspace in UUID format."),
   })
   .refine((data) => data.channel_id || data.channelId || data.default_channel_id, {
@@ -60,9 +60,9 @@ const slackOauthCallbackSchema = z
 
 const listSlackIntegrationSchema = z
   .object({
-    organization_id: z
+    workspace_id: z
       .string()
-      .min(1, "organization_id is required")
+      .min(1, "workspace_id is required")
       .describe(
         "The unique identifier of the workspace whose Slack integrations are being retrieved."
       ),
@@ -71,9 +71,9 @@ const listSlackIntegrationSchema = z
 
 const removeSlackIntegrationSchema = z
   .object({
-    organization_id: z
+    workspace_id: z
       .string()
-      .min(1, "organization_id is required")
+      .min(1, "workspace_id is required")
       .describe(
         "The unique identifier of the workspace whose Slack integration is to be disconnected and removed."
       ),
