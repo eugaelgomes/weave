@@ -26,9 +26,7 @@ const { prisma } = require("@theweave/database");
 
 /**
  * @typedef {Object} SystemSettingsUpdates
- * @property {Record<string, any>} [storage_config] - Storage configuration
  * @property {Record<string, any>} [smtp_config] - SMTP configuration
- * @property {Record<string, any>} [oauth_config] - OAuth configuration
  * @property {Record<string, any>} [ai_global_config] - Global AI configuration
  * @property {Record<string, any>} [instance_branding] - Instance branding
  */
@@ -332,9 +330,7 @@ class WorkspaceSettingsRepository {
     const defaultData = {
       ai_global_config: {},
       instance_branding: {},
-      oauth_config: {},
       smtp_config: {},
-      storage_config: {},
     };
 
     return await client.system_settings.upsert({
@@ -356,13 +352,7 @@ class WorkspaceSettingsRepository {
    */
   async updateSystemSettings(updates, client = prisma) {
     const data = {};
-    const allowedFields = [
-      "storage_config",
-      "smtp_config",
-      "oauth_config",
-      "ai_global_config",
-      "instance_branding",
-    ];
+    const allowedFields = ["smtp_config", "ai_global_config", "instance_branding"];
 
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key) && value !== undefined) {

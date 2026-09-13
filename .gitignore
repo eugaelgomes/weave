@@ -116,7 +116,8 @@ temp/
 .docker/
 docker-compose.override.yml
 volumes/
-storage/
+/storage/
+
 
 # ==========================================
 # IDEs, Editors & OS System Files

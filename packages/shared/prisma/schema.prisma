@@ -1042,9 +1042,7 @@ model notifications {
 
 model system_settings {
   id                Int       @id @default(autoincrement())
-  storage_config    Json?     @default("{}")
   smtp_config       Json?     @default("{}")
-  oauth_config      Json?     @default("{}")
   ai_global_config  Json?     @default("{}")
   instance_branding Json?     @default("{}")
   rate_limit_config Json?     @default("{}")

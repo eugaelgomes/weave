@@ -90,9 +90,10 @@ docker compose up server --build
 | `EMAIL_SMTP_USER` / `EMAIL_SMTP_PASSWORD`        | SMTP credentials                                      |
 | `EMAIL_SMTP_SECURE` / `EMAIL_SMTP_REQUIRE_TLS`   | SMTP TLS settings                                     |
 | `EMAIL_FROM`                                     | Default transactional sender                           |
-| `S3_ENDPOINT`                             | S3 endpoint (e.g. AWS S3, MinIO, DO Spaces)           |
-| `S3_ACCESS_KEY` / `S3_SECRET_KEY`         | Object storage keys                                   |
-| `S3_BUCKET_NAME` / `S3_REGION`            | Bucket and region                                     |
+| `STORAGE_ENABLED`                                | Enable/disable object storage (`true` / `false`)      |
+| `STORAGE_ENDPOINT`                               | S3 endpoint (e.g. AWS S3, MinIO, DO Spaces)           |
+| `STORAGE_ACCESS_KEY` / `STORAGE_SECRET_KEY`       | Object storage keys                                   |
+| `STORAGE_BUCKET_NAME` / `STORAGE_REGION`          | Bucket and region                                     |
 | `GEMINI_API_KEY`                                 | Google Generative AI (where used from API)            |
 | `FRONTEND_URL`                                   | Front-end URL (OAuth redirects, emails)               |
 | `TOKEN_IP`                                       | Optional ipinfo.io token                              |

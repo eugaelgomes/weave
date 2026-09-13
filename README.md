@@ -172,7 +172,7 @@ All services share a single unified `.env` at the monorepo root (see `.env.examp
 | **Database**   | `DATABASE_HOST_URL`, `DATABASE_SERVICE_PORT`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `DATABASE_NAME`                                        |
 | **Redis**      | `REDIS_URL`, and various queue keys (e.g., `REDIS_DOMAIN_VERIFY_DELAYED_QUEUE_KEY`, `REDIS_PLAN_USAGE_DELAYED_QUEUE_KEY`)                              |
 | **Auth**       | `SESSION_SECRET`, `SECRET_KEY`, `BCRYPT_SALT_ROUNDS`                                                                                               |
-| **Storage**    | `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET_NAME`, `S3_REGION` *(optional — storage gracefully disables itself when unset)* |
+| **Storage**    | `STORAGE_ENABLED`, `STORAGE_ENDPOINT`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_BUCKET_NAME`, `STORAGE_REGION` *(optional — storage gracefully disables itself when unset)* |
 | **Email**      | `EMAIL_TRANSPORT`, `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`, `EMAIL_FROM`, `CONTACT_EMAIL`                |
 | **LLM**        | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `WEAVE_API_URL`                                                                         |
 | **OAuth**      | `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_CLIENT_ID/SECRET`, `MICROSOFT_CLIENT_ID/SECRET`                                                                 |
@@ -232,7 +232,7 @@ npm run db:migrate
 
 **Worker not starting — missing env vars**
 
-The worker strictly requires `DATABASE_*`, `NODE_ENV`, `CONTACT_EMAIL`, `FRONTEND_URL`, and all **`REDIS_*_QUEUE_KEY`** variables defined in `queue-queue-keys.js`. When `EMAIL_TRANSPORT=smtp` (the default), it also requires `EMAIL_FROM`, `EMAIL_SMTP_HOST`, `EMAIL_SMTP_USER`, and `EMAIL_SMTP_PASSWORD`. Set `EMAIL_TRANSPORT=noop` only to explicitly disable delivery. Storage (`S3_*`) and `API_URL` are optional and will gracefully fallback if unset.
+The worker strictly requires `DATABASE_*`, `NODE_ENV`, `CONTACT_EMAIL`, `FRONTEND_URL`, and all **`REDIS_*_QUEUE_KEY`** variables defined in `queue-queue-keys.js`. When `EMAIL_TRANSPORT=smtp` (the default), it also requires `EMAIL_FROM`, `EMAIL_SMTP_HOST`, `EMAIL_SMTP_USER`, and `EMAIL_SMTP_PASSWORD`. Set `EMAIL_TRANSPORT=noop` only to explicitly disable delivery. Storage (`STORAGE_*`) and `API_URL` are optional and will gracefully fallback if unset.
 
 **Changes not reflected after Docker rebuild**
 

@@ -20,9 +20,7 @@ class SystemSettingsCache {
         this.settings = this.settings || {
           ai_global_config: {},
           instance_branding: {},
-          oauth_config: {},
           smtp_config: {},
-          storage_config: {},
         };
       }
     }
@@ -43,8 +41,8 @@ class SystemSettingsCache {
   }
 
   async getStorageConfig() {
-    await this.load();
-    return this.settings?.storage_config || {};
+    const { getStorageConfig } = require("@/config/storage.config");
+    return getStorageConfig();
   }
 
   async getOauthConfig() {

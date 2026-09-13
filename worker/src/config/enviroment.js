@@ -9,7 +9,7 @@ const requiredEnvVars = [
   "NODE_ENV",
   "CONTACT_EMAIL",
   "FRONTEND_URL",
-  // S3_* vars are optional — SpacesService disables itself gracefully when unconfigured
+  // STORAGE_* vars are optional — SpacesService disables itself gracefully when unconfigured
   // API_URL is optional — backup processor falls back to http://localhost:8080
 ];
 
@@ -73,11 +73,19 @@ const env = {
   NODE_ENV: process.env.NODE_ENV,
 
   storage: {
-    accessKey: process.env.S3_ACCESS_KEY,
-    bucketName: process.env.S3_BUCKET_NAME,
-    endpoint: process.env.S3_ENDPOINT,
-    region: process.env.S3_REGION,
-    secretKey: process.env.S3_SECRET_KEY,
+    accessKey: process.env.STORAGE_ACCESS_KEY || process.env.S3_ACCESS_KEY,
+    bucketName: process.env.STORAGE_BUCKET_NAME || process.env.S3_BUCKET_NAME,
+    enabled:
+      parseBoolean(process.env.STORAGE_ENABLED || process.env.S3_STORAGE_ENABLED) &&
+      Boolean(
+        (process.env.STORAGE_ENDPOINT || process.env.S3_ENDPOINT) &&
+          (process.env.STORAGE_ACCESS_KEY || process.env.S3_ACCESS_KEY) &&
+          (process.env.STORAGE_SECRET_KEY || process.env.S3_SECRET_KEY) &&
+          (process.env.STORAGE_BUCKET_NAME || process.env.S3_BUCKET_NAME)
+      ),
+    endpoint: process.env.STORAGE_ENDPOINT || process.env.S3_ENDPOINT,
+    region: process.env.STORAGE_REGION || process.env.S3_REGION || "us-east-1",
+    secretKey: process.env.STORAGE_SECRET_KEY || process.env.S3_SECRET_KEY,
   },
 };
 
