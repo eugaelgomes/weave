@@ -81,6 +81,8 @@ export const API_ENDPOINTS = {
   USERS: "/auth/users",
   ONBOARDING_STEP_ONE: "/users/me/onboarding/step-1",
   ONBOARDING_STEP_TWO: "/users/me/onboarding/step-2",
+  ONBOARDING_WORKSPACE_LOGO: "/users/me/onboarding/workspace-logo",
+  ONBOARDING_STEP_THREE_TEAMS: "/users/me/onboarding/step-3",
   ONBOARDING_STEP_THREE: "/users/me/onboarding/step-3-complete",
   ONBOARDING_WORKSPACE_NAME_AVAILABILITY: "/users/me/onboarding/workspace-name-availability",
 

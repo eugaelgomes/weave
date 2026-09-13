@@ -38,14 +38,38 @@ const submitStepOneSchema = z.object({
 
 const submitStepTwoSchema = z
   .object({
+    country: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z]{2}$/, "Country must use a 2-letter ISO code (example: BR, US)")
+      .optional(),
     invite_token: z.string().optional(),
+    language: z.enum(["pt-BR", "en-US", "es-ES"]).optional(),
     unique_name: z.string().max(40).optional(),
+    workspace_description: z.string().trim().max(500).optional(),
     workspace_name: z.string().max(80).optional(),
     workspace_role: z.string().optional().default("general"),
+    workspace_timezone: z.string().trim().max(100).optional(),
   })
   .refine((data) => data.invite_token || (data.unique_name && data.workspace_name), {
     message: "You must provide an invite_token or create a new workspace with a name.",
   });
+
+const onboardingTeamSchema = z.object({
+  description: z.string().trim().max(240).optional(),
+  name: z.string().trim().min(1, "Team name is required").max(80),
+});
+
+const onboardingMemberSchema = z.object({
+  email: z.string().trim().email("Invalid email format"),
+  name: z.string().trim().min(1, "Member name is required").max(100),
+  team_index: z.number().int().min(0).optional(),
+});
+
+const submitStepThreeSchema = z.object({
+  members: z.array(onboardingMemberSchema).max(50).optional().default([]),
+  teams: z.array(onboardingTeamSchema).max(20).optional().default([]),
+});
 
 const workspaceUniqueNameAvailabilitySchema = z.object({
   unique_name: z.string().trim().min(1).max(40),
@@ -53,6 +77,7 @@ const workspaceUniqueNameAvailabilitySchema = z.object({
 
 module.exports = {
   submitStepOneSchema,
+  submitStepThreeSchema,
   submitStepTwoSchema,
   workspaceUniqueNameAvailabilitySchema,
 };

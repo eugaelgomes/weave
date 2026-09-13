@@ -25,6 +25,7 @@ const {
 } = require("./schemas/users.schema");
 const {
   submitStepOneSchema,
+  submitStepThreeSchema,
   submitStepTwoSchema,
   workspaceUniqueNameAvailabilitySchema,
 } = require("./schemas/onboarding.schema");
@@ -96,6 +97,23 @@ router.post(
   standardTrafficLimiter,
   validate(submitStepTwoSchema, "body"),
   OnboardingController.submitStepTwoWorkspace.bind(OnboardingController)
+);
+
+router.post(
+  "/me/onboarding/workspace-logo",
+  verifyToken,
+  structuralLimiter,
+  multipartImageUpload.single("image"),
+  validateCompressedImageSize,
+  OnboardingController.uploadWorkspaceLogo.bind(OnboardingController)
+);
+
+router.post(
+  "/me/onboarding/step-3",
+  verifyToken,
+  standardTrafficLimiter,
+  validate(submitStepThreeSchema, "body"),
+  OnboardingController.submitStepThreeTeams.bind(OnboardingController)
 );
 
 router.post(

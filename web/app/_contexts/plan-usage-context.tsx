@@ -38,12 +38,13 @@ const PlanUsageContext = createContext<PlanUsageContextValue | undefined>(undefi
 
 export function PlanUsageProvider({ children }: { children: React.ReactNode }) {
   const { user, authenticated, mergeUser } = useAuth();
+  const hasCompletedOnboarding = user?.onboarding_state?.step === "COMPLETED";
   const [serverGates, setServerGates] = useState<PlanMeResponse["gates"] | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refreshPlanUsage = useCallback(async () => {
-    if (!authenticated) return;
+    if (!authenticated || !hasCompletedOnboarding) return;
     setIsRefreshing(true);
     try {
       const data = await fetchPlanUsageMe();
@@ -55,7 +56,7 @@ export function PlanUsageProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsRefreshing(false);
     }
-  }, [authenticated, mergeUser]);
+  }, [authenticated, hasCompletedOnboarding, mergeUser]);
 
   const refreshRef = useRef(refreshPlanUsage);
   refreshRef.current = refreshPlanUsage;
@@ -66,16 +67,16 @@ export function PlanUsageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!authenticated) {
+    if (!authenticated || !hasCompletedOnboarding) {
       setServerGates(null);
       setLastSyncedAt(null);
       return;
     }
     void refreshPlanUsage();
-  }, [authenticated, refreshPlanUsage]);
+  }, [authenticated, hasCompletedOnboarding, refreshPlanUsage]);
 
   useEffect(() => {
-    if (!authenticated || typeof window === "undefined") return;
+    if (!authenticated || !hasCompletedOnboarding || typeof window === "undefined") return;
 
     const id = window.setInterval(() => {
       void refreshRef.current();
@@ -98,7 +99,7 @@ export function PlanUsageProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onFocus);
     };
-  }, [authenticated]);
+  }, [authenticated, hasCompletedOnboarding]);
 
   const gates = useMemo(() => {
     return serverGates ?? localGatesFromUser(user);

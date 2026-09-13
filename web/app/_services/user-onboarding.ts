@@ -15,17 +15,38 @@ export interface OnboardingProfileData {
 }
 
 export interface OnboardingWorkspaceData {
+  country?: string;
   workspace_name: string;
   unique_name: string;
   invite_token?: string;
+  language?: "pt-BR" | "en-US" | "es-ES";
+  workspace_description?: string;
   workspace_role?: string;
+  workspace_timezone?: string;
 }
 
 export interface OnboardingWorkspaceResponse {
   success: boolean;
   data: {
     workspaceId: string;
+    workspacePublicId: string | null;
   };
+}
+
+export interface OnboardingTeamData {
+  name: string;
+  description?: string;
+}
+
+export interface OnboardingMemberData {
+  email: string;
+  name: string;
+  team_index?: number;
+}
+
+export interface OnboardingTeamsData {
+  teams?: OnboardingTeamData[];
+  members?: OnboardingMemberData[];
 }
 
 export interface WorkspaceUniqueNameAvailability {
@@ -42,12 +63,21 @@ export const submitOnboardingWorkspace = async (
   data: OnboardingWorkspaceData
 ): Promise<OnboardingWorkspaceResponse> => {
   const response = await apiClient.post(API_ENDPOINTS.ONBOARDING_STEP_TWO, data);
-  const result = await handleResponse<{ workspaceId: string }>(response);
+  const result = await handleResponse<{ workspaceId: string; workspacePublicId: string | null }>(
+    response
+  );
 
   return {
     success: true,
     data: result,
   };
+};
+
+export const uploadOnboardingWorkspaceLogo = async (file: File): Promise<void> => {
+  const formData = new FormData();
+  formData.append("image", file);
+  const response = await apiClient.post(API_ENDPOINTS.ONBOARDING_WORKSPACE_LOGO, formData);
+  await handleResponse(response);
 };
 
 export const checkWorkspaceUniqueNameAvailability = async (
@@ -64,4 +94,9 @@ export const checkWorkspaceUniqueNameAvailability = async (
 
 export const completeOnboarding = async (): Promise<void> => {
   await apiClient.post(API_ENDPOINTS.ONBOARDING_STEP_THREE, {});
+};
+
+export const submitOnboardingTeams = async (data: OnboardingTeamsData): Promise<void> => {
+  const response = await apiClient.post(API_ENDPOINTS.ONBOARDING_STEP_THREE_TEAMS, data);
+  await handleResponse(response);
 };
