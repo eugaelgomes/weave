@@ -92,15 +92,19 @@ class OnboardingController extends BaseController {
       );
       if (!result.success) throw new Error("Unable to upload workspace logo.");
 
+      // The browser needs the public storage URL. Persisting only the object key makes it
+      // resolve relative to the web application (for example, /image_<uuid>.png).
+      const logoUrl = result.url || result.key;
+
       const updatedWorkspace = await this.workspacesRepository.updateWorkspaceLogo(
         workspace.id,
-        result.key,
+        logoUrl,
         userId
       );
       if (!updatedWorkspace) throw new Error("Unable to save workspace logo.");
 
       return res.status(200).json({
-        data: { logo_url: result.key },
+        data: { logo_url: logoUrl },
         success: true,
       });
     } catch (error) {
