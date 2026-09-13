@@ -56,7 +56,18 @@ class GoogleOauthRepository extends BaseRepository {
     ]);
     const user = results[0];
     if (user && planId) {
-      await PlansRepository.assignPlanToUser(user.user_id, planId);
+      // The account already received its plan in the INSERT above. A failure to
+      // create the auxiliary subscription record (for example, while a legacy
+      // database migration is pending) must not make the OAuth login fail.
+      try {
+        await PlansRepository.assignPlanToUser(user.user_id, planId);
+      } catch (error) {
+        console.error("Google OAuth user subscription initialization failed:", {
+          code: error.code || null,
+          message: error.message,
+          userId: user.user_id,
+        });
+      }
     }
     return user;
   }

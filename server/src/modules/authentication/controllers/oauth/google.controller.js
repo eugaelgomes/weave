@@ -108,13 +108,15 @@ class GoogleOauthController extends AuthBaseController {
       }
       const googleUser = googleUserResult.data;
 
-      phase = "provisioning";
+      phase = "provider_account_lookup";
       let user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
 
       if (!user) {
+        phase = "email_account_lookup";
         const existingUser = await AuthRepository.findUserByEmail(googleUser.email);
 
         if (existingUser) {
+          phase = "account_link";
           await GoogleOauthRepository.updateUserWithGoogle(
             existingUser.user_id,
             googleUser.id,
@@ -122,6 +124,7 @@ class GoogleOauthController extends AuthBaseController {
             googleUser.name
           );
         } else {
+          phase = "domain_policy";
           const emailDomain = googleUser.email.split("@")[1];
           if (emailDomain) {
             const isRestricted = await settingsRepository.isDomainRestricted(emailDomain);
@@ -133,6 +136,7 @@ class GoogleOauthController extends AuthBaseController {
             }
           }
 
+          phase = "account_create";
           await GoogleOauthRepository.createUserWithGoogle(
             googleUser.id,
             googleUser.name,
@@ -141,6 +145,7 @@ class GoogleOauthController extends AuthBaseController {
           );
         }
 
+        phase = "provider_account_reload";
         user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
 
         if (!user) {

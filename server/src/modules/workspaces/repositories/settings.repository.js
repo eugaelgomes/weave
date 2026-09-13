@@ -167,7 +167,7 @@ class WorkspaceSettingsRepository {
    */
   async isDomainRestricted(domainName, client = prisma) {
     const setting = await client.workspace_settings.findFirst({
-      select: { id: true },
+      select: { workspace_id: true },
       where: {
         deleted: false,
         OR: [
