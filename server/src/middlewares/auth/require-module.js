@@ -1,6 +1,5 @@
 const baseRepository = require("@/modules/workspaces/repositories/base.repository");
 
-
 /**
  * Middleware para bloquear acesso a módulos desativados pela organização.
  * Requer que o usuário esteja autenticado (`verifyToken`).
@@ -19,8 +18,7 @@ function requireModule(moduleName) {
         });
       }
 
-      const workspace =
-        await baseRepository.getActiveOrganizationWithMembership(userId);
+      const workspace = await baseRepository.getActiveWorkspaceWithMembership(userId);
 
       if (!workspace) {
         // Se o usuário não tem organização, não pode acessar os módulos corporativos

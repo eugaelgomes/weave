@@ -47,7 +47,7 @@ function requireProjectPermission(permission) {
       if (memberRows?.length) {
         project = memberRows[0];
       } else {
-        const membership = await baseRepository.getActiveOrganizationWithMembership(userId);
+        const membership = await baseRepository.getActiveWorkspaceWithMembership(userId);
         if (membership?.id && membership.permissions?.includes("access_all_org_projects")) {
           const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
             projectId,
@@ -76,7 +76,7 @@ function requireProjectPermission(permission) {
         return next();
       }
 
-      const membership = await baseRepository.getActiveOrganizationWithMembership(userId);
+      const membership = await baseRepository.getActiveWorkspaceWithMembership(userId);
       if (membership?.id && membership.permissions?.includes("access_all_org_projects")) {
         const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
           projectId,

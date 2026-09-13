@@ -54,13 +54,13 @@ class CredentialsRepository extends BaseRepository {
           SELECT row_to_json(workspace_data)
           FROM (
             SELECT 
-              wm.workspace_id AS org_id, 
-              (SELECT wr.name FROM workspace_member_roles wmr JOIN workspaces_roles wr ON wr.id = wmr.role_id WHERE wmr.workspace_member_id = wm.id LIMIT 1) AS org_member_role, 
-              wm.created_at AS org_member_since, 
-              w.unique_name AS org_unique_name, 
-              w.public_id AS org_public_id,
-              w.workspace_name AS org_name, 
-              w.logo_url AS org_logo_url,
+              wm.workspace_id AS workspace_id,
+              (SELECT wr.name FROM workspace_member_roles wmr JOIN workspaces_roles wr ON wr.id = wmr.role_id WHERE wmr.workspace_member_id = wm.id LIMIT 1) AS workspace_member_role,
+              wm.created_at AS workspace_member_since,
+              w.unique_name AS workspace_unique_name,
+              w.public_id AS workspace_public_id,
+              w.workspace_name AS workspace_name,
+              w.logo_url AS workspace_logo_url,
               (SELECT integrations FROM workspace_settings ws WHERE ws.workspace_id = w.id) AS active_modules
             FROM workspace_members wm
             JOIN workspaces w ON w.id = wm.workspace_id
@@ -107,11 +107,11 @@ class CredentialsRepository extends BaseRepository {
           SELECT row_to_json(team_data)
           FROM (
             SELECT 
-              t.id AS org_default_area_id,
-              t.name AS org_default_area_name,
-              t.slug AS org_default_area_slug,
-              t.description AS org_default_area_description,
-              t.properties AS org_default_area_properties
+              t.id AS workspace_default_team_id,
+              t.name AS workspace_default_team_name,
+              t.slug AS workspace_default_team_slug,
+              t.description AS workspace_default_team_description,
+              t.properties AS workspace_default_team_properties
             FROM teams t
             WHERE t.deleted = false
               AND t.workspace_id = (
@@ -133,7 +133,7 @@ class CredentialsRepository extends BaseRepository {
   }
 
   /**
-   * @param {string} username The username or email
+   * @param {string} username The username, email, or user ID
    * @returns {Promise<import('@/types/models').User | null>}
    */
   async findUserByUsername(username) {
@@ -146,6 +146,8 @@ class CredentialsRepository extends BaseRepository {
           SELECT * FROM users WHERE username = $1 AND deleted = false
           UNION ALL
           SELECT * FROM users WHERE email = $1 AND deleted = false
+          UNION ALL
+          SELECT * FROM users WHERE user_id::text = $1 AND deleted = false
           LIMIT 1
       ),
       latest_workspace AS (
@@ -188,13 +190,13 @@ class CredentialsRepository extends BaseRepository {
           SELECT row_to_json(workspace_data)
           FROM (
             SELECT 
-              wm.workspace_id AS org_id, 
-              (SELECT wr.name FROM workspace_member_roles wmr JOIN workspaces_roles wr ON wr.id = wmr.role_id WHERE wmr.workspace_member_id = wm.id LIMIT 1) AS org_member_role, 
-              wm.created_at AS org_member_since, 
-              w.unique_name AS org_unique_name, 
-              w.public_id AS org_public_id,
-              w.workspace_name AS org_name, 
-              w.logo_url AS org_logo_url,
+              wm.workspace_id AS workspace_id,
+              (SELECT wr.name FROM workspace_member_roles wmr JOIN workspaces_roles wr ON wr.id = wmr.role_id WHERE wmr.workspace_member_id = wm.id LIMIT 1) AS workspace_member_role,
+              wm.created_at AS workspace_member_since,
+              w.unique_name AS workspace_unique_name,
+              w.public_id AS workspace_public_id,
+              w.workspace_name AS workspace_name,
+              w.logo_url AS workspace_logo_url,
               (SELECT integrations FROM workspace_settings ws WHERE ws.workspace_id = w.id) AS active_modules
             FROM workspace_members wm
             JOIN workspaces w ON w.id = wm.workspace_id
@@ -241,11 +243,11 @@ class CredentialsRepository extends BaseRepository {
           SELECT row_to_json(team_data)
           FROM (
             SELECT 
-              t.id AS org_default_area_id,
-              t.name AS org_default_area_name,
-              t.slug AS org_default_area_slug,
-              t.description AS org_default_area_description,
-              t.properties AS org_default_area_properties
+              t.id AS workspace_default_team_id,
+              t.name AS workspace_default_team_name,
+              t.slug AS workspace_default_team_slug,
+              t.description AS workspace_default_team_description,
+              t.properties AS workspace_default_team_properties
             FROM teams t
             WHERE t.deleted = false
               AND t.workspace_id = (

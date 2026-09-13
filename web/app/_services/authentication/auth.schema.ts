@@ -151,7 +151,36 @@ export const UserSchema = z.object({
   logo_url: z.string().nullable().optional(),
   org_member_since: z.string().nullable().optional(),
 
+  workspace_id: z.string().nullable().optional(),
+  workspace_public_id: z.string().nullable().optional(),
+  workspace_name: z.string().nullable().optional(),
+  workspace_unique_name: z.string().nullable().optional(),
+  workspace_logo_url: z.string().nullable().optional(),
+  workspace_member_role: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  workspace_member_since: z.string().nullable().optional(),
+
   user_organization: z
+    .object({
+      id: z.string().nullable().optional(),
+      unique_name: z.string().nullable().optional(),
+      name: z.string().nullable().optional(),
+      logo_url: z.string().nullable().optional(),
+      member_role: z
+        .union([z.string(), z.array(z.string())])
+        .nullable()
+        .optional(),
+      member_since: z.string().nullable().optional(),
+      public_id: z.string().nullable().optional(),
+      active_modules: z.record(z.string(), z.boolean()).nullable().optional(),
+      default_area: BackendOrgDefaultAreaSchema,
+    })
+    .nullable()
+    .optional(),
+
+  user_workspace: z
     .object({
       id: z.string().nullable().optional(),
       unique_name: z.string().nullable().optional(),
@@ -283,6 +312,22 @@ export const BackendAuthResponseSchema = z.object({
       })
       .optional()
       .nullable(),
+    user_workspace: z
+      .object({
+        id: z.string().nullable().optional(),
+        unique_name: z.string().nullable().optional(),
+        name: z.string().nullable().optional(),
+        role: z
+          .union([z.string(), z.array(z.string())])
+          .nullable()
+          .optional(),
+        logo_url: z.string().nullable().optional(),
+        member_since: z.string().nullable().optional(),
+        public_id: z.string().nullable().optional(),
+        default_area: BackendOrgDefaultAreaSchema,
+      })
+      .optional()
+      .nullable(),
     user_subscription: z.object({
       plan_id: z.string(),
       plan_name: z.string(),
@@ -301,6 +346,22 @@ export const BackendMeResponseSchema = z.object({
     user_profile: BackendProfileSchema,
     user_settings: BackendSettingsSchema,
     user_organization: z
+      .object({
+        id: z.string().nullable().optional(),
+        unique_name: z.string().nullable().optional(),
+        name: z.string().nullable().optional(),
+        logo_url: z.string().nullable().optional(),
+        member_role: z
+          .union([z.string(), z.array(z.string())])
+          .nullable()
+          .optional(),
+        member_since: z.string().nullable().optional(),
+        public_id: z.string().nullable().optional(),
+        default_area: BackendOrgDefaultAreaSchema,
+      })
+      .optional()
+      .nullable(),
+    user_workspace: z
       .object({
         id: z.string().nullable().optional(),
         unique_name: z.string().nullable().optional(),

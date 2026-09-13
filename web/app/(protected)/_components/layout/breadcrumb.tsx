@@ -11,8 +11,8 @@ const Breadcrumb = () => {
   const pathname = usePathname();
   const { t } = useLanguage();
   const { user } = useAuth();
-  const orgPrefix = user?.org_public_id
-    ? `/${user.org_public_id}`
+  const workspacePrefix = user?.workspace_public_id
+    ? `/${user.workspace_public_id}`
     : user?.public_id
       ? `/${user.public_id}`
       : "";
@@ -69,7 +69,7 @@ const Breadcrumb = () => {
     >
       {/* Home Link */}
       <Link
-        href={`${orgPrefix}/home`}
+        href={`${workspacePrefix}/home`}
         className="group hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md px-2 py-1 text-neutral-400 transition-all hover:bg-neutral-800/50"
         aria-label={t.nav.breadcrumbHome}
       >

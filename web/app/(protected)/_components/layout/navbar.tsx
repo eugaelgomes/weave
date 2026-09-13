@@ -38,15 +38,15 @@ const NotificationsLink = ({
   surface?: "mobile" | "desktop";
 }) => {
   const { user } = useAuth();
-  const orgPrefix = user?.org_public_id
-    ? `/${user.org_public_id}`
+  const workspacePrefix = user?.workspace_public_id
+    ? `/${user.workspace_public_id}`
     : user?.public_id
       ? `/${user.public_id}`
       : "";
 
   return (
     <Link
-      href={`${orgPrefix}/notifications`}
+      href={`${workspacePrefix}/notifications`}
       className={cn(
         surface === "desktop" ? navbarElevatedSurfaceClass : navIconMobileShellClass,
         "focus-visible:ring-brand-yellow/50 relative flex items-center justify-center transition-colors focus-visible:ring-2 focus-visible:outline-none",

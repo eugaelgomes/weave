@@ -15,7 +15,7 @@ export { ORG_PERMISSIONS };
 
 /**
  * Organization permission checks aligned with weave-api `organization-role-policy.js`.
- * Prefer `members`-based role when loaded; fall back to `user.org_member_role` from `/me`.
+ * Prefer `members`-based role when loaded; fall back to `user.workspace_member_role` from `/me`.
  */
 export function useOrgPermissions() {
   const { user } = useAuth();
@@ -25,10 +25,10 @@ export function useOrgPermissions() {
     if (!user?.id) return null;
     const fromMembers = getMemberRole(user.id);
     if (fromMembers) return normalizeOrgRole(fromMembers);
-    const r = user.org_member_role;
+    const r = user.workspace_member_role;
     if (Array.isArray(r)) return normalizeOrgRole(r[0] ?? null);
     return normalizeOrgRole(r ?? null);
-  }, [user?.id, user?.org_member_role, getMemberRole]);
+  }, [user?.id, user?.workspace_member_role, getMemberRole]);
 
   const can = useCallback(
     (permission: OrgPermission) => {

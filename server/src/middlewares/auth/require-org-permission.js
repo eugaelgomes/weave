@@ -20,7 +20,7 @@ function requireOrgPermission(permission) {
         });
       }
 
-      const workspace = await baseRepository.getActiveOrganizationWithMembership(userId);
+      const workspace = await baseRepository.getActiveWorkspaceWithMembership(userId);
 
       if (!workspace) {
         return res.status(404).json({

@@ -16,7 +16,6 @@ import { NotesContext } from "@/app/_contexts/notes-context";
 import { ProjectsContext } from "@/app/_contexts/projects-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import Link from "next/link";
-import { useAuth } from "@/app/_contexts/auth-context";
 import { routes } from "@/app/_utils/routes";
 
 interface SearchResult {
@@ -45,8 +44,6 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const projectsOverview = projectsContext ? projectsContext.projectsOverview : [];
   const { t } = useLanguage();
   const searchT = t.navbar.searchModal;
-  const { user } = useAuth();
-  const orgId = user?.org_public_id || user?.public_id || "default";
 
   useEffect(() => {
     setMounted(true);

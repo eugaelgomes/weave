@@ -63,16 +63,6 @@ class CredentialsController extends AuthBaseController {
         status: "OK",
         user: {
           onboarding_state: user.onboarding_state || {},
-          user_organization: {
-            default_area: defaultArea,
-            id: protectedOrg?.id || null,
-            logo_url: protectedOrg?.logo_url || null,
-            member_since: protectedOrg?.member_since || null,
-            name: protectedOrg?.name || null,
-            public_id: protectedOrg?.public_id || null,
-            role: protectedOrg?.member_role || null,
-            unique_name: protectedOrg?.unique_name || null,
-          },
           user_profile: {
             avatar_url: protectedUser.avatar_url,
             email: protectedUser.email,
@@ -89,6 +79,16 @@ class CredentialsController extends AuthBaseController {
             plan_details: user.plan_details || {},
             plan_id: user.plan_id,
             plan_name: user.plan_name,
+          },
+          user_workspace: {
+            default_area: defaultArea,
+            id: protectedOrg?.id || null,
+            logo_url: protectedOrg?.logo_url || null,
+            member_since: protectedOrg?.member_since || null,
+            name: protectedOrg?.name || null,
+            public_id: protectedOrg?.public_id || null,
+            role: protectedOrg?.member_role || null,
+            unique_name: protectedOrg?.unique_name || null,
           },
         },
       });

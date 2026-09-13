@@ -88,7 +88,7 @@ export const _mapBackendDataToUser = (data: BackendUserData): User => {
  */
 export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
   const { user } = data;
-  const organization = user.user_organization;
+  const workspace = user.user_workspace ?? user.user_organization;
 
   return {
     // Profile
@@ -103,27 +103,47 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     theme_mode: normalizeThemeMode(user.user_settings.theme_mode),
     private_profile: user.user_settings.private_profile,
 
-    // Organization
-    org_id: organization?.id,
-    org_public_id: organization?.public_id,
-    org_name: organization?.name,
+    // Workspace
+    workspace_id: workspace?.id,
+    workspace_public_id: workspace?.public_id,
+    workspace_name: workspace?.name,
+    workspace_unique_name: workspace?.unique_name,
+    workspace_logo_url: normalizeStorageUrl(workspace?.logo_url),
+    workspace_member_role: workspace?.role,
+    workspace_member_since: workspace?.member_since ?? undefined,
 
-    org_unique_name: organization?.unique_name,
-    org_logo_url: normalizeStorageUrl(organization?.logo_url),
-    org_member_role: organization?.role,
-    org_member_since: organization?.member_since ?? undefined,
-    org_default_area: mapOrgDefaultAreaToUser(organization?.default_area ?? undefined),
+    // Compatibility aliases while legacy screens are migrated.
+    org_id: workspace?.id,
+    org_public_id: workspace?.public_id,
+    org_name: workspace?.name,
+    org_unique_name: workspace?.unique_name,
+    org_logo_url: normalizeStorageUrl(workspace?.logo_url),
+    org_member_role: workspace?.role,
+    org_member_since: workspace?.member_since ?? undefined,
+    org_default_area: mapOrgDefaultAreaToUser(workspace?.default_area ?? undefined),
 
-    user_organization: organization
+    user_workspace: workspace
       ? {
-          id: organization.id,
-          unique_name: organization.unique_name,
-          name: organization.name,
-          logo_url: normalizeStorageUrl(organization.logo_url),
-          member_role: organization.role,
-          member_since: organization.member_since ?? undefined,
-          public_id: organization.public_id,
-          default_area: mapOrgDefaultAreaToUser(organization.default_area ?? undefined),
+          id: workspace.id,
+          unique_name: workspace.unique_name,
+          name: workspace.name,
+          logo_url: normalizeStorageUrl(workspace.logo_url),
+          member_role: workspace.role,
+          member_since: workspace.member_since ?? undefined,
+          public_id: workspace.public_id,
+          default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
+        }
+      : undefined,
+    user_organization: workspace
+      ? {
+          id: workspace.id,
+          unique_name: workspace.unique_name,
+          name: workspace.name,
+          logo_url: normalizeStorageUrl(workspace.logo_url),
+          member_role: workspace.role,
+          member_since: workspace.member_since ?? undefined,
+          public_id: workspace.public_id,
+          default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
         }
       : undefined,
 
@@ -139,7 +159,7 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
  */
 export const mapMeResponseToUser = (data: BackendMeResponse): User => {
   const { user } = data;
-  const organization = user.user_organization;
+  const workspace = user.user_workspace ?? user.user_organization;
   const currentPlan = user.current_plan;
   const currentPlanUsage = user.current_plan_usage;
 
@@ -161,28 +181,49 @@ export const mapMeResponseToUser = (data: BackendMeResponse): User => {
     private_profile: user.user_settings.private_profile ?? undefined,
     auth_with_google: user.user_settings.auth_with_google ?? undefined,
 
-    // Organization
-    org_id: organization?.id,
-    org_public_id: organization?.public_id,
-    org_name: organization?.name,
+    // Workspace
+    workspace_id: workspace?.id,
+    workspace_public_id: workspace?.public_id,
+    workspace_name: workspace?.name,
+    workspace_unique_name: workspace?.unique_name,
+    workspace_logo_url: normalizeStorageUrl(workspace?.logo_url),
+    workspace_member_role: workspace?.member_role,
+    workspace_member_since: workspace?.member_since ?? undefined,
 
-    org_unique_name: organization?.unique_name,
-    org_logo_url: normalizeStorageUrl(organization?.logo_url),
-    org_member_role: organization?.member_role,
-    org_member_since: organization?.member_since ?? undefined,
-    org_default_area: mapOrgDefaultAreaToUser(organization?.default_area ?? undefined),
+    // Compatibility aliases while legacy screens are migrated.
+    org_id: workspace?.id,
+    org_public_id: workspace?.public_id,
+    org_name: workspace?.name,
+    org_unique_name: workspace?.unique_name,
+    org_logo_url: normalizeStorageUrl(workspace?.logo_url),
+    org_member_role: workspace?.member_role,
+    org_member_since: workspace?.member_since ?? undefined,
+    org_default_area: mapOrgDefaultAreaToUser(workspace?.default_area ?? undefined),
 
-    user_organization: organization
+    user_workspace: workspace
       ? {
-          id: organization.id,
-          unique_name: organization.unique_name,
-          name: organization.name,
-          logo_url: normalizeStorageUrl(organization.logo_url),
-          member_role: organization.member_role,
-          member_since: organization.member_since ?? undefined,
-          public_id: organization.public_id,
-          active_modules: (organization as any).active_modules ?? undefined,
-          default_area: mapOrgDefaultAreaToUser(organization.default_area ?? undefined),
+          id: workspace.id,
+          unique_name: workspace.unique_name,
+          name: workspace.name,
+          logo_url: normalizeStorageUrl(workspace.logo_url),
+          member_role: workspace.member_role,
+          member_since: workspace.member_since ?? undefined,
+          public_id: workspace.public_id,
+          active_modules: (workspace as any).active_modules ?? undefined,
+          default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
+        }
+      : undefined,
+    user_organization: workspace
+      ? {
+          id: workspace.id,
+          unique_name: workspace.unique_name,
+          name: workspace.name,
+          logo_url: normalizeStorageUrl(workspace.logo_url),
+          member_role: workspace.member_role,
+          member_since: workspace.member_since ?? undefined,
+          public_id: workspace.public_id,
+          active_modules: (workspace as any).active_modules ?? undefined,
+          default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
         }
       : undefined,
 
