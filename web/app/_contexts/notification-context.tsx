@@ -1,9 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import {
   Notification,
-  NotificationsResponse,
   FetchNotificationsParams,
   fetchNotifications as apiFetchNotifications,
   markNotificationAsRead as apiMarkNotificationAsRead,
@@ -65,13 +64,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     },
     [user]
   );
-
-  // Initial fetch for unread count or just latest
-  useEffect(() => {
-    if (user) {
-      fetchNotifications({ limit: 20 });
-    }
-  }, [user, fetchNotifications]);
 
   const markAsRead = useCallback(async (id: string) => {
     try {

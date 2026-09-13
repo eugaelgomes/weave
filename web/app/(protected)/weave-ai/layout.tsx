@@ -7,8 +7,8 @@ import { useParams, usePathname, useRouter, useSearchParams } from "next/navigat
 import { Bot, Plus, Trash2, MessageSquare, Cpu, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WeaveAIHeader } from "@/app/(protected)/_components/ui/headers/weave-ai-header";
-import { useChat, ChatProvider } from "@/app/_contexts/chat-context";
-import { useAgent, AgentProvider } from "@/app/_contexts/agent-context";
+import { useChat } from "@/app/_contexts/chat-context";
+import { useAgent } from "@/app/_contexts/agent-context";
 import { NotesProvider } from "@/app/_contexts/notes-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout";

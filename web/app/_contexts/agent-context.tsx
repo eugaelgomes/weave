@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import { useAuth } from "./auth-context";
 import {
   listAgents,
@@ -178,13 +178,6 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (authenticated) {
-      loadAgents(); // Initial load
-      loadProviders();
-    }
-  }, [authenticated, loadAgents, loadProviders]);
 
   return (
     <AgentContext.Provider

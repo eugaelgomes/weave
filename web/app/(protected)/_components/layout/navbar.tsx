@@ -8,7 +8,6 @@ import { Menu, Sun, Moon, Search, CircleUserRound, Bell, Globe } from "lucide-re
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
-import { useNotification } from "@/app/_contexts/notification-context";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 
@@ -38,7 +37,6 @@ const NotificationsLink = ({
   className?: string;
   surface?: "mobile" | "desktop";
 }) => {
-  const { unreadCount } = useNotification();
   const { user } = useAuth();
   const orgPrefix = user?.org_public_id
     ? `/${user.org_public_id}`
@@ -61,11 +59,6 @@ const NotificationsLink = ({
       title={ariaLabel}
     >
       <Bell className="size-4" strokeWidth={2.1} />
-      {unreadCount > 0 && (
-        <span className="bg-brand-primary-500 dark:border-surface-dark-border-strong absolute -top-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full border-2 border-white px-0.5 text-[7px] font-bold text-white md:h-4 md:min-w-[16px] md:text-[8px]">
-          {unreadCount > 99 ? "99+" : unreadCount}
-        </span>
-      )}
     </Link>
   );
 };
@@ -171,9 +164,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed: _isCollapsed = false }: NavbarPr
                   <span className="min-w-0 flex-1 truncate text-left">
                     {t.navbar.searchPlaceholder}
                   </span>
-                  <kbd className="text-sm font-semibold text-gray-400 dark:text-gray-500">
-                    ⌘ K
-                  </kbd>
+                  <kbd className="text-sm font-semibold text-gray-400 dark:text-gray-500">⌘ K</kbd>
                 </button>
               </section>
             )}

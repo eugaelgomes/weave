@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAgent, type Agent } from "@/app/_contexts/agent-context";
@@ -137,9 +137,13 @@ export default function AgentsOverviewPage() {
   const router = useRouter();
   const params = useParams();
 
-  const { agents } = useAgent();
+  const { agents, loadAgents } = useAgent();
   const [query, setQuery] = useState("");
   const [providerFilter, setProviderFilter] = useState<"all" | "gemini" | "perplexity">("all");
+
+  useEffect(() => {
+    loadAgents();
+  }, [loadAgents]);
 
   const filteredAgents = useMemo(() => {
     return agents.filter((agent) => {

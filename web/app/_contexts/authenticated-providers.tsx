@@ -1,14 +1,10 @@
 "use client";
 
 import React from "react";
-import { NotificationProvider } from "./notification-context";
-import { ChatProvider } from "./chat-context";
-import { AgentProvider } from "./agent-context";
-
 import { ModulesProvider } from "./modules-context";
 
-// Apenas providers globais — necessários em todas as rotas protegidas.
-// Os demais providers são carregados sob demanda nos layouts de cada módulo.
+// Dados de domínio são carregados nos layouts dos respectivos módulos.
+// Aqui permanecem somente dados derivados da sessão, sem chamadas à API.
 const composeProviders = (...providers: React.ElementType[]) =>
   providers.reduce((AccumulatedProviders, CurrentProvider) => {
     const ComposedProviders = ({ children }: { children: React.ReactNode }) => (
@@ -21,12 +17,7 @@ const composeProviders = (...providers: React.ElementType[]) =>
     return ComposedProviders;
   });
 
-const GlobalProviders = composeProviders(
-  ModulesProvider,
-  NotificationProvider,
-  AgentProvider,
-  ChatProvider
-);
+const GlobalProviders = composeProviders(ModulesProvider);
 
 export function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   return <GlobalProviders>{children}</GlobalProviders>;

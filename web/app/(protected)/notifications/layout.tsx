@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Bell, Archive, Inbox, Menu, X, Trash2, MailWarning } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationsHeader } from "@/app/(protected)/_components/ui/headers/notifications-header";
+import { NotificationProvider } from "@/app/_contexts/notification-context";
 
 interface SidebarProps {
   className?: string;
@@ -85,7 +86,7 @@ function NotificationSidebar({ className, onLinkClick }: SidebarProps) {
   );
 }
 
-export default function NotificationsLayout({ children }: { children: React.ReactNode }) {
+function NotificationsLayoutContent({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -142,5 +143,13 @@ export default function NotificationsLayout({ children }: { children: React.Reac
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NotificationsLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <NotificationProvider>
+      <NotificationsLayoutContent>{children}</NotificationsLayoutContent>
+    </NotificationProvider>
   );
 }

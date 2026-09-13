@@ -75,8 +75,14 @@ export function AgentForm({
   const router = useRouter();
   const params = useParams();
 
-  const { createAgent, updateAgent, agentProviders, duplicateAgent, toggleAgentActive } =
-    useAgent();
+  const {
+    createAgent,
+    updateAgent,
+    agentProviders,
+    duplicateAgent,
+    toggleAgentActive,
+    loadProviders,
+  } = useAgent();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,6 +112,10 @@ export function AgentForm({
   const [existingFiles] = useState<{ name: string; url: string }[]>(
     initialData?.knowledge_files?.map((f) => ({ name: f.original_name, url: f.url })) || []
   );
+
+  useEffect(() => {
+    loadProviders();
+  }, [loadProviders]);
 
   const handleDuplicate = async () => {
     if (!initialData?.id) return;

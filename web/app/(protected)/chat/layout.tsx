@@ -1,8 +1,13 @@
 "use client";
 
 import React from "react";
-import { NotesProvider } from "@/app/_contexts/notes-context";
+import { AgentProvider } from "@/app/_contexts/agent-context";
+import { ChatProvider } from "@/app/_contexts/chat-context";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <AgentProvider>
+      <ChatProvider>{children}</ChatProvider>
+    </AgentProvider>
+  );
 }
