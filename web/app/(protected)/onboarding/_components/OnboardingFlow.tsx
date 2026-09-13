@@ -24,6 +24,7 @@ import { useTheme } from "@/app/_contexts/theme-context";
 import {
   submitOnboardingProfile,
   submitOnboardingWorkspace,
+  completeOnboarding,
 } from "@/app/_services/user-onboarding";
 import { cn } from "@/lib/utils";
 
@@ -115,6 +116,7 @@ export function OnboardingFlow() {
   const [workspaceName, setWorkspaceName] = useState("");
   const [uniqueName, setUniqueName] = useState("");
   const [workspaceRole, setWorkspaceRole] = useState("team");
+  const [showCreateWorkspaceForm, setShowCreateWorkspaceForm] = useState(false);
 
   const completedSteps = user?.onboarding_state?.completed_steps ?? emptyCompletedSteps;
 
@@ -131,7 +133,7 @@ export function OnboardingFlow() {
     const hasProfile = completedSteps.includes("profile");
     const hasWorkspace = completedSteps.includes("workspace");
 
-    if (hasWorkspace && user?.org_public_id) {
+    if (hasWorkspace && hasProfile && user?.org_public_id) {
       router.replace(`/${user.org_public_id}/home`);
       return;
     }
@@ -171,10 +173,37 @@ export function OnboardingFlow() {
           },
         },
       });
-      await refreshUser();
+      const refreshedUser = await refreshUser();
+      const nextSteps = refreshedUser?.onboarding_state?.completed_steps || [];
+      if (
+        refreshedUser?.org_public_id &&
+        (nextSteps.includes("workspace") || refreshedUser?.onboarding_state?.step === "COMPLETED")
+      ) {
+        router.replace(`/${refreshedUser.org_public_id}/home`);
+        return;
+      }
       setCurrentStep(2);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível salvar seu perfil.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAcceptExistingWorkspace = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      await completeOnboarding();
+      const refreshedUser = await refreshUser();
+      const targetOrg = refreshedUser?.org_public_id || user?.org_public_id;
+      if (targetOrg) {
+        router.replace(`/${targetOrg}/home`);
+      } else {
+        router.replace("/home");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível acessar o workspace.");
     } finally {
       setIsLoading(false);
     }
@@ -220,8 +249,8 @@ export function OnboardingFlow() {
   );
 
   return (
-    <main className="mx-2 h-full min-h-0 w-auto flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 lg:p-8">
-      <div className="mx-auto w-full max-w-4xl space-y-5 sm:space-y-6 py-2 pb-24 sm:py-4 sm:pb-28">
+    <main className="w-full flex-1 p-3.5 sm:p-6 lg:p-8">
+      <div className="mx-auto w-full max-w-4xl space-y-5 sm:space-y-6 py-2 pb-16 sm:py-4 sm:pb-20">
         {/* Superior Horizontal Stepper Overview */}
         <nav
           aria-label="Etapas do onboarding"
@@ -324,12 +353,16 @@ export function OnboardingFlow() {
                 <h1 className="text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl dark:text-white">
                   {currentStep === 1
                     ? "Vamos deixar tudo com a sua cara"
-                    : "Crie o seu workspace"}
+                    : user?.org_public_id && !showCreateWorkspaceForm
+                      ? "Seu workspace convidado"
+                      : "Crie o seu workspace"}
                 </h1>
                 <p className="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">
                   {currentStep === 1
                     ? "Configure seu nome de exibição, preferências de idioma e aparência."
-                    : "Defina o nome da sua organização, URL pública e o modo de trabalho."}
+                    : user?.org_public_id && !showCreateWorkspaceForm
+                      ? "Você foi convidado para colaborar em um workspace existente."
+                      : "Defina o nome da sua organização, URL pública e o modo de trabalho."}
                 </p>
               </div>
 
@@ -493,8 +526,62 @@ export function OnboardingFlow() {
                     </button>
                   </div>
                 </form>
+              ) : user?.org_public_id && !showCreateWorkspaceForm ? (
+                <div className="space-y-6">
+                  <div className="rounded-xl border border-neutral-200/80 bg-neutral-50/60 p-5 dark:border-white/10 dark:bg-white/[0.02]">
+                    <div className="flex items-center gap-3.5 mb-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-900 text-white shadow-xs dark:bg-white dark:text-neutral-900">
+                        <Building2 className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-semibold text-neutral-900 dark:text-white truncate">
+                          {user?.user_organization?.name || user?.org_name || "Workspace Convidado"}
+                        </h3>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                          Você já possui um convite ativo e acesso a este workspace.
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-300">
+                      Você pode começar a colaborar imediatamente com sua equipe no espaço oficial sem precisar criar um novo espaço.
+                    </p>
+                  </div>
+
+                  <FormError error={error} />
+
+                  <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
+                    <button
+                      type="button"
+                      onClick={handleAcceptExistingWorkspace}
+                      disabled={isLoading}
+                      className={primaryButtonClassName}
+                    >
+                      {isLoading ? "Acessando..." : "Entrar no workspace"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateWorkspaceForm(true)}
+                      disabled={isLoading}
+                      className="text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white transition-colors py-2 px-1"
+                    >
+                      Ou criar um workspace novo
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <form onSubmit={handleWorkspaceSubmit} className="space-y-5">
+                  {user?.org_public_id && (
+                    <div className="pb-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateWorkspaceForm(false)}
+                        disabled={isLoading}
+                        className="text-xs text-neutral-500 hover:text-neutral-800 hover:underline dark:text-neutral-400 dark:hover:text-white"
+                      >
+                        ← Voltar para o workspace convidado
+                      </button>
+                    </div>
+                  )}
                   <div className="space-y-3.5">
                     <Field label="Nome do workspace">
                       <input
@@ -554,8 +641,8 @@ export function OnboardingFlow() {
                               className={cn(
                                 "flex h-7 w-7 items-center justify-center rounded-md mb-2.5",
                                 isSelected
-                                  ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                                  : "bg-neutral-100 text-neutral-600 dark:bg-white/10 dark:text-neutral-300"
+                                ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                                : "bg-neutral-100 text-neutral-600 dark:bg-white/10 dark:text-neutral-300"
                               )}
                             >
                               <Icon className="h-3.5 w-3.5" />

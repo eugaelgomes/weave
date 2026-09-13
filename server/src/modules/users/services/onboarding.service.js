@@ -1,6 +1,7 @@
 const { prisma } = require("@theweave/database");
 const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
 const WorkspacesRepository = require("@/modules/workspaces/repositories/base.repository");
+const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const OnboardingRepository = require("../repositories/onboarding.repository");
 const { normalizeAppPreferences } = require("@/modules/users/utils/normalize");
 
@@ -11,12 +12,12 @@ class OnboardingService {
   async processProfileStep(userId, profileData) {
     const { name, username, timezone, theme_mode, usage_preference } = profileData;
 
-    // Check if user already accepted terms
+    // Check if user already accepted terms; if not, automatically record terms acceptance
     const user = await SearchUsersRepository.findById(userId);
     const completedSteps = user.onboarding_state?.completed_steps || [];
 
     if (!completedSteps.includes("terms")) {
-      throw new Error("TERMS_NOT_ACCEPTED");
+      await OnboardingRepository.appendOnboardingStep(userId, "TERMS_ACCEPTED", "terms");
     }
 
     return await prisma.$transaction(async (client) => {
@@ -70,6 +71,17 @@ class OnboardingService {
         client
       );
 
+      // If user already belongs to a workspace (e.g. from an invite), complete workspace and onboarding
+      if (user.workspace_id || completedSteps.includes("workspace")) {
+        await OnboardingRepository.appendOnboardingStep(
+          userId,
+          "WORKSPACE_CONFIGURED",
+          "workspace",
+          client
+        );
+        await OnboardingRepository.appendOnboardingStep(userId, "COMPLETED", "intro", client);
+      }
+
       return { success: true };
     });
   }
@@ -100,6 +112,24 @@ class OnboardingService {
           // If for some reason the invite_token is already the current user's ID
           await OnboardingRepository.activateInvite(pendingMember.id, client);
         }
+
+        const currentUser = await client.users.findUnique({
+          select: { plan_id: true, workspace_id: true },
+          where: { user_id: userId },
+        });
+
+        const defaultPlanId =
+          currentUser?.plan_id || (await PlansRepository.getDefaultSignupPlanId(client));
+
+        await client.users.update({
+          data: {
+            email_verified: true,
+            email_verified_at: new Date(),
+            plan_id: defaultPlanId,
+            workspace_id: workspaceIdToJoin,
+          },
+          where: { user_id: userId },
+        });
       } else {
         // 1. Create workspace (this also creates settings, default team, and adds member as admin)
         const workspace = await WorkspacesRepository.createWorkspaces(
@@ -133,6 +163,12 @@ class OnboardingService {
   /** Completes the onboarding flow. */
   async completeOnboarding(userId) {
     await prisma.$transaction(async (client) => {
+      await OnboardingRepository.appendOnboardingStep(
+        userId,
+        "WORKSPACE_CONFIGURED",
+        "workspace",
+        client
+      );
       await OnboardingRepository.appendOnboardingStep(userId, "COMPLETED", "intro", client);
     });
     return { message: "Onboarding finalized", success: true };
