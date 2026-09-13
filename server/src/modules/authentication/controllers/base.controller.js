@@ -3,6 +3,19 @@
  */
 class AuthBaseController {
   /**
+   * Direct newly provisioned or invited users to onboarding before any module
+   * that requires a completed setup (such as the AI chat) is mounted.
+   *
+   * @param {{ onboarding_state?: { step?: string } } | null | undefined} user
+   * @returns {string}
+   */
+  _getPostAuthenticationPath(user) {
+    return user?.onboarding_state?.step === "COMPLETED"
+      ? "/chat/?auth=success"
+      : "/account/onboarding?auth=success";
+  }
+
+  /**
    * @param {object | null | undefined} defaultTeamData
    * @returns {{
    *   id: string | null,

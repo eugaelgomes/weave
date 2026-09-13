@@ -180,7 +180,7 @@ class MicrosoftOauthController extends AuthBaseController {
             `${frontendURL}/auth/?error=auth_failed&provider=microsoft&phase=session_persistence`
           );
         }
-        return res.redirect(`${frontendURL}/chat/?auth=success`);
+        return res.redirect(`${frontendURL}${this._getPostAuthenticationPath(user)}`);
       });
     } catch (error) {
       console.error("Microsoft OAuth callback error:", {

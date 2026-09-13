@@ -74,7 +74,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
   defaultUseCase,
   defaultContext,
 }) => {
-  const { authenticated } = useAuth();
+  const { authenticated, user } = useAuth();
   const params = useParams();
   /** Bumped on createNewSession and at the start of each loadSession / scoped loadChatHistory; stale async completions must not overwrite state. */
   const chatStateEpochRef = useRef(0);
@@ -86,6 +86,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [hasMoreHistory, setHasMoreHistory] = useState(true);
+  const canUseChat = authenticated && user?.onboarding_state?.step === "COMPLETED";
 
   const defaultContextRef = useRef(defaultContext);
   useEffect(() => {
@@ -101,15 +102,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     messagesRef.current = messages;
   }, [messages]);
 
-  // Carrega lista de sessões quando autenticado
-  useEffect(() => {
-    if (authenticated) {
-      loadChatHistory();
-    }
-  }, [authenticated]);
-
   const loadModels = useCallback(async () => {
-    if (!authenticated) return;
+    if (!canUseChat) return;
 
     try {
       setLoading(true);
@@ -122,11 +116,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [authenticated]);
+  }, [canUseChat]);
 
   const loadChatHistory = useCallback(
     async (sessionId?: string, append = false) => {
-      if (!authenticated) return;
+      if (!canUseChat) return;
 
       const requestToken = sessionId ? ++chatStateEpochRef.current : null;
       const limit = 10;
@@ -162,12 +156,19 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
         setLoading(false);
       }
     },
-    [authenticated]
+    [canUseChat]
   );
+
+  // Carrega lista de sessões somente depois de concluir o onboarding.
+  useEffect(() => {
+    if (canUseChat) {
+      loadChatHistory();
+    }
+  }, [canUseChat, loadChatHistory]);
 
   const sendMessage = useCallback(
     async (data: SendMessageData): Promise<ChatMessage | null> => {
-      if (!authenticated) return null;
+      if (!canUseChat) return null;
 
       const epochAtSendStart = chatStateEpochRef.current;
       const requestId = data.requestId || createRequestId();
@@ -412,7 +413,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
         setIsTyping(false);
       }
     },
-    [authenticated, loadChatHistory]
+    [canUseChat, loadChatHistory]
   );
 
   const retryMessage = useCallback(
@@ -431,7 +432,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 
   const loadSession = useCallback(
     async (sessionId: string) => {
-      if (!authenticated) return;
+      if (!canUseChat) return;
 
       const requestToken = ++chatStateEpochRef.current;
 
@@ -477,7 +478,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
         setLoading(false);
       }
     },
-    [authenticated]
+    [canUseChat]
   );
 
   const createNewSession = useCallback(() => {
@@ -489,7 +490,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 
   const deleteSession = useCallback(
     async (sessionId: string): Promise<boolean> => {
-      if (!authenticated) return false;
+      if (!canUseChat) return false;
 
       try {
         setError(null);
@@ -512,7 +513,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
         return false;
       }
     },
-    [authenticated, currentSession?.id]
+    [canUseChat, currentSession?.id]
   );
 
   const setCurrentSession = useCallback(

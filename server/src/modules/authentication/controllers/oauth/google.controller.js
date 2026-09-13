@@ -175,7 +175,7 @@ class GoogleOauthController extends AuthBaseController {
             `${frontendURL}/auth/?error=auth_failed&provider=google&phase=session_persistence`
           );
         }
-        return res.redirect(`${frontendURL}/chat/?auth=success`);
+        return res.redirect(`${frontendURL}${this._getPostAuthenticationPath(user)}`);
       });
     } catch (error) {
       console.error("Google OAuth callback error:", {
