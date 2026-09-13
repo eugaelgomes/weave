@@ -39,6 +39,7 @@ class GoogleOauthController extends AuthBaseController {
 
   async googleCallback(req, res) {
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+    let phase = "configuration";
 
     const googleUserSchema = z.object({
       email: z.string().email(),
@@ -84,6 +85,7 @@ class GoogleOauthController extends AuthBaseController {
       params.append("grant_type", "authorization_code");
       params.append("redirect_uri", redirectUri);
 
+      phase = "token";
       const tokenResponse = await axios.post("https://oauth2.googleapis.com/token", params, {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -96,6 +98,7 @@ class GoogleOauthController extends AuthBaseController {
         throw new Error("Access token not received from Google.");
       }
 
+      phase = "profile";
       const userResponse = await axios.get(
         `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`
       );
@@ -105,6 +108,7 @@ class GoogleOauthController extends AuthBaseController {
       }
       const googleUser = googleUserResult.data;
 
+      phase = "provisioning";
       let user = await GoogleOauthRepository.findUserByGoogleId(googleUser.id);
 
       if (!user) {
@@ -144,6 +148,7 @@ class GoogleOauthController extends AuthBaseController {
         }
       }
 
+      phase = "session";
       const workspace = this._normalizeWorkspace(user.workspace);
       const defaultTeam = this._normalizeDefaultTeam(user.default_team);
 
@@ -152,17 +157,31 @@ class GoogleOauthController extends AuthBaseController {
       req.session.user = payload;
       req.session.userId = user.user_id;
 
+      phase = "session_persistence";
       req.session.save((err) => {
         if (err) {
-          console.error("Session save error during Google OAuth:", err);
-          return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
+          console.error("Google OAuth session save error:", {
+            code: err.code || null,
+            constraint: err.constraint || err.meta?.target || null,
+            message: err.message,
+            phase,
+          });
+          return res.redirect(
+            `${frontendURL}/auth/?error=auth_failed&provider=google&phase=session_persistence`
+          );
         }
         return res.redirect(`${frontendURL}/chat/?auth=success`);
       });
     } catch (error) {
-      console.error("Google OAuth callback error:", error.message);
-      const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
-      res.redirect(`${frontendURL}/auth/?error=auth_failed`);
+      console.error("Google OAuth callback error:", {
+        code: error.code || null,
+        constraint: error.constraint || error.meta?.target || null,
+        message: error.message,
+        phase,
+      });
+      return res.redirect(
+        `${frontendURL}/auth/?error=auth_failed&provider=google&phase=${encodeURIComponent(phase)}`
+      );
     }
   }
 }

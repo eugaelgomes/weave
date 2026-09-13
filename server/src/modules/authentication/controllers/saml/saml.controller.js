@@ -71,6 +71,7 @@ class SamlController extends AuthBaseController {
    */
   async samlCallback(req, res) {
     const frontendURL = getFrontendUrl();
+    let phase = "validation";
     try {
       const { SAMLResponse, RelayState } = req.body;
       const organizationId = RelayState;
@@ -105,6 +106,7 @@ class SamlController extends AuthBaseController {
         return res.redirect(`${frontendURL}/auth?error=sso_domain_mismatch`);
       }
 
+      phase = "provisioning";
       let user = await AuthRepository.findUserByEmail(userEmail);
 
       if (!user) {
@@ -131,6 +133,7 @@ class SamlController extends AuthBaseController {
         throw new Error("Failed to provision SSO user.");
       }
 
+      phase = "session";
       const workspace = this._normalizeWorkspace(user.workspace);
       const defaultTeam = this._normalizeDefaultTeam(user.default_team);
 
@@ -138,16 +141,31 @@ class SamlController extends AuthBaseController {
       req.session.user = payload;
       req.session.userId = user.user_id;
 
+      phase = "session_persistence";
       req.session.save((err) => {
         if (err) {
-          console.error("Session save error during SAML OAuth:", err);
-          return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
+          console.error("SAML session save error:", {
+            code: err.code || null,
+            constraint: err.constraint || err.meta?.target || null,
+            message: err.message,
+            phase,
+          });
+          return res.redirect(
+            `${frontendURL}/auth/?error=auth_failed&provider=saml&phase=session_persistence`
+          );
         }
         return res.redirect(`${frontendURL}/chat/?auth=success`);
       });
     } catch (error) {
-      console.error("SAML ACS Callback error:", error);
-      return res.redirect(`${frontendURL}/auth?error=sso_validation_failed`);
+      console.error("SAML ACS Callback error:", {
+        code: error.code || null,
+        constraint: error.constraint || error.meta?.target || null,
+        message: error.message,
+        phase,
+      });
+      return res.redirect(
+        `${frontendURL}/auth?error=sso_validation_failed&phase=${encodeURIComponent(phase)}`
+      );
     }
   }
 }

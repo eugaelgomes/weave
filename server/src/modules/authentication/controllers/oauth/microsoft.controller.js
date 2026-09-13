@@ -34,6 +34,7 @@ class MicrosoftOauthController extends AuthBaseController {
 
   async microsoftCallback(req, res) {
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+    let phase = "configuration";
 
     try {
       const { microsoft } = getOauthConfig();
@@ -75,6 +76,7 @@ class MicrosoftOauthController extends AuthBaseController {
         scope: "openid profile email User.Read",
       });
 
+      phase = "token";
       const tokenResponse = await axios.post(
         `https://login.microsoftonline.com/${encodeURIComponent(tenantId)}/oauth2/v2.0/token`,
         tokenPayload.toString(),
@@ -90,6 +92,7 @@ class MicrosoftOauthController extends AuthBaseController {
         throw new Error("Access token not received from Microsoft.");
       }
 
+      phase = "profile";
       const userResponse = await axios.get(
         "https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,userPrincipalName",
         {
@@ -117,6 +120,7 @@ class MicrosoftOauthController extends AuthBaseController {
       const microsoftId = microsoftUser.id;
       const userEmail = microsoftUser.mail || microsoftUser.userPrincipalName;
 
+      phase = "provisioning";
       let user = await MicrosoftOauthRepository.findUserByMicrosoftId(microsoftId);
 
       if (!user) {
@@ -154,6 +158,7 @@ class MicrosoftOauthController extends AuthBaseController {
         }
       }
 
+      phase = "session";
       const workspace = this._normalizeWorkspace(user.workspace);
       const defaultTeam = this._normalizeDefaultTeam(user.default_team);
 
@@ -162,16 +167,31 @@ class MicrosoftOauthController extends AuthBaseController {
       req.session.user = payload;
       req.session.userId = user.user_id;
 
+      phase = "session_persistence";
       req.session.save((err) => {
         if (err) {
-          console.error("Session save error during Microsoft OAuth:", err);
-          return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
+          console.error("Microsoft OAuth session save error:", {
+            code: err.code || null,
+            constraint: err.constraint || err.meta?.target || null,
+            message: err.message,
+            phase,
+          });
+          return res.redirect(
+            `${frontendURL}/auth/?error=auth_failed&provider=microsoft&phase=session_persistence`
+          );
         }
         return res.redirect(`${frontendURL}/chat/?auth=success`);
       });
     } catch (error) {
-      console.error("Microsoft OAuth callback error:", error.message);
-      return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
+      console.error("Microsoft OAuth callback error:", {
+        code: error.code || null,
+        constraint: error.constraint || error.meta?.target || null,
+        message: error.message,
+        phase,
+      });
+      return res.redirect(
+        `${frontendURL}/auth/?error=auth_failed&provider=microsoft&phase=${encodeURIComponent(phase)}`
+      );
     }
   }
 }

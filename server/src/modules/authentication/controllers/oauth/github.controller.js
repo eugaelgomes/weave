@@ -33,6 +33,7 @@ class GithubOauthController extends AuthBaseController {
 
   async githubCallback(req, res) {
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+    let phase = "configuration";
 
     try {
       const { github } = getOauthConfig();
@@ -64,6 +65,7 @@ class GithubOauthController extends AuthBaseController {
 
       const redirectUri = github.redirect_uri;
 
+      phase = "token";
       const tokenResponse = await axios.post(
         "https://github.com/login/oauth/access_token",
         {
@@ -85,6 +87,7 @@ class GithubOauthController extends AuthBaseController {
         throw new Error("Access token not received from GitHub.");
       }
 
+      phase = "profile";
       const userResponse = await axios.get("https://api.github.com/user", {
         headers: {
           Accept: "application/vnd.github.v3+json",
@@ -134,6 +137,7 @@ class GithubOauthController extends AuthBaseController {
         throw new Error("No verified email found for this GitHub account.");
       }
 
+      phase = "provisioning";
       let user = await GithubOauthRepository.findUserByGithubId(githubId);
 
       if (!user) {
@@ -182,6 +186,7 @@ class GithubOauthController extends AuthBaseController {
         }
       }
 
+      phase = "session";
       const workspace = this._normalizeWorkspace(user.workspace);
       const defaultTeam = this._normalizeDefaultTeam(user.default_team);
 
@@ -190,16 +195,31 @@ class GithubOauthController extends AuthBaseController {
       req.session.user = payload;
       req.session.userId = user.user_id;
 
+      phase = "session_persistence";
       req.session.save((err) => {
         if (err) {
-          console.error("Session save error during GitHub OAuth:", err);
-          return res.redirect(`${frontendURL}/auth/?error=auth_failed`);
+          console.error("GitHub OAuth session save error:", {
+            code: err.code || null,
+            constraint: err.constraint || err.meta?.target || null,
+            message: err.message,
+            phase,
+          });
+          return res.redirect(
+            `${frontendURL}/auth/?error=auth_failed&provider=github&phase=session_persistence`
+          );
         }
         return res.redirect(`${frontendURL}/chat/?auth=success`);
       });
     } catch (error) {
-      console.error("GitHub OAuth callback error:", error.message);
-      res.redirect(`${frontendURL}/auth/?error=auth_failed`);
+      console.error("GitHub OAuth callback error:", {
+        code: error.code || null,
+        constraint: error.constraint || error.meta?.target || null,
+        message: error.message,
+        phase,
+      });
+      return res.redirect(
+        `${frontendURL}/auth/?error=auth_failed&provider=github&phase=${encodeURIComponent(phase)}`
+      );
     }
   }
 }
