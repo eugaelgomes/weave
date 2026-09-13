@@ -122,6 +122,7 @@ const routeRegistry = [
   { basePath: "/auth", handler: authRoutes },
   { basePath: "/backup", handler: backupRoutes },
   { basePath: "/workspaces", handler: organizationsRoutes },
+  { basePath: "/organizations", handler: organizationsRoutes },
   { basePath: "/plans", handler: plansRoutes },
   { basePath: "/users", handler: userRoutes },
   { basePath: "/weave-ai", handler: agentHouseRoutes },

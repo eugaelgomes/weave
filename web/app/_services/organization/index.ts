@@ -1056,6 +1056,7 @@ export const deleteDomain = async (domainId: string, userId?: string): Promise<v
 export interface UserWorkspaceSummary {
   id: string;
   org_name: string;
+  workspace_name?: string;
   unique_name: string;
   logo_url: string | null;
   member_role: string;
@@ -1069,7 +1070,11 @@ export const fetchMyOrganizations = async (): Promise<UserWorkspaceSummary[]> =>
       response
     );
     if (data.data && Array.isArray(data.data)) {
-      return data.data;
+      return data.data.map((item: any) => ({
+        ...item,
+        org_name: item.org_name || item.workspace_name || "",
+        workspace_name: item.workspace_name || item.org_name || "",
+      }));
     }
     return [];
   } catch (error) {
@@ -1079,7 +1084,10 @@ export const fetchMyOrganizations = async (): Promise<UserWorkspaceSummary[]> =>
 };
 
 export const switchOrganizationApi = async (organizationId: string): Promise<boolean> => {
-  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_SWITCH, { organizationId });
+  const response = await apiClient.post(API_ENDPOINTS.ORGANIZATIONS_SWITCH, {
+    organizationId,
+    workspaceId: organizationId,
+  });
   const data = await handleResponse<{ success?: boolean }>(response);
   return data.success === true;
 };

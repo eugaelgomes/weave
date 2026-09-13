@@ -154,7 +154,7 @@ const Navbar = ({ onToggleSidebar, isCollapsed: _isCollapsed = false }: NavbarPr
                 <button
                   type="button"
                   onClick={() => setIsSearchOpen(true)}
-                  className="flex h-7 w-full items-center gap-2 rounded-md bg-black/5 px-2 text-xs text-black transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+                  className="flex h-6 w-full items-center gap-2 rounded-full bg-black/5 px-2 text-xs text-black transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
                   aria-label={t.navbar.openSearch}
                   title={t.navbar.openSearch}
                 >

@@ -52,7 +52,7 @@ const router = express.Router();
 router.use(verifyToken, requireOnboarding);
 
 router.get(
-  "/my-workspaces",
+  ["/my-workspaces", "/my-organizations"],
   highTrafficLimiter,
   UsersController.listMyWorkspaces.bind(UsersController)
 );
@@ -119,59 +119,59 @@ router.post(
 
 // ------ Teams Routes ------
 router.get(
-  "/teams",
+  ["/teams", "/areas"],
   highTrafficLimiter,
   workspaceTeamsController.listTeams.bind(workspaceTeamsController)
 );
 
 router.post(
-  "/teams",
+  ["/teams", "/areas"],
   structuralLimiter,
   validate(createTeamSchema, "body"), // TODO rename schema validations to team
   workspaceTeamsController.createTeam.bind(workspaceTeamsController)
 );
 
 router.get(
-  "/teams/:teamId",
+  ["/teams/:teamId", "/areas/:teamId"],
   highTrafficLimiter,
   workspaceTeamsController.getTeam.bind(workspaceTeamsController)
 );
 
 router.put(
-  "/teams/:teamId",
+  ["/teams/:teamId", "/areas/:teamId"],
   structuralLimiter,
   validate(updateTeamSchema, "body"),
   workspaceTeamsController.updateTeam.bind(workspaceTeamsController)
 );
 
 router.delete(
-  "/teams/:teamId",
+  ["/teams/:teamId", "/areas/:teamId"],
   structuralLimiter,
   workspaceTeamsController.deleteTeam.bind(workspaceTeamsController)
 );
 
 router.get(
-  "/teams/:teamId/members",
+  ["/teams/:teamId/members", "/areas/:teamId/members"],
   highTrafficLimiter,
   workspaceTeamsController.listTeamMembers.bind(workspaceTeamsController)
 );
 
 router.post(
-  "/teams/:teamId/members",
+  ["/teams/:teamId/members", "/areas/:teamId/members"],
   structuralLimiter,
   validate(addTeamMemberSchema, "body"),
   workspaceTeamsController.addTeamMember.bind(workspaceTeamsController)
 );
 
 router.patch(
-  "/teams/:teamId/members/:memberId",
+  ["/teams/:teamId/members/:memberId", "/areas/:teamId/members/:memberId"],
   structuralLimiter,
   validate(updateTeamMemberSchema, "body"),
   workspaceTeamsController.updateTeamMember.bind(workspaceTeamsController)
 );
 
 router.delete(
-  "/teams/:teamId/members/:memberId",
+  ["/teams/:teamId/members/:memberId", "/areas/:teamId/members/:memberId"],
   structuralLimiter,
   workspaceTeamsController.removeTeamMember.bind(workspaceTeamsController)
 );

@@ -94,6 +94,7 @@ class OnboardingService {
       unique_name,
       workspace_description,
       workspace_name,
+      workspace_role,
       workspace_timezone,
     } = workspaceData;
 
@@ -171,6 +172,8 @@ class OnboardingService {
             data: {
               preferences: {
                 language: language || "pt-BR",
+                purpose: workspace_role || "team",
+                role: workspace_role || "team",
                 timezone: workspace_timezone || null,
               },
             },

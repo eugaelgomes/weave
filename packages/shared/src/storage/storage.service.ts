@@ -51,6 +51,11 @@ export class SpacesService {
       LOGO: "logo",
       ROOT: "organizations",
     },
+    WORKSPACES: {
+      BANNER: "banner",
+      LOGO: "logo",
+      ROOT: "workspaces",
+    },
     PROJECTS: {
       FILES: "files",
       ICONS: "icons",
@@ -209,7 +214,11 @@ export class SpacesService {
       const uniqueFileName = fileName || `image_${uuidv4()}${fileExtension}`;
       const key = folderPath
         ? this.buildKey(folderPath, uniqueFileName)
-        : this.buildKey(SpacesService.FOLDER_PATHS.IMAGES, userId ? String(userId) : null, uniqueFileName);
+        : this.buildKey(
+            SpacesService.FOLDER_PATHS.IMAGES,
+            userId ? String(userId) : null,
+            uniqueFileName
+          );
 
       const uploadParams: PutObjectCommandInput = {
         Body: imageBuffer,
@@ -314,63 +323,145 @@ export class SpacesService {
     return mimeToExt[mimeType] || ".bin";
   }
 
-  public async uploadNoteIcon(fileBuffer: Buffer, mimeType: string, noteId: string | number, userId: string | number): Promise<UploadResult> {
+  public async uploadNoteIcon(
+    fileBuffer: Buffer,
+    mimeType: string,
+    noteId: string | number,
+    userId: string | number
+  ): Promise<UploadResult> {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `${uuidv4()}${ext}`;
-    const folderPath = this.buildKey(NOTES.ROOT, `userId_${userId}`, `noteId_${noteId}`, NOTES.ICONS);
+    const folderPath = this.buildKey(
+      NOTES.ROOT,
+      `userId_${userId}`,
+      `noteId_${noteId}`,
+      NOTES.ICONS
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  public async uploadNoteBanner(fileBuffer: Buffer, mimeType: string, noteId: string | number, userId: string | number): Promise<UploadResult> {
+  public async uploadNoteBanner(
+    fileBuffer: Buffer,
+    mimeType: string,
+    noteId: string | number,
+    userId: string | number
+  ): Promise<UploadResult> {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `${uuidv4()}${ext}`;
-    const folderPath = this.buildKey(NOTES.ROOT, `userId_${userId}`, `noteId_${noteId}`, NOTES.BANNERS);
+    const folderPath = this.buildKey(
+      NOTES.ROOT,
+      `userId_${userId}`,
+      `noteId_${noteId}`,
+      NOTES.BANNERS
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  public async uploadNoteFile(fileBuffer: Buffer, mimeType: string, noteId: string | number, userId: string | number, originalName: string | null = null): Promise<UploadResult> {
+  public async uploadNoteFile(
+    fileBuffer: Buffer,
+    mimeType: string,
+    noteId: string | number,
+    userId: string | number,
+    originalName: string | null = null
+  ): Promise<UploadResult> {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const safeOriginalName = originalName ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_") : `file${ext}`;
+    const safeOriginalName = originalName
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_")
+      : `file${ext}`;
     const fileName = `${uuidv4()}_${safeOriginalName}`;
-    const folderPath = this.buildKey(NOTES.ROOT, `userId_${userId}`, `noteId_${noteId}`, NOTES.FILES);
+    const folderPath = this.buildKey(
+      NOTES.ROOT,
+      `userId_${userId}`,
+      `noteId_${noteId}`,
+      NOTES.FILES
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  public async uploadNoteDocumentImage(fileBuffer: Buffer, mimeType: string, noteId: string | number, userId: string | number, originalName: string | null = null): Promise<UploadResult> {
+  public async uploadNoteDocumentImage(
+    fileBuffer: Buffer,
+    mimeType: string,
+    noteId: string | number,
+    userId: string | number,
+    originalName: string | null = null
+  ): Promise<UploadResult> {
     const { NOTES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const safeOriginalName = originalName ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_") : `image${ext}`;
+    const safeOriginalName = originalName
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_")
+      : `image${ext}`;
     const fileName = `${uuidv4()}_${safeOriginalName}`;
-    const folderPath = this.buildKey(NOTES.ROOT, `userId_${userId}`, `noteId_${noteId}`, NOTES.DOCUMENT_IMAGES);
+    const folderPath = this.buildKey(
+      NOTES.ROOT,
+      `userId_${userId}`,
+      `noteId_${noteId}`,
+      NOTES.DOCUMENT_IMAGES
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  public async uploadNoteCommentFile(fileBuffer: Buffer, mimeType: string, noteId: string | number, userId: string | number, originalName: string | null = null): Promise<UploadResult> {
+  public async uploadNoteCommentFile(
+    fileBuffer: Buffer,
+    mimeType: string,
+    noteId: string | number,
+    userId: string | number,
+    originalName: string | null = null
+  ): Promise<UploadResult> {
     const { NOTES_COMMENTS_FILES } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const safeOriginalName = originalName ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_") : `file${ext}`;
+    const safeOriginalName = originalName
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_")
+      : `file${ext}`;
     const fileName = `${uuidv4()}_${safeOriginalName}`;
-    const folderPath = this.buildKey(NOTES_COMMENTS_FILES.ROOT, `userId_${userId}`, `noteId_${noteId}`, NOTES_COMMENTS_FILES.FILES);
+    const folderPath = this.buildKey(
+      NOTES_COMMENTS_FILES.ROOT,
+      `userId_${userId}`,
+      `noteId_${noteId}`,
+      NOTES_COMMENTS_FILES.FILES
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  public async uploadProjectIcon(fileBuffer: Buffer, mimeType: string, projectId: string | number, userId: string | number): Promise<UploadResult> {
+  public async uploadProjectIcon(
+    fileBuffer: Buffer,
+    mimeType: string,
+    projectId: string | number,
+    userId: string | number
+  ): Promise<UploadResult> {
     const { PROJECTS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `${uuidv4()}${ext}`;
-    const folderPath = this.buildKey(PROJECTS.ROOT, `userId_${userId}`, `projectId_${projectId}`, PROJECTS.ICONS);
+    const folderPath = this.buildKey(
+      PROJECTS.ROOT,
+      `userId_${userId}`,
+      `projectId_${projectId}`,
+      PROJECTS.ICONS
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  public async uploadProjectFile(fileBuffer: Buffer, mimeType: string, projectId: string | number, userId: string | number, originalName: string | null = null): Promise<UploadResult> {
+  public async uploadProjectFile(
+    fileBuffer: Buffer,
+    mimeType: string,
+    projectId: string | number,
+    userId: string | number,
+    originalName: string | null = null
+  ): Promise<UploadResult> {
     const { PROJECTS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
-    const safeOriginalName = originalName ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_") : `file${ext}`;
+    const safeOriginalName = originalName
+      ? originalName.replace(/[^a-zA-Z0-9.-]/g, "_")
+      : `file${ext}`;
     const fileName = `${uuidv4()}_${safeOriginalName}`;
-    const folderPath = this.buildKey(PROJECTS.ROOT, `userId_${userId}`, `projectId_${projectId}`, PROJECTS.FILES);
+    const folderPath = this.buildKey(
+      PROJECTS.ROOT,
+      `userId_${userId}`,
+      `projectId_${projectId}`,
+      PROJECTS.FILES
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
@@ -414,7 +505,10 @@ export class SpacesService {
     return `${this.spacesEndpoint}/${this.bucketName}/${key}`;
   }
 
-  public async getSignedUrl(key: string | null | undefined, expiresIn: number = 43200): Promise<string | null> {
+  public async getSignedUrl(
+    key: string | null | undefined,
+    expiresIn: number = 43200
+  ): Promise<string | null> {
     await this.ensureConfigured();
     if (!key) return null;
     if (
@@ -439,27 +533,52 @@ export class SpacesService {
     }
   }
 
-  public async uploadProfileImage(fileBuffer: Buffer, mimeType: string, userId: string | number): Promise<UploadResult> {
+  public async uploadProfileImage(
+    fileBuffer: Buffer,
+    mimeType: string,
+    userId: string | number
+  ): Promise<UploadResult> {
     const { USERS_CONTENT } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `user-${userId}-avatar${ext}`;
-    const folderPath = this.buildKey(USERS_CONTENT.ROOT, USERS_CONTENT.PROFILE, String(userId), USERS_CONTENT.AVATAR);
+    const folderPath = this.buildKey(
+      USERS_CONTENT.ROOT,
+      USERS_CONTENT.PROFILE,
+      String(userId),
+      USERS_CONTENT.AVATAR
+    );
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  public async uploadOrganizationLogo(fileBuffer: Buffer, mimeType: string, organizationId: string | number): Promise<UploadResult> {
+  public async uploadOrganizationLogo(
+    fileBuffer: Buffer,
+    mimeType: string,
+    organizationId: string | number
+  ): Promise<UploadResult> {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `org-${organizationId}-logo${ext}`;
-    const folderPath = this.buildKey(ORGANIZATIONS.ROOT, String(organizationId), ORGANIZATIONS.LOGO);
+    const folderPath = this.buildKey(
+      ORGANIZATIONS.ROOT,
+      String(organizationId),
+      ORGANIZATIONS.LOGO
+    );
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
   }
 
-  public async uploadOrganizationBanner(fileBuffer: Buffer, mimeType: string, organizationId: string | number): Promise<UploadResult> {
+  public async uploadOrganizationBanner(
+    fileBuffer: Buffer,
+    mimeType: string,
+    organizationId: string | number
+  ): Promise<UploadResult> {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `org-${organizationId}-banner${ext}`;
-    const folderPath = this.buildKey(ORGANIZATIONS.ROOT, String(organizationId), ORGANIZATIONS.BANNER);
+    const folderPath = this.buildKey(
+      ORGANIZATIONS.ROOT,
+      String(organizationId),
+      ORGANIZATIONS.BANNER
+    );
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
   }
 
@@ -478,7 +597,11 @@ export class SpacesService {
     return `file_${Date.now()}_${uuidv4()}${sanitizedExt}`;
   }
 
-  public validateConfiguration(): { config: Record<string, boolean>; isValid: boolean; missing: string[] } {
+  public validateConfiguration(): {
+    config: Record<string, boolean>;
+    isValid: boolean;
+    missing: string[];
+  } {
     const config = {
       accessKey: !!this.accessKeyId,
       bucket: !!this.bucketName,

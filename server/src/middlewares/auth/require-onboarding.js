@@ -15,9 +15,21 @@ module.exports = async (req, res, next) => {
     if (!user) return next(AppError.unauthorized("User not found."));
 
     const onboardingState = user.onboarding_state || {};
+    const completedSteps = onboardingState.completed_steps || [];
+    const hasProfile =
+      completedSteps.includes("profile") ||
+      Boolean(user.name && user.username) ||
+      onboardingState.step === "STEP_1_COMPLETED" ||
+      onboardingState.step === "STEP_2_COMPLETED";
+    const hasWorkspace =
+      completedSteps.includes("workspace") ||
+      onboardingState.step === "STEP_2_COMPLETED" ||
+      Boolean(req.user?.workspaceId);
 
-    // If onboarding state is defined but not COMPLETED, block access
-    if (onboardingState && onboardingState.step !== "COMPLETED") {
+    const isComplete = onboardingState.step === "COMPLETED" || (hasProfile && hasWorkspace);
+
+    // If mandatory onboarding steps are not finished, block access
+    if (!isComplete) {
       return next(
         AppError.forbidden(
           "Onboarding is incomplete. Please finish the initial setup steps.",

@@ -63,6 +63,7 @@ const parseResourceDescriptor = (key) => {
         type: "project",
       };
     }
+    case "organizations":
     case "workspaces": {
       const workspaceId = sanitizeId(segments[1]);
       if (!workspaceId) return null;
