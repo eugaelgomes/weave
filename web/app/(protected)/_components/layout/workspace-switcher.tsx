@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { ChevronDown, Check, Plus, Loader2, Building2, X } from "lucide-react";
+import { ChevronsUpDown, Check, Plus, Loader2, Building2, X } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
 import {
   fetchMyOrganizations,
@@ -71,20 +71,18 @@ export const WorkspaceSwitcher = () => {
     }
   };
 
-  if (!activeOrgName && !activeOrgUniqueName) {
-    return null;
-  }
+  const displayName = activeOrgName || activeOrgUniqueName || "weave-engine";
 
   return (
     <>
-      <div className="relative ml-1.5 sm:ml-2" ref={containerRef}>
+      <div className="relative ml-0.5 sm:ml-1" ref={containerRef}>
         <button
           type="button"
           onClick={toggleDropdown}
           disabled={!!switchingId}
           className={cn(
-            "group flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-700 transition-all duration-150",
-            "hover:bg-black/5 dark:text-gray-200 dark:hover:bg-white/10",
+            "group flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs font-semibold text-black transition-all duration-150 sm:font-medium",
+            "hover:bg-black/5 dark:text-white dark:hover:bg-white/10",
             "focus-visible:ring-brand-primary-500/50 focus-visible:ring-2 focus-visible:outline-none",
             isOpen && "bg-black/5 dark:bg-white/10"
           )}
@@ -95,29 +93,30 @@ export const WorkspaceSwitcher = () => {
           {activeOrgLogo ? (
             <Image
               src={activeOrgLogo}
-              alt={activeOrgName || activeOrgUniqueName}
+              alt={displayName}
               width={16}
               height={16}
               className="h-4 w-4 shrink-0 rounded-sm object-contain"
             />
-          ) : (
+          ) : activeOrgName || activeOrgUniqueName ? (
             <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-gray-200 text-[10px] font-bold text-gray-600 dark:bg-neutral-700 dark:text-gray-300">
-              {(activeOrgName || activeOrgUniqueName || "O").charAt(0).toUpperCase()}
+              {displayName.charAt(0).toUpperCase()}
             </div>
-          )}
+          ) : null}
 
-          <span className="max-w-[90px] truncate text-gray-700 sm:max-w-[150px] dark:text-gray-200">
-            {activeOrgName || activeOrgUniqueName}
+          <span className="max-w-[120px] truncate text-black sm:max-w-[170px] dark:text-white">
+            {displayName}
           </span>
 
           {switchingId ? (
-            <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />
           ) : (
-            <ChevronDown
+            <ChevronsUpDown
               className={cn(
-                "h-3 w-3 shrink-0 text-gray-400 transition-transform duration-200 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300",
-                isOpen && "rotate-180"
+                "size-4 shrink-0 text-black transition-colors dark:text-white",
+                isOpen && "text-black dark:text-white"
               )}
+              strokeWidth={2.1}
             />
           )}
         </button>
