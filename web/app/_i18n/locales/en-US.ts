@@ -343,6 +343,20 @@ const enUS: TranslationKeys = {
       arrowsToNavigate: "to navigate",
       enterToOpen: "to open",
     },
+    onboardingPrompt: {
+      buttonLabel: "Workspace setup ({completed}/{total})",
+      title: "Workspace Setup",
+      description: "Complete the remaining steps to get the most out of your experience.",
+      stepCounter: "{completed} of {total} completed",
+      stepProfile: "Personal profile",
+      stepWorkspace: "Workspace setup",
+      stepTeams: "Teams and members",
+      completedBadge: "Completed",
+      pendingBadge: "Pending",
+      actionComplete: "Complete setup",
+      actionDismiss: "Dismiss",
+      dismissTooltip: "Mark onboarding as completed",
+    },
   },
 
   settings: {

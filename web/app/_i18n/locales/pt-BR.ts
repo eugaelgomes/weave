@@ -342,6 +342,20 @@ const ptBR = {
       arrowsToNavigate: "para navegar",
       enterToOpen: "para abrir",
     },
+    onboardingPrompt: {
+      buttonLabel: "Configuração do workspace ({completed}/{total})",
+      title: "Configuração do Workspace",
+      description: "Complete as etapas para aproveitar ao máximo sua experiência.",
+      stepCounter: "{completed} de {total} concluídas",
+      stepProfile: "Perfil pessoal",
+      stepWorkspace: "Configuração do workspace",
+      stepTeams: "Times e membros",
+      completedBadge: "Concluído",
+      pendingBadge: "Pendente",
+      actionComplete: "Completar etapas",
+      actionDismiss: "Dispensar",
+      dismissTooltip: "Marcar onboarding como concluído",
+    },
   },
 
   settings: {

@@ -344,6 +344,20 @@ const esES: TranslationKeys = {
       arrowsToNavigate: "para navegar",
       enterToOpen: "para abrir",
     },
+    onboardingPrompt: {
+      buttonLabel: "Configuración del workspace ({completed}/{total})",
+      title: "Configuración del Workspace",
+      description: "Completa los pasos restantes para aprovechar al máximo tu experiencia.",
+      stepCounter: "{completed} de {total} completados",
+      stepProfile: "Perfil personal",
+      stepWorkspace: "Configuración del workspace",
+      stepTeams: "Equipos y miembros",
+      completedBadge: "Completado",
+      pendingBadge: "Pendiente",
+      actionComplete: "Completar ahora",
+      actionDismiss: "Descartar",
+      dismissTooltip: "Marcar onboarding como completado",
+    },
   },
 
   settings: {

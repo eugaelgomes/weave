@@ -86,7 +86,12 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [hasMoreHistory, setHasMoreHistory] = useState(true);
-  const canUseChat = authenticated && user?.onboarding_state?.step === "COMPLETED";
+  const completedSteps = user?.onboarding_state?.completed_steps ?? [];
+  const hasMandatorySteps =
+    user?.onboarding_state?.step === "COMPLETED" ||
+    (completedSteps.includes("profile") &&
+      (completedSteps.includes("workspace") || Boolean(user?.workspace_public_id)));
+  const canUseChat = authenticated && hasMandatorySteps;
 
   const defaultContextRef = useRef(defaultContext);
   useEffect(() => {

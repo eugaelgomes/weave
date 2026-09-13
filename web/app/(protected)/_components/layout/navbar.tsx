@@ -9,6 +9,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useTheme } from "@/app/_contexts/theme-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { WorkspaceSwitcher } from "./workspace-switcher";
+import { OnboardingNavIndicator } from "./onboarding-nav-indicator";
 import SearchModal from "@/app/(protected)/_components/ui/navbar/search-modal";
 
 import { cn } from "@/lib/utils";
@@ -232,6 +233,8 @@ const Navbar = ({ onToggleSidebar, isCollapsed: _isCollapsed = false }: NavbarPr
                       </div>
                     </div>
                   </div>
+
+                  <OnboardingNavIndicator />
 
                   <NotificationsLink
                     ariaLabel={t.nav.notifications}

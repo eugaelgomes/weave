@@ -17,7 +17,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/account/onboarding/") ||
     pathname === "/onboarding" ||
     pathname.startsWith("/onboarding/");
-  const onboardingComplete = user?.onboarding_state?.step === "COMPLETED";
+  const completedSteps = user?.onboarding_state?.completed_steps ?? [];
+  const hasMandatoryProfile =
+    completedSteps.includes("profile") || Boolean(user?.user_name && user?.username);
+  const hasMandatoryWorkspace =
+    completedSteps.includes("workspace") ||
+    Boolean(user?.workspace_public_id || (user as any)?.workspace_id);
+  const mandatoryOnboardingComplete =
+    user?.onboarding_state?.step === "COMPLETED" || (hasMandatoryProfile && hasMandatoryWorkspace);
 
   useEffect(() => {
     if (!loading && !authenticated && !hasRedirected.current) {
@@ -36,16 +43,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       !loading &&
       authenticated &&
       user &&
-      !onboardingComplete &&
+      !mandatoryOnboardingComplete &&
       !isOnboardingPath &&
       !hasRedirected.current
     ) {
       hasRedirected.current = true;
       router.replace("/account/onboarding");
     }
-  }, [authenticated, isOnboardingPath, loading, onboardingComplete, router, user]);
+  }, [authenticated, isOnboardingPath, loading, mandatoryOnboardingComplete, router, user]);
 
-  if (loading || !authenticated || (authenticated && !onboardingComplete && !isOnboardingPath)) {
+  if (
+    loading ||
+    !authenticated ||
+    (authenticated && !mandatoryOnboardingComplete && !isOnboardingPath)
+  ) {
     return <GlobalLoading className="h-screen min-h-screen" />;
   }
 

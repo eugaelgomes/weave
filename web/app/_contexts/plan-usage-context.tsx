@@ -38,7 +38,10 @@ const PlanUsageContext = createContext<PlanUsageContextValue | undefined>(undefi
 
 export function PlanUsageProvider({ children }: { children: React.ReactNode }) {
   const { user, authenticated, mergeUser } = useAuth();
-  const hasCompletedOnboarding = user?.onboarding_state?.step === "COMPLETED";
+  const completedSteps = user?.onboarding_state?.completed_steps ?? [];
+  const hasMandatorySteps =
+    completedSteps.includes("profile") && completedSteps.includes("workspace");
+  const hasCompletedOnboarding = user?.onboarding_state?.step === "COMPLETED" || hasMandatorySteps;
   const [serverGates, setServerGates] = useState<PlanMeResponse["gates"] | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);

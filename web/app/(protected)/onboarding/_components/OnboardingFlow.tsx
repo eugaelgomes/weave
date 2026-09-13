@@ -173,7 +173,8 @@ export function OnboardingFlow() {
     const requestedStep = searchParams.get("step");
     const hasProfile = completedSteps.includes("profile");
     const hasWorkspace = completedSteps.includes("workspace");
-    const hasTeams = completedSteps.includes("teams");
+    const hasTeams =
+      completedSteps.includes("teams") || user?.onboarding_state?.step === "COMPLETED";
 
     if (hasWorkspace && hasProfile && hasTeams && user?.workspace_public_id) {
       router.replace(`/${user.workspace_public_id}/home`);
