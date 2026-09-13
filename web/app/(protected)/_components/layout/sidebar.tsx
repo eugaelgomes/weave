@@ -50,7 +50,7 @@ interface NavItemConfig {
 }
 
 const NAV_ITEMS: NavItemConfig[] = [
-  { id: "home", label: "Home", icon: Home, path: "/organization/general", exact: true },
+  { id: "home", label: "Home", icon: Home, path: "/home", exact: true },
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   { id: "agents", label: "Agents", icon: Bot, path: "/weave-ai/agents", badge: "New" },
   { id: "audio", label: "Audio", icon: AudioLines, path: "/weave-ai/audio" },

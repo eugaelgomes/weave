@@ -176,8 +176,8 @@ export function OnboardingFlow() {
     const hasTeams =
       completedSteps.includes("teams") || user?.onboarding_state?.step === "COMPLETED";
 
-    if (hasWorkspace && hasProfile && hasTeams && user?.workspace_public_id) {
-      router.replace(`/${user.workspace_public_id}/home`);
+    if (hasWorkspace && hasProfile && hasTeams) {
+      router.replace("/home");
       return;
     }
 
@@ -284,11 +284,8 @@ export function OnboardingFlow() {
       setWorkspaceLanguage(locale);
       const refreshedUser = await refreshUser();
       const nextSteps = refreshedUser?.onboarding_state?.completed_steps || [];
-      if (
-        refreshedUser?.workspace_public_id &&
-        (nextSteps.includes("teams") || refreshedUser?.onboarding_state?.step === "COMPLETED")
-      ) {
-        router.replace(`/${refreshedUser.workspace_public_id}/home`);
+      if (nextSteps.includes("teams") || refreshedUser?.onboarding_state?.step === "COMPLETED") {
+        router.replace("/home");
         return;
       }
       if (nextSteps.includes("workspace")) {
@@ -308,9 +305,8 @@ export function OnboardingFlow() {
     setIsLoading(true);
     try {
       await completeOnboarding();
-      const refreshedUser = await refreshUser();
-      const targetWorkspace = refreshedUser?.workspace_public_id || user?.workspace_public_id;
-      router.replace(targetWorkspace ? `/${targetWorkspace}/home` : "/home");
+      await refreshUser();
+      router.replace("/home");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível acessar o workspace.");
     } finally {
@@ -458,10 +454,8 @@ export function OnboardingFlow() {
           name: team.name.trim(),
         })),
       });
-      const refreshedUser = await refreshUser();
-      const targetWorkspace =
-        refreshedUser?.workspace_public_id || user?.workspace_public_id || workspacePublicId;
-      router.replace(targetWorkspace ? `/${targetWorkspace}/home` : "/home");
+      await refreshUser();
+      router.replace("/home");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível concluir a configuração.");
     } finally {

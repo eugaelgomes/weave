@@ -24,11 +24,7 @@ class AuthBaseController {
       user?.onboarding_state?.step === "COMPLETED" || (hasProfile && hasWorkspace);
 
     if (mandatoryComplete) {
-      const workspacePublicId =
-        user?.workspace?.public_id ||
-        user?.workspace_public_id ||
-        user?.workspace?.workspace_public_id;
-      return workspacePublicId ? `/${workspacePublicId}/home` : "/chat/?auth=success";
+      return "/home?auth=success";
     }
 
     return "/account/onboarding?auth=success";

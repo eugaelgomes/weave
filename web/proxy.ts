@@ -75,6 +75,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (pathname !== "/home" && pathname.endsWith("/home")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/home";
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 
@@ -91,5 +97,6 @@ export const config = {
     "/calendar/:path*",
     "/organization/projects/:path*",
     "/organization/dashboard",
+    "/:path*/home",
   ],
 };
