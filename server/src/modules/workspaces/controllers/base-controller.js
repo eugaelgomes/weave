@@ -73,6 +73,9 @@ class WorkspacesBaseController {
     if (!workspace) {
       throw AppError.notFound("Workspace not found");
     }
+    if (workspace.member_role === "OWNER" || workspace.member_roles?.includes("OWNER")) {
+      return true;
+    }
     const userPermissions = workspace.permissions || [];
     if (!userPermissions.includes(permission)) {
       throw AppError.forbidden("Insufficient workspace permissions", "WORKSPACE_FORBIDDEN");
@@ -89,6 +92,9 @@ class WorkspacesBaseController {
   _ensureWorkspacePermissionAny(workspace, permissions, _res) {
     if (!workspace) {
       throw AppError.notFound("Workspace not found");
+    }
+    if (workspace.member_role === "OWNER" || workspace.member_roles?.includes("OWNER")) {
+      return true;
     }
     const userPermissions = workspace.permissions || [];
     if (!permissions.some((p) => userPermissions.includes(p))) {
@@ -305,7 +311,11 @@ class WorkspacesController extends WorkspacesBaseController {
 
       const formatted = workspaceResponseSchema.parse(workspace);
 
-      res.status(200).json({ data: formatted, success: true });
+      res.status(200).json({
+        data: formatted,
+        organization_data: formatted,
+        success: true,
+      });
     } catch (error) {
       console.error("Error getting workspace:", error);
       return next(fromUnknown(error));

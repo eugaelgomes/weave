@@ -198,11 +198,7 @@ class WorkspaceRolesRepository {
       include: {
         workspace_member_roles: {
           include: {
-            workspace_roles: {
-              where: {
-                deleted: false,
-              },
-            },
+            workspace_roles: true,
           },
         },
       },
@@ -216,7 +212,11 @@ class WorkspaceRolesRepository {
     const permissionsSet = new Set();
     for (const member of members) {
       for (const wmr of member.workspace_member_roles) {
-        if (wmr.workspace_roles && Array.isArray(wmr.workspace_roles.permissions)) {
+        if (
+          wmr.workspace_roles &&
+          !wmr.workspace_roles.deleted &&
+          Array.isArray(wmr.workspace_roles.permissions)
+        ) {
           for (const perm of wmr.workspace_roles.permissions) {
             permissionsSet.add(perm);
           }

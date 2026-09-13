@@ -264,6 +264,8 @@ router.delete(
   workspaceMembersController.removeMember.bind(workspaceMembersController)
 );
 
+router.get("/invites", workspaceMembersController.listInvites.bind(workspaceMembersController));
+
 router.post(
   "/invites",
   validate(inviteMemberSchema, "body"),

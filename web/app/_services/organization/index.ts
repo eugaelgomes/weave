@@ -407,13 +407,18 @@ export const fetchOrganization = async (userId?: string): Promise<Organization |
     const response = await apiClient.get(url);
     const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
-    if ((data.status === "OK" || data.success) && data.organization_data) {
-      return transformBackendOrganization(asUnknown(data.organization_data));
+    const orgPayload = data.organization_data || data.data;
+    if ((data.status === "OK" || data.success) && orgPayload) {
+      return transformBackendOrganization(asUnknown(orgPayload));
     }
 
     return null;
   } catch (error: any) {
-    if (error.message?.includes("não encontrada") || error.status === 404) {
+    if (
+      error.message?.includes("não encontrada") ||
+      error.message?.includes("not found") ||
+      error.status === 404
+    ) {
       return null;
     }
     throw error;
@@ -734,8 +739,14 @@ export const fetchOrganizationMembers = async (
     const response = await apiClient.get(url);
     const data = OrgJsonSchema.parse(await handleResponse<unknown>(response));
 
-    if (data.status === "OK" && data.list_org_members) {
-      const countRaw = data.count;
+    const membersRaw =
+      data.list_org_members ||
+      data.list_workspace_members ||
+      (data.data as any)?.list_org_members ||
+      (data.data as any)?.list_workspace_members;
+
+    if ((data.status === "OK" || data.success) && membersRaw) {
+      const countRaw = data.count ?? (data.data as any)?.count;
       const count =
         typeof countRaw === "number"
           ? countRaw
@@ -744,9 +755,9 @@ export const fetchOrganizationMembers = async (
             : 0;
       return {
         count,
-        count_by_role: recordNumbers(data.count_by_role),
-        count_by_status: recordNumbers(data.count_by_status),
-        list_org_members: (data.list_org_members as Array<{ member_data: OrganizationMember }>).map(
+        count_by_role: recordNumbers(data.count_by_role || (data.data as any)?.count_by_role),
+        count_by_status: recordNumbers(data.count_by_status || (data.data as any)?.count_by_status),
+        list_org_members: (membersRaw as Array<{ member_data: OrganizationMember }>).map(
           (item) => item.member_data
         ),
       };

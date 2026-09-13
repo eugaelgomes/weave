@@ -120,7 +120,7 @@ class WorkspaceMembersRepository {
         pm.*,
         (SELECT count FROM total_count) as total_count,
         (
-          SELECT array_agg(DISTINCT r.name)
+          SELECT COALESCE(array_agg(DISTINCT r.name), ARRAY[]::text[])
           FROM workspace_member_roles wmr 
           JOIN workspaces_roles r ON r.id = wmr.role_id
           WHERE wmr.workspace_member_id = pm.id
@@ -132,19 +132,8 @@ class WorkspaceMembersRepository {
           CROSS JOIN jsonb_array_elements(r2.permissions) as perm
           WHERE wmr2.workspace_member_id = pm.id
         ) as accumulated_permissions,
-        (SELECT COUNT(*) 
-         FROM notes n 
-         WHERE n.user_id = pm.user_id AND n.deleted = false) as notes_count,
-        (SELECT COALESCE(json_agg(json_build_object(
-           'project_id', p.id::text,
-           'project_name', p.title,
-           'role', prm.role
-         )), '[]'::json)
-         FROM project_members prm
-         JOIN projects p ON p.id = prm.project_id
-         WHERE prm.user_id = pm.user_id
-           AND prm.deleted = false 
-           AND p.deleted = false) as projects,
+        0::bigint as notes_count,
+        '[]'::json as projects,
         (SELECT COALESCE(json_agg(json_build_object(
            'team_id', a.id::text,
            'team_name', a.name,
@@ -152,7 +141,7 @@ class WorkspaceMembersRepository {
          )), '[]'::json)
          FROM team_members am
          JOIN teams a ON a.id = am.team_id
-         JOIN workspaces_roles tr ON tr.id = am.role_id
+         LEFT JOIN workspaces_roles tr ON tr.id = am.role_id
          WHERE am.user_id = pm.user_id
            AND am.deleted = false 
            AND a.deleted = false
@@ -179,8 +168,9 @@ class WorkspaceMembersRepository {
 
     return results.map((row) => ({
       ...row,
-      notes_count: Number(row.notes_count),
-      total_count: Number(row.total_count),
+      notes_count: Number(row.notes_count || 0),
+      roles: Array.isArray(row.roles) ? row.roles : [],
+      total_count: Number(row.total_count || 0),
     }));
   }
 

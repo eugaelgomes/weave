@@ -54,15 +54,32 @@ class WorkspaceBaseRepository {
       client
     );
 
+    const isOwner = workspace.user_id === user_id;
+    const allPermissions = [
+      "manage_areas",
+      "manage_brand",
+      "manage_domains",
+      "manage_members",
+      "manage_org_lifecycle",
+      "manage_weave_ai",
+      "view_member_directory",
+    ];
+
+    const effectivePermissions = isOwner
+      ? Array.from(new Set([...permissions, ...allPermissions]))
+      : permissions;
+
     return {
       ...workspace,
       avatar_url: workspace.users_workspaces_user_idTousers?.avatar_url,
       billing_cycle: workspace.plans?.details?.billing?.billing_cycle || "monthly",
       currency: workspace.plans?.currency,
       email: workspace.users_workspaces_user_idTousers?.email,
-      member_roles,
+      member_role: isOwner ? "OWNER" : member_roles[0] || "MEMBER",
+      member_roles:
+        isOwner && !member_roles.includes("OWNER") ? ["OWNER", ...member_roles] : member_roles,
       name: workspace.users_workspaces_user_idTousers?.name,
-      permissions,
+      permissions: effectivePermissions,
       plan_details: workspace.plans?.details,
       plan_name: workspace.plans?.name,
       plan_snapshot: workspace.plans?.details,
@@ -149,12 +166,19 @@ class WorkspaceBaseRepository {
       },
     });
 
-    return members.map((m) => ({
-      ...m.workspaces,
-      joined_at: m.created_at,
-      member_roles: m.workspace_member_roles.map((wmr) => wmr.workspace_roles.name),
-      member_status: m.status,
-    }));
+    return members.map((m) => {
+      const isOwner = m.workspaces?.user_id === user_id;
+      const roles =
+        m.workspace_member_roles?.map((wmr) => wmr.workspace_roles?.name).filter(Boolean) || [];
+      const memberRole = isOwner ? "OWNER" : roles[0] || "MEMBER";
+      return {
+        ...m.workspaces,
+        joined_at: m.created_at,
+        member_role: memberRole,
+        member_roles: roles,
+        member_status: m.status,
+      };
+    });
   }
 
   /**

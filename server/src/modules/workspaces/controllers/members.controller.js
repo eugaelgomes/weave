@@ -12,10 +12,13 @@ const { memberListResponseSchema } = require("../schemas/members.schema");
 const { send_workspace_invite } = require("@/services/email/templates/invite-member");
 const { getUserEmailLocale } = require("@/services/email/i18n");
 const teamsRepository = require("../repositories/teams.repository");
+const membersRepository = require("../repositories/members.repository");
 
 class WorkspaceMembersController extends WorkspacesBaseController {
   constructor() {
     super();
+    this.membersRepository = membersRepository;
+    this.workspacesRepository = membersRepository;
     this.teamsRepository = teamsRepository;
   }
 
@@ -168,30 +171,100 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       const totalCount = members.length > 0 ? parseInt(members[0].total_count, 10) : 0;
       const totalPages = Math.ceil(totalCount / parsedLimit);
 
+      const parsedMembers = memberListResponseSchema.parse(members);
+      const countByRole = members.reduce((acc, member) => {
+        (member.roles || []).forEach((role) => {
+          acc[role] = (acc[role] || 0) + 1;
+        });
+        return acc;
+      }, {});
+      const countByStatus = members.reduce((acc, member) => {
+        acc[member.status] = (acc[member.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      const payload = {
+        count: members.length,
+        count_by_role: countByRole,
+        count_by_status: countByStatus,
+        current_page: parsedPage,
+        list_org_members: parsedMembers,
+        list_workspace_members: parsedMembers,
+        total_count: totalCount,
+        total_pages: totalPages,
+      };
+
       res.status(200).json({
-        data: {
-          count: members.length,
-          count_by_role: members.reduce((acc, member) => {
-            (member.roles || []).forEach((role) => {
-              acc[role] = (acc[role] || 0) + 1;
-            });
-            return acc;
-          }, {}),
-          count_by_status: members.reduce((acc, member) => {
-            acc[member.status] = (acc[member.status] || 0) + 1;
-            return acc;
-          }, {}),
-          current_page: parsedPage,
-          list_workspace_members: memberListResponseSchema.parse(members),
-          total_count: totalCount,
-          total_pages: totalPages,
-        },
+        ...payload,
+        data: payload,
+        status: "OK",
         success: true,
         workspace_id: currentWorkspace.id,
       });
     } catch (error) {
       console.error("Error fetching members:", error);
       return next(fromUnknown(error));
+    }
+  }
+
+  /**
+   * List pending invites in the workspace
+   */
+  async listInvites(req, res, next) {
+    try {
+      const userId = this._validateAuthentication(req, res);
+      if (!userId) return;
+
+      const currentWorkspace = await this._getUserWorkspace(userId);
+      if (!currentWorkspace) {
+        throw AppError.notFound("Workspace not found");
+      }
+
+      const pendingUsers = await prisma.workspace_members.findMany({
+        include: {
+          users_workspace_members_user_idTousers: {
+            select: {
+              avatar_url: true,
+              email: true,
+              name: true,
+              status: true,
+              user_id: true,
+              username: true,
+            },
+          },
+          workspace_member_roles: {
+            include: {
+              workspace_roles: true,
+            },
+          },
+        },
+        where: {
+          deleted: false,
+          users_workspace_members_user_idTousers: {
+            status: "PENDING_INVITE",
+          },
+          workspace_id: currentWorkspace.id,
+        },
+      });
+
+      const formatted = pendingUsers.map((m) => ({
+        created_at: m.created_at,
+        email: m.users_workspace_members_user_idTousers.email,
+        id: m.id,
+        name: m.users_workspace_members_user_idTousers.name,
+        roles: m.workspace_member_roles.map((r) => r.workspace_roles?.name).filter(Boolean),
+        status: "pending",
+        user_id: m.user_id,
+      }));
+
+      res.status(200).json({
+        data: formatted,
+        invites: formatted,
+        status: "OK",
+        success: true,
+      });
+    } catch (error) {
+      next(fromUnknown(error));
     }
   }
 

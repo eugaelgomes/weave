@@ -94,27 +94,28 @@ const updateMemberRoleSchema = z.object({
 const memberResponseSchema = z
   .object({
     avatar_url: z.string().nullable().optional(),
-    created_at: z.union([z.string(), z.date()]).optional(),
+    created_at: z.union([z.string(), z.date()]).nullable().optional(),
     email: z.string(),
     invited_by: z.string().nullable().optional(),
     inviter_avatar_url: z.string().nullable().optional(),
     inviter_name: z.string().nullable().optional(),
     inviter_username: z.string().nullable().optional(),
+    last_login: z.union([z.string(), z.date()]).nullable().optional(),
     last_login_at: z.union([z.string(), z.date()]).nullable().optional(),
     name: z.string(),
     notes_count: z.union([z.string(), z.number()]).optional(),
     projects: z.array(z.any()).optional(),
-    roles: z.array(z.string()),
+    roles: z.array(z.string()).nullable().optional().default([]),
     status: z.string(),
     teams: z.array(z.any()).optional(),
-    updated_at: z.union([z.string(), z.date()]).optional(),
+    updated_at: z.union([z.string(), z.date()]).nullable().optional(),
     user_id: z.string(),
     username: z.string().nullable().optional(),
   })
   .transform((member) => ({
     member_data: {
       activity: {
-        last_login_at: member.last_login_at || null,
+        last_login_at: member.last_login_at || member.last_login || null,
         notes_count:
           typeof member.notes_count === "string"
             ? parseInt(member.notes_count, 10)
@@ -134,13 +135,13 @@ const memberResponseSchema = z
           }
         : null,
       membership: {
-        created_at: member.created_at,
-        roles: member.roles,
+        created_at: member.created_at || null,
+        roles: member.roles || [],
         status: member.status,
-        updated_at: member.updated_at,
+        updated_at: member.updated_at || null,
       },
       name: member.name,
-      username: member.username,
+      username: member.username || null,
     },
   }));
 
