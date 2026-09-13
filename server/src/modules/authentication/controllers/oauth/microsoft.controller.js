@@ -123,7 +123,11 @@ class MicrosoftOauthController extends AuthBaseController {
         const existingUser = await AuthRepository.findUserByEmail(userEmail);
 
         if (existingUser) {
-          await MicrosoftOauthRepository.updateUserWithMicrosoft(existingUser.user_id, microsoftId);
+          await MicrosoftOauthRepository.updateUserWithMicrosoft(
+            existingUser.user_id,
+            microsoftId,
+            microsoftUser.displayName
+          );
         } else {
           const emailDomain = userEmail.split("@")[1];
           if (emailDomain) {

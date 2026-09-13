@@ -794,44 +794,50 @@ class PlansRepository {
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
 
-    const [updatedUser] = await client.$transaction([
-      client.users.update({
-        data: {
-          plan_id: planId,
-          updated_at: now,
-        },
-        select: {
-          plan_id: true,
-          user_id: true,
-        },
-        where: { user_id: userId },
-      }),
-      client.subscriptions.upsert({
-        create: {
-          current_period_end: periodEnd,
-          current_period_start: now,
-          plan_id: planId,
-          provider: "internal",
-          status: "active",
+    const updateUserOp = client.users.update({
+      data: {
+        plan_id: planId,
+        updated_at: now,
+      },
+      select: {
+        plan_id: true,
+        user_id: true,
+      },
+      where: { user_id: userId },
+    });
+
+    const upsertSubOp = client.subscriptions.upsert({
+      create: {
+        current_period_end: periodEnd,
+        current_period_start: now,
+        plan_id: planId,
+        provider: "internal",
+        status: "active",
+        subscriber_id: userId,
+        subscriber_type: "user",
+      },
+      update: {
+        current_period_end: periodEnd,
+        current_period_start: now,
+        plan_id: planId,
+        status: "active",
+        updated_at: now,
+      },
+      where: {
+        subscriber_type_subscriber_id: {
           subscriber_id: userId,
           subscriber_type: "user",
         },
-        update: {
-          current_period_end: periodEnd,
-          current_period_start: now,
-          plan_id: planId,
-          status: "active",
-          updated_at: now,
-        },
-        where: {
-          uq_subscriptions_subscriber: {
-            subscriber_id: userId,
-            subscriber_type: "user",
-          },
-        },
-      }),
-    ]);
+      },
+    });
 
+    if (typeof client.$transaction === "function") {
+      const [updatedUser] = await client.$transaction([updateUserOp, upsertSubOp]);
+      return updatedUser;
+    }
+
+    const updatedUser = await updateUserOp;
+    await upsertSubOp;
     return updatedUser;
   }
 }

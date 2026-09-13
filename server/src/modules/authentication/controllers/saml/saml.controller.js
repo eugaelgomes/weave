@@ -117,6 +117,14 @@ class SamlController extends AuthBaseController {
         );
 
         user = await AuthRepository.findUserByEmail(userEmail);
+      } else {
+        const displayName = profile.displayName || profile.firstName || null;
+        await AuthRepository.updateUserWithSaml(
+          user.user_id,
+          `saml-${profile.nameID || userEmail}`,
+          displayName
+        );
+        user = await AuthRepository.findUserByEmail(userEmail);
       }
 
       if (!user) {

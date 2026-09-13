@@ -109,7 +109,7 @@ class UsersRepository extends BaseRepository {
     const resolvedPlanId = plan_id || (await PlansRepository.getDefaultSignupPlanId(client));
     const publicUserId = generatePublicId();
 
-    return await client.users.create({
+    const newUser = await client.users.create({
       data: {
         avatar_url: avatar_url || null,
         birth_date: birth_date ? new Date(birth_date) : null,
@@ -134,6 +134,39 @@ class UsersRepository extends BaseRepository {
         user_id: true,
       },
     });
+
+    if (resolvedPlanId) {
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+      await client.subscriptions.upsert({
+        create: {
+          current_period_end: periodEnd,
+          current_period_start: now,
+          plan_id: resolvedPlanId,
+          provider: "internal",
+          status: "active",
+          subscriber_id: newUser.user_id,
+          subscriber_type: "user",
+        },
+        update: {
+          current_period_end: periodEnd,
+          current_period_start: now,
+          plan_id: resolvedPlanId,
+          status: "active",
+          updated_at: now,
+        },
+        where: {
+          subscriber_type_subscriber_id: {
+            subscriber_id: newUser.user_id,
+            subscriber_type: "user",
+          },
+        },
+      });
+    }
+
+    return newUser;
   }
 
   /**
@@ -146,10 +179,10 @@ class UsersRepository extends BaseRepository {
    * @returns {Promise<{ public_user_id: string, user_id: string }>} Essential user IDs.
    */
   async createGithubUser(username, name, githubId, client = prisma) {
-    const planId = await PlansRepository.getDefaultSignupPlanId();
+    const planId = await PlansRepository.getDefaultSignupPlanId(client);
     const publicUserId = generatePublicId();
 
-    return await client.users.create({
+    const createdUser = await client.users.create({
       data: {
         github_id: githubId,
         name,
@@ -162,6 +195,39 @@ class UsersRepository extends BaseRepository {
         user_id: true,
       },
     });
+
+    if (planId) {
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+      await client.subscriptions.upsert({
+        create: {
+          current_period_end: periodEnd,
+          current_period_start: now,
+          plan_id: planId,
+          provider: "internal",
+          status: "active",
+          subscriber_id: createdUser.user_id,
+          subscriber_type: "user",
+        },
+        update: {
+          current_period_end: periodEnd,
+          current_period_start: now,
+          plan_id: planId,
+          status: "active",
+          updated_at: now,
+        },
+        where: {
+          subscriber_type_subscriber_id: {
+            subscriber_id: createdUser.user_id,
+            subscriber_type: "user",
+          },
+        },
+      });
+    }
+
+    return createdUser;
   }
 
   /**
@@ -184,13 +250,22 @@ class UsersRepository extends BaseRepository {
       onboarding_state,
     } = userData;
 
-    return await client.users.update({
+    const existingUser = await client.users.findUnique({
+      select: { plan_id: true },
+      where: { user_id: userId },
+    });
+
+    const resolvedPlanId =
+      existingUser?.plan_id || (await PlansRepository.getDefaultSignupPlanId(client));
+
+    const updatedUser = await client.users.update({
       data: {
         birth_date: birth_date ? new Date(birth_date) : null,
         name: name ?? null,
         onboarding_state: onboarding_state || undefined,
         password,
         phone_number,
+        plan_id: resolvedPlanId,
         private_profile: private_profile || false,
         status: "ACTIVE",
         timezone,
@@ -206,6 +281,39 @@ class UsersRepository extends BaseRepository {
       },
       where: { user_id: userId },
     });
+
+    if (resolvedPlanId) {
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+      await client.subscriptions.upsert({
+        create: {
+          current_period_end: periodEnd,
+          current_period_start: now,
+          plan_id: resolvedPlanId,
+          provider: "internal",
+          status: "active",
+          subscriber_id: userId,
+          subscriber_type: "user",
+        },
+        update: {
+          current_period_end: periodEnd,
+          current_period_start: now,
+          plan_id: resolvedPlanId,
+          status: "active",
+          updated_at: now,
+        },
+        where: {
+          subscriber_type_subscriber_id: {
+            subscriber_id: userId,
+            subscriber_type: "user",
+          },
+        },
+      });
+    }
+
+    return updatedUser;
   }
 
   // ==========================================

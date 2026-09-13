@@ -114,7 +114,8 @@ class GoogleOauthController extends AuthBaseController {
           await GoogleOauthRepository.updateUserWithGoogle(
             existingUser.user_id,
             googleUser.id,
-            googleUser.picture
+            googleUser.picture,
+            googleUser.name
           );
         } else {
           const emailDomain = googleUser.email.split("@")[1];

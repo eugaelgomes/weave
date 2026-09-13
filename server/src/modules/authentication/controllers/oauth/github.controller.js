@@ -143,7 +143,8 @@ class GithubOauthController extends AuthBaseController {
           await GithubOauthRepository.updateUserWithGithub(
             existingUser.user_id,
             githubId,
-            githubUser.avatar_url
+            githubUser.avatar_url,
+            githubUser.name
           );
         } else {
           const emailDomain = userEmail.split("@")[1];

@@ -206,9 +206,13 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       const authUserId = this._validateAuthentication(req, res);
       if (!authUserId) return;
 
-      const { email, role, name, username, target_teams = [] } = req.body;
+      const { email, roles, name, username, target_teams = [] } = req.body;
 
-      const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
+      // `inviteMemberSchema` accepts a list of workspace role UUIDs.  Reading the
+      // old singular `role` property caused an empty role to reach the repository,
+      // so the membership (and consequently the pending account used by SSO) was
+      // never persisted.
+      const normalizedRoles = roles.map((roleId) => roleId.trim());
 
       const currentWorkspace = await this._getUserWorkspace(authUserId);
       if (!currentWorkspace) {
@@ -248,7 +252,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       const invite = await this.workspacesRepository.createWorkspaceInvite(
         currentWorkspace.id,
         email,
-        normalizedRole,
+        normalizedRoles,
         authUserId,
         usedName,
         username || null,
@@ -264,7 +268,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
         currentWorkspace.workspace_name,
         inviter.name || inviter.username,
         invite.invite_id,
-        normalizedRole,
+        normalizedRoles[0],
         inviterLocale
       );
 
@@ -277,7 +281,10 @@ class WorkspaceMembersController extends WorkspacesBaseController {
           email: invite.email,
           expires_at: invite.expires_at,
           invite_id: invite.invite_id,
-          role: invite.role,
+          // Keep the legacy singular field for clients that display only the
+          // primary role, while exposing every persisted workspace role.
+          role: normalizedRoles[0],
+          roles: invite.roles,
           target_teams: invite.target_teams,
         },
         message: "Invite sent successfully.",
@@ -319,10 +326,10 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       };
 
       for (const inviteData of invites) {
-        const { email, role, name, username, target_teams = [] } = inviteData;
+        const { email, roles, name, username, target_teams = [] } = inviteData;
 
         try {
-          const normalizedRole = typeof role === "string" ? role.trim().toUpperCase() : "";
+          const normalizedRoles = roles.map((roleId) => roleId.trim());
 
           const existingUsers = await SearchUsersRepository.findByUsernameOrEmail("", email);
           const targetUser = existingUsers.find((u) => u.email === email);
@@ -352,7 +359,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
           const invite = await this.workspacesRepository.createWorkspaceInvite(
             currentWorkspace.id,
             email,
-            normalizedRole,
+            normalizedRoles,
             authUserId,
             name?.trim() || null,
             username || null,
@@ -364,7 +371,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
             currentWorkspace.workspace_name,
             inviter.name || inviter.username,
             invite.invite_id,
-            normalizedRole,
+            normalizedRoles[0],
             inviterLocale
           );
 

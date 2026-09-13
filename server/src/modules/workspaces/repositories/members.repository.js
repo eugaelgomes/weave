@@ -1,5 +1,6 @@
 const { prisma } = require("@theweave/database");
 const { generatePublicId } = require("@/utils/formatters.util");
+const plansRepository = require("@/modules/plans/repositories/plans.repository");
 
 /**
  * @typedef {import('@prisma/client').PrismaClient} PrismaClient
@@ -238,7 +239,7 @@ class WorkspaceMembersRepository {
           updated_at: new Date(),
         },
         where: {
-          unique_workspace_user: {
+          workspace_id_user_id: {
             user_id,
             workspace_id,
           },
@@ -376,7 +377,7 @@ class WorkspaceMembersRepository {
         updated_at: new Date(),
       },
       where: {
-        unique_workspace_user: { user_id, workspace_id },
+        workspace_id_user_id: { user_id, workspace_id },
       },
     });
   }
@@ -493,6 +494,8 @@ class WorkspaceMembersRepository {
         where: { email: { equals: email, mode: "insensitive" } },
       });
 
+      const defaultPlanId = await plansRepository.getDefaultSignupPlanId(tx);
+
       if (!user) {
         const publicUserId = generatePublicId();
         user = await tx.users.create({
@@ -500,11 +503,58 @@ class WorkspaceMembersRepository {
             email,
             name,
             password: "",
+            plan_id: defaultPlanId,
             public_user_id: publicUserId,
             status: "PENDING_INVITE",
             username: username || email.split("@")[0],
+            workspace_id,
           },
         });
+
+        if (defaultPlanId) {
+          const now = new Date();
+          const periodEnd = new Date(now);
+          periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+          await tx.subscriptions.upsert({
+            create: {
+              current_period_end: periodEnd,
+              current_period_start: now,
+              plan_id: defaultPlanId,
+              provider: "internal",
+              status: "active",
+              subscriber_id: user.user_id,
+              subscriber_type: "user",
+            },
+            update: {
+              current_period_end: periodEnd,
+              current_period_start: now,
+              plan_id: defaultPlanId,
+              status: "active",
+              updated_at: now,
+            },
+            where: {
+              subscriber_type_subscriber_id: {
+                subscriber_id: user.user_id,
+                subscriber_type: "user",
+              },
+            },
+          });
+        }
+      } else {
+        const updates = {};
+        if (!user.plan_id && defaultPlanId) {
+          updates.plan_id = defaultPlanId;
+        }
+        if (!user.workspace_id) {
+          updates.workspace_id = workspace_id;
+        }
+        if (Object.keys(updates).length > 0) {
+          user = await tx.users.update({
+            data: updates,
+            where: { user_id: user.user_id },
+          });
+        }
       }
 
       await this.addWorkspaceMember(workspace_id, user.user_id, roleIds, "ACTIVE", invited_by, tx);
