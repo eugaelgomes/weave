@@ -18,6 +18,7 @@ const ERROR_CODES = {
   ROUTE_NOT_FOUND: "ROUTE_NOT_FOUND",
   USER_UNIQUE_CONFLICT: "USER_UNIQUE_CONFLICT",
   VALIDATION_ERROR: "VALIDATION_ERROR",
+  WORKSPACE_UNIQUE_CONFLICT: "WORKSPACE_UNIQUE_CONFLICT",
 };
 
 /**
@@ -31,6 +32,7 @@ const DEFAULT_MESSAGES = {
   [ERROR_CODES.AUTH_REQUIRED]: "Authentication is required to perform this action.",
   [ERROR_CODES.ROUTE_NOT_FOUND]: "The requested route was not found.",
   [ERROR_CODES.USER_UNIQUE_CONFLICT]: "This value is already in use.",
+  [ERROR_CODES.WORKSPACE_UNIQUE_CONFLICT]: "This workspace identifier is already in use.",
   [ERROR_CODES.NOTE_NOT_FOUND]: "Note not found.",
   [ERROR_CODES.FILE_TOO_LARGE]: "Attached file exceeds the allowed size.",
   [ERROR_CODES.INVALID_FILE_TYPE]: "Attached file type is not allowed.",

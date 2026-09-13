@@ -26,6 +26,7 @@ import {
   submitOnboardingWorkspace,
   completeOnboarding,
 } from "@/app/_services/user-onboarding";
+import { ApiError } from "@/app/_services/api-error";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2;
@@ -227,7 +228,13 @@ export function OnboardingFlow() {
       }
       router.replace(`/${refreshedUser.org_public_id}/home`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível criar seu workspace.");
+      setError(
+        err instanceof ApiError && err.code === "WORKSPACE_UNIQUE_CONFLICT"
+          ? "Este identificador de workspace já está em uso. Escolha outro."
+          : err instanceof Error
+            ? err.message
+            : "Não foi possível criar seu workspace."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -250,12 +257,9 @@ export function OnboardingFlow() {
 
   return (
     <main className="w-full flex-1 p-3.5 sm:p-6 lg:p-8">
-      <div className="mx-auto w-full max-w-4xl space-y-5 sm:space-y-6 py-2 pb-16 sm:py-4 sm:pb-20">
+      <div className="mx-auto w-full max-w-4xl space-y-5 py-2 pb-16 sm:space-y-6 sm:py-4 sm:pb-20">
         {/* Superior Horizontal Stepper Overview */}
-        <nav
-          aria-label="Etapas do onboarding"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2"
-        >
+        <nav aria-label="Etapas do onboarding" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {/* Step 1 Overview */}
           <button
             type="button"
@@ -315,7 +319,7 @@ export function OnboardingFlow() {
               "flex items-center gap-3.5 rounded-xl border p-4 text-left transition-all",
               currentStep === 2
                 ? "border-neutral-900 bg-white shadow-xs dark:border-white/30 dark:bg-[#1d1d1b]"
-                : "border-neutral-200/80 bg-white/60 dark:border-white/10 dark:bg-white/[0.02] opacity-75"
+                : "border-neutral-200/80 bg-white/60 opacity-75 dark:border-white/10 dark:bg-white/[0.02]"
             )}
           >
             <div
@@ -388,9 +392,7 @@ export function OnboardingFlow() {
                           </span>
                           <input
                             value={username}
-                            onChange={(event) =>
-                              setUsername(event.target.value.toLowerCase())
-                            }
+                            onChange={(event) => setUsername(event.target.value.toLowerCase())}
                             placeholder="gael.rens"
                             maxLength={18}
                             disabled={isLoading}
@@ -414,13 +416,13 @@ export function OnboardingFlow() {
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
+                        <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
                       </div>
                     </Field>
                   </div>
 
                   {/* Appearance & Locale section */}
-                  <div className="space-y-3.5 pt-2 border-t border-neutral-100 dark:border-white/5">
+                  <div className="space-y-3.5 border-t border-neutral-100 pt-2 dark:border-white/5">
                     {/* Theme Mode Toggle */}
                     <div className="space-y-1.5">
                       <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
@@ -474,7 +476,7 @@ export function OnboardingFlow() {
                             <option value="en-US">English</option>
                             <option value="es-ES">Español</option>
                           </select>
-                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
+                          <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
                         </div>
                       </Field>
 
@@ -491,7 +493,7 @@ export function OnboardingFlow() {
                             <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                             <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                           </select>
-                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
+                          <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
                         </div>
                       </Field>
 
@@ -499,16 +501,14 @@ export function OnboardingFlow() {
                         <div className="relative">
                           <select
                             value={timeFormat}
-                            onChange={(event) =>
-                              setTimeFormat(event.target.value as "12h" | "24h")
-                            }
+                            onChange={(event) => setTimeFormat(event.target.value as "12h" | "24h")}
                             disabled={isLoading}
                             className={selectClassName}
                           >
                             <option value="24h">24 horas</option>
                             <option value="12h">12 horas</option>
                           </select>
-                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
+                          <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" />
                         </div>
                       </Field>
                     </div>
@@ -517,11 +517,7 @@ export function OnboardingFlow() {
                   <FormError error={error} />
 
                   <div className="pt-3">
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className={primaryButtonClassName}
-                    >
+                    <button type="submit" disabled={isLoading} className={primaryButtonClassName}>
                       {isLoading ? "Salvando perfil..." : "Salvar e continuar"}
                     </button>
                   </div>
@@ -529,12 +525,12 @@ export function OnboardingFlow() {
               ) : user?.org_public_id && !showCreateWorkspaceForm ? (
                 <div className="space-y-6">
                   <div className="rounded-xl border border-neutral-200/80 bg-neutral-50/60 p-5 dark:border-white/10 dark:bg-white/[0.02]">
-                    <div className="flex items-center gap-3.5 mb-3">
+                    <div className="mb-3 flex items-center gap-3.5">
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-900 text-white shadow-xs dark:bg-white dark:text-neutral-900">
                         <Building2 className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-base font-semibold text-neutral-900 dark:text-white truncate">
+                        <h3 className="truncate text-base font-semibold text-neutral-900 dark:text-white">
                           {user?.user_organization?.name || user?.org_name || "Workspace Convidado"}
                         </h3>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -543,7 +539,8 @@ export function OnboardingFlow() {
                       </div>
                     </div>
                     <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-300">
-                      Você pode começar a colaborar imediatamente com sua equipe no espaço oficial sem precisar criar um novo espaço.
+                      Você pode começar a colaborar imediatamente com sua equipe no espaço oficial
+                      sem precisar criar um novo espaço.
                     </p>
                   </div>
 
@@ -562,7 +559,7 @@ export function OnboardingFlow() {
                       type="button"
                       onClick={() => setShowCreateWorkspaceForm(true)}
                       disabled={isLoading}
-                      className="text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white transition-colors py-2 px-1"
+                      className="px-1 py-2 text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-white"
                     >
                       Ou criar um workspace novo
                     </button>
@@ -616,7 +613,7 @@ export function OnboardingFlow() {
                   </div>
 
                   {/* Purpose selection cards */}
-                  <div className="space-y-2 pt-2 border-t border-neutral-100 dark:border-white/5">
+                  <div className="space-y-2 border-t border-neutral-100 pt-2 dark:border-white/5">
                     <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                       Como você pretende usar o The Weave?
                     </span>
@@ -633,16 +630,16 @@ export function OnboardingFlow() {
                             className={cn(
                               "flex flex-col items-start rounded-xl border p-3.5 text-left transition-all",
                               isSelected
-                                ? "border-neutral-900 bg-neutral-50/80 dark:border-white/40 dark:bg-white/[0.06] ring-1 ring-neutral-900/10 dark:ring-white/20"
+                                ? "border-neutral-900 bg-neutral-50/80 ring-1 ring-neutral-900/10 dark:border-white/40 dark:bg-white/[0.06] dark:ring-white/20"
                                 : "border-neutral-200/80 bg-white hover:border-neutral-300 dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-white/20"
                             )}
                           >
                             <div
                               className={cn(
-                                "flex h-7 w-7 items-center justify-center rounded-md mb-2.5",
+                                "mb-2.5 flex h-7 w-7 items-center justify-center rounded-md",
                                 isSelected
-                                ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                                : "bg-neutral-100 text-neutral-600 dark:bg-white/10 dark:text-neutral-300"
+                                  ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                                  : "bg-neutral-100 text-neutral-600 dark:bg-white/10 dark:text-neutral-300"
                               )}
                             >
                               <Icon className="h-3.5 w-3.5" />
@@ -650,7 +647,7 @@ export function OnboardingFlow() {
                             <span className="text-xs font-semibold text-neutral-900 dark:text-white">
                               {purpose.title}
                             </span>
-                            <span className="mt-1 text-[11px] leading-4 text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                            <span className="mt-1 line-clamp-2 text-[11px] leading-4 text-neutral-500 dark:text-neutral-400">
                               {purpose.description}
                             </span>
                           </button>
@@ -666,7 +663,7 @@ export function OnboardingFlow() {
                       type="button"
                       onClick={() => setCurrentStep(1)}
                       disabled={isLoading}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-white/10 dark:text-neutral-300 dark:hover:bg-white/5 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50 dark:border-white/10 dark:text-neutral-300 dark:hover:bg-white/5"
                     >
                       <ChevronLeft className="h-4 w-4" />
                       Voltar
@@ -684,10 +681,10 @@ export function OnboardingFlow() {
             </div>
 
             {/* Live Interactive Preview Column */}
-            <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between rounded-xl border border-neutral-200/70 bg-neutral-50/50 p-5 dark:border-white/5 dark:bg-white/[0.02] self-start lg:sticky lg:top-4">
+            <div className="flex flex-col justify-between self-start rounded-xl border border-neutral-200/70 bg-neutral-50/50 p-5 lg:sticky lg:top-4 lg:col-span-5 xl:col-span-4 dark:border-white/5 dark:bg-white/[0.02]">
               <div>
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-200/60 dark:border-white/5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                <div className="flex items-center justify-between border-b border-neutral-200/60 pb-3 dark:border-white/5">
+                  <span className="text-xs font-semibold tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
                     {currentStep === 1 ? "Prévia do Perfil" : "Prévia do Workspace"}
                   </span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
@@ -781,29 +778,31 @@ export function OnboardingFlow() {
                         </div>
                       </div>
 
-                      <div className="mt-3.5 pt-3 border-t border-neutral-100 dark:border-white/5 flex items-center justify-between text-xs">
+                      <div className="mt-3.5 flex items-center justify-between border-t border-neutral-100 pt-3 text-xs dark:border-white/5">
                         <span className="text-neutral-400 dark:text-neutral-500">Seu papel</span>
-                        <span className="font-medium text-neutral-800 dark:text-neutral-200 inline-flex items-center gap-1">
-                          <Shield className="h-3 w-3 text-brand-primary-500" />
+                        <span className="inline-flex items-center gap-1 font-medium text-neutral-800 dark:text-neutral-200">
+                          <Shield className="text-brand-primary-500 h-3 w-3" />
                           Administrador
                         </span>
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-white/70 p-3 text-xs text-neutral-600 dark:bg-white/[0.03] dark:text-neutral-400 space-y-1">
+                    <div className="space-y-1 rounded-lg bg-white/70 p-3 text-xs text-neutral-600 dark:bg-white/[0.03] dark:text-neutral-400">
                       <p className="font-medium text-neutral-900 dark:text-white">
                         O que acontece a seguir?
                       </p>
                       <p className="text-[11px] leading-4 text-neutral-500 dark:text-neutral-400">
-                        Seu workspace será gerado automaticamente com notas, calendário e espaço de equipe prontos para uso.
+                        Seu workspace será gerado automaticamente com notas, calendário e espaço de
+                        equipe prontos para uso.
                       </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="mt-6 pt-3 border-t border-neutral-200/60 dark:border-white/5 text-[11px] text-neutral-400 dark:text-neutral-500">
-                Você pode atualizar essas preferências a qualquer momento nas configurações da sua conta.
+              <div className="mt-6 border-t border-neutral-200/60 pt-3 text-[11px] text-neutral-400 dark:border-white/5 dark:text-neutral-500">
+                Você pode atualizar essas preferências a qualquer momento nas configurações da sua
+                conta.
               </div>
             </div>
           </div>
@@ -825,13 +824,9 @@ function Field({
   return (
     <label className="block space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-          {label}
-        </span>
+        <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">{label}</span>
         {optional && (
-          <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
-            opcional
-          </span>
+          <span className="text-[11px] text-neutral-400 dark:text-neutral-500">opcional</span>
         )}
       </div>
       {children}

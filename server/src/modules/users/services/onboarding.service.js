@@ -4,6 +4,11 @@ const WorkspacesRepository = require("@/modules/workspaces/repositories/base.rep
 const PlansRepository = require("@/modules/plans/repositories/plans.repository");
 const OnboardingRepository = require("../repositories/onboarding.repository");
 const { normalizeAppPreferences } = require("@/modules/users/utils/normalize");
+const { AppError, ERROR_CODES } = require("@/errors");
+
+const isWorkspaceUniqueNameConflict = (error) =>
+  error?.code === "P2002" &&
+  (error?.meta?.target?.includes?.("unique_name") || error?.message?.includes("unique_name"));
 
 class OnboardingService {
   /**
@@ -92,72 +97,96 @@ class OnboardingService {
   async processWorkspaceStep(userId, workspaceData) {
     const { workspace_name, unique_name, invite_token } = workspaceData;
 
-    return await prisma.$transaction(async (client) => {
-      let workspaceIdToJoin = null;
+    try {
+      return await prisma.$transaction(async (client) => {
+        let workspaceIdToJoin = null;
 
-      if (invite_token) {
-        // 1. Consume the invite
-        const pendingMember = await OnboardingRepository.findPendingInvite(invite_token, client);
+        if (invite_token) {
+          // 1. Consume the invite
+          const pendingMember = await OnboardingRepository.findPendingInvite(invite_token, client);
 
-        if (!pendingMember) {
-          throw new Error("Invalid or expired invite token.");
-        }
+          if (!pendingMember) {
+            throw new Error("Invalid or expired invite token.");
+          }
 
-        workspaceIdToJoin = pendingMember.workspace_id;
+          workspaceIdToJoin = pendingMember.workspace_id;
 
-        // Transfer the membership to the actual authenticated user
-        if (invite_token !== userId) {
-          await OnboardingRepository.claimInvite(pendingMember.id, userId, invite_token, client);
+          // Transfer the membership to the actual authenticated user
+          if (invite_token !== userId) {
+            await OnboardingRepository.claimInvite(pendingMember.id, userId, invite_token, client);
+          } else {
+            // If for some reason the invite_token is already the current user's ID
+            await OnboardingRepository.activateInvite(pendingMember.id, client);
+          }
+
+          const currentUser = await client.users.findUnique({
+            select: { plan_id: true, workspace_id: true },
+            where: { user_id: userId },
+          });
+
+          const defaultPlanId =
+            currentUser?.plan_id || (await PlansRepository.getDefaultSignupPlanId(client));
+
+          await client.users.update({
+            data: {
+              email_verified: true,
+              email_verified_at: new Date(),
+              plan_id: defaultPlanId,
+              workspace_id: workspaceIdToJoin,
+            },
+            where: { user_id: userId },
+          });
         } else {
-          // If for some reason the invite_token is already the current user's ID
-          await OnboardingRepository.activateInvite(pendingMember.id, client);
+          const existingWorkspace = await client.workspaces.findUnique({
+            select: { id: true },
+            where: { unique_name },
+          });
+
+          if (existingWorkspace) {
+            throw AppError.conflict(
+              "This workspace identifier is already in use.",
+              ERROR_CODES.WORKSPACE_UNIQUE_CONFLICT,
+              { field: "unique_name" }
+            );
+          }
+
+          // 1. Create workspace (this also creates settings, default team, and adds member as admin)
+          const workspace = await WorkspacesRepository.createWorkspaces(
+            userId,
+            workspace_name,
+            unique_name,
+            null,
+            null,
+            null,
+            null,
+            client
+          );
+          workspaceIdToJoin = workspace.id;
         }
 
-        const currentUser = await client.users.findUnique({
-          select: { plan_id: true, workspace_id: true },
-          where: { user_id: userId },
-        });
-
-        const defaultPlanId =
-          currentUser?.plan_id || (await PlansRepository.getDefaultSignupPlanId(client));
-
-        await client.users.update({
-          data: {
-            email_verified: true,
-            email_verified_at: new Date(),
-            plan_id: defaultPlanId,
-            workspace_id: workspaceIdToJoin,
-          },
-          where: { user_id: userId },
-        });
-      } else {
-        // 1. Create workspace (this also creates settings, default team, and adds member as admin)
-        const workspace = await WorkspacesRepository.createWorkspaces(
+        // 5. Update onboarding status preserving completed_steps
+        await OnboardingRepository.appendOnboardingStep(
           userId,
-          workspace_name,
-          unique_name,
-          null,
-          null,
-          null,
-          null,
+          "WORKSPACE_CONFIGURED",
+          "workspace",
           client
         );
-        workspaceIdToJoin = workspace.id;
+
+        // Workspace setup is the final user-facing onboarding step.
+        await OnboardingRepository.appendOnboardingStep(userId, "COMPLETED", "intro", client);
+
+        return { workspaceId: workspaceIdToJoin };
+      });
+    } catch (error) {
+      if (isWorkspaceUniqueNameConflict(error)) {
+        throw AppError.conflict(
+          "This workspace identifier is already in use.",
+          ERROR_CODES.WORKSPACE_UNIQUE_CONFLICT,
+          { field: "unique_name" }
+        );
       }
-
-      // 5. Update onboarding status preserving completed_steps
-      await OnboardingRepository.appendOnboardingStep(
-        userId,
-        "WORKSPACE_CONFIGURED",
-        "workspace",
-        client
-      );
-
-      // Workspace setup is the final user-facing onboarding step.
-      await OnboardingRepository.appendOnboardingStep(userId, "COMPLETED", "intro", client);
-
-      return { workspaceId: workspaceIdToJoin };
-    });
+      throw error;
+    }
   }
 
   /** Completes the onboarding flow. */
