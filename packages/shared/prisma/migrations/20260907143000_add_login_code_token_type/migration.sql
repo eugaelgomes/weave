@@ -1,1 +1,0 @@
-ALTER TYPE "token_type_enum" ADD VALUE IF NOT EXISTS 'LOGIN_CODE';
