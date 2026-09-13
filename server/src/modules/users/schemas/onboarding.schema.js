@@ -47,7 +47,12 @@ const submitStepTwoSchema = z
     message: "You must provide an invite_token or create a new workspace with a name.",
   });
 
+const workspaceUniqueNameAvailabilitySchema = z.object({
+  unique_name: z.string().trim().min(1).max(40),
+});
+
 module.exports = {
   submitStepOneSchema,
   submitStepTwoSchema,
+  workspaceUniqueNameAvailabilitySchema,
 };

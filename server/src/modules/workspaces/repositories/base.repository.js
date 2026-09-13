@@ -220,7 +220,8 @@ class WorkspaceBaseRepository {
       const defaultPlanId = defaultPlan?.plan_id || null;
 
       const publicId = generatePublicId();
-      const publicWorkspaceId = `workspace_${publicId}`;
+      // Keep workspace public IDs in the same short, opaque format as user public IDs.
+      const publicWorkspaceId = publicId;
 
       // 2. Create Workspace
       const workspace = await tx.workspaces.create({

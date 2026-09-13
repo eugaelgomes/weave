@@ -82,6 +82,7 @@ export const API_ENDPOINTS = {
   ONBOARDING_STEP_ONE: "/users/me/onboarding/step-1",
   ONBOARDING_STEP_TWO: "/users/me/onboarding/step-2",
   ONBOARDING_STEP_THREE: "/users/me/onboarding/step-3-complete",
+  ONBOARDING_WORKSPACE_NAME_AVAILABILITY: "/users/me/onboarding/workspace-name-availability",
 
   /** Lean plan + usage + gates for the authenticated web session */
   PLANS_ME: "/plans/me",

@@ -23,7 +23,11 @@ const {
   searchUsersSchema,
   confirmDeleteAccountSchema,
 } = require("./schemas/users.schema");
-const { submitStepOneSchema, submitStepTwoSchema } = require("./schemas/onboarding.schema");
+const {
+  submitStepOneSchema,
+  submitStepTwoSchema,
+  workspaceUniqueNameAvailabilitySchema,
+} = require("./schemas/onboarding.schema");
 
 // Utils
 const { multipartImageUpload } = require("@/utils/middlewares.util");
@@ -69,6 +73,14 @@ router.get(
 );
 
 // Onboarding Routes
+
+router.get(
+  "/me/onboarding/workspace-name-availability",
+  verifyToken,
+  highTrafficLimiter,
+  validate(workspaceUniqueNameAvailabilitySchema, "query"),
+  OnboardingController.checkWorkspaceUniqueNameAvailability.bind(OnboardingController)
+);
 
 router.post(
   "/me/onboarding/step-1",

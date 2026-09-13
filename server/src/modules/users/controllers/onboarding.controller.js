@@ -1,6 +1,7 @@
 const BaseController = require("@/modules/workspaces/controllers/base-controller");
 const OnboardingService = require("../services/onboarding.service");
 const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
+const { normalizeWorkspaceName } = require("@/modules/workspaces/utils/normalizer");
 
 class OnboardingController extends BaseController {
   /**
@@ -46,6 +47,34 @@ class OnboardingController extends BaseController {
       res.json({ data: result, success: true });
     } catch (error) {
       next(error);
+    }
+  }
+
+  /**
+   * GET /api/v1/users/me/onboarding/workspace-name-availability
+   * Checks the normalized workspace identifier before the final submission.
+   */
+  async checkWorkspaceUniqueNameAvailability(req, res, next) {
+    try {
+      const uniqueName = normalizeWorkspaceName(req.query.unique_name);
+
+      if (!uniqueName) {
+        return res.json({
+          data: { available: false, unique_name: null },
+          success: true,
+        });
+      }
+
+      const existingNames = await this.workspacesRepository.getAvailableWorkspaceNames(uniqueName);
+      return res.json({
+        data: {
+          available: !existingNames.includes(uniqueName),
+          unique_name: uniqueName,
+        },
+        success: true,
+      });
+    } catch (error) {
+      return next(error);
     }
   }
 

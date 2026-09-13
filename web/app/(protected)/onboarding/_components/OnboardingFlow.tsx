@@ -22,14 +22,18 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useTheme } from "@/app/_contexts/theme-context";
 import {
+  checkWorkspaceUniqueNameAvailability,
   submitOnboardingProfile,
   submitOnboardingWorkspace,
   completeOnboarding,
 } from "@/app/_services/user-onboarding";
 import { ApiError } from "@/app/_services/api-error";
+import { checkUserAvailability } from "@/app/_services/authentication/auth.users";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2;
+type WorkspaceIdentifierStatus = "idle" | "checking" | "available" | "unavailable" | "error";
+type UsernameStatus = "idle" | "checking" | "available" | "unavailable" | "invalid" | "error";
 
 const emptyCompletedSteps: string[] = [];
 
@@ -79,6 +83,19 @@ function getInitials(nameString?: string, usernameString?: string): string {
   return target.slice(0, 2).toUpperCase();
 }
 
+function normalizeWorkspaceIdentifier(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
 /**
  * Modern, wide, clean onboarding flow.
  * Features a top step overview, 2-column layout with live preview and rich input options.
@@ -116,6 +133,9 @@ export function OnboardingFlow() {
   );
   const [workspaceName, setWorkspaceName] = useState("");
   const [uniqueName, setUniqueName] = useState("");
+  const [workspaceIdentifierStatus, setWorkspaceIdentifierStatus] =
+    useState<WorkspaceIdentifierStatus>("idle");
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
   const [workspaceRole, setWorkspaceRole] = useState("team");
   const [showCreateWorkspaceForm, setShowCreateWorkspaceForm] = useState(false);
 
@@ -147,6 +167,69 @@ export function OnboardingFlow() {
       setCurrentStep(hasProfile ? 2 : 1);
     }
   }, [completedSteps, router, searchParams, user?.org_public_id]);
+
+  useEffect(() => {
+    const candidate = uniqueName.trim();
+    if (!candidate) {
+      setWorkspaceIdentifierStatus("idle");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      setWorkspaceIdentifierStatus("checking");
+      try {
+        const result = await checkWorkspaceUniqueNameAvailability(candidate, controller.signal);
+        if (!controller.signal.aborted) {
+          setWorkspaceIdentifierStatus(result.available ? "available" : "unavailable");
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setWorkspaceIdentifierStatus("error");
+        }
+      }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [uniqueName]);
+
+  useEffect(() => {
+    const candidate = username.trim().toLowerCase();
+    if (!candidate || candidate === user?.username) {
+      setUsernameStatus("idle");
+      return;
+    }
+    if (candidate.length < 6 || candidate.length > 18 || !/^[a-z0-9._-]+$/.test(candidate)) {
+      setUsernameStatus("invalid");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      setUsernameStatus("checking");
+      try {
+        const availability = await checkUserAvailability(
+          { username: candidate },
+          controller.signal
+        );
+        if (!controller.signal.aborted) {
+          setUsernameStatus(availability.username.available ? "available" : "unavailable");
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setUsernameStatus("error");
+        }
+      }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [user?.username, username]);
 
   const handleThemeChange = (nextTheme: "LIGHT" | "DARK") => {
     setTheme(nextTheme === "DARK" ? "dark" : "light");
@@ -242,8 +325,35 @@ export function OnboardingFlow() {
 
   const updateWorkspaceName = (value: string) => {
     setWorkspaceName(value);
-    setUniqueName(value.toLowerCase().replace(/[^a-z0-9_-]/g, ""));
+    setUniqueName(normalizeWorkspaceIdentifier(value));
   };
+
+  const workspaceIdentifierMessage =
+    workspaceIdentifierStatus === "checking"
+      ? "Verificando disponibilidade..."
+      : workspaceIdentifierStatus === "available"
+        ? "Este identificador está disponível."
+        : workspaceIdentifierStatus === "unavailable"
+          ? "Este identificador já está em uso."
+          : workspaceIdentifierStatus === "error"
+            ? "Não foi possível verificar agora. Tente novamente em instantes."
+            : null;
+
+  const usernameMessage =
+    usernameStatus === "checking"
+      ? "Verificando disponibilidade..."
+      : usernameStatus === "available"
+        ? "Este nome de usuário está disponível."
+        : usernameStatus === "unavailable"
+          ? "Este nome de usuário já está em uso."
+          : usernameStatus === "invalid"
+            ? "Use de 6 a 18 caracteres: letras, números, ponto, hífen ou _."
+            : usernameStatus === "error"
+              ? "Não foi possível verificar agora."
+              : null;
+
+  const usernameChanged =
+    username.trim().length > 0 && username.trim().toLowerCase() !== user?.username;
 
   const userInitials = useMemo(
     () => getInitials(name || user?.user_name, username || user?.username),
@@ -386,7 +496,16 @@ export function OnboardingFlow() {
                       </Field>
 
                       <Field label="Nome de usuário" optional>
-                        <div className="flex overflow-hidden rounded-lg border border-neutral-200 bg-white transition-colors focus-within:border-neutral-900 dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:border-white/40">
+                        <div
+                          className={cn(
+                            "flex overflow-hidden rounded-lg border bg-white transition-colors focus-within:border-neutral-900 dark:bg-white/[0.04] dark:focus-within:border-white/40",
+                            usernameStatus === "available"
+                              ? "border-emerald-500/70 dark:border-emerald-400/70"
+                              : usernameStatus === "unavailable" || usernameStatus === "invalid"
+                                ? "border-red-500/70 dark:border-red-400/70"
+                                : "border-neutral-200 dark:border-white/10"
+                          )}
+                        >
                           <span className="flex items-center border-r border-neutral-200 bg-neutral-50 px-2.5 text-xs text-neutral-500 select-none dark:border-white/10 dark:bg-white/[0.02] dark:text-neutral-400">
                             @
                           </span>
@@ -396,9 +515,24 @@ export function OnboardingFlow() {
                             placeholder="gael.rens"
                             maxLength={18}
                             disabled={isLoading}
+                            aria-describedby="username-status"
                             className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 disabled:cursor-not-allowed dark:text-white dark:placeholder:text-neutral-500"
                           />
                         </div>
+                        <p
+                          id="username-status"
+                          aria-live="polite"
+                          className={cn(
+                            "min-h-4 text-[11px]",
+                            usernameStatus === "available"
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : usernameStatus === "unavailable" || usernameStatus === "invalid"
+                                ? "text-red-600 dark:text-red-400"
+                                : "text-neutral-500 dark:text-neutral-400"
+                          )}
+                        >
+                          {usernameMessage}
+                        </p>
                       </Field>
                     </div>
 
@@ -517,7 +651,11 @@ export function OnboardingFlow() {
                   <FormError error={error} />
 
                   <div className="pt-3">
-                    <button type="submit" disabled={isLoading} className={primaryButtonClassName}>
+                    <button
+                      type="submit"
+                      disabled={isLoading || (usernameChanged && usernameStatus !== "available")}
+                      className={primaryButtonClassName}
+                    >
                       {isLoading ? "Salvando perfil..." : "Salvar e continuar"}
                     </button>
                   </div>
@@ -592,23 +730,45 @@ export function OnboardingFlow() {
                     </Field>
 
                     <Field label="URL única de acesso">
-                      <div className="flex overflow-hidden rounded-lg border border-neutral-200 bg-white transition-colors focus-within:border-neutral-900 dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:border-white/40">
+                      <div
+                        className={cn(
+                          "flex overflow-hidden rounded-lg border bg-white transition-colors focus-within:border-neutral-900 dark:bg-white/[0.04] dark:focus-within:border-white/40",
+                          workspaceIdentifierStatus === "available"
+                            ? "border-emerald-500/70 dark:border-emerald-400/70"
+                            : workspaceIdentifierStatus === "unavailable"
+                              ? "border-red-500/70 dark:border-red-400/70"
+                              : "border-neutral-200 dark:border-white/10"
+                        )}
+                      >
                         <span className="flex items-center border-r border-neutral-200 bg-neutral-50 px-3 text-xs text-neutral-500 select-none dark:border-white/10 dark:bg-white/[0.02] dark:text-neutral-400">
                           theweave.app/
                         </span>
                         <input
                           value={uniqueName}
                           onChange={(event) =>
-                            setUniqueName(
-                              event.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, "")
-                            )
+                            setUniqueName(normalizeWorkspaceIdentifier(event.target.value))
                           }
                           placeholder="minha-empresa"
                           required
                           disabled={isLoading}
+                          aria-describedby="workspace-identifier-status"
                           className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 disabled:cursor-not-allowed dark:text-white dark:placeholder:text-neutral-500"
                         />
                       </div>
+                      <p
+                        id="workspace-identifier-status"
+                        aria-live="polite"
+                        className={cn(
+                          "min-h-4 text-[11px]",
+                          workspaceIdentifierStatus === "available"
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : workspaceIdentifierStatus === "unavailable"
+                              ? "text-red-600 dark:text-red-400"
+                              : "text-neutral-500 dark:text-neutral-400"
+                        )}
+                      >
+                        {workspaceIdentifierMessage}
+                      </p>
                     </Field>
                   </div>
 
@@ -670,7 +830,12 @@ export function OnboardingFlow() {
                     </button>
                     <button
                       type="submit"
-                      disabled={isLoading || !workspaceName || !uniqueName}
+                      disabled={
+                        isLoading ||
+                        !workspaceName ||
+                        !uniqueName ||
+                        workspaceIdentifierStatus !== "available"
+                      }
                       className={primaryButtonClassName}
                     >
                       {isLoading ? "Criando workspace..." : "Criar workspace"}

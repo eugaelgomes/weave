@@ -28,6 +28,11 @@ export interface OnboardingWorkspaceResponse {
   };
 }
 
+export interface WorkspaceUniqueNameAvailability {
+  available: boolean;
+  unique_name: string | null;
+}
+
 export const submitOnboardingProfile = async (data: OnboardingProfileData): Promise<void> => {
   const response = await apiClient.post(API_ENDPOINTS.ONBOARDING_STEP_ONE, data);
   await handleResponse(response);
@@ -43,6 +48,18 @@ export const submitOnboardingWorkspace = async (
     success: true,
     data: result,
   };
+};
+
+export const checkWorkspaceUniqueNameAvailability = async (
+  uniqueName: string,
+  signal?: AbortSignal
+): Promise<WorkspaceUniqueNameAvailability> => {
+  const searchParams = new URLSearchParams({ unique_name: uniqueName });
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.ONBOARDING_WORKSPACE_NAME_AVAILABILITY}?${searchParams.toString()}`,
+    { signal }
+  );
+  return handleResponse<WorkspaceUniqueNameAvailability>(response);
 };
 
 export const completeOnboarding = async (): Promise<void> => {

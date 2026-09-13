@@ -3,7 +3,8 @@ import { apiClient, handleResponse } from "../api-methods";
 import type { User, UserUniqueField, UserAvailabilityMap } from "./auth.types";
 
 export const checkUserAvailability = async (
-  params: Partial<Record<UserUniqueField, string>>
+  params: Partial<Record<UserUniqueField, string>>,
+  signal?: AbortSignal
 ): Promise<UserAvailabilityMap> => {
   const searchParams = new URLSearchParams();
 
@@ -22,7 +23,7 @@ export const checkUserAvailability = async (
     ? `${API_ENDPOINTS.CHECK_USER_AVAILABILITY}?${query}`
     : API_ENDPOINTS.CHECK_USER_AVAILABILITY;
 
-  const response = await apiClient.get(endpoint);
+  const response = await apiClient.get(endpoint, { signal });
   const data = await handleResponse<{ availability: Partial<UserAvailabilityMap> }>(response);
 
   return {
