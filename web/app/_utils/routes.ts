@@ -46,16 +46,25 @@ export const routes = {
   },
 
   workspace: {
-    general: () => `/workspace/general/`,
+    general: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/general/`,
     create: () => `/workspace/create/`,
-    plans: () => `/workspace/plans/`,
-    integrations: () => `/workspace/integrations/`,
-    membersList: () => `/workspace/members/list/`,
-    membersInvites: () => `/workspace/members/invites/`,
-    areas: () => `/workspace/areas/`,
-    projects: () => `/workspace/projects/`,
-    editor: () => `/workspace/editor/`,
-    about: () => `/workspace/about/`,
+    plans: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/plans/`,
+    integrations: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/integrations/`,
+    membersList: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/members/list/`,
+    membersInvites: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/members/invites/`,
+    areas: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/areas/`,
+    projects: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/projects/`,
+    editor: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/editor/`,
+    about: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/about/`,
   },
 
   settings: {

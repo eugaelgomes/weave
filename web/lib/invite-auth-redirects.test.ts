@@ -2,13 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   resolveLegacyAuthInviteRedirect,
-  resolveOrganizationAcceptInviteRedirect,
+  resolveWorkspaceAcceptInviteRedirect,
 } from "./invite-auth-redirects.ts";
 
 const SAMPLE_UUID = "078ce37f-ba69-4038-942e-a375f9580c4a";
 
-test("resolveOrganizationAcceptInviteRedirect maps token to invite_token", () => {
-  const result = resolveOrganizationAcceptInviteRedirect(
+test("resolveWorkspaceAcceptInviteRedirect maps token to invite_token", () => {
+  const result = resolveWorkspaceAcceptInviteRedirect(
     "/workspace/accept-invite",
     SAMPLE_UUID
   );

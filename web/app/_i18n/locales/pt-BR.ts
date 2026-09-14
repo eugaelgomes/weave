@@ -393,9 +393,9 @@ const ptBR = {
     emptyBody:
       "Crie seu primeiro workspace para começar a gerenciar projetos e colaborar com sua equipe.",
     createWorkspace: "Criar Workspace",
-    deletedTitle: "Organização Excluída",
+    deletedTitle: "Workspaceanização Excluída",
     deletedBody: "Esta organização está marcada para exclusão definitiva em 30 dias.",
-    restoreOrganization: "Restaurar Organização",
+    restoreWorkspace: "Restaurar Workspaceanização",
     settingsSectionTitle: "Geral",
     defaultLanguage: "Idioma Padrão",
     timezone: "Fuso Horário",
@@ -424,9 +424,9 @@ const ptBR = {
     digestMonthly: "Mensal",
     dangerZoneTitle: "Zona de Perigo",
     dangerZoneHint: "Ações nesta área podem ser irreversíveis ou causar perda de dados temporária.",
-    deleteOrgTitle: "Deletar Organização",
-    deleteOrgHint: "Isso marcará a organização para exclusão em 30 dias.",
-    deleteOrgButton: "Deletar",
+    deleteWorkspaceTitle: "Deletar Workspaceanização",
+    deleteWorkspaceHint: "Isso marcará a organização para exclusão em 30 dias.",
+    deleteWorkspaceButton: "Deletar",
     deleting: "Deletando...",
   },
 
@@ -439,12 +439,12 @@ const ptBR = {
     billingMonthly: "mês",
     billingYearly: "ano",
     manageSubscription: "Gerenciar Assinatura",
-    membersUsage: "Membros da Organização",
+    membersUsage: "Membros da Workspaceanização",
     projectsUsage: "Projetos Ativos",
   },
 
   workspaceIntegrations: {
-    description: "Conecte ferramentas externas e gerencie domínios customizados.",
+    description: "Gerencie os conectores do workspace com ferramentas externas.",
     sectionTitle: "Integrações",
     activeIntegration: "Integração ativa",
     emptyTitle: "Nenhuma integração ativa",
@@ -489,7 +489,7 @@ const ptBR = {
 
   workspaceEditor: {
     title: "Sobre {name}",
-    fallbackOrgName: "a organização",
+    fallbackWorkspaceName: "a organização",
     description: "Edite como o workspace aparece para membros e visitantes.",
     body: "Esta área será expandida com detalhes do perfil do workspace. Por enquanto, use Geral e as outras seções para gerenciar sua organização.",
   },
@@ -588,7 +588,7 @@ const ptBR = {
     cancelInviteSuccess: "Convite cancelado com sucesso.",
   },
 
-  acceptOrganizationInvite: {
+  acceptWorkspaceInvite: {
     greetingWithName: "Oi {name}. Você foi convidado para participar do workspace {org}.",
     greetingNoName: "Oi! Você foi convidado para participar do workspace {org}.",
     confirmCredentials: "Confirme abaixo seu nome, usuário e senha.",
@@ -642,7 +642,7 @@ const ptBR = {
     welcome: "Com o weave-AI você pode!",
     suggestionTask: "Criar, editar ou alterar detalhes de tarefas",
     suggestionProject: "Consultar status, informações e resumos de projetos",
-    suggestionSchedule: "Organizar minha agenda e próximas entregas",
+    suggestionSchedule: "Workspaceanizar minha agenda e próximas entregas",
     suggestionResearch: "Pesquisar um assunto para mim",
     suggestionSummarize: "Resumir ou analisar um documento",
     inputPlaceholder: "Envie uma mensagem para o Weave AI...",

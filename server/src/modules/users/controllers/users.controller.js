@@ -281,7 +281,7 @@ class UsersController extends BaseController {
         expiresIn: 12 * 60 * 60,
         userId: req.user.userId,
       });
-      const protectedOrg = workspace
+      const protectedWorkspace = workspace
         ? await presignObjectFields(workspace, ["logo_url"], {
             expiresIn: 12 * 60 * 60,
             userId: req.user.userId,
@@ -317,7 +317,7 @@ class UsersController extends BaseController {
             theme_mode: protectedUser.theme_mode,
           },
           user_workspace: {
-            active_modules: protectedOrg?.active_modules || {
+            active_modules: protectedWorkspace?.active_modules || {
               agent_house: true,
               calendar: true,
               notes: true,
@@ -325,13 +325,13 @@ class UsersController extends BaseController {
               weave_flow: true,
             },
             default_area: defaultArea,
-            id: protectedOrg?.id || null,
-            logo_url: protectedOrg?.logo_url || null,
-            member_role: protectedOrg?.member_role || null,
-            member_since: protectedOrg?.member_since || null,
-            name: protectedOrg?.name || null,
-            public_id: protectedOrg?.public_id || null,
-            unique_name: protectedOrg?.unique_name || null,
+            id: protectedWorkspace?.id || null,
+            logo_url: protectedWorkspace?.logo_url || null,
+            member_role: protectedWorkspace?.member_role || null,
+            member_since: protectedWorkspace?.member_since || null,
+            name: protectedWorkspace?.name || null,
+            public_id: protectedWorkspace?.public_id || null,
+            unique_name: protectedWorkspace?.unique_name || null,
           },
         },
       });
@@ -620,6 +620,7 @@ class UsersController extends BaseController {
             joined_at: workspace.joined_at,
             logo_url: presigned.logo_url || null,
             member_role: workspace.member_role,
+            public_id: workspace.public_id,
             unique_name: workspace.unique_name,
             workspace_name: workspace.workspace_name,
             workspace_name: workspace.workspace_name,
@@ -660,18 +661,18 @@ class UsersController extends BaseController {
       }
 
       const userWorkspaces = await workspacesBaseRepository.getUserWorkspacesWithMembership(userId);
-      const targetOrg = userWorkspaces.find((o) => o.id === workspaceId);
+      const targetWorkspace = userWorkspaces.find((o) => o.id === workspaceId);
 
-      if (!targetOrg) {
+      if (!targetWorkspace) {
         return res.status(404).json({ error: "Workspace not found", success: false });
       }
 
       const workspace = {
-        id: targetOrg.id,
-        logo_url: targetOrg.logo_url,
-        member_role: targetOrg.member_role,
-        unique_name: targetOrg.unique_name,
-        workspace_name: targetOrg.workspace_name,
+        id: targetWorkspace.id,
+        logo_url: targetWorkspace.logo_url,
+        member_role: targetWorkspace.member_role,
+        unique_name: targetWorkspace.unique_name,
+        workspace_name: targetWorkspace.workspace_name,
       };
 
       let defaultArea = null;

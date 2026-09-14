@@ -16,5 +16,5 @@ Mounted in internal router under both `/projects`, `/workspaces`, and `/task-pri
 ## Middleware and security notes
 
 - Global `verifyToken`.
-- Write operations require `requireOrgPermission(MANAGE_TASK_PRIORITIES)`.
+- Write operations require `requireWorkspacePermission(MANAGE_TASK_PRIORITIES)`.
 - Router uses `mergeParams: true` to support nested route mounting.

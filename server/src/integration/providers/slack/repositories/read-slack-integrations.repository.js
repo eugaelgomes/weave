@@ -8,7 +8,7 @@ class ReadSlackIntegrationsRepository extends BaseRepository {
    * @param {string} workspaceId
    * @returns {Promise<object|undefined>}
    */
-  async findActiveByOrganizationId(workspaceId) {
+  async findActiveByWorkspaceId(workspaceId) {
     const rows = await this.executeQuery(
       `SELECT
          id,

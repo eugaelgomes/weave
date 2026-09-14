@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
   resolveLegacyAuthInviteRedirect,
-  resolveOrganizationAcceptInviteRedirect,
+  resolveWorkspaceAcceptInviteRedirect,
 } from "./lib/invite-auth-redirects";
 
 function applyInviteRedirect(
@@ -29,7 +29,7 @@ function applyInviteRedirect(
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname.replace(/\/$/, "") || "/";
 
-  const orgInviteRedirect = resolveOrganizationAcceptInviteRedirect(
+  const orgInviteRedirect = resolveWorkspaceAcceptInviteRedirect(
     pathname,
     request.nextUrl.searchParams.get("token")
   );

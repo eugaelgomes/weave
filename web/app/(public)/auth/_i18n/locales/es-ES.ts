@@ -107,10 +107,10 @@ export const esES = {
       },
       notes: {
         title: "Tareas en Bloques",
-        desc: "Editor modular con drag-and-drop. Organiza ideas y enlaza tareas a proyectos.",
+        desc: "Editor modular con drag-and-drop. Workspaceaniza ideas y enlaza tareas a proyectos.",
       },
       collaboration: {
-        title: "Colaboración y Organizaciones",
+        title: "Colaboración y Workspaceanizaciones",
         desc: "Gestión de áreas por sectores, niveles de acceso estrictos y seguridad activa por dominio.",
       },
       ai: {

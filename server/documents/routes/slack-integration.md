@@ -1,6 +1,6 @@
 # Slack integration
 
-**Canonical reference** for Slack OAuth, database migration, environment variables, and REST paths. Organization Slack settings use the **active workspace** (no `:orgId` in the path); see [workspaces-routes.md](workspaces-routes.md#slack-and-workspace-scope).
+**Canonical reference** for Slack OAuth, database migration, environment variables, and REST paths. Workspace Slack settings use the **active workspace** (no `:orgId` in the path); see [workspaces-routes.md](workspaces-routes.md#slack-and-workspace-scope).
 
 ## Database
 

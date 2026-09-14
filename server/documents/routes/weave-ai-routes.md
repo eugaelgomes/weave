@@ -17,6 +17,6 @@ Handles AI chat endpoints and user agent management (CRUD + sharing + provider/m
 ## Middleware and security notes
 
 - Global `verifyToken` + `strictLimiter`.
-- Agent write routes require `requireOrgPermission(MANAGE_WEAVE_AI)`.
+- Agent write routes require `requireWorkspacePermission(MANAGE_WEAVE_AI)`.
 - Chat route validates upload constraints (file types, MIME, per-type size limits).
 - Knowledge upload uses multipart middleware (`knowledge_files`, up to 5 files).

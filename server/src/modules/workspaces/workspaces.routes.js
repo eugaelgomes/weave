@@ -52,7 +52,7 @@ const router = express.Router();
 router.use(verifyToken, requireOnboarding);
 
 router.get(
-  ["/my-workspaces", "/my-organizations"],
+  ["/my-workspaces", "/my-workspaces"],
   highTrafficLimiter,
   UsersController.listMyWorkspaces.bind(UsersController)
 );
@@ -295,6 +295,12 @@ router.put(
 router.get(
   "/workspace-projects",
   workspacesController.workspaceProjects.bind(workspacesController)
+);
+
+router.get(
+  "/:workspacePublicId",
+  highTrafficLimiter,
+  workspacesController.getWorkspace.bind(workspacesController)
 );
 
 module.exports = router;

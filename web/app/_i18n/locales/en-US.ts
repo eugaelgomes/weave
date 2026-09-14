@@ -395,9 +395,9 @@ const enUS: TranslationKeys = {
     emptyBody:
       "Create your first workspace to start managing projects and collaborating with your team.",
     createWorkspace: "Create Workspace",
-    deletedTitle: "Organization Deleted",
+    deletedTitle: "Workspace Deleted",
     deletedBody: "This workspace is scheduled for permanent deletion in 30 days.",
-    restoreOrganization: "Restore Organization",
+    restoreWorkspace: "Restore Workspace",
     settingsSectionTitle: "General",
     defaultLanguage: "Default Language",
     timezone: "Timezone",
@@ -426,9 +426,9 @@ const enUS: TranslationKeys = {
     digestMonthly: "Monthly",
     dangerZoneTitle: "Danger Zone",
     dangerZoneHint: "Actions in this area may be irreversible or cause temporary data loss.",
-    deleteOrgTitle: "Delete Organization",
-    deleteOrgHint: "This will mark the workspace for deletion in 30 days.",
-    deleteOrgButton: "Delete",
+    deleteWorkspaceTitle: "Delete Workspace",
+    deleteWorkspaceHint: "This will mark the workspace for deletion in 30 days.",
+    deleteWorkspaceButton: "Delete",
     deleting: "Deleting...",
   },
 
@@ -441,12 +441,12 @@ const enUS: TranslationKeys = {
     billingMonthly: "month",
     billingYearly: "year",
     manageSubscription: "Manage Subscription",
-    membersUsage: "Organization Members",
+    membersUsage: "Workspace Members",
     projectsUsage: "Active Projects",
   },
 
   workspaceIntegrations: {
-    description: "Connect external tools and manage custom domains.",
+    description: "Manage workspace connectors for external tools.",
     sectionTitle: "Integrations",
     activeIntegration: "Active integration",
     emptyTitle: "No active integrations",
@@ -491,7 +491,7 @@ const enUS: TranslationKeys = {
 
   workspaceEditor: {
     title: "About {name}",
-    fallbackOrgName: "the workspace",
+    fallbackWorkspaceName: "the workspace",
     description: "Edit how your workspace appears to members and visitors.",
     body: "This area will be expanded with workspace profile details. For now, use General and the other sections to manage your workspace.",
   },
@@ -590,7 +590,7 @@ const enUS: TranslationKeys = {
     cancelInviteSuccess: "Invite cancelled successfully.",
   },
 
-  acceptOrganizationInvite: {
+  acceptWorkspaceInvite: {
     greetingWithName: "Hi, {name}. You've been invited to join the {org} workspace.",
     greetingNoName: "Hi! You've been invited to join the {org} workspace.",
     confirmCredentials: "Confirm your name, username, and password below.",
@@ -644,7 +644,7 @@ const enUS: TranslationKeys = {
     welcome: "With weave-AI you can!",
     suggestionTask: "Create, edit or change task details",
     suggestionProject: "Check status, info and project summaries",
-    suggestionSchedule: "Organize my schedule and upcoming deliveries",
+    suggestionSchedule: "Workspaceanize my schedule and upcoming deliveries",
     suggestionResearch: "Research a topic for me",
     suggestionSummarize: "Summarize or analyze a document",
     inputPlaceholder: "Send a message to Weave AI...",

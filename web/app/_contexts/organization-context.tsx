@@ -1,24 +1,25 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { useAuth } from "./auth-context";
 import {
-  fetchOrganization as fetchOrganizationService,
-  createOrganization as createOrganizationService,
-  updateOrganization as updateOrganizationService,
-  uploadOrganizationLogo as uploadOrganizationLogoService,
-  uploadOrganizationBanner as uploadOrganizationBannerService,
-  updateOrganizationProperties as updateOrganizationPropertiesService,
-  deleteOrganization as deleteOrganizationService,
-  restoreOrganization as restoreOrganizationService,
-  fetchOrganizationMembers as fetchMembersService,
+  fetchWorkspace as fetchWorkspaceService,
+  createWorkspace as createWorkspaceService,
+  updateWorkspace as updateWorkspaceService,
+  uploadWorkspaceLogo as uploadWorkspaceLogoService,
+  uploadWorkspaceBanner as uploadWorkspaceBannerService,
+  updateWorkspaceProperties as updateWorkspacePropertiesService,
+  deleteWorkspace as deleteWorkspaceService,
+  restoreWorkspace as restoreWorkspaceService,
+  fetchWorkspaceMembers as fetchMembersService,
   fetchPendingInvites as fetchInvitesService,
-  fetchOrganizationAreas as fetchAreasService,
+  fetchWorkspaceAreas as fetchAreasService,
   fetchAreaMembers as fetchAreaMembersService,
-  createOrganizationArea as createAreaService,
-  getOrganizationArea as getAreaService,
-  updateOrganizationArea as updateAreaService,
-  deleteOrganizationArea as deleteAreaService,
+  createWorkspaceArea as createAreaService,
+  getWorkspaceArea as getAreaService,
+  updateWorkspaceArea as updateAreaService,
+  deleteWorkspaceArea as deleteAreaService,
   addAreaMember as addAreaMemberService,
   updateAreaMember as updateAreaMemberService,
   removeAreaMember as removeAreaMemberService,
@@ -27,34 +28,34 @@ import {
   cancelInvite as cancelInviteService,
   removeMember as removeMemberService,
   updateMemberRole as updateMemberRoleService,
-  type Organization,
-  type OrganizationMember,
-  type OrganizationInvite,
-  type OrganizationArea,
-  type OrganizationAreaMember,
-  type CreateOrganizationData,
-  type UpdateOrganizationData,
-  type OrganizationProperties,
+  type Workspace,
+  type WorkspaceMember,
+  type WorkspaceInvite,
+  type WorkspaceArea,
+  type WorkspaceAreaMember,
+  type CreateWorkspaceData,
+  type UpdateWorkspaceData,
+  type WorkspaceProperties,
   type InviteMemberData,
-  type CreateOrganizationAreaInput,
-  type UpdateOrganizationAreaInput,
+  type CreateWorkspaceAreaInput,
+  type UpdateWorkspaceAreaInput,
   type AddAreaMemberInput,
   type UpdateAreaMemberInput,
-  type OrganizationMembersData,
-  type OrgWorkspaceRole,
+  type WorkspaceMembersData,
+  type WorkspaceRole,
 } from "../_services/workspace";
 
 export type {
-  OrganizationArea,
-  OrganizationAreaMember,
-  OrganizationMember,
-  OrganizationAreaMemberRole,
-  OrganizationAreaProperties,
-  OrganizationMembersData,
-  OrgWorkspaceRole,
+  WorkspaceArea,
+  WorkspaceAreaMember,
+  WorkspaceMember,
+  WorkspaceAreaMemberRole,
+  WorkspaceAreaProperties,
+  WorkspaceMembersData,
+  WorkspaceRole,
 } from "../_services/workspace";
 
-export interface OrganizationStats {
+export interface WorkspaceStats {
   totalMembers: number;
   totalProjects: number;
   totalAdmins: number;
@@ -62,14 +63,14 @@ export interface OrganizationStats {
   featuresEnabled: number;
 }
 
-export interface OrganizationContextType {
+export interface WorkspaceContextType {
   // Estado
-  workspace: Organization | null;
-  members: OrganizationMember[];
-  memberStats: Omit<OrganizationMembersData, "list_workspace_members"> | null;
-  invites: OrganizationInvite[];
-  areas: OrganizationArea[];
-  areaMembers: Record<string, OrganizationAreaMember[]>;
+  workspace: Workspace | null;
+  members: WorkspaceMember[];
+  memberStats: Omit<WorkspaceMembersData, "list_workspace_members"> | null;
+  invites: WorkspaceInvite[];
+  areas: WorkspaceArea[];
+  areaMembers: Record<string, WorkspaceAreaMember[]>;
   loading: boolean;
   areasLoading: boolean;
   areaMembersLoading: boolean;
@@ -77,79 +78,110 @@ export interface OrganizationContextType {
   areasError: string | null;
   areaMembersError: string | null;
   lastFetch: Date | null;
-  hasOrganization: boolean;
+  hasWorkspace: boolean;
 
-  // CRUD Organização
-  fetchOrganizationData: () => Promise<void>; // Busca Org + Membros + Convites
-  refreshOrganization: () => Promise<void>;
-  createOrganization: (workspaceData: CreateOrganizationData) => Promise<Organization | null>;
-  updateOrganization: (workspaceData: UpdateOrganizationData) => Promise<Organization | null>;
-  uploadLogo: (file: File) => Promise<Organization | null>;
-  uploadBanner: (file: File) => Promise<Organization | null>;
-  updateProperties: (properties: OrganizationProperties) => Promise<Organization | null>;
-  deleteOrganization: () => Promise<boolean>;
-  restoreOrganization: () => Promise<Organization | null>;
+  // CRUD Workspaceanização
+  fetchWorkspaceData: () => Promise<void>; // Busca Workspace + Membros + Convites
+  refreshWorkspace: () => Promise<void>;
+  createWorkspace: (workspaceData: CreateWorkspaceData) => Promise<Workspace | null>;
+  updateWorkspace: (workspaceData: UpdateWorkspaceData) => Promise<Workspace | null>;
+  uploadLogo: (file: File) => Promise<Workspace | null>;
+  uploadBanner: (file: File) => Promise<Workspace | null>;
+  updateProperties: (properties: WorkspaceProperties) => Promise<Workspace | null>;
+  deleteWorkspace: () => Promise<boolean>;
+  restoreWorkspace: () => Promise<Workspace | null>;
 
   // Gestão de Membros
   addMember: (memberId: string, role: string) => Promise<boolean>; // Adição direta (Admin)
   inviteMember: (data: InviteMemberData) => Promise<{ success: boolean; message: string }>; // Convite por email
   cancelInvite: (inviteId: string) => Promise<boolean>;
   removeMember: (memberId: string) => Promise<boolean>;
-  updateMemberRole: (memberId: string, role: OrgWorkspaceRole) => Promise<boolean>;
+  updateMemberRole: (memberId: string, role: WorkspaceRole) => Promise<boolean>;
 
   // Gestão de Áreas
-  fetchAreas: (force?: boolean) => Promise<OrganizationArea[]>;
-  getAreaById: (areaId: string, options?: { force?: boolean }) => Promise<OrganizationArea | null>;
-  createArea: (data: CreateOrganizationAreaInput) => Promise<OrganizationArea | null>;
+  fetchAreas: (force?: boolean) => Promise<WorkspaceArea[]>;
+  getAreaById: (areaId: string, options?: { force?: boolean }) => Promise<WorkspaceArea | null>;
+  createArea: (data: CreateWorkspaceAreaInput) => Promise<WorkspaceArea | null>;
   updateArea: (
     areaId: string,
-    data: UpdateOrganizationAreaInput
-  ) => Promise<OrganizationArea | null>;
+    data: UpdateWorkspaceAreaInput
+  ) => Promise<WorkspaceArea | null>;
   deleteArea: (areaId: string) => Promise<boolean>;
-  fetchAreaMembers: (areaId: string, force?: boolean) => Promise<OrganizationAreaMember[]>;
+  fetchAreaMembers: (areaId: string, force?: boolean) => Promise<WorkspaceAreaMember[]>;
   addAreaMember: (
     areaId: string,
     data: AddAreaMemberInput
-  ) => Promise<OrganizationAreaMember | null>;
+  ) => Promise<WorkspaceAreaMember | null>;
   updateAreaMember: (
     areaId: string,
     memberId: string,
     data: UpdateAreaMemberInput
-  ) => Promise<OrganizationAreaMember | null>;
+  ) => Promise<WorkspaceAreaMember | null>;
   removeAreaMember: (areaId: string, memberId: string) => Promise<boolean>;
 
   // Dados Derivados
-  getStats: () => OrganizationStats;
-  getMemberRole: (userId: string) => OrgWorkspaceRole | null;
+  getStats: () => WorkspaceStats;
+  getMemberRole: (userId: string) => WorkspaceRole | null;
   isOwner: (userId: string) => boolean;
   isAdmin: (userId: string) => boolean;
   isMember: (userId: string) => boolean;
   canManageMembers: (userId: string) => boolean;
 }
 
-const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
+const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
-export function useOrganization(): OrganizationContextType {
-  const context = useContext(OrganizationContext);
+function workspaceFromSession(
+  user: ReturnType<typeof useAuth>["user"],
+  requestedPublicId?: string
+): Workspace | null {
+  const activeWorkspace = user?.user_workspace;
+
+  if (
+    !user?.id ||
+    !activeWorkspace?.id ||
+    !activeWorkspace.public_id ||
+    (requestedPublicId && activeWorkspace.public_id !== requestedPublicId)
+  ) {
+    return null;
+  }
+
+  return {
+    id: activeWorkspace.id,
+    public_id: activeWorkspace.public_id,
+    user_id: user.id,
+    workspace_name: activeWorkspace.name || user.workspace_name || "Workspace",
+    unique_name: activeWorkspace.unique_name || user.workspace_unique_name || "",
+    logo_url: activeWorkspace.logo_url ?? user.workspace_logo_url,
+    deleted: false,
+    created_at: "",
+    updated_at: "",
+  };
+}
+
+export function useWorkspace(): WorkspaceContextType {
+  const context = useContext(WorkspaceContext);
   if (!context) {
-    throw new Error("useOrganization deve ser usado dentro de um OrganizationProvider");
+    throw new Error("useWorkspace deve ser usado dentro de um WorkspaceProvider");
   }
   return context;
 }
 
-export function OrganizationProvider({ children }: { children: React.ReactNode }) {
+export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const params = useParams<{ publicId?: string }>();
+  const requestedPublicId =
+    typeof params.publicId === "string" ? params.publicId : undefined;
 
   // Estados
-  const [workspace, setOrganization] = useState<Organization | null>(null);
-  const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [memberStats, setMemberStats] = useState<Omit<
-    OrganizationMembersData,
+    WorkspaceMembersData,
     "list_workspace_members"
   > | null>(null);
-  const [invites, setInvites] = useState<OrganizationInvite[]>([]);
-  const [areas, setAreas] = useState<OrganizationArea[]>([]);
-  const [areaMembers, setAreaMembers] = useState<Record<string, OrganizationAreaMember[]>>({});
+  const [invites, setInvites] = useState<WorkspaceInvite[]>([]);
+  const [areas, setAreas] = useState<WorkspaceArea[]>([]);
+  const [areaMembers, setAreaMembers] = useState<Record<string, WorkspaceAreaMember[]>>({});
 
   const [loading, setLoading] = useState(false);
   const [areasLoading, setAreasLoading] = useState(false);
@@ -161,17 +193,22 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const [areasFetched, setAreasFetched] = useState(false);
 
-  // 1. BUSCAR DADOS COMPLETOS (Org + Membros + Convites)
-  const fetchOrganizationData = useCallback(async () => {
+  useEffect(() => {
+    setInitialFetchDone(false);
+    setWorkspace(null);
+  }, [requestedPublicId]);
+
+  // 1. BUSCAR DADOS COMPLETOS (Workspace + Membros + Convites)
+  const fetchWorkspaceData = useCallback(async () => {
     if (!user?.id) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      // 1. Busca Organização
-      const orgData = await fetchOrganizationService();
-      setOrganization(orgData);
+      // 1. Busca Workspaceanização
+      const orgData = await fetchWorkspaceService(requestedPublicId);
+      setWorkspace(orgData);
 
       if (orgData) {
         // 2. Se tem organização, busca membros e convites em paralelo
@@ -205,6 +242,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       setInitialFetchDone(true);
     } catch (err: unknown) {
       console.error("Erro ao buscar dados da organização:", err);
+      // The authenticated session already identifies the active workspace. Do
+      // not turn a transient details request into the misleading create-workspace
+      // screen when that workspace is exactly the one in the scoped URL.
+      const sessionWorkspace = workspaceFromSession(user, requestedPublicId);
+      if (sessionWorkspace) {
+        setWorkspace(sessionWorkspace);
+      }
       setInitialFetchDone(true);
       // Não setamos workspace como null aqui imediatamente se for um erro de rede temporário,
       // mas se for 404 o service já retorna null.
@@ -214,25 +258,25 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [requestedPublicId, user]);
 
   // 1.1 Refresh Manual
-  const refreshOrganization = useCallback(async () => {
-    await fetchOrganizationData();
-  }, [fetchOrganizationData]);
+  const refreshWorkspace = useCallback(async () => {
+    await fetchWorkspaceData();
+  }, [fetchWorkspaceData]);
 
   // 2. CRIAR ORGANIZAÇÃO
-  const createOrganization = useCallback(
-    async (workspaceData: CreateOrganizationData): Promise<Organization | null> => {
+  const createWorkspace = useCallback(
+    async (workspaceData: CreateWorkspaceData): Promise<Workspace | null> => {
       if (!user?.id) return null;
       setLoading(true);
       setError(null);
       try {
-        const newOrg = await createOrganizationService(workspaceData, user.id);
-        setOrganization(newOrg);
+        const newWorkspace = await createWorkspaceService(workspaceData, user.id);
+        setWorkspace(newWorkspace);
         // Ao criar, o criador é o único membro/dono
-        await fetchOrganizationData(); // Recarrega tudo para garantir consistência
-        return newOrg;
+        await fetchWorkspaceData(); // Recarrega tudo para garantir consistência
+        return newWorkspace;
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Erro ao criar organização");
         return null;
@@ -240,18 +284,18 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         setLoading(false);
       }
     },
-    [user?.id, fetchOrganizationData]
+    [user?.id, fetchWorkspaceData]
   );
 
   // 3. ATUALIZAR ORGANIZAÇÃO
-  const updateOrganization = useCallback(
-    async (workspaceData: UpdateOrganizationData): Promise<Organization | null> => {
+  const updateWorkspace = useCallback(
+    async (workspaceData: UpdateWorkspaceData): Promise<Workspace | null> => {
       setLoading(true);
       setError(null);
       try {
-        const updatedOrg = await updateOrganizationService(workspaceData);
-        setOrganization(updatedOrg);
-        return updatedOrg;
+        const updatedWorkspace = await updateWorkspaceService(workspaceData);
+        setWorkspace(updatedWorkspace);
+        return updatedWorkspace;
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Erro ao atualizar organização");
         return null;
@@ -263,13 +307,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   // 3. ATUALIZAR LOGO
-  const uploadLogo = useCallback(async (file: File): Promise<Organization | null> => {
+  const uploadLogo = useCallback(async (file: File): Promise<Workspace | null> => {
     setLoading(true);
     setError(null);
     try {
-      const updatedOrg = await uploadOrganizationLogoService(file);
-      setOrganization(updatedOrg);
-      return updatedOrg;
+      const updatedWorkspace = await uploadWorkspaceLogoService(file);
+      setWorkspace(updatedWorkspace);
+      return updatedWorkspace;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao atualizar logo");
       return null;
@@ -279,13 +323,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   // 3. ATUALIZAR BANNER
-  const uploadBanner = useCallback(async (file: File): Promise<Organization | null> => {
+  const uploadBanner = useCallback(async (file: File): Promise<Workspace | null> => {
     setLoading(true);
     setError(null);
     try {
-      const updatedOrg = await uploadOrganizationBannerService(file);
-      setOrganization(updatedOrg);
-      return updatedOrg;
+      const updatedWorkspace = await uploadWorkspaceBannerService(file);
+      setWorkspace(updatedWorkspace);
+      return updatedWorkspace;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao atualizar banner");
       return null;
@@ -296,13 +340,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // 3.1 ATUALIZAR PROPERTIES
   const updateProperties = useCallback(
-    async (properties: OrganizationProperties): Promise<Organization | null> => {
+    async (properties: WorkspaceProperties): Promise<Workspace | null> => {
       setLoading(true);
       setError(null);
       try {
-        const updatedOrg = await updateOrganizationPropertiesService(properties);
-        setOrganization(updatedOrg);
-        return updatedOrg;
+        const updatedWorkspace = await updateWorkspacePropertiesService(properties);
+        setWorkspace(updatedWorkspace);
+        return updatedWorkspace;
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Erro ao atualizar propriedades");
         return null;
@@ -314,12 +358,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   // 4. DELETAR
-  const deleteOrganization = useCallback(async (): Promise<boolean> => {
+  const deleteWorkspace = useCallback(async (): Promise<boolean> => {
     setLoading(true);
     try {
-      const success = await deleteOrganizationService();
+      const success = await deleteWorkspaceService();
       if (success) {
-        setOrganization(null);
+        setWorkspace(null);
         setMembers([]);
         setInvites([]);
         setAreas([]);
@@ -336,20 +380,20 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   // 4.1 RESTAURAR
-  const restoreOrganization = useCallback(async (): Promise<Organization | null> => {
+  const restoreWorkspace = useCallback(async (): Promise<Workspace | null> => {
     setLoading(true);
     try {
-      const restoredOrg = await restoreOrganizationService();
-      setOrganization(restoredOrg);
-      await fetchOrganizationData(); // Recarrega dados completos
-      return restoredOrg;
+      const restoredWorkspace = await restoreWorkspaceService();
+      setWorkspace(restoredWorkspace);
+      await fetchWorkspaceData(); // Recarrega dados completos
+      return restoredWorkspace;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao restaurar organização");
       return null;
     } finally {
       setLoading(false);
     }
-  }, [fetchOrganizationData]);
+  }, [fetchWorkspaceData]);
 
   // 5. MEMBROS: Adicionar Direto (Admin)
   const addMember = useCallback(
@@ -432,7 +476,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const updateMemberRole = useCallback(
-    async (memberId: string, role: OrgWorkspaceRole): Promise<boolean> => {
+    async (memberId: string, role: WorkspaceRole): Promise<boolean> => {
       setLoading(true);
       try {
         const updatedMember = await updateMemberRoleService(memberId, role);
@@ -465,7 +509,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // 6.1 GESTÃO DE ÁREAS
   const fetchAreas = useCallback(
-    async (force = false): Promise<OrganizationArea[]> => {
+    async (force = false): Promise<WorkspaceArea[]> => {
       if (!workspace?.id) {
         setAreas([]);
         setAreasFetched(false);
@@ -496,7 +540,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   const getAreaById = useCallback(
-    async (areaId: string, options: { force?: boolean } = {}): Promise<OrganizationArea | null> => {
+    async (areaId: string, options: { force?: boolean } = {}): Promise<WorkspaceArea | null> => {
       if (!areaId) return null;
       const { force = false } = options;
 
@@ -523,7 +567,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   const createArea = useCallback(
-    async (data: CreateOrganizationAreaInput): Promise<OrganizationArea | null> => {
+    async (data: CreateWorkspaceAreaInput): Promise<WorkspaceArea | null> => {
       setAreasLoading(true);
       setAreasError(null);
       try {
@@ -541,7 +585,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   const updateArea = useCallback(
-    async (areaId: string, data: UpdateOrganizationAreaInput): Promise<OrganizationArea | null> => {
+    async (areaId: string, data: UpdateWorkspaceAreaInput): Promise<WorkspaceArea | null> => {
       setAreasLoading(true);
       setAreasError(null);
       try {
@@ -579,7 +623,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const fetchMembersByArea = useCallback(
-    async (areaId: string, force = false): Promise<OrganizationAreaMember[]> => {
+    async (areaId: string, force = false): Promise<WorkspaceAreaMember[]> => {
       if (!areaId) return [];
 
       if (!force && areaMembers[areaId]) {
@@ -605,7 +649,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   const addAreaMember = useCallback(
-    async (areaId: string, data: AddAreaMemberInput): Promise<OrganizationAreaMember | null> => {
+    async (areaId: string, data: AddAreaMemberInput): Promise<WorkspaceAreaMember | null> => {
       setAreaMembersLoading(true);
       setAreaMembersError(null);
       try {
@@ -630,7 +674,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       areaId: string,
       memberId: string,
       data: UpdateAreaMemberInput
-    ): Promise<OrganizationAreaMember | null> => {
+    ): Promise<WorkspaceAreaMember | null> => {
       setAreaMembersLoading(true);
       setAreaMembersError(null);
       try {
@@ -682,7 +726,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   );
 
   // 7. DADOS DERIVADOS E STATS
-  const getStats = useCallback((): OrganizationStats => {
+  const getStats = useCallback((): WorkspaceStats => {
     if (!workspace) {
       return {
         totalMembers: 0,
@@ -756,12 +800,12 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   // 8. INITIAL LOAD — só busca se o usuário tem workspace_id (vem do login/me)
   useEffect(() => {
-    if (user?.id && user.workspace_id && !initialFetchDone && !loading) {
-      fetchOrganizationData();
-    } else if (user?.id && !user.workspace_id) {
+    if (user?.id && (requestedPublicId || user.workspace_id) && !initialFetchDone && !loading) {
+      fetchWorkspaceData();
+    } else if (user?.id && !requestedPublicId && !user.workspace_id) {
       setInitialFetchDone(true);
     }
-  }, [user?.id, user?.workspace_id, initialFetchDone, loading, fetchOrganizationData]);
+  }, [user?.id, user?.workspace_id, requestedPublicId, initialFetchDone, loading, fetchWorkspaceData]);
 
   useEffect(() => {
     if (workspace?.id && !areasFetched) {
@@ -769,9 +813,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     }
   }, [workspace?.id, areasFetched, fetchAreas]);
 
-  const hasOrganization = workspace !== null && !workspace.deleted;
+  const hasWorkspace = workspace !== null && !workspace.deleted;
 
-  const value: OrganizationContextType = {
+  const value: WorkspaceContextType = {
     workspace,
     members,
     memberStats,
@@ -785,16 +829,16 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     areasError,
     areaMembersError,
     lastFetch,
-    hasOrganization,
-    fetchOrganizationData,
-    refreshOrganization,
-    createOrganization,
-    updateOrganization,
+    hasWorkspace,
+    fetchWorkspaceData,
+    refreshWorkspace,
+    createWorkspace,
+    updateWorkspace,
     uploadLogo,
     uploadBanner,
     updateProperties,
-    deleteOrganization,
-    restoreOrganization,
+    deleteWorkspace,
+    restoreWorkspace,
     addMember,
     inviteMember,
     cancelInvite,
@@ -817,5 +861,5 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     canManageMembers,
   };
 
-  return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;
+  return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }

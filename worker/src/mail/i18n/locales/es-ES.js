@@ -38,7 +38,7 @@ module.exports = {
   "common.greetingFallback": "usuario",
   "common.newEmail": "Nuevo email",
   "common.note": "Nota",
-  "common.workspace": "Organizacion",
+  "common.workspace": "Workspaceanizacion",
 
   "common.project": "Proyecto",
   "common.role": "Rol",

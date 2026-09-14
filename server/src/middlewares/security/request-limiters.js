@@ -49,7 +49,7 @@ const notesBlockWriteLimiter = rateLimit({
 });
 
 /**
- * Operações Estruturais: Criar Organização, Alterar Planos, Configurações de Perfil
+ * Operações Estruturais: Criar Workspaceanização, Alterar Planos, Configurações de Perfil
  * 300 requisições a cada 30 minutos
  */
 const structuralLimiter = rateLimit({

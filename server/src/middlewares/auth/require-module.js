@@ -18,7 +18,11 @@ function requireModule(moduleName) {
         });
       }
 
-      const workspace = await baseRepository.getActiveWorkspaceWithMembership(userId);
+      const workspace = await baseRepository.getActiveWorkspaceWithMembership(
+        userId,
+        undefined,
+        req.user?.workspace_public_id
+      );
 
       if (!workspace) {
         // Se o usuário não tem organização, não pode acessar os módulos corporativos

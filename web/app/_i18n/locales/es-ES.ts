@@ -396,9 +396,9 @@ const esES: TranslationKeys = {
     emptyBody:
       "Crea tu primer workspace para empezar a gestionar proyectos y colaborar con tu equipo.",
     createWorkspace: "Crear Workspace",
-    deletedTitle: "Organización eliminada",
+    deletedTitle: "Workspaceanización eliminada",
     deletedBody: "Esta organización está programada para eliminación permanente en 30 días.",
-    restoreOrganization: "Restaurar organización",
+    restoreWorkspace: "Restaurar organización",
     settingsSectionTitle: "General",
     defaultLanguage: "Idioma predeterminado",
     timezone: "Zona horaria",
@@ -428,9 +428,9 @@ const esES: TranslationKeys = {
     dangerZoneTitle: "Zona de peligro",
     dangerZoneHint:
       "Las acciones en esta área pueden ser irreversibles o causar pérdida temporal de datos.",
-    deleteOrgTitle: "Eliminar organización",
-    deleteOrgHint: "Esto marcará la organización para eliminación en 30 días.",
-    deleteOrgButton: "Eliminar",
+    deleteWorkspaceTitle: "Eliminar organización",
+    deleteWorkspaceHint: "Esto marcará la organización para eliminación en 30 días.",
+    deleteWorkspaceButton: "Eliminar",
     deleting: "Eliminando...",
   },
 
@@ -448,7 +448,7 @@ const esES: TranslationKeys = {
   },
 
   workspaceIntegrations: {
-    description: "Conecta herramientas externas y gestiona dominios personalizados.",
+    description: "Gestiona los conectores del workspace con herramientas externas.",
     sectionTitle: "Integraciones",
     activeIntegration: "Integración activa",
     emptyTitle: "Sin integraciones activas",
@@ -493,7 +493,7 @@ const esES: TranslationKeys = {
 
   workspaceEditor: {
     title: "Sobre {name}",
-    fallbackOrgName: "la organización",
+    fallbackWorkspaceName: "la organización",
     description: "Edita cómo aparece tu workspace para miembros y visitantes.",
     body: "Esta área se ampliará con los detalles del perfil del workspace. Por ahora, usa General y las demás secciones para gestionar tu organización.",
   },
@@ -592,7 +592,7 @@ const esES: TranslationKeys = {
     cancelInviteSuccess: "Invitación cancelada correctamente.",
   },
 
-  acceptOrganizationInvite: {
+  acceptWorkspaceInvite: {
     greetingWithName: "Hola, {name}. Has sido invitado a participar en el workspace {org}.",
     greetingNoName: "¡Hola! Has sido invitado a participar en el workspace {org}.",
     confirmCredentials: "Confirma abajo tu nombre, usuario y contraseña.",
@@ -646,7 +646,7 @@ const esES: TranslationKeys = {
     welcome: "¡Con weave-AI puedes!",
     suggestionTask: "Crear, editar o cambiar detalles de tareas",
     suggestionProject: "Consultar estado, información y resúmenes de proyectos",
-    suggestionSchedule: "Organizar mi agenda y próximas entregas",
+    suggestionSchedule: "Workspaceanizar mi agenda y próximas entregas",
     suggestionResearch: "Investigar un tema para mí",
     suggestionSummarize: "Resumir o analizar un documento",
     inputPlaceholder: "Envía un mensaje a Weave AI...",

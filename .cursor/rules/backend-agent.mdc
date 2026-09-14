@@ -73,7 +73,7 @@ Strictly follow the modular architecture in `src/modules/`.
 
 # Multi-tenancy & Security
 This is a SaaS product. Every feature must ensure data isolation:
-- Always validate User (Tenant), Organization, or Project IDs in database queries. User A must never access Organization B's data without membership.
+- Always validate User (Tenant), Worksapceanization, or Project IDs in database queries. User A must never access Worksapceanization B's data without membership.
 - Validate permissions and roles (RBAC) before allowing mutations (POST/PUT/DELETE) on project or note data.
 
 # Performance

@@ -60,8 +60,8 @@ class WorkspacesBaseController {
    * @param {string} userId - User ID
    * @returns {Promise<Object|null>} Workspace data with injected `member_role` or null if not found
    */
-  async _getUserWorkspace(userId) {
-    return this.baseRepository.getActiveWorkspaceWithMembership(userId);
+  async _getUserWorkspace(userId, workspacePublicId = null) {
+    return this.baseRepository.getActiveWorkspaceWithMembership(userId, prisma, workspacePublicId);
   }
 
   /**
@@ -247,7 +247,7 @@ class WorkspacesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const existingWorkspace = await this._getUserWorkspace(userId);
+      const existingWorkspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (existingWorkspace) {
         throw AppError.conflict("User already has a workspace. Use PUT to update it.");
       }
@@ -305,7 +305,8 @@ class WorkspacesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const requestedWorkspacePublicId = req.params?.workspacePublicId || null;
+      const workspace = await this._getUserWorkspace(userId, requestedWorkspacePublicId);
       if (!workspace) {
         throw AppError.notFound("Workspace not found. User does not have a workspace yet.");
       }
@@ -330,7 +331,7 @@ class WorkspacesController extends WorkspacesBaseController {
 
       const { workspace_name, unique_name, logo_url, banner_url, description, settings } = req.body;
 
-      const currentWorkspace = await this._getUserWorkspace(userId);
+      const currentWorkspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!currentWorkspace) {
         throw AppError.notFound("Workspace not found");
       }
@@ -412,7 +413,7 @@ class WorkspacesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const currentWorkspace = await this._getUserWorkspace(userId);
+      const currentWorkspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!currentWorkspace) {
         throw AppError.notFound("Workspace not found");
       }
@@ -469,7 +470,7 @@ class WorkspacesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const currentWorkspace = await this._getUserWorkspace(userId);
+      const currentWorkspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!currentWorkspace) {
         throw AppError.notFound("Workspace not found");
       }
@@ -577,7 +578,7 @@ class WorkspacesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
       if (!req.file) throw AppError.badRequest("No file was uploaded");
-      const currentWorkspace = await this._getUserWorkspace(userId);
+      const currentWorkspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!currentWorkspace) throw AppError.notFound("Workspace not found");
       if (
         !this._ensureWorkspacePermission(
@@ -623,7 +624,7 @@ class WorkspacesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
       if (!req.file) throw AppError.badRequest("No file was uploaded");
-      const currentWorkspace = await this._getUserWorkspace(userId);
+      const currentWorkspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!currentWorkspace) throw AppError.notFound("Workspace not found");
       if (
         !this._ensureWorkspacePermission(
@@ -673,7 +674,7 @@ class WorkspacesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const currentWorkspace = await this._getUserWorkspace(userId);
+      const currentWorkspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!currentWorkspace) throw AppError.notFound("Workspace not found");
 
       const projects = await this.workspacesRepository.getWorkspaceProjects(currentWorkspace.id);

@@ -11,13 +11,9 @@ import {
   Home,
   MessageSquare,
   Bot,
-  AudioLines,
-  ImageIcon,
-  SquareTerminal,
   KeyRound,
   TrendingUp,
   Logs,
-  Braces,
   Database,
   Orbit,
   Settings,
@@ -53,13 +49,9 @@ const NAV_ITEMS: NavItemConfig[] = [
   { id: "home", label: "Home", icon: Home, path: "/home", exact: true },
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   { id: "agents", label: "Agents", icon: Bot, path: "/weave-ai/agents", badge: "New" },
-  { id: "audio", label: "Audio", icon: AudioLines, path: "/weave-ai/audio" },
-  { id: "images", label: "Images", icon: ImageIcon, path: "/weave-ai/images" },
-  { id: "codex", label: "Codex", icon: SquareTerminal, path: "/weave-flow" },
   { id: "api-keys", label: "API Keys", icon: KeyRound, path: "/workspace/integrations" },
   { id: "usage", label: "Usage", icon: TrendingUp, path: "/workspace/plans" },
   { id: "logs", label: "Logs", icon: Logs, path: "/logs" },
-  { id: "batches", label: "Batches", icon: Braces, path: "/batches" },
   { id: "storage", label: "Storage", icon: Database, path: "/documents" },
   { id: "plugins", label: "Plugins", icon: Orbit, path: "/weave-ai/tools" },
   { id: "settings", label: "Settings", icon: Settings, path: "/workspace/settings" },
@@ -77,9 +69,21 @@ const MORE_OPTIONS = [
 // ---------------------------------------------------------------------------
 
 const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarProps) => {
-  const { authenticated } = useAuth();
+  const { authenticated, user } = useAuth();
   const { t } = useLanguage();
   const pathname = usePathname();
+  const workspacePublicId = user?.user_workspace?.public_id || user?.workspace_public_id;
+  const withWorkspaceId = (path: string) =>
+    workspacePublicId && path.startsWith("/workspace/")
+      ? path.replace("/workspace/", `/workspace/${encodeURIComponent(workspacePublicId)}/`)
+      : path;
+  const navItems = NAV_ITEMS.map((item) =>
+    item.path ? { ...item, path: withWorkspaceId(item.path) } : item
+  );
+  const moreOptions = MORE_OPTIONS.map((option) => ({
+    ...option,
+    path: withWorkspaceId(option.path),
+  }));
 
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
@@ -136,7 +140,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
         )}
       >
         <ul className="space-y-0">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = item.path
               ? item.exact
@@ -188,7 +192,7 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
                       )}
                     >
                       <div className="space-y-0.5">
-                        {MORE_OPTIONS.map((subItem) => {
+                        {moreOptions.map((subItem) => {
                           const SubIcon = subItem.icon;
                           const isSubActive = !subItem.external && pathname === subItem.path;
 

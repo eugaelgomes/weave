@@ -13,7 +13,7 @@ module.exports = {
   backup,
   notes,
   notifications,
-  organizations: workspaces,
+  workspaces: workspaces,
   plans,
   storage,
   tracing,

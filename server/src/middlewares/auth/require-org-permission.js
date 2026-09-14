@@ -9,7 +9,7 @@ const rolesRepository = require("@/modules/workspaces/repositories/roles.reposit
  * @param {string} permission
  * @returns {import('express').RequestHandler}
  */
-function requireOrgPermission(permission) {
+function requireWorkspacePermission(permission) {
   return async (req, res, next) => {
     try {
       const userId = req.user?.userId;
@@ -20,7 +20,11 @@ function requireOrgPermission(permission) {
         });
       }
 
-      const workspace = await baseRepository.getActiveWorkspaceWithMembership(userId);
+      const workspace = await baseRepository.getActiveWorkspaceWithMembership(
+        userId,
+        undefined,
+        req.user?.workspace_public_id
+      );
 
       if (!workspace) {
         return res.status(404).json({
@@ -42,7 +46,7 @@ function requireOrgPermission(permission) {
       req.workspaceContext = workspace;
       return next();
     } catch (err) {
-      console.error("[requireOrgPermission]", err);
+      console.error("[requireWorkspacePermission]", err);
       return res.status(500).json({
         error: "Internal server error",
         success: false,
@@ -51,4 +55,4 @@ function requireOrgPermission(permission) {
   };
 }
 
-module.exports = { requireOrgPermission };
+module.exports = { requireWorkspacePermission };

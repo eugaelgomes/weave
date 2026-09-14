@@ -2,7 +2,7 @@ import getStorageUrl from "@/app/_utils/get-storage-url";
 import { normalizeStorageUrl, normalizeThemeMode } from "./auth.utils";
 import type {
   User,
-  OrgDefaultArea,
+  WorkspaceDefaultArea,
   BackendProfile,
   BackendUserData,
   BackendAuthResponse,
@@ -13,8 +13,8 @@ import type {
 export const backendProfileEmailToUser = (email: BackendProfile["email"]): User["email"] =>
   email ? email : undefined;
 
-export const mapOrgDefaultAreaToUser = (
-  area: OrgDefaultArea | null | undefined
+export const mapWorkspaceDefaultAreaToUser = (
+  area: WorkspaceDefaultArea | null | undefined
 ): User["workspace_default_area"] => {
   if (area == null) return undefined;
   return {
@@ -54,7 +54,7 @@ export const _mapBackendDataToUser = (data: BackendUserData): User => {
     private_profile: settings?.private_profile ?? undefined,
     auth_with_google: settings?.auth_with_google ?? undefined,
 
-    // Organization (Optional)
+    // Workspace (Optional)
     workspace_id: workspace?.id,
     workspace_public_id: workspace?.public_id,
     workspace_name: workspace?.workspace_name,
@@ -120,7 +120,7 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
     org_logo_url: normalizeStorageUrl(workspace?.logo_url),
     org_member_role: workspace?.role,
     org_member_since: workspace?.member_since ?? undefined,
-    org_default_area: mapOrgDefaultAreaToUser(workspace?.default_area ?? undefined),
+    org_default_area: mapWorkspaceDefaultAreaToUser(workspace?.default_area ?? undefined),
 
     user_organization: workspace
       ? {
@@ -131,7 +131,7 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
           member_role: workspace.role,
           member_since: workspace.member_since ?? undefined,
           public_id: workspace.public_id,
-          default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
+          default_area: mapWorkspaceDefaultAreaToUser(workspace.default_area ?? undefined),
         }
       : undefined,
     user_workspace: workspace
@@ -143,7 +143,7 @@ export const mapLoginResponseToUser = (data: BackendAuthResponse): User => {
           member_role: workspace.role,
           member_since: workspace.member_since ?? undefined,
           public_id: workspace.public_id,
-          default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
+          default_area: mapWorkspaceDefaultAreaToUser(workspace.default_area ?? undefined),
         }
       : undefined,
 
@@ -198,7 +198,7 @@ export const mapMeResponseToUser = (data: BackendMeResponse): User => {
     org_logo_url: normalizeStorageUrl(workspace?.logo_url),
     org_member_role: workspace?.member_role,
     org_member_since: workspace?.member_since ?? undefined,
-    org_default_area: mapOrgDefaultAreaToUser(workspace?.default_area ?? undefined),
+    org_default_area: mapWorkspaceDefaultAreaToUser(workspace?.default_area ?? undefined),
 
     user_organization: workspace
       ? {
@@ -210,7 +210,7 @@ export const mapMeResponseToUser = (data: BackendMeResponse): User => {
           member_since: workspace.member_since ?? undefined,
           public_id: workspace.public_id,
           active_modules: (workspace as any).active_modules ?? undefined,
-          default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
+          default_area: mapWorkspaceDefaultAreaToUser(workspace.default_area ?? undefined),
         }
       : undefined,
     user_workspace: workspace
@@ -223,7 +223,7 @@ export const mapMeResponseToUser = (data: BackendMeResponse): User => {
           member_since: workspace.member_since ?? undefined,
           public_id: workspace.public_id,
           active_modules: (workspace as any).active_modules ?? undefined,
-          default_area: mapOrgDefaultAreaToUser(workspace.default_area ?? undefined),
+          default_area: mapWorkspaceDefaultAreaToUser(workspace.default_area ?? undefined),
         }
       : undefined,
 

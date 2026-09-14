@@ -271,10 +271,10 @@ function CommentComposerTextarea({
   };
 
   const showMenu = Boolean(activeAt?.field === field);
-  const needsOrgHint = Boolean(
+  const needsWorkspaceHint = Boolean(
     searchMentionUsers && activeAt?.field === field && activeAt.query.trim().length < 3
   );
-  const showEmptyHint = showMenu && atItems.length === 0 && !remoteMentionLoading && !needsOrgHint;
+  const showEmptyHint = showMenu && atItems.length === 0 && !remoteMentionLoading && !needsWorkspaceHint;
 
   return (
     <div className="relative">
@@ -296,7 +296,7 @@ function CommentComposerTextarea({
         onKeyDown={onKeyDown}
       />
       {showMenu &&
-        (atItems.length > 0 || needsOrgHint || remoteMentionLoading || showEmptyHint) && (
+        (atItems.length > 0 || needsWorkspaceHint || remoteMentionLoading || showEmptyHint) && (
           <div
             className="dark:border-surface-dark-border-strong absolute right-0 bottom-full z-20 mb-1 max-h-52 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white py-1 text-left text-xs shadow-lg dark:bg-[#1d1d1b]"
             role="listbox"
@@ -306,7 +306,7 @@ function CommentComposerTextarea({
                 <Loader2 size={12} className="animate-spin" /> Buscando…
               </div>
             )}
-            {needsOrgHint && (
+            {needsWorkspaceHint && (
               <p className="dark:border-surface-dark-border border-b border-neutral-100 px-2 py-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
                 Digite pelo menos 3 caracteres após @ para buscar pessoas na organização.
               </p>

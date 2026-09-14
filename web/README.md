@@ -55,7 +55,7 @@ Conditional providers depend on authentication state:
 AuthContext → ConditionalProviders → AuthenticatedProviders
                                       ├── NotesContext (and related)
                                       ├── ProjectsContext
-                                      ├── OrganizationContext
+                                      ├── WorkspaceContext
                                       ├── ChatContext
                                       └── ThemeContext
 ```
@@ -79,7 +79,7 @@ Authenticated-only providers mount after the user is signed in.
 | `/notes`, `/notes/[public_id]`                 | Protected | Notes (public id in URL)     |
 | `/projects/[public_id]/tasks/[public_note_id]` | Protected | Task alias → `/notes/...`    |
 | `/projects`, `/projects/*`                     | Protected | Projects                     |
-| `/workspace/*`                              | Protected | Organization admin and areas |
+| `/workspace/*`                              | Protected | Workspace admin and areas |
 | `/settings/*`                                  | Protected | User and workspace settings  |
 | `/weave-ai/*`                                  | Protected | AI chat and agents           |
 | `/notifications/*`                             | Protected | Notifications                |

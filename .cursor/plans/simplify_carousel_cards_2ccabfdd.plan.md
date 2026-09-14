@@ -150,5 +150,5 @@ Sem chaves novas obrigatórias. Chaves `workspace` / `openProject` podem permane
 
 | Arquivo | Mudança |
 |---------|---------|
-| [`notes-carousel.tsx`](weave-app/app/(protected)/home/_components/notes-carousel.tsx) | Org/status/link fora; metadados em texto; contexto no rodapé; zero border/bg interno |
-| [`project-carousel.tsx`](weave-app/app/(protected)/home/_components/project-carousel.tsx) | Org fora; metadados em texto; Weave dot/texto; progresso sem trilho; zero border/bg interno |
+| [`notes-carousel.tsx`](weave-app/app/(protected)/home/_components/notes-carousel.tsx) | Worksapce/status/link fora; metadados em texto; contexto no rodapé; zero border/bg interno |
+| [`project-carousel.tsx`](weave-app/app/(protected)/home/_components/project-carousel.tsx) | Worksapce fora; metadados em texto; Weave dot/texto; progresso sem trilho; zero border/bg interno |

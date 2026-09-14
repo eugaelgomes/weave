@@ -181,7 +181,7 @@ const createBaseContent = (payload, options = {}) => {
   return normalizedContent;
 };
 
-const buildOrganizationActionContent = (payload) => {
+const buildWorkspaceActionContent = (payload) => {
   const actionKey = payload.content?.action;
   const workspaceName = payload.content?.workspace_name;
   const roleLabel = formatRole(payload.content?.role);
@@ -203,7 +203,7 @@ const buildOrganizationActionContent = (payload) => {
   return null;
 };
 
-const buildOrganizationInviteContent = (payload) => {
+const buildWorkspaceInviteContent = (payload) => {
   const actionKey = payload.content?.action;
   const workspaceName = payload.content?.workspace_name;
   const roleLabel = formatRole(payload.content?.role);
@@ -371,8 +371,8 @@ const builders = {
   note_shared: buildNoteSharedContent,
   project_action: buildProjectActionContent,
   project_invite: buildProjectInviteContent,
-  workspace_action: buildOrganizationActionContent,
-  workspace_invite: buildOrganizationInviteContent,
+  workspace_action: buildWorkspaceActionContent,
+  workspace_invite: buildWorkspaceInviteContent,
 };
 
 const defaultBuilder = (payload) => createBaseContent(payload);

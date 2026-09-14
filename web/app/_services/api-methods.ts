@@ -41,6 +41,16 @@ const resolveApiBaseUrl = (): string => {
   return ensureApiV1Path(configuredBaseUrl);
 };
 
+const getWorkspacePublicIdFromPathname = (): string | null => {
+  if (typeof window === "undefined") return null;
+
+  const match = window.location.pathname.match(/^\/workspace\/([^/]+)(?:\/|$)/);
+  const publicId = match?.[1];
+
+  // `/workspace/create` is a concrete route, not a scoped workspace URL.
+  return publicId && publicId !== "create" ? publicId : null;
+};
+
 // Configurações da API
 export const API_BASE_URL = resolveApiBaseUrl();
 
@@ -166,8 +176,9 @@ export const API_ENDPOINTS = {
   BACKUP_JOBS: "/backup/jobs",
   BACKUP_SUMMARY: "/backup/summary",
 
-  // Organizations
+  // Workspaces
   ORGANIZATIONS: "/workspaces",
+  WORKSPACE_BY_PUBLIC_ID: (publicId: string) => `/workspaces/${encodeURIComponent(publicId)}`,
   ORGANIZATIONS_MY_ORGANIZATIONS: "/workspaces/my-workspaces",
   ORGANIZATIONS_SWITCH: "/workspaces/switch",
   ORGANIZATIONS_CREATION_STEP_ONE: "/workspaces/creation-steps/step-1",
@@ -270,17 +281,24 @@ class ApiClient {
         ? crypto.randomUUID()
         : `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const internal = await getInternalChallengeHeaders();
+    const workspacePublicId = getWorkspacePublicIdFromPathname();
+    const workspaceHeader: Record<string, string> = {};
+    if (workspacePublicId) {
+      workspaceHeader["x-weave-workspace-public-id"] = workspacePublicId;
+    }
 
     if (!(options.body instanceof FormData)) {
       config.headers = {
         ...this.defaultHeaders,
         ...internal,
+        ...workspaceHeader,
         "x-request-id": requestId,
         ...((options.headers as Record<string, string>) || {}),
       };
     } else {
       config.headers = {
         ...internal,
+        ...workspaceHeader,
         "x-request-id": requestId,
         ...(options.headers || {}),
       } as HeadersInit;
@@ -320,11 +338,13 @@ class ApiClient {
             config.headers = {
               ...this.defaultHeaders,
               ...internalRetry,
+              ...workspaceHeader,
               ...((options.headers as Record<string, string>) || {}),
             };
           } else {
             config.headers = {
               ...internalRetry,
+              ...workspaceHeader,
               ...(options.headers || {}),
             } as HeadersInit;
           }

@@ -309,7 +309,7 @@ class SprintContextBuilder {
     parts.push(`- **Status**: ${project.status || "OPEN"}`);
     parts.push(`- **Methodology**: ${project.methodology || "N/A"}`);
     if (project.workspace_name) {
-      parts.push(`- **Organization**: ${project.workspace_name}`);
+      parts.push(`- **Workspace**: ${project.workspace_name}`);
     }
     if (project.description) {
       parts.push(`- **Description**: ${project.description}`);

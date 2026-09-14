@@ -103,7 +103,7 @@ class MutateSlackIntegrationsRepository extends BaseRepository {
    * Soft-delete integration for an workspace.
    * @param {string} workspaceId
    */
-  async softDeleteByOrganizationId(workspaceId) {
+  async softDeleteByWorkspaceId(workspaceId) {
     await this.rowCount(
       `UPDATE workspace_slack_integrations
        SET is_active = false,

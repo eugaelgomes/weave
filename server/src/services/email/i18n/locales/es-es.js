@@ -54,7 +54,7 @@ module.exports = {
   "common.project": "Proyecto",
   "common.role": "Rol",
   "common.username": "Usuario",
-  "common.workspace": "Organizacion",
+  "common.workspace": "Workspaceanizacion",
   "deleteMessage.bodyDetail": "Todos los datos vinculados se borraron de forma definitiva.",
   "deleteMessage.bodyUser": "Usuario eliminado",
   "deleteMessage.footer": "Recibio este correo como confirmacion de la eliminacion de su cuenta.",

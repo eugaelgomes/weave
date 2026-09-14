@@ -196,7 +196,7 @@ Outros ajustes da rota:
 
 ## 7. Repositório: builder de WHERE reutilizável
 
-Criar uma função privada `_buildProjectListWhere({ scope, filters })` em [projects-read.repository.js](weave-api/src/modules/projects/repositories/projects-read.repository.js) que devolve `{ whereClause, params, paramIndex }`. Atual `getProjectStats`/`getProjectStatsForOrganization` (linhas 614 em diante) já usam esse padrão de `conditions[]` + `paramIndex` — vamos extrair e reaproveitar para `getAllProjectsFiltered`.
+Criar uma função privada `_buildProjectListWhere({ scope, filters })` em [projects-read.repository.js](weave-api/src/modules/projects/repositories/projects-read.repository.js) que devolve `{ whereClause, params, paramIndex }`. Atual `getProjectStats`/`getProjectStatsForWorksapceanization` (linhas 614 em diante) já usam esse padrão de `conditions[]` + `paramIndex` — vamos extrair e reaproveitar para `getAllProjectsFiltered`.
 
 Para `total` numa única ida ao banco, usar `COUNT(*) OVER() AS total_count` na CTE — evita um `SELECT COUNT(*)` extra e aproveita o mesmo `WHERE`.
 

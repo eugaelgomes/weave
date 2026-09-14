@@ -5,7 +5,7 @@ import {
   type User,
   type BackendProfile,
   type BackendSettings,
-  type BackendOrganization,
+  type BackendWorkspace,
   type BackendAuthResponse,
   type BackendMeResponse,
   type LoginCredentials,
@@ -15,7 +15,7 @@ import {
   type SamlSsoDiscoverResponse,
   type CreateUserData,
   type ActivateAccountPayload,
-  type OrgDefaultArea,
+  type WorkspaceDefaultArea,
 } from "./auth.schema";
 
 export type {
@@ -25,7 +25,7 @@ export type {
   User,
   BackendProfile,
   BackendSettings,
-  BackendOrganization,
+  BackendWorkspace,
   BackendAuthResponse,
   BackendMeResponse,
   LoginCredentials,
@@ -35,14 +35,14 @@ export type {
   SamlSsoDiscoverResponse,
   CreateUserData,
   ActivateAccountPayload,
-  OrgDefaultArea,
+  WorkspaceDefaultArea,
 };
 
 // Unified interface for data coming from 'user_data' (deprecated func support)
 export interface BackendUserData {
   profile: BackendProfile;
   settings?: BackendSettings;
-  workspace?: BackendOrganization;
+  workspace?: BackendWorkspace;
   current_plan?: any;
   current_plan_usage?: any;
   usage_preference?: Record<string, unknown>;

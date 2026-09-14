@@ -25,7 +25,7 @@ class SlackOauthController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (userId === null || userId === undefined) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace?.id) {
         return res.status(404).json({ error: "Workspace not found" });
       }

@@ -8,7 +8,7 @@ import { SignUp } from "@/app/(public)/auth/_components/SignUp";
 import { ForgotPassword } from "@/app/(public)/auth/_components/ForgotPassword";
 import { ResetPassword } from "@/app/(public)/auth/_components/ResetPassword";
 import { ConfirmCreateAccount } from "@/app/(public)/auth/_components/ConfirmCreateAccount";
-import { AcceptOrganizationInviteModal } from "@/app/(public)/auth/_components/AcceptOrganizationInviteModal";
+import { AcceptWorkspaceInviteModal } from "@/app/(public)/auth/_components/AcceptWorkspaceInviteModal";
 import { WeaveLogoAnimation } from "@/app/(public)/auth/_components/WeaveLogoAnimation";
 import { Fredoka } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -141,7 +141,7 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
-    // Org invites use invite_token. Account activation uses view=confirm&token=...
+    // Workspace invites use invite_token. Account activation uses view=confirm&token=...
     const invite = searchParams.get("invite_token");
     if (invite) {
       setCurrentView("accept-invite");
@@ -241,7 +241,7 @@ export default function AuthPage() {
               />
             )}
             {currentView === "accept-invite" && (
-              <AcceptOrganizationInviteModal
+              <AcceptWorkspaceInviteModal
                 isOpen={!!inviteToken}
                 token={inviteToken ?? ""}
                 onClose={() => router.replace("/auth/")}

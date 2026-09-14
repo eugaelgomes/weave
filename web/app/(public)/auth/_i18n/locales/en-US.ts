@@ -105,10 +105,10 @@ export const enUS = {
       },
       notes: {
         title: "Block Tasks",
-        desc: "Modular editor with drag-and-drop. Organize ideas and link tasks to projects.",
+        desc: "Modular editor with drag-and-drop. Workspaceanize ideas and link tasks to projects.",
       },
       collaboration: {
-        title: "Collaboration and Organizations",
+        title: "Collaboration and Workspaces",
         desc: "Area management by sectors, strict access levels, and active domain security.",
       },
       ai: {

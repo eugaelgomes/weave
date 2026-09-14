@@ -16,7 +16,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) {
         throw AppError.notFound("Workspace not found");
       }
@@ -33,7 +33,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) {
         throw AppError.notFound("Workspace not found");
       }
@@ -74,7 +74,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) {
         throw AppError.notFound("Workspace not found");
       }
@@ -114,7 +114,7 @@ class WorkspaceRolesController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) {
         throw AppError.notFound("Workspace not found");
       }

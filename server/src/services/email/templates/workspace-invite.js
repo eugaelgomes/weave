@@ -10,7 +10,7 @@ async function welcome_message(email, workspace_name) {
       ctaUrl: frontendUrl,
       introLines: [`A organizacao ${workspace_name} convidou voce para usar o Weave.`],
       preheader: "Voce foi convidado(a) para o Weave.",
-      subtitle: "Organizacao",
+      subtitle: "Workspaceanizacao",
       title: "Convite para o Weave",
     });
 

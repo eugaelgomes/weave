@@ -40,7 +40,7 @@ class CredentialsController extends AuthBaseController {
         expiresIn: 12 * 60 * 60,
         userId: user.user_id,
       });
-      const protectedOrg = workspace
+      const protectedWorkspace = workspace
         ? await presignObjectFields(workspace, ["logo_url"], {
             expiresIn: 12 * 60 * 60,
             userId: user.user_id,
@@ -82,13 +82,13 @@ class CredentialsController extends AuthBaseController {
           },
           user_workspace: {
             default_area: defaultArea,
-            id: protectedOrg?.id || null,
-            logo_url: protectedOrg?.logo_url || null,
-            member_since: protectedOrg?.member_since || null,
-            name: protectedOrg?.name || null,
-            public_id: protectedOrg?.public_id || null,
-            role: protectedOrg?.member_role || null,
-            unique_name: protectedOrg?.unique_name || null,
+            id: protectedWorkspace?.id || null,
+            logo_url: protectedWorkspace?.logo_url || null,
+            member_since: protectedWorkspace?.member_since || null,
+            name: protectedWorkspace?.name || null,
+            public_id: protectedWorkspace?.public_id || null,
+            role: protectedWorkspace?.member_role || null,
+            unique_name: protectedWorkspace?.unique_name || null,
           },
         },
       });

@@ -550,7 +550,7 @@ export class SpacesService {
     return this.uploadImage(fileBuffer, mimeType, userId, fileName, folderPath);
   }
 
-  public async uploadOrganizationLogo(
+  public async uploadWorksapceanizationLogo(
     fileBuffer: Buffer,
     mimeType: string,
     workspaceId: string | number
@@ -566,7 +566,7 @@ export class SpacesService {
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
   }
 
-  public async uploadOrganizationBanner(
+  public async uploadWorksapceanizationBanner(
     fileBuffer: Buffer,
     mimeType: string,
     workspaceId: string | number

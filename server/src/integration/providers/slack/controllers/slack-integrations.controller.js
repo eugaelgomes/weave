@@ -1,4 +1,4 @@
-const OrganizationsBaseController = require("@/modules/workspaces/controllers/base-controller");
+const WorkspacesBaseController = require("@/modules/workspaces/controllers/base-controller");
 const ReadSlackIntegrationsRepository = require("@/integration/providers/slack/repositories/read-slack-integrations.repository");
 const MutateSlackIntegrationsRepository = require("@/integration/providers/slack/repositories/mutate-slack-integrations.repository");
 const { SlackClient } = require("@/integration/providers/slack/slack.client");
@@ -6,7 +6,7 @@ const { SlackClient } = require("@/integration/providers/slack/slack.client");
 /**
  * Slack integration settings for the active workspace.
  */
-class SlackIntegrationsController extends OrganizationsBaseController {
+class SlackIntegrationsController extends WorkspacesBaseController {
   /**
    * `GET /workspaces/integrations/slack`
    *
@@ -18,14 +18,18 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (
-        !this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS, res)
+        !this._ensureWorkspacePermission(
+          workspace,
+          this._workspacePermissions.MANAGE_WORKSPACE_LIFECYCLE,
+          res
+        )
       ) {
         return;
       }
 
-      const row = await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
+      const row = await ReadSlackIntegrationsRepository.findActiveByWorkspaceId(
         String(workspace.id)
       );
 
@@ -65,16 +69,20 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (
-        !this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS, res)
+        !this._ensureWorkspacePermission(
+          workspace,
+          this._workspacePermissions.MANAGE_WORKSPACE_LIFECYCLE,
+          res
+        )
       ) {
         return;
       }
 
       const channelId = req.body?.channel_id ?? req.body?.channelId ?? req.body?.default_channel_id;
 
-      const integration = await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
+      const integration = await ReadSlackIntegrationsRepository.findActiveByWorkspaceId(
         String(workspace.id)
       );
       if (!integration?.bot_access_token) {
@@ -121,14 +129,18 @@ class SlackIntegrationsController extends OrganizationsBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserOrganization(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (
-        !this._ensureOrgPermission(workspace, this._orgPermissions.MANAGE_GLOBAL_INTEGRATIONS, res)
+        !this._ensureWorkspacePermission(
+          workspace,
+          this._workspacePermissions.MANAGE_WORKSPACE_LIFECYCLE,
+          res
+        )
       ) {
         return;
       }
 
-      const integration = await ReadSlackIntegrationsRepository.findActiveByOrganizationId(
+      const integration = await ReadSlackIntegrationsRepository.findActiveByWorkspaceId(
         String(workspace.id)
       );
       if (integration?.bot_access_token) {
@@ -139,7 +151,7 @@ class SlackIntegrationsController extends OrganizationsBaseController {
         }
       }
 
-      await MutateSlackIntegrationsRepository.softDeleteByOrganizationId(String(workspace.id));
+      await MutateSlackIntegrationsRepository.softDeleteByWorkspaceId(String(workspace.id));
 
       return res.status(204).send();
     } catch (error) {

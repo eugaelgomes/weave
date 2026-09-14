@@ -41,21 +41,25 @@ function requireProjectPermission(permission) {
       }
 
       let project = null;
-      let resolvedViaOrgWide = false;
+      let resolvedViaWorkspaceWide = false;
 
       const memberRows = await projectsRepository.getProjectByIdWithAccess(projectId, userId);
       if (memberRows?.length) {
         project = memberRows[0];
       } else {
-        const membership = await baseRepository.getActiveWorkspaceWithMembership(userId);
+        const membership = await baseRepository.getActiveWorkspaceWithMembership(
+          userId,
+          undefined,
+          req.user?.workspace_public_id
+        );
         if (membership?.id && membership.permissions?.includes("access_all_workspace_projects")) {
-          const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
+          const orgRows = await projectsRepository.getProjectByIdWithWorkspaceScope(
             projectId,
             membership.id
           );
           if (orgRows?.length) {
             project = orgRows[0];
-            resolvedViaOrgWide = true;
+            resolvedViaWorkspaceWide = true;
           }
         }
       }
@@ -72,13 +76,17 @@ function requireProjectPermission(permission) {
         return next();
       }
 
-      if (resolvedViaOrgWide) {
+      if (resolvedViaWorkspaceWide) {
         return next();
       }
 
-      const membership = await baseRepository.getActiveWorkspaceWithMembership(userId);
+      const membership = await baseRepository.getActiveWorkspaceWithMembership(
+        userId,
+        undefined,
+        req.user?.workspace_public_id
+      );
       if (membership?.id && membership.permissions?.includes("access_all_workspace_projects")) {
-        const orgRows = await projectsRepository.getProjectByIdWithOrgScope(
+        const orgRows = await projectsRepository.getProjectByIdWithWorkspaceScope(
           projectId,
           membership.id
         );

@@ -39,11 +39,11 @@ class WorkspaceTokensController {
         return res.status(400).json({ error: "One or more provided scopes are invalid." });
       }
 
-      const isOrgScope = cleanScopes.some(
+      const isWorkspaceScope = cleanScopes.some(
         (s) => s.startsWith("workspaces:") || s.startsWith("projects:") || s.startsWith("calendar:")
       );
 
-      if (workspaceId || isOrgScope) {
+      if (workspaceId || isWorkspaceScope) {
         if (!workspaceId) {
           return res.status(400).json({
             error:

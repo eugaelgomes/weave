@@ -20,7 +20,7 @@ export interface AgenticExecutionContext {
   onChunk?: (chunk: string | Record<string, unknown>) => void;
   /** User ID for MCP context. */
   userId?: string | null;
-  /** Organization ID for MCP context. */
+  /** Worksapceanization ID for MCP context. */
   workspaceId?: string | null;
   /** Active trace ID for tracing integration. */
   traceId?: string;

@@ -1,4 +1,4 @@
-# Organizations Routes (`src/modules/workspaces/workspaces.routes.js`)
+# Workspaces Routes (`src/modules/workspaces/workspaces.routes.js`)
 
 ## What it does
 
@@ -11,18 +11,18 @@ Handles workspace profile lifecycle, members, invites, domains/SSO settings, are
 ## Main endpoint groups
 
 - Public invite flow: preview/accept invite
-- Organization lifecycle: get/create/update/delete/restore
+- Workspace lifecycle: get/create/update/delete/restore
 - Members: list/update role/remove
 - Invites: create/list/cancel
 - Domains: list/create/verify/update SSO/delete
 - Areas: CRUD + member management
 - Assets: upload logo/banner
-- Organization projects listing
+- Workspace projects listing
 - Slack integration: status, default channel, disconnect (`/integrations/slack/*`)
 
 ### Slack and workspace scope
 
-Slack settings use the **active workspace** resolved from the authenticated user (`getActiveOrganizationWithMembership`), consistent with `GET /workspaces/` and other org routes. Paths are **`/workspaces/integrations/slack`** — there is **no** `workspaceId` (or `:orgId`) in the URL. For the full contract and setup, see the canonical doc [slack-integration.md](slack-integration.md).
+Slack settings use the **active workspace** resolved from the authenticated user (`getActiveWorkspaceWithMembership`), consistent with `GET /workspaces/` and other org routes. Paths are **`/workspaces/integrations/slack`** — there is **no** `workspaceId` (or `:orgId`) in the URL. For the full contract and setup, see the canonical doc [slack-integration.md](slack-integration.md).
 
 ## Middleware and security notes
 

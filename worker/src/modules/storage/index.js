@@ -383,11 +383,11 @@ class SpacesService {
   }
 
   // ========================================
-  // Organization Assets (logo, banner)
+  // Workspace Assets (logo, banner)
   // Estrutura: workspaces/{orgId}/{logo|banner}/{arquivo}
   // ========================================
 
-  async uploadOrganizationLogo(fileBuffer, mimeType, workspaceId) {
+  async uploadWorkspaceLogo(fileBuffer, mimeType, workspaceId) {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `org-${workspaceId}-logo${ext}`;
@@ -399,7 +399,7 @@ class SpacesService {
     return this.uploadImage(fileBuffer, mimeType, null, fileName, folderPath);
   }
 
-  async uploadOrganizationBanner(fileBuffer, mimeType, workspaceId) {
+  async uploadWorkspaceBanner(fileBuffer, mimeType, workspaceId) {
     const { ORGANIZATIONS } = SpacesService.FOLDER_PATHS;
     const ext = this.getFileExtensionFromMimeType(mimeType);
     const fileName = `org-${workspaceId}-banner${ext}`;

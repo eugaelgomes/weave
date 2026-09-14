@@ -1,4 +1,4 @@
-# Require Org Permission (`src/middlewares/auth/require-org-permission.js`)
+# Require Workspace Permission (`src/middlewares/auth/require-org-permission.js`)
 
 ## What it does
 

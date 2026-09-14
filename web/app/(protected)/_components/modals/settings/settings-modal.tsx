@@ -9,7 +9,7 @@ import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-s
 import { ApiTokensProvider } from "@/app/_contexts/api-tokens-context";
 import { BackupProvider } from "@/app/_contexts/backup-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
-import { OrganizationProvider } from "@/app/_contexts/workspace-context";
+import { WorkspaceProvider } from "@/app/_contexts/workspace-context";
 import { useAuth } from "@/app/_contexts/auth-context";
 
 // Tabs imports
@@ -228,7 +228,7 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
 
 export default function SettingsModal(props: SettingsModalProps) {
   return (
-    <OrganizationProvider>
+    <WorkspaceProvider>
       <ApiTokensProvider>
         <BackupProvider>
           <SlackProvider>
@@ -236,6 +236,6 @@ export default function SettingsModal(props: SettingsModalProps) {
           </SlackProvider>
         </BackupProvider>
       </ApiTokensProvider>
-    </OrganizationProvider>
+    </WorkspaceProvider>
   );
 }

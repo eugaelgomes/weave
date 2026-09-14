@@ -20,6 +20,6 @@ Manages project CRUD, stages, collaborators, associated notes, and stage assignm
 ## Middleware and security notes
 
 - Global `verifyToken`.
-- Permission gate for write operations: `requireOrgPermission(MANAGE_PROJECTS)`.
+- Permission gate for write operations: `requireWorkspacePermission(MANAGE_PROJECTS)`.
 - Uses `highTrafficLimiter` for reads and `standardTrafficLimiter` for write/update operations.
 - Uses multipart upload middleware on project update with files/icon.

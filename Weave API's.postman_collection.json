@@ -1868,7 +1868,7 @@
       "description": "Integração com IA e agentes."
     },
     {
-      "name": "Organizations",
+      "name": "Worksapceanizations",
       "item": [
         {
           "name": "Add Domain",
@@ -2117,7 +2117,7 @@
           "response": []
         },
         {
-          "name": "Organizations Projects",
+          "name": "Worksapceanizations Projects",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -2159,7 +2159,7 @@
           "response": []
         },
         {
-          "name": "Organization Data",
+          "name": "Worksapceanization Data",
           "request": {
             "method": "GET",
             "header": [],
@@ -2172,7 +2172,7 @@
           "response": []
         },
         {
-          "name": "Create Organization",
+          "name": "Create Worksapceanization",
           "request": {
             "method": "POST",
             "header": [],
@@ -2194,7 +2194,7 @@
           "response": []
         },
         {
-          "name": "Update Organization",
+          "name": "Update Worksapceanization",
           "request": {
             "method": "PUT",
             "header": [],
@@ -2229,7 +2229,7 @@
           "response": []
         },
         {
-          "name": "Delete Organization",
+          "name": "Delete Worksapceanization",
           "request": {
             "method": "DELETE",
             "header": [],

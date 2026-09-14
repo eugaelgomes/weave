@@ -55,7 +55,7 @@ const jsonLd = {
       publisher: { "@id": `${siteOrigin}/#workspace` },
     },
     {
-      "@type": "Organization",
+      "@type": "Workspace",
       "@id": `${siteOrigin}/#workspace`,
       name: "Weave",
       url: siteOrigin,

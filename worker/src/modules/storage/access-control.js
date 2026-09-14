@@ -147,7 +147,7 @@ const hasProjectAccess = async (userId, projectId) => {
   return count > 0;
 };
 
-const hasOrganizationAccess = async (userId, workspaceId) => {
+const hasWorkspaceAccess = async (userId, workspaceId) => {
   if (!userId || !workspaceId) return false;
 
   const query = `
@@ -198,7 +198,7 @@ const assertFileAccess = async (userId, key) => {
       hasAccess = await hasProjectAccess(normalizedUserId, descriptor.projectId);
       break;
     case "workspace":
-      hasAccess = await hasOrganizationAccess(normalizedUserId, descriptor.workspaceId);
+      hasAccess = await hasWorkspaceAccess(normalizedUserId, descriptor.workspaceId);
       break;
     default:
       hasAccess = false;

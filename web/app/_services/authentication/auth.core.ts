@@ -153,7 +153,11 @@ export const initiateMicrosoftLogin = (): void => {
 };
 
 export const getAuthProvidersService = async (): Promise<AuthProvidersConfig> => {
-  const res = await apiClient.get(API_ENDPOINTS.AUTH_PROVIDERS);
+  // Provider availability is public metadata. Keep this request simple so the
+  // sign-in screen can load even before the internal challenge is available.
+  const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH_PROVIDERS}`, {
+    credentials: "include",
+  });
   return await handleResponse<AuthProvidersConfig>(res, {
     skipSessionInvalidationOn401: true,
   });

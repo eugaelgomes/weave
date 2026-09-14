@@ -116,7 +116,7 @@ Add Redis, worker, and engine URLs as required by your deployment (`weave-api` e
 | `/notes`           | Notes and blocks                          | Yes                               |
 | `/backup`          | Backup / export                           | Yes                               |
 | `/projects`        | Projects, collaborators, tags, priorities | Yes                               |
-| `/workspaces`   | Organizations, members, areas             | Yes                               |
+| `/workspaces`   | Workspaces, members, areas             | Yes                               |
 | `/weave-ai`        | AI chat, agents, models                   | Yes                               |
 | `/plans`           | Plans and usage                           | Yes                               |
 | `/notifications`   | Notifications                             | Yes                               |

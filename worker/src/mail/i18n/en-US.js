@@ -37,7 +37,7 @@ module.exports = {
   "common.greetingFallback": "there",
   "common.newEmail": "New email",
   "common.note": "Note",
-  "common.workspace": "Organization",
+  "common.workspace": "Workspace",
 
   "common.project": "Project",
   "common.role": "Role",
@@ -82,7 +82,7 @@ module.exports = {
   "invite.preheader": "Invitation to join an workspace.",
   "invite.subject": "Invitation to {workspaceName} - Weave",
 
-  "invite.subtitle": "Organization invitation",
+  "invite.subtitle": "Workspace invitation",
   "invite.title": "You have been invited",
   "inviteAccepted.cta": "Go to Home",
   "inviteAccepted.feature1": "Create notes and organize ideas with blocks.",

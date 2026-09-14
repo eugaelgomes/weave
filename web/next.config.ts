@@ -135,7 +135,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/workspace/:path*",
-        destination: "/organization/:path*",
+        destination: "/workspace/:path*",
       },
     ];
   },

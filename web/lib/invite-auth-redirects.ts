@@ -49,7 +49,7 @@ export function resolveLegacyAuthInviteRedirect(
 /**
  * Maps /workspace/accept-invite?token= to canonical /auth/?invite_token=.
  */
-export function resolveOrganizationAcceptInviteRedirect(
+export function resolveWorkspaceAcceptInviteRedirect(
   pathname: string,
   token: string | null
 ): InviteAuthRedirectResult | null {

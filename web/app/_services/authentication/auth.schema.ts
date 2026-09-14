@@ -113,7 +113,7 @@ export const UsageDetailsSchema = z
   .optional();
 
 /** Matches `mapDefaultAreaInfo` in weave-api `user-data.controller.js` / auth controllers. */
-export const BackendOrgDefaultAreaFieldsSchema = z.object({
+export const BackendWorkspaceDefaultAreaFieldsSchema = z.object({
   id: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
@@ -123,9 +123,9 @@ export const BackendOrgDefaultAreaFieldsSchema = z.object({
   properties: z.record(z.string(), z.unknown()).optional(),
 });
 
-export const BackendOrgDefaultAreaSchema = BackendOrgDefaultAreaFieldsSchema.nullable().optional();
+export const BackendWorkspaceDefaultAreaSchema = BackendWorkspaceDefaultAreaFieldsSchema.nullable().optional();
 
-export type OrgDefaultArea = z.infer<typeof BackendOrgDefaultAreaFieldsSchema>;
+export type WorkspaceDefaultArea = z.infer<typeof BackendWorkspaceDefaultAreaFieldsSchema>;
 
 export const UserSchema = z.object({
   id: z.string().optional(),
@@ -175,7 +175,7 @@ export const UserSchema = z.object({
       member_since: z.string().nullable().optional(),
       public_id: z.string().nullable().optional(),
       active_modules: z.record(z.string(), z.boolean()).nullable().optional(),
-      default_area: BackendOrgDefaultAreaSchema,
+      default_area: BackendWorkspaceDefaultAreaSchema,
     })
     .nullable()
     .optional(),
@@ -193,7 +193,7 @@ export const UserSchema = z.object({
       member_since: z.string().nullable().optional(),
       public_id: z.string().nullable().optional(),
       active_modules: z.record(z.string(), z.boolean()).nullable().optional(),
-      default_area: BackendOrgDefaultAreaSchema,
+      default_area: BackendWorkspaceDefaultAreaSchema,
     })
     .nullable()
     .optional(),
@@ -218,8 +218,8 @@ export const UserSchema = z.object({
   usage_period_end: z.string().optional(),
   usage_details: UsageDetailsSchema,
 
-  org_default_area: BackendOrgDefaultAreaFieldsSchema.nullable().optional(),
-  workspace_default_area: BackendOrgDefaultAreaFieldsSchema.nullable().optional(),
+  org_default_area: BackendWorkspaceDefaultAreaFieldsSchema.nullable().optional(),
+  workspace_default_area: BackendWorkspaceDefaultAreaFieldsSchema.nullable().optional(),
   onboarding_state: z
     .object({
       step: z.string().optional(),
@@ -250,7 +250,7 @@ export const BackendSettingsSchema = z.object({
   usage_preference: z.record(z.string(), z.unknown()).optional(),
 });
 
-export const BackendOrganizationSchema = z.object({
+export const BackendWorkspaceSchema = z.object({
   id: z.string().nullable().optional(),
   unique_name: z.string().nullable().optional(),
   name: z.string().nullable().optional(), // Login response and Me response slightly differ
@@ -316,7 +316,7 @@ export const BackendAuthResponseSchema = z.object({
         logo_url: z.string().nullable().optional(),
         member_since: z.string().nullable().optional(),
         public_id: z.string().nullable().optional(),
-        default_area: BackendOrgDefaultAreaSchema,
+        default_area: BackendWorkspaceDefaultAreaSchema,
       })
       .optional()
       .nullable(),
@@ -332,7 +332,7 @@ export const BackendAuthResponseSchema = z.object({
         logo_url: z.string().nullable().optional(),
         member_since: z.string().nullable().optional(),
         public_id: z.string().nullable().optional(),
-        default_area: BackendOrgDefaultAreaSchema,
+        default_area: BackendWorkspaceDefaultAreaSchema,
       })
       .optional()
       .nullable(),
@@ -365,7 +365,7 @@ export const BackendMeResponseSchema = z.object({
           .optional(),
         member_since: z.string().nullable().optional(),
         public_id: z.string().nullable().optional(),
-        default_area: BackendOrgDefaultAreaSchema,
+        default_area: BackendWorkspaceDefaultAreaSchema,
       })
       .optional()
       .nullable(),
@@ -381,7 +381,7 @@ export const BackendMeResponseSchema = z.object({
           .optional(),
         member_since: z.string().nullable().optional(),
         public_id: z.string().nullable().optional(),
-        default_area: BackendOrgDefaultAreaSchema,
+        default_area: BackendWorkspaceDefaultAreaSchema,
       })
       .optional()
       .nullable(),
@@ -468,7 +468,7 @@ export type UsageDetails = z.infer<typeof UsageDetailsSchema>;
 export type User = z.infer<typeof UserSchema>;
 export type BackendProfile = z.infer<typeof BackendProfileSchema>;
 export type BackendSettings = z.infer<typeof BackendSettingsSchema>;
-export type BackendOrganization = z.infer<typeof BackendOrganizationSchema>;
+export type BackendWorkspace = z.infer<typeof BackendWorkspaceSchema>;
 export type BackendAuthResponse = z.infer<typeof BackendAuthResponseSchema>;
 export type BackendMeResponse = z.infer<typeof BackendMeResponseSchema>;
 export type LoginCredentials = z.infer<typeof LoginCredentialsSchema>;

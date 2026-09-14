@@ -17,7 +17,11 @@ class WorkspaceBaseRepository {
    * @param {PrismaClient} [client=prisma] - Optional Prisma client instance.
    * @returns {Promise<Object|null>} The workspace with membership and permissions, or null.
    */
-  async getActiveWorkspaceWithMembership(user_id, client = prisma) {
+  async getActiveWorkspaceWithMembership(
+    user_id,
+    client = prisma,
+    requestedWorkspacePublicId = null
+  ) {
     const member = await client.workspace_members.findFirst({
       include: {
         workspace_member_roles: {
@@ -34,7 +38,16 @@ class WorkspaceBaseRepository {
         },
       },
       orderBy: { created_at: "asc" },
-      where: { deleted: false, user_id, workspaces: { deleted: false } },
+      where: {
+        deleted: false,
+        user_id,
+        workspaces: {
+          is: {
+            deleted: false,
+            ...(requestedWorkspacePublicId ? { public_id: requestedWorkspacePublicId } : {}),
+          },
+        },
+      },
     });
 
     let workspace;
@@ -45,7 +58,11 @@ class WorkspaceBaseRepository {
       member_roles = member.workspace_member_roles.map((wmr) => wmr.workspace_roles.name);
     } else {
       const ownedWorkspaces = await this.getWorkspacesByUserId(user_id, client);
-      workspace = ownedWorkspaces.find((o) => !o.deleted);
+      workspace = ownedWorkspaces.find(
+        (candidate) =>
+          !candidate.deleted &&
+          (!requestedWorkspacePublicId || candidate.public_id === requestedWorkspacePublicId)
+      );
       if (!workspace) return null;
     }
 
@@ -108,12 +125,16 @@ class WorkspaceBaseRepository {
   }
 
   /**
-   * Alias for getActiveWorkspaceWithMembership.
+   * Compatibility alias for getActiveWorkspaceWithMembership.
    * @param {string} user_id
    * @param {PrismaClient} [client=prisma]
    */
-  async getActiveOrganizationWithMembership(user_id, client = prisma) {
-    return this.getActiveWorkspaceWithMembership(user_id, client);
+  async getActiveOrganizationWithMembership(
+    user_id,
+    client = prisma,
+    requestedWorkspacePublicId = null
+  ) {
+    return this.getActiveWorkspaceWithMembership(user_id, client, requestedWorkspacePublicId);
   }
 
   /**
@@ -168,6 +189,7 @@ class WorkspaceBaseRepository {
             description: true,
             id: true,
             logo_url: true,
+            public_id: true,
             unique_name: true,
             user_id: true,
             workspace_name: true,

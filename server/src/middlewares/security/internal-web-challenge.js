@@ -14,6 +14,7 @@ function getChallengeSecret() {
 
 function shouldSkipInternalChallenge(path) {
   const isSsoAuthPath = path.startsWith("/auth/signin/sso") || path.startsWith("/auth/sso");
+  const isPublicAuthMetadataPath = path === "/auth/providers";
 
   if (path === "/_internal/challenge" || path.startsWith("/_internal/challenge/")) {
     return true;
@@ -24,7 +25,12 @@ function shouldSkipInternalChallenge(path) {
     path.startsWith("/integrations/slack/install") ||
     path.startsWith("/integrations/slack/oauth/callback");
 
-  if (path.startsWith("/webhooks") || isSsoAuthPath || isSlackWebhookOrOAuth) {
+  if (
+    path.startsWith("/webhooks") ||
+    isSsoAuthPath ||
+    isPublicAuthMetadataPath ||
+    isSlackWebhookOrOAuth
+  ) {
     return true;
   }
   return false;

@@ -3,7 +3,7 @@ name: Workspace search and share
 overview: "Isolar descoberta de utilizadores e partilha (notas/projetos/IA) pela mesma regra: utilizadores só interagem com quem partilha o mesmo contexto de workspace (membros ativos de organização), ou ambos fora de qualquer workspace."
 todos:
   - id: scope-module
-    content: Adicionar workspace-user-scope (getActiveOrganizationIdsForUser + usersMayInteract) com JSDoc e queries alinhadas a workspace_members
+    content: Adicionar workspace-user-scope (getActiveWorksapceanizationIdsForUser + usersMayInteract) com JSDoc e queries alinhadas a workspace_members
     status: completed
   - id: search-filter
     content: Filtrar searchUsers(searchTerm, searcherUserId) no repositório + controller
@@ -38,7 +38,7 @@ Criar um módulo pequeno com JSDoc, por exemplo:
 
 Funções:
 
-- `getActiveOrganizationIdsForUser(userId)` → `Promise<string[]>` (query única, `SELECT DISTINCT workspace_id ...`).
+- `getActiveWorksapceanizationIdsForUser(userId)` → `Promise<string[]>` (query única, `SELECT DISTINCT workspace_id ...`).
 - `usersMayInteract(actorUserId, targetUserId)` → `Promise<boolean>` (duas queries ou uma query com join, conforme preferência de legibilidade).
 
 Não expor PII; só UUIDs e lógica booleana.
@@ -81,8 +81,8 @@ Convém extrair um helper único (ex. `assertUsersMayInteractOr403(actorId, targ
 
 ```mermaid
 flowchart TD
-  A[getOrgIds actor]
-  B[getOrgIds target]
+  A[getWorksapceIds actor]
+  B[getWorksapceIds target]
   A --> E{Both empty?}
   B --> E
   E -->|yes| OK[Allow]

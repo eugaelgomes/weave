@@ -108,8 +108,13 @@ const verifyToken = async (req, res, next) => {
       });
     }
 
-    // Attaches the validated web credentials to the request
-    req.user = parsed.data;
+    // A workspace scoped URL can select another workspace the user belongs to.
+    // Authorization remains enforced by each workspace repository lookup.
+    const requestedWorkspacePublicId = req.get("x-weave-workspace-public-id");
+    req.user = {
+      ...parsed.data,
+      workspace_public_id: requestedWorkspacePublicId || undefined,
+    };
 
     return next();
   } catch {

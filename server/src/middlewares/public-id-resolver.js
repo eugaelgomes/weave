@@ -54,7 +54,7 @@ async function resolveNotePublicIdParam(req, res, next, id) {
   }
 }
 
-async function resolveOrganizationPublicIdParam(req, res, next, id) {
+async function resolveWorkspacePublicIdParam(req, res, next, id) {
   try {
     if (id && id.length === 12 && !id.includes("-")) {
       const query = `
@@ -74,13 +74,13 @@ async function resolveOrganizationPublicIdParam(req, res, next, id) {
     }
     next();
   } catch (error) {
-    console.error("[resolveOrganizationPublicIdParam] Error resolving public ID:", error);
+    console.error("[resolveWorkspacePublicIdParam] Error resolving public ID:", error);
     next();
   }
 }
 
 module.exports = {
   resolveNotePublicIdParam,
-  resolveOrganizationPublicIdParam,
   resolveProjectPublicIdParam,
+  resolveWorkspacePublicIdParam,
 };

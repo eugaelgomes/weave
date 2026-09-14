@@ -16,5 +16,5 @@ Mounted in internal router under both `/projects` and `/workspaces` contexts.
 ## Middleware and security notes
 
 - Global `verifyToken`.
-- Write operations require `requireOrgPermission(MANAGE_TAGS)`.
+- Write operations require `requireWorkspacePermission(MANAGE_TAGS)`.
 - Router uses `mergeParams: true` to support nested mounting.

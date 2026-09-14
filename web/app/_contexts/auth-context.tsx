@@ -34,7 +34,7 @@ import { ApiError } from "../_services/api-error";
 import { mergeUsageDetails } from "../_services/plans-service/plan-usage-service";
 import { logClientError } from "../_utils/client-logger";
 import { useTheme } from "./theme-context";
-import { switchOrganizationApi } from "../_services/workspace";
+import { switchWorkspaceApi } from "../_services/workspace";
 
 /** Consumer-facing user model — import from this module in UI; do not import auth-service types directly. */
 export type { User };
@@ -94,7 +94,7 @@ type AuthContextType = {
   recoverPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
   resetSenha: (token: string, password: string) => Promise<{ success: boolean; message?: string }>;
   deleteUserPermanently: () => Promise<{ success: boolean; message?: string }>;
-  switchOrganization: (workspaceId: string) => Promise<{ success: boolean; message?: string }>;
+  switchWorkspace: (workspaceId: string) => Promise<{ success: boolean; message?: string }>;
 
   // Providers Configuration
   providers: AuthProvidersConfig | null;
@@ -489,18 +489,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const switchOrganization = async (workspaceId: string) => {
+  const switchWorkspace = async (workspaceId: string) => {
     try {
-      const ok = await switchOrganizationApi(workspaceId);
+      const ok = await switchWorkspaceApi(workspaceId);
       if (ok) {
         const freshUser = await refreshUser();
-        if (freshUser?.user_workspace?.public_id) {
-          window.location.href = `/${freshUser.user_workspace.public_id}/new`;
-        } else if (freshUser?.user_workspace?.unique_name) {
-          window.location.href = `/${freshUser.user_workspace.unique_name}/new`;
-        } else {
-          window.location.href = "/";
+        const workspacePublicId =
+          freshUser?.user_workspace?.public_id || freshUser?.workspace_public_id;
+        if (!workspacePublicId) {
+          throw new Error("The selected workspace does not have a public_id");
         }
+        window.location.href = `/workspace/${encodeURIComponent(workspacePublicId)}/general`;
         return { success: true };
       }
       return { success: false, message: "Failed to switch workspace" };
@@ -533,7 +532,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         recoverPassword,
         resetSenha,
         deleteUserPermanently,
-        switchOrganization,
+        switchWorkspace,
         providers,
         providersLoading,
         isProviderEnabled,

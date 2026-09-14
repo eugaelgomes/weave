@@ -723,10 +723,10 @@ class PlansRepository {
         // Sort in JS: prioritize matching workspace over user, then period_end DESC
         return results
           .sort((a, b) => {
-            const aIsOrg = a.workspace_id === latestWorkspace?.workspace_id;
-            const bIsOrg = b.workspace_id === latestWorkspace?.workspace_id;
-            if (aIsOrg && !bIsOrg) return -1;
-            if (!aIsOrg && bIsOrg) return 1;
+            const aIsWorkspace = a.workspace_id === latestWorkspace?.workspace_id;
+            const bIsWorkspace = b.workspace_id === latestWorkspace?.workspace_id;
+            if (aIsWorkspace && !bIsWorkspace) return -1;
+            if (!aIsWorkspace && bIsWorkspace) return 1;
             return b.period_end.getTime() - a.period_end.getTime();
           })
           .slice(0, limit);

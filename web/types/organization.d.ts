@@ -1,16 +1,16 @@
-export type OrganizationMemberRole = "owner" | "admin" | "member" | "invited";
+export type WorkspaceMemberRole = "owner" | "admin" | "member" | "invited";
 
-export interface OrganizationMembers {
+export interface WorkspaceMembers {
   owner: string;
   admins: string[];
   members: string[];
   invited: string[];
 }
 
-export interface Organization {
+export interface Workspace {
   id: string;
   name: string;
   unique_name: string;
-  members: OrganizationMembers;
+  members: WorkspaceMembers;
   // Adicione outros campos conforme necessário
 }

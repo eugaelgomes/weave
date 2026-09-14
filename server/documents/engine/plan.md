@@ -44,7 +44,7 @@ Tabela principal — só metadados e referências. **Nenhum campo de conteúdo p
 | `project_id`         | `uuid NOT NULL`                              | Projeto que gerou o raciocínio                 |
 | `sprint_id`          | `uuid NOT NULL`                              | Sprint associada                               |
 | `report_config_id`   | `uuid NULL`                                  | Config de AI report que disparou               |
-| `workspace_id`    | `uuid NULL`                                  | Organização (para escopo)                      |
+| `workspace_id`    | `uuid NULL`                                  | Workspaceanização (para escopo)                      |
 | `triggered_by`       | `uuid NOT NULL`                              | Usuário/owner que disparou                     |
 | `reasoning_type`     | `weave_engine_reasoning_type NOT NULL`       | Tipo do raciocínio (enum)                      |
 | `title`              | `varchar(255) NOT NULL`                      | Título (ex: "Sprint 3 - Daily Standup")        |

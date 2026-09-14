@@ -20,7 +20,7 @@ Generates standardized HTML and plain text for transactional emails.
 - `resolveEmailLocale(raw)` — normalizes BCP 47 tags.
 - `getUserEmailLocale({ userId, email })` — reads `users.user_preference.language.interface`.
 - `t(locale, key, vars)` — template strings in `locales/pt-BR.js`, `en-US.js`, `es-ES.js`.
-- Org invites to unknown emails use the **inviter's** locale.
+- Workspace invites to unknown emails use the **inviter's** locale.
 - Multi-recipient jobs (due-date, AI report) build **one email per recipient** with that user's locale.
 
 ## Worker sync

@@ -1,5 +1,5 @@
 ---
-name: Organization UI alignment
+name: Worksapceanization UI alignment
 overview: "Alinhar todas as rotas em `app/(protected)/workspace` ao padrão visual do resto do weave-app: paleta neutral + superfície `#1d1d1b`, bordas/sombras `surface-dark-*`, headers partilhados e tipografia coerente, substituindo o bloco zinc-centric e inconsistências de layout."
 todos:
   - id: org-settings-components
@@ -20,7 +20,7 @@ todos:
 isProject: false
 ---
 
-# Plano: corrigir telas de Organization (front)
+# Plano: corrigir telas de Worksapceanization (front)
 
 ## Referência de padrão (alvo)
 

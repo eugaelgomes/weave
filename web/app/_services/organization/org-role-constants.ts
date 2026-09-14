@@ -3,7 +3,7 @@
  * (see members.controller.js, workspace-role-policy.js).
  */
 
-export const WORKSPACE_WORKSPACE_ROLES = [
+export const WORKSPACE_ROLES = [
   "SUPER_ADMIN",
   "ADMIN",
   "BILLING_MANAGER",
@@ -11,7 +11,7 @@ export const WORKSPACE_WORKSPACE_ROLES = [
   "GUEST",
 ] as const;
 
-export type OrgWorkspaceRole = (typeof WORKSPACE_WORKSPACE_ROLES)[number];
+export type WorkspaceRole = (typeof WORKSPACE_ROLES)[number];
 
 export const PROJECT_MEMBER_ROLES = [
   "PROJECT_MANAGER",
@@ -23,13 +23,13 @@ export const PROJECT_MEMBER_ROLES = [
 export type ProjectMemberRoleForInvite = (typeof PROJECT_MEMBER_ROLES)[number];
 
 /** Lowercase keys for Tailwind / translation maps (Badge). */
-export type OrgRoleUiKey = "super_admin" | "admin" | "billing_manager" | "member" | "guest";
+export type WorkspaceRoleUiKey = "super_admin" | "admin" | "billing_manager" | "member" | "guest";
 
 /**
  * Normalizes API workspace role (typically UPPERCASE) to a stable UI key.
  * Unknown values fall back to `member`.
  */
-export function normalizeOrgRoleForUi(role: string | null | undefined): OrgRoleUiKey {
+export function normalizeWorkspaceRoleForUi(role: string | null | undefined): WorkspaceRoleUiKey {
   const u = (role ?? "").trim().toUpperCase();
   if (u === "SUPER_ADMIN") return "super_admin";
   if (u === "ADMIN") return "admin";
@@ -39,8 +39,8 @@ export function normalizeOrgRoleForUi(role: string | null | undefined): OrgRoleU
   return "member";
 }
 
-export function isOrgWorkspaceRole(value: string): value is OrgWorkspaceRole {
-  return (WORKSPACE_WORKSPACE_ROLES as readonly string[]).includes(value);
+export function isWorkspaceRole(value: string): value is WorkspaceRole {
+  return (WORKSPACE_ROLES as readonly string[]).includes(value);
 }
 
 export function isProjectMemberRoleForInvite(value: string): value is ProjectMemberRoleForInvite {

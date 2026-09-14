@@ -19,7 +19,7 @@ Gerencia upload/download/delete de arquivos no DigitalOcean Spaces (API compativ
   - Comentario de nota: anexos
   - Projeto: icone e arquivo
   - Usuario: avatar
-  - Organizacao: logo e banner
+  - Workspaceanizacao: logo e banner
 - Utilitarios:
   - extensao por MIME
   - validacao de tipo/tamanho de imagem

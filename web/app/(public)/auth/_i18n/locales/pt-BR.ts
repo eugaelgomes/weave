@@ -106,10 +106,10 @@ export const ptBR = {
       },
       notes: {
         title: "Tarefas em Blocos",
-        desc: "Editor modular com drag-and-drop. Organize ideias e vincule pendências aos projetos.",
+        desc: "Editor modular com drag-and-drop. Workspaceanize ideias e vincule pendências aos projetos.",
       },
       collaboration: {
-        title: "Colaboração e Organizações",
+        title: "Colaboração e Workspaceanizações",
         desc: "Gestão de áreas por setores, níveis de acesso rígidos e segurança ativa por domínio.",
       },
       ai: {

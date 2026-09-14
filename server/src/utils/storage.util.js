@@ -21,7 +21,7 @@ const SPACES_PREFIXES = [
   spacesService.constructor?.FOLDER_PATHS?.NOTES_COMMENTS_FILES?.ROOT || "notes-comments-files",
   spacesService.constructor?.FOLDER_PATHS?.PROJECTS?.ROOT || "projects",
   spacesService.constructor?.FOLDER_PATHS?.USERS_CONTENT?.ROOT || "users-content",
-  spacesService.constructor?.FOLDER_PATHS?.ORGANIZATIONS?.ROOT || "organizations",
+  spacesService.constructor?.FOLDER_PATHS?.ORGANIZATIONS?.ROOT || "workspaces",
   spacesService.constructor?.FOLDER_PATHS?.WORKSPACES?.ROOT || "workspaces",
   spacesService.constructor?.FOLDER_PATHS?.AGENTS?.ROOT || "agents",
 ];

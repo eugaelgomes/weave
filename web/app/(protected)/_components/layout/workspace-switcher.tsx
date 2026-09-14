@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { ChevronsUpDown, Check, Plus, Loader2, Building2, X } from "lucide-react";
 import { useAuth } from "@/app/_contexts/auth-context";
 import {
-  fetchMyOrganizations,
+  fetchMyWorkspaces,
   type UserWorkspaceSummary,
-  createOrganization,
+  createWorkspace,
 } from "@/app/_services/workspace";
 import { cn } from "@/lib/utils";
 
 export const WorkspaceSwitcher = () => {
-  const { user, switchOrganization } = useAuth();
+  const { user, switchWorkspace } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [workspaces, setWorkspaces] = useState<UserWorkspaceSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,25 +20,64 @@ export const WorkspaceSwitcher = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const activeOrgName = user?.user_workspace?.name || user?.workspace_name || "";
-  const activeOrgUniqueName = user?.user_workspace?.unique_name || user?.workspace_unique_name || "";
-  const activeOrgLogo = user?.user_workspace?.logo_url || user?.workspace_logo_url || null;
-  const activeOrgId = user?.user_workspace?.id || user?.workspace_id || null;
+  const activeWorkspaceName = user?.user_workspace?.name || user?.workspace_name || "";
+  const activeWorkspaceUniqueName =
+    user?.user_workspace?.unique_name || user?.workspace_unique_name || "";
+  const activeWorkspacePublicId =
+    user?.user_workspace?.public_id || user?.workspace_public_id || "";
+  const activeWorkspaceLogo = user?.user_workspace?.logo_url || user?.workspace_logo_url || null;
+  const activeWorkspaceId = user?.user_workspace?.id || user?.workspace_id || null;
+  const activeWorkspaceRole = user?.user_workspace?.member_role || user?.workspace_member_role;
+  const activeWorkspace = useMemo(
+    () =>
+      activeWorkspaceId
+        ? {
+            id: activeWorkspaceId,
+            logo_url: activeWorkspaceLogo,
+            member_role: Array.isArray(activeWorkspaceRole)
+              ? activeWorkspaceRole[0] || "MEMBER"
+              : activeWorkspaceRole || "MEMBER",
+            public_id: activeWorkspacePublicId,
+            unique_name: activeWorkspaceUniqueName || "",
+            workspace_name: activeWorkspaceName || activeWorkspaceUniqueName || "Workspace",
+          }
+        : null,
+    [
+      activeWorkspaceId,
+      activeWorkspaceLogo,
+      activeWorkspaceName,
+      activeWorkspacePublicId,
+      activeWorkspaceRole,
+      activeWorkspaceUniqueName,
+    ]
+  );
+
+  const includeActiveWorkspace = useCallback(
+    (items: UserWorkspaceSummary[]) => {
+      if (!activeWorkspace || items.some((workspace) => workspace.id === activeWorkspace.id)) {
+        return items;
+      }
+
+      return [activeWorkspace, ...items];
+    },
+    [activeWorkspace]
+  );
 
   const loadWorkspaces = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchMyOrganizations();
-      setWorkspaces(data);
+      const data = await fetchMyWorkspaces();
+      setWorkspaces(includeActiveWorkspace(data));
     } catch (err) {
       console.error("Failed to load workspaces:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [includeActiveWorkspace]);
 
   const toggleDropdown = () => {
     if (!isOpen) {
+      setWorkspaces((current) => includeActiveWorkspace(current));
       loadWorkspaces();
     }
     setIsOpen((prev) => !prev);
@@ -60,18 +99,18 @@ export const WorkspaceSwitcher = () => {
   }, [isOpen]);
 
   const handleSelectWorkspace = async (workspaceId: string) => {
-    if (workspaceId === activeOrgId || switchingId) return;
+    if (workspaceId === activeWorkspaceId || switchingId) return;
 
     setSwitchingId(workspaceId);
     try {
-      await switchOrganization(workspaceId);
+      await switchWorkspace(workspaceId);
     } catch (err) {
       console.error("Error switching workspace:", err);
       setSwitchingId(null);
     }
   };
 
-  const displayName = activeOrgName || activeOrgUniqueName || "weave-engine";
+  const displayName = activeWorkspaceName || activeWorkspaceUniqueName || "weave-engine";
 
   return (
     <>
@@ -90,15 +129,15 @@ export const WorkspaceSwitcher = () => {
           aria-label="Switch workspace"
           title="Alternar organização"
         >
-          {activeOrgLogo ? (
+          {activeWorkspaceLogo ? (
             <Image
-              src={activeOrgLogo}
+              src={activeWorkspaceLogo}
               alt={displayName}
               width={16}
               height={16}
               className="h-4 w-4 shrink-0 rounded-sm object-contain"
             />
-          ) : activeOrgName || activeOrgUniqueName ? (
+          ) : activeWorkspaceName || activeWorkspaceUniqueName ? (
             <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-gray-200 text-[10px] font-bold text-gray-600 dark:bg-neutral-700 dark:text-gray-300">
               {displayName.charAt(0).toUpperCase()}
             </div>
@@ -131,7 +170,7 @@ export const WorkspaceSwitcher = () => {
             ) : (
               <div className="max-h-56 space-y-0.5 overflow-y-auto">
                 {workspaces.map((ws) => {
-                  const isActive = ws.id === activeOrgId;
+                  const isActive = ws.id === activeWorkspaceId;
                   const isCurrentlySwitching = ws.id === switchingId;
 
                   return (

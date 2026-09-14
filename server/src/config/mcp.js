@@ -18,7 +18,7 @@ const { createBackupTools } = require("@/modules/backup/tools/backup.tools");
 const { createUsersTools } = require("@/modules/users/tools/users.tools");
 
 const { createAgentHouseTools } = require("@/modules/agent-house/tools/agent-house.tools");
-const { createOrganizationsTools } = require("@/modules/workspaces/tools/workspaces.tools");
+const { createWorkspacesTools } = require("@/modules/workspaces/tools/workspaces.tools");
 
 /**
  * Builds the MCP registry for the given user.
@@ -38,7 +38,7 @@ function buildRegistry(user) {
     ...createUsersTools(user),
 
     ...createAgentHouseTools(user),
-    ...createOrganizationsTools(user),
+    ...createWorkspacesTools(user),
   };
 
   let filteredTools = allTools;

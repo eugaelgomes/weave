@@ -14,11 +14,11 @@ todos:
 isProject: false
 ---
 
-# Organizar contrato Slack, migration e variáveis
+# Worksapceanizar contrato Slack, migration e variáveis
 
 ## 1. Contrato da API (org ativa vs `:orgId`)
 
-**Decisão de produto já refletida no código:** os endpoints de integração Slack seguem o mesmo padrão que o resto de [`weave-api/src/modules/workspaces/workspaces.routes.js`](weave-api/src/modules/workspaces/workspaces.routes.js): após `verifyToken`, a organização vem do **contexto ativo** do utilizador (`getActiveOrganizationWithMembership`), não de um `:orgId` na URL.
+**Decisão de produto já refletida no código:** os endpoints de integração Slack seguem o mesmo padrão que o resto de [`weave-api/src/modules/workspaces/workspaces.routes.js`](weave-api/src/modules/workspaces/workspaces.routes.js): após `verifyToken`, a organização vem do **contexto ativo** do utilizador (`getActiveWorksapceanizationWithMembership`), não de um `:orgId` na URL.
 
 | Caminho real (v1) | Autenticação | Permissão |
 |-------------------|--------------|-----------|
@@ -31,7 +31,7 @@ isProject: false
 
 - Manter [`weave-api/documents/routes/slack-integration.md`](weave-api/documents/routes/slack-integration.md) como **fonte canónica** da secção “API surface” (já descreve paths sem `:orgId`).
 - Em [`weave-api/documents/routes/workspaces-routes.md`](weave-api/documents/routes/workspaces-routes.md), garantir uma linha explícita: *“Slack: escopo = organização ativa do JWT/membership; não usar `workspaceId` no path.”*
-- Se no futuro existir **troca de workspace** no front com org explícita, aí sim faria sentido introduzir `/:orgId/...` **ou** header `X-Organization-Id` validado contra membership — fora do escopo atual.
+- Se no futuro existir **troca de workspace** no front com org explícita, aí sim faria sentido introduzir `/:orgId/...` **ou** header `X-Worksapceanization-Id` validado contra membership — fora do escopo atual.
 
 ```mermaid
 flowchart LR
@@ -39,12 +39,12 @@ flowchart LR
     JWT[JWT com userId]
   end
   subgraph api [weave-api]
-    OrgsRoutes["/workspaces/integrations/slack"]
-    Repo["getActiveOrganizationWithMembership"]
+    WorksapcesRoutes["/workspaces/integrations/slack"]
+    Repo["getActiveWorksapceanizationWithMembership"]
     SlackCtrl[slack-integrations.controller]
   end
-  JWT --> OrgsRoutes
-  OrgsRoutes --> SlackCtrl
+  JWT --> WorksapcesRoutes
+  WorksapcesRoutes --> SlackCtrl
   SlackCtrl --> Repo
 ```
 
@@ -73,7 +73,7 @@ Variáveis mínimas (já listadas em [`weave-api/.env.example`](weave-api/.env.e
 - `FRONTEND_URL` — redirect pós-OAuth para `/app/settings/integrations`.
 - Opcionais: `SLACK_REDIRECT_URI`, `SLACK_BOT_SCOPES`.
 
-**Organização sugerida:**
+**Worksapceanização sugerida:**
 
 - **Desenvolvimento local:** copiar de `.env.example` para `weave-api/.env` e preencher; commitar apenas `.env.example`.
 - **Produção (compose):** mesmo conjunto no `.env` da raiz ou no secret manager que já usam (`DOPPLER_CONFIG=prd` no compose); garantir que `SLACK_REDIRECT_URI` no Slack App coincide com o host real da API (`https://apis.weavenotes.app/.../callback` ou o que tiveres).

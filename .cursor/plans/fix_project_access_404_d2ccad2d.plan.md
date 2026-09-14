@@ -3,7 +3,7 @@ name: Fix Project Access 404
 overview: Diagnose why project-by-id and related endpoints return “Projeto não encontrado ou você não tem acesso” after successful creation, given `new_structure_db.sql` baseline and the project showing in list. Then implement the smallest backend fixes to restore consistent access checks and unblock wizard steps (stages/collaborators/notes).
 todos:
   - id: inspect-membership-shape
-    content: Read `workspaces.repository.getActiveOrganizationWithMembership` and confirm whether `membership.id` is org id or membership row id; identify correct field to pass to org-scope project queries.
+    content: Read `workspaces.repository.getActiveWorksapceanizationWithMembership` and confirm whether `membership.id` is org id or membership row id; identify correct field to pass to org-scope project queries.
     status: completed
   - id: inspect-org-scope-queries
     content: Read and verify `projects-read.repository.js` org-scope methods filter by `projects.workspace_id` and accept the workspace id correctly.
@@ -31,19 +31,19 @@ isProject: false
   - The created project **appears in the projects list**, so it is being persisted.
 
 ## Likely failure modes (ranked)
-- **Membership/org-scope mismatch**: `ProjectsCoreController._validateProjectAccess` has an org-wide path that calls `projectsRepository.getProjectByIdWithOrgScope(projectId, membership.id)`.
+- **Membership/org-scope mismatch**: `ProjectsCoreController._validateProjectAccess` has an org-wide path that calls `projectsRepository.getProjectByIdWithWorksapceScope(projectId, membership.id)`.
   - If `membership.id` is not actually the workspace id (common shape is `workspace_id`), org-scope lookups will always fail.
   - This would also affect `ProjectsReadController.getCollaborators`’ org-scope path.
-- **`_canAccessAllOrganizationProjects` returning true unexpectedly**: If normal members are being treated as org-wide, access validation will always take the org-scope path and fail.
-- **Repository org-scope query doesn’t match new schema**: `getProjectByIdWithOrgScope` may filter on the wrong column (e.g., `workspace_id` vs `workspace_id`) even though other queries match new schema.
+- **`_canAccessAllWorksapceanizationProjects` returning true unexpectedly**: If normal members are being treated as org-wide, access validation will always take the org-scope path and fail.
+- **Repository org-scope query doesn’t match new schema**: `getProjectByIdWithWorksapceScope` may filter on the wrong column (e.g., `workspace_id` vs `workspace_id`) even though other queries match new schema.
 - **ID type mismatch in specific queries**: Less likely (would typically throw 500), but we will verify casts and column types against `new_structure_db.sql`.
 
 ## Investigation steps (read-only + runtime verification)
 - Inspect workspace membership shape and role policy:
-  - [`weave-api/src/modules/workspaces/repositories/workspaces.repository.js`](weave-api/src/modules/workspaces/repositories/workspaces.repository.js) `getActiveOrganizationWithMembership` return shape.
+  - [`weave-api/src/modules/workspaces/repositories/workspaces.repository.js`](weave-api/src/modules/workspaces/repositories/workspaces.repository.js) `getActiveWorksapceanizationWithMembership` return shape.
   - [`weave-api/src/modules/workspaces/workspace-role-policy.js`](weave-api/src/modules/workspaces/workspace-role-policy.js) for `ACCESS_ALL_WORKSPACE_PROJECTS` logic.
 - Inspect org-scope project queries:
-  - [`weave-api/src/modules/projects/repositories/projects-read.repository.js`](weave-api/src/modules/projects/repositories/projects-read.repository.js) `getProjectByIdWithOrgScope`, `getCollaboratorsWithOrgScope`, `getAssociatedNotesWithOrgScope`.
+  - [`weave-api/src/modules/projects/repositories/projects-read.repository.js`](weave-api/src/modules/projects/repositories/projects-read.repository.js) `getProjectByIdWithWorksapceScope`, `getCollaboratorsWithWorksapceScope`, `getAssociatedNotesWithWorksapceScope`.
 - Add a minimal, deterministic reproduction using curl (once we’re executing):
   - `POST /api/projects` capture returned `id`.
   - `GET /api/projects/:id` with same auth.
@@ -53,10 +53,10 @@ isProject: false
 - **Normalize membership workspace id**:
   - Update `ProjectsCoreController._validateProjectAccess` and `ProjectsReadController.getCollaborators` to pass `membership.workspace_id` (or equivalent) into org-scope repository methods.
   - Keep compatibility by supporting both shapes: `membership.workspace_id ?? membership.workspace_id ?? membership.id` only if `membership.id` is confirmed to be org id.
-- **Harden `_canAccessAllOrganizationProjects` usage**:
+- **Harden `_canAccessAllWorksapceanizationProjects` usage**:
   - Ensure it only returns true for roles that actually have `WORKSPACE_PERMISSIONS.ACCESS_ALL_WORKSPACE_PROJECTS`.
 - **Align org-scope repository filters to new schema**:
-  - Ensure `getProjectByIdWithOrgScope` filters on `projects.workspace_id` (not legacy `workspace_id`).
+  - Ensure `getProjectByIdWithWorksapceScope` filters on `projects.workspace_id` (not legacy `workspace_id`).
 - **Optional safety improvement**:
   - Change `_handleError` mapping so authorization failures return 403 (not 404), but only if you prefer more explicit API semantics.
 
@@ -67,7 +67,7 @@ isProject: false
 - Regression checks:
   - Owner access works.
   - Collaborator access works.
-  - Org-wide access (admin) works across org projects.
+  - Worksapce-wide access (admin) works across org projects.
 
 ```mermaid
 flowchart TD
@@ -75,7 +75,7 @@ flowchart TD
   Web -->|GET_/api/projects/:id| ServerRead[ProjectsReadController]
   ServerRead -->|_validateProjectAccess| AccessCheck[ProjectsCoreController]
   AccessCheck -->|owner_or_member| ByAccess[projectsRepository.getProjectByIdWithAccess]
-  AccessCheck -->|orgWide| ByOrg[projectsRepository.getProjectByIdWithOrgScope]
-  ByOrg --> Db[(Postgres)]
+  AccessCheck -->|orgWide| ByWorksapce[projectsRepository.getProjectByIdWithWorksapceScope]
+  ByWorksapce --> Db[(Postgres)]
   ByAccess --> Db
 ```

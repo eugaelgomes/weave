@@ -19,7 +19,7 @@ export const WORKSPACE_PERMISSIONS = Object.freeze({
   MANAGE_WEAVE_AI: "manage_weave_ai",
 } as const);
 
-export type OrgPermission = (typeof WORKSPACE_PERMISSIONS)[keyof typeof WORKSPACE_PERMISSIONS];
+export type WorkspacePermission = (typeof WORKSPACE_PERMISSIONS)[keyof typeof WORKSPACE_PERMISSIONS];
 
 const WORKSPACE_ROLES = Object.freeze({
   SUPER_ADMIN: "SUPER_ADMIN",
@@ -29,7 +29,7 @@ const WORKSPACE_ROLES = Object.freeze({
   GUEST: "GUEST",
 } as const);
 
-const PERMISSIONS_BY_ROLE: Readonly<Record<string, readonly OrgPermission[]>> = Object.freeze({
+const PERMISSIONS_BY_ROLE: Readonly<Record<string, readonly WorkspacePermission[]>> = Object.freeze({
   [WORKSPACE_ROLES.SUPER_ADMIN]: Object.values(WORKSPACE_PERMISSIONS),
   [WORKSPACE_ROLES.ADMIN]: [
     WORKSPACE_PERMISSIONS.ACCESS_ALL_WORKSPACE_PROJECTS,
@@ -55,13 +55,13 @@ const PERMISSIONS_BY_ROLE: Readonly<Record<string, readonly OrgPermission[]>> = 
   [WORKSPACE_ROLES.GUEST]: [],
 });
 
-export function normalizeOrgRole(role: string | null | undefined): string | null {
+export function normalizeWorkspaceRole(role: string | null | undefined): string | null {
   if (!role || typeof role !== "string") return null;
   return role.toUpperCase();
 }
 
-export function getPermissionsForRole(role: string | null | undefined): OrgPermission[] {
-  const normalized = normalizeOrgRole(role);
+export function getPermissionsForRole(role: string | null | undefined): WorkspacePermission[] {
+  const normalized = normalizeWorkspaceRole(role);
   if (!normalized) return [];
   const list = PERMISSIONS_BY_ROLE[normalized];
   return list ? [...list] : [];
@@ -69,7 +69,7 @@ export function getPermissionsForRole(role: string | null | undefined): OrgPermi
 
 export function orgRoleHasPermission(
   role: string | null | undefined,
-  permission: OrgPermission
+  permission: WorkspacePermission
 ): boolean {
   return getPermissionsForRole(role).includes(permission);
 }

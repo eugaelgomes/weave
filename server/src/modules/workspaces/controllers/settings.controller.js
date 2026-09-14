@@ -45,7 +45,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       return res.status(200).json({
         data: {
           ...this.creationStepsService.getStepOneMetadata(),
@@ -62,7 +62,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      let workspace = await this._getUserWorkspace(userId);
+      let workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       const validated = await this.creationStepsService.validateStepOnePayload(
         req.body || {},
         workspace
@@ -88,7 +88,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
           null
         );
 
-        workspace = await this._getUserWorkspace(userId);
+        workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       } else {
         const settingsWithStep = this.creationStepsService.buildStepOneSettings(
           workspace.settings,
@@ -125,7 +125,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
     try {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) {
         throw AppError.notFound("Workspace not found");
       }
@@ -192,7 +192,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) throw AppError.notFound("Workspace not found");
 
       const settings = await this.settingsRepository.getSettings(workspace.id);
@@ -214,7 +214,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) throw AppError.notFound("Workspace not found");
 
       // TODO: replace with workspaceRoleHasPermission when RBAC is active
@@ -263,7 +263,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) throw AppError.notFound("Workspace not found");
 
       if (
@@ -302,7 +302,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) throw AppError.notFound("Workspace not found");
 
       if (
@@ -337,7 +337,7 @@ class WorkspaceSettingsController extends WorkspacesBaseController {
       const userId = this._validateAuthentication(req, res);
       if (!userId) return;
 
-      const workspace = await this._getUserWorkspace(userId);
+      const workspace = await this._getUserWorkspace(userId, req.user?.workspace_public_id);
       if (!workspace) throw AppError.notFound("Workspace not found");
 
       if (
