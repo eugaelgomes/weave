@@ -244,7 +244,7 @@ export default function WorkspaceCreatePage() {
       setStepOneCompleted(true);
       router.push(
         workspace?.public_id
-          ? `/workspace/${encodeURIComponent(workspace.public_id)}/general`
+          ? `/workspace/${encodeURIComponent(workspace.public_id)}/dashboard`
           : "/workspace"
       );
     } catch (error) {

@@ -7,6 +7,7 @@ import Sidebar from "@/app/(protected)/_components/layout/sidebar";
 import { cn } from "@/lib/utils";
 
 import Navbar from "@/app/(protected)/_components/layout/navbar";
+import SettingsModal from "@/app/(protected)/_components/modals/settings/settings-modal";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ interface ProtectedLayoutProps {
 const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     const savedState = localStorage.getItem("sidebar-collapsed");
@@ -34,6 +36,21 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
       document.body.style.overflow = "";
     };
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    const syncSettingsModal = () => {
+      setIsSettingsOpen(window.location.hash.startsWith("#settings"));
+    };
+
+    syncSettingsModal();
+    window.addEventListener("hashchange", syncSettingsModal);
+    return () => window.removeEventListener("hashchange", syncSettingsModal);
+  }, []);
+
+  const closeSettingsModal = () => {
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    setIsSettingsOpen(false);
+  };
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const closeSidebar = () => setSidebarOpen(false);
@@ -99,6 +116,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           </div>
         </div>
       </div>
+      <SettingsModal isOpen={isSettingsOpen} onClose={closeSettingsModal} />
     </div>
   );
 };

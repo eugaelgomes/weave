@@ -1,6 +1,7 @@
 import React from "react";
 import { Building2, Camera, Edit3, Clock, MapPin, X } from "lucide-react";
 import getStorageUrl from "@/app/_utils/get-storage-url";
+import { useAuth } from "@/app/_contexts/auth-context";
 import { Input } from "./form-primitives";
 import type { WorkspaceOverviewProps } from "./settings-types";
 
@@ -172,12 +173,6 @@ const EditWorkspaceInfoModal = ({
           <button
             type="button"
             onClick={() => {
-              window.history.replaceState(
-                null,
-                "",
-                window.location.pathname + window.location.search
-              );
-              window.dispatchEvent(new HashChangeEvent("hashchange"));
               onClose();
             }}
             aria-label="Fechar modal de edição de organização"
@@ -254,27 +249,32 @@ export function WorkspaceOverview({
   formData,
   setFormData,
 }: WorkspaceOverviewProps) {
+  const { user } = useAuth();
+  const workspaceHash = (path: string) =>
+    user?.public_id
+      ? `#settings/${encodeURIComponent(user.public_id)}/workspace/${path}`
+      : "#settings";
+
   return (
     <div className="space-y-6">
       <WorkspaceHeroCard
         workspace={workspace}
         userIsOwner={userIsOwner}
         onEditLogo={() => {
-          window.location.hash = "#workspace/image/logo";
+          window.location.hash = workspaceHash("image/logo");
         }}
         onEditBanner={() => {
-          window.location.hash = "#workspace/image/banner";
+          window.location.hash = workspaceHash("image/banner");
         }}
         onOpenEditModal={() => {
-          window.location.hash = "#workspace/info/edit";
+          window.location.hash = workspaceHash("info/edit");
         }}
       />
 
       <EditWorkspaceInfoModal
         isOpen={isEditingInfo}
         onClose={() => {
-          window.history.replaceState(null, "", window.location.pathname + window.location.search);
-          window.dispatchEvent(new HashChangeEvent("hashchange"));
+          window.location.hash = workspaceHash("general");
           setIsEditingInfo(false);
         }}
         onSubmit={handleUpdateInfo}

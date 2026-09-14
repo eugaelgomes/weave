@@ -40,6 +40,7 @@ interface NavItemConfig {
   label: string;
   icon: React.ElementType;
   path?: string;
+  settingsPath?: string;
   badge?: string;
   exact?: boolean;
   isMore?: boolean;
@@ -49,12 +50,22 @@ const NAV_ITEMS: NavItemConfig[] = [
   { id: "home", label: "Home", icon: Home, path: "/home", exact: true },
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   { id: "agents", label: "Agents", icon: Bot, path: "/weave-ai/agents", badge: "New" },
-  { id: "api-keys", label: "API Keys", icon: KeyRound, path: "/workspace/integrations" },
-  { id: "usage", label: "Usage", icon: TrendingUp, path: "/workspace/plans" },
+  {
+    id: "api-keys",
+    label: "API Keys",
+    icon: KeyRound,
+    settingsPath: "workspace/integrations",
+  },
+  {
+    id: "usage",
+    label: "Usage",
+    icon: TrendingUp,
+    settingsPath: "workspace/plans",
+  },
   { id: "logs", label: "Logs", icon: Logs, path: "/logs" },
   { id: "storage", label: "Storage", icon: Database, path: "/documents" },
   { id: "plugins", label: "Plugins", icon: Orbit, path: "/weave-ai/tools" },
-  { id: "settings", label: "Settings", icon: Settings, path: "/workspace/settings" },
+  { id: "settings", label: "Settings", icon: Settings, settingsPath: "account" },
   { id: "more", label: "More", icon: MoreHorizontal, isMore: true },
 ];
 
@@ -73,6 +84,9 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
   const { t } = useLanguage();
   const pathname = usePathname();
   const workspacePublicId = user?.user_workspace?.public_id || user?.workspace_public_id;
+  const userPublicId = user?.public_id;
+  const settingsHash = (path: string) =>
+    userPublicId ? `#settings/${encodeURIComponent(userPublicId)}/${path}` : "#settings";
   const withWorkspaceId = (path: string) =>
     workspacePublicId && path.startsWith("/workspace/")
       ? path.replace("/workspace/", `/workspace/${encodeURIComponent(workspacePublicId)}/`)
@@ -247,46 +261,78 @@ const Sidebar = ({ onLinkClick, isCollapsed = false, toggleCollapse }: SidebarPr
 
             return (
               <li key={item.id} className="w-full">
-                <Link
-                  href={item.path || "#"}
-                  onClick={onLinkClick}
-                  title={isCollapsed ? item.label : undefined}
-                  className={cn(
-                    "group flex h-8 w-full items-center rounded-md text-xs transition-colors select-none",
-                    isCollapsed && "justify-center",
-                    active
-                      ? "bg-neutral-200/70 font-medium text-neutral-900 dark:bg-white/10 dark:text-white"
-                      : "text-neutral-600 hover:bg-neutral-200/50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
-                  )}
-                >
-                  <span className="relative flex size-8 shrink-0 items-center justify-center">
-                    <Icon
-                      className="size-[17px] shrink-0 text-black transition-colors dark:text-white"
-                      strokeWidth={2.1}
-                    />
-
-                    {/* Collapsed dot for badge */}
-                    {isCollapsed && item.badge && (
-                      <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-[#6941C6] ring-1 ring-white dark:bg-purple-400 dark:ring-[#18181b]" />
-                    )}
-                  </span>
-
-                  <div
+                {item.settingsPath ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.location.hash = settingsHash(item.settingsPath!);
+                      onLinkClick?.();
+                    }}
+                    title={isCollapsed ? item.label : undefined}
                     className={cn(
-                      "flex min-w-0 flex-1 items-center justify-between overflow-hidden transition-[opacity,max-width] duration-200 ease-out",
-                      isCollapsed
-                        ? "pointer-events-none max-w-0 pr-0 opacity-0"
-                        : "max-w-[180px] pr-2 opacity-100"
+                      "group flex h-8 w-full items-center rounded-md text-xs transition-colors select-none",
+                      isCollapsed && "justify-center",
+                      "text-neutral-600 hover:bg-neutral-200/50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
                     )}
                   >
-                    <span className="truncate text-[13px] leading-none">{item.label}</span>
-                    {item.badge && (
-                      <span className="ml-auto rounded bg-[#ECE9FE] px-1.5 py-0.5 text-[9px] leading-none font-semibold text-[#6941C6] dark:bg-purple-900/40 dark:text-purple-300">
-                        {item.badge}
-                      </span>
+                    <span className="relative flex size-8 shrink-0 items-center justify-center">
+                      <Icon
+                        className="size-[17px] shrink-0 text-black transition-colors dark:text-white"
+                        strokeWidth={2.1}
+                      />
+                    </span>
+                    <span
+                      className={cn(
+                        "min-w-0 flex-1 truncate pr-2 text-left text-[13px] leading-none transition-[opacity,max-width] duration-200 ease-out",
+                        isCollapsed
+                          ? "pointer-events-none max-w-0 opacity-0"
+                          : "max-w-[180px] opacity-100"
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  </button>
+                ) : (
+                  <Link
+                    href={item.path || "#"}
+                    onClick={onLinkClick}
+                    title={isCollapsed ? item.label : undefined}
+                    className={cn(
+                      "group flex h-8 w-full items-center rounded-md text-xs transition-colors select-none",
+                      isCollapsed && "justify-center",
+                      active
+                        ? "bg-neutral-200/70 font-medium text-neutral-900 dark:bg-white/10 dark:text-white"
+                        : "text-neutral-600 hover:bg-neutral-200/50 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
                     )}
-                  </div>
-                </Link>
+                  >
+                    <span className="relative flex size-8 shrink-0 items-center justify-center">
+                      <Icon
+                        className="size-[17px] shrink-0 text-black transition-colors dark:text-white"
+                        strokeWidth={2.1}
+                      />
+
+                      {isCollapsed && item.badge && (
+                        <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-[#6941C6] ring-1 ring-white dark:bg-purple-400 dark:ring-[#18181b]" />
+                      )}
+                    </span>
+
+                    <div
+                      className={cn(
+                        "flex min-w-0 flex-1 items-center justify-between overflow-hidden transition-[opacity,max-width] duration-200 ease-out",
+                        isCollapsed
+                          ? "pointer-events-none max-w-0 pr-0 opacity-0"
+                          : "max-w-[180px] pr-2 opacity-100"
+                      )}
+                    >
+                      <span className="truncate text-[13px] leading-none">{item.label}</span>
+                      {item.badge && (
+                        <span className="ml-auto rounded bg-[#ECE9FE] px-1.5 py-0.5 text-[9px] leading-none font-semibold text-[#6941C6] dark:bg-purple-900/40 dark:text-purple-300">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                )}
               </li>
             );
           })}

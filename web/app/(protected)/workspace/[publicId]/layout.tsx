@@ -23,12 +23,14 @@ import { ModuleLayout } from "@/app/(protected)/_components/layout/module-layout
 import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 import { WorkspaceProvider } from "@/app/_contexts/workspace-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
+import { useAuth } from "@/app/_contexts/auth-context";
 import { routes } from "@/app/_utils/routes";
 
 type WorkspaceNavLeaf = {
   icon: LucideIcon;
   label: string;
   href: string;
+  modalHash?: string;
   matchPaths?: string[];
   type: WorkspaceHeaderType;
 };
@@ -83,16 +85,34 @@ function WorkspaceNavLink({
   indent?: boolean;
 }) {
   const Icon = item.icon;
+  const content = (
+    <div className="flex items-center gap-1.5">
+      <Icon className={iconClass(isActive)} />
+      <span>{item.label}</span>
+    </div>
+  );
+
+  if (item.modalHash) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          window.location.hash = item.modalHash!;
+        }}
+        className={`${linkClass(isActive)} ${indent ? "pl-3" : ""}`}
+      >
+        {content}
+      </button>
+    );
+  }
+
   return (
     <Link
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       className={`${linkClass(isActive)} ${indent ? "pl-3" : ""}`}
     >
-      <div className="flex items-center gap-1.5">
-        <Icon className={iconClass(isActive)} />
-        <span>{item.label}</span>
-      </div>
+      {content}
     </Link>
   );
 }
@@ -101,7 +121,11 @@ function WorkspaceLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const params = useParams<{ publicId: string }>();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const publicId = params.publicId;
+  const settingsHashPrefix = user?.public_id
+    ? `#settings/${encodeURIComponent(user.public_id)}/workspace/`
+    : "#settings";
 
   const WORKSPACE_NAV: WorkspaceNavItem[] = useMemo(
     () => [
@@ -109,18 +133,21 @@ function WorkspaceLayoutContent({ children }: { children: React.ReactNode }) {
         icon: Settings,
         label: t.nav.general,
         href: routes.workspace.general(publicId),
+        modalHash: `${settingsHashPrefix}general`,
         type: "workspaceSettings",
       },
       {
         icon: CreditCard,
         label: t.nav.plans,
         href: routes.workspace.plans(publicId),
+        modalHash: `${settingsHashPrefix}plans`,
         type: "workspacePlans",
       },
       {
         icon: Zap,
         label: t.nav.integrations,
         href: routes.workspace.integrations(publicId),
+        modalHash: `${settingsHashPrefix}integrations`,
         type: "workspaceIntegrations",
       },
       {
@@ -163,7 +190,7 @@ function WorkspaceLayoutContent({ children }: { children: React.ReactNode }) {
         type: "workspaceEditor",
       },
     ],
-    [t, publicId]
+    [t, publicId, settingsHashPrefix]
   );
 
   const activeLeaf = useMemo(() => {
@@ -237,7 +264,12 @@ function WorkspaceLayoutContent({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ModuleLayout header={<WorkspaceHeader type={activeLeaf.type} />}>{children}</ModuleLayout>
+    <ModuleLayout
+      header={<WorkspaceHeader type={activeLeaf.type} />}
+      sidebarContent={sidebarContent}
+    >
+      {children}
+    </ModuleLayout>
   );
 }
 

@@ -46,13 +46,15 @@ export const routes = {
   },
 
   workspace: {
+    dashboard: (workspacePublicId: string) =>
+      `/workspace/${encodeURIComponent(workspacePublicId)}/dashboard/`,
     general: (workspacePublicId: string) =>
-      `/workspace/${encodeURIComponent(workspacePublicId)}/general/`,
+      `/workspace/${encodeURIComponent(workspacePublicId)}/settings/general/`,
     create: () => `/workspace/create/`,
     plans: (workspacePublicId: string) =>
-      `/workspace/${encodeURIComponent(workspacePublicId)}/plans/`,
+      `/workspace/${encodeURIComponent(workspacePublicId)}/settings/plans/`,
     integrations: (workspacePublicId: string) =>
-      `/workspace/${encodeURIComponent(workspacePublicId)}/integrations/`,
+      `/workspace/${encodeURIComponent(workspacePublicId)}/settings/integrations/`,
     membersList: (workspacePublicId: string) =>
       `/workspace/${encodeURIComponent(workspacePublicId)}/members/list/`,
     membersInvites: (workspacePublicId: string) =>

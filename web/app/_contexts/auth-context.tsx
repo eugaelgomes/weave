@@ -499,7 +499,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!workspacePublicId) {
           throw new Error("The selected workspace does not have a public_id");
         }
-        window.location.href = `/workspace/${encodeURIComponent(workspacePublicId)}/general`;
+        window.location.href = `/workspace/${encodeURIComponent(workspacePublicId)}/dashboard`;
         return { success: true };
       }
       return { success: false, message: "Failed to switch workspace" };

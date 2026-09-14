@@ -4,6 +4,7 @@ import React from "react";
 import { Building2, Trash2, RefreshCw, Plus, Activity } from "lucide-react";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { useLanguage } from "@/app/_contexts/language-context";
+import { useAuth } from "@/app/_contexts/auth-context";
 import { WorkspacePageShell } from "@/app/(protected)/workspace/_components/workspace-page-shell";
 import { WorkspaceImageEditModal } from "./_components/workspace-image-edit-modal";
 import { SettingsForm } from "./_components/settings-form";
@@ -13,6 +14,7 @@ import { AreasSection } from "./_components/areas-section";
 
 const WorkspacePage = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const {
     workspace,
     loading,
@@ -40,13 +42,17 @@ const WorkspacePage = () => {
   React.useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash === "#workspace/image/logo") {
+      const workspaceHash = (path: string) =>
+        user?.public_id
+          ? `#settings/${encodeURIComponent(user.public_id)}/workspace/${path}`
+          : "#settings";
+      if (hash === workspaceHash("image/logo")) {
         setEditingImage("logo");
         setIsEditingInfo(false);
-      } else if (hash === "#workspace/image/banner") {
+      } else if (hash === workspaceHash("image/banner")) {
         setEditingImage("banner");
         setIsEditingInfo(false);
-      } else if (hash === "#workspace/info/edit") {
+      } else if (hash === workspaceHash("info/edit")) {
         setIsEditingInfo(true);
         setEditingImage(null);
       } else {
@@ -57,7 +63,7 @@ const WorkspacePage = () => {
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [setEditingImage, setIsEditingInfo]);
+  }, [setEditingImage, setIsEditingInfo, user?.public_id]);
 
   if (!hasWorkspace && !workspace?.deleted) {
     return (
@@ -157,12 +163,9 @@ const WorkspacePage = () => {
               : getStorageUrl(workspace?.banner_url || "")
           }
           onClose={() => {
-            window.history.replaceState(
-              null,
-              "",
-              window.location.pathname + window.location.search
-            );
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
+            window.location.hash = user?.public_id
+              ? `#settings/${encodeURIComponent(user.public_id)}/workspace/general`
+              : "#settings";
             setEditingImage(null);
           }}
           onSave={handleUpdateImage}

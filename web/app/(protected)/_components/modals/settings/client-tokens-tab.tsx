@@ -146,6 +146,7 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
 
 export function SettingsApiTokens() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const { apiTokens, scopesInfo, loadingTokens, generateApiToken, revokeToken } = useApiTokens();
   const { workspace } = useWorkspace();
 
@@ -164,18 +165,21 @@ export function SettingsApiTokens() {
 
   const [actionModal, setActionModal] = useState<{ id: string; type: "revoke" } | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const settingsHash = (path: string) =>
+    user?.public_id ? `#settings/${encodeURIComponent(user.public_id)}/${path}` : "#settings";
 
   React.useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash.startsWith("#settings/tokens/revoke/")) {
-        const id = hash.split("/")[3];
+      const revokePrefix = `${settingsHash("security/tokens/revoke")}/`;
+      if (hash.startsWith(revokePrefix)) {
+        const id = hash.slice(revokePrefix.length);
         if (id) setActionModal({ id, type: "revoke" });
       } else {
         setActionModal(null);
       }
 
-      if (hash === "#settings/tokens/password") {
+      if (hash === settingsHash("security/tokens/password")) {
         setShowPasswordModal(true);
       } else {
         setShowPasswordModal(false);
@@ -184,7 +188,7 @@ export function SettingsApiTokens() {
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
+  }, [user?.public_id]);
 
   // Base classes para manter padronizado com o User Data
   const labelClass =
@@ -201,12 +205,12 @@ export function SettingsApiTokens() {
       return;
     }
     setError("");
-    window.location.hash = "#settings/tokens/password";
+    window.location.hash = settingsHash("security/tokens/password");
   };
 
   const executeCreateToken = async () => {
     setLoading(true);
-    window.location.hash = "#settings/tokens";
+    window.location.hash = settingsHash("security/tokens");
 
     let expiresAtDate = null;
     if (expiresAt && expiresAt !== "0") {
@@ -510,7 +514,9 @@ export function SettingsApiTokens() {
                           {!token.revoked_at && (
                             <button
                               onClick={() => {
-                                window.location.hash = `#settings/tokens/revoke/${token.id}`;
+                                window.location.hash = settingsHash(
+                                  `security/tokens/revoke/${token.id}`
+                                );
                               }}
                               className="rounded p-1 text-neutral-400 transition-colors hover:bg-amber-100 hover:text-amber-600 dark:hover:bg-amber-900/30"
                               title={t.clientTokens.revokeAccess}
@@ -539,11 +545,11 @@ export function SettingsApiTokens() {
       <TokenActionModal
         isOpen={!!actionModal}
         onClose={() => {
-          window.location.hash = "#settings/tokens";
+          window.location.hash = settingsHash("security/tokens");
         }}
         onConfirm={() => {
           if (actionModal?.type === "revoke") revokeToken(actionModal.id);
-          window.location.hash = "#settings/tokens";
+          window.location.hash = settingsHash("security/tokens");
         }}
         title={t.clientTokens.revokeModalTitle}
         description={t.clientTokens.revokeModalDesc}
@@ -554,7 +560,7 @@ export function SettingsApiTokens() {
       <PasswordConfirmModal
         isOpen={showPasswordModal}
         onClose={() => {
-          window.location.hash = "#settings/tokens";
+          window.location.hash = settingsHash("security/tokens");
         }}
         onConfirm={executeCreateToken}
       />

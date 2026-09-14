@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { User, Lock, Zap, CreditCard, X, LogOut } from "lucide-react";
+import { User, Lock, Zap, CreditCard, X, LogOut, Search, Building2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
-import { SidebarSectionHeader } from "@/app/(protected)/_components/ui/sidebar-section-header";
 import { ApiTokensProvider } from "@/app/_contexts/api-tokens-context";
 import { BackupProvider } from "@/app/_contexts/backup-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
@@ -17,13 +16,24 @@ import AccountSettingsTab from "./account-tab";
 import PlansSettingsTab from "./plans-tab";
 import SecuritySettingsTab from "./security-tab";
 import IntegrationsSettingsTab from "./integrations-tab";
+import WorkspaceGeneralPage from "@/app/(protected)/workspace/[publicId]/settings/general/page";
+import WorkspacePlansPage from "@/app/(protected)/workspace/[publicId]/settings/plans/page";
+import WorkspaceIntegrationsPage from "@/app/(protected)/workspace/[publicId]/settings/integrations/page";
 
-export type SettingsTab = "account" | "plans" | "security" | "integrations";
+export type SettingsTab =
+  | "account"
+  | "plans"
+  | "security"
+  | "integrations"
+  | "workspace-general"
+  | "workspace-plans"
+  | "workspace-integrations";
 
 type SettingsNavItem = {
   id: SettingsTab;
   icon: LucideIcon;
   label: string;
+  section: "account" | "workspace";
 };
 
 export interface SettingsModalProps {
@@ -39,8 +49,26 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
 }) => {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const [searchQuery, setSearchQuery] = useState("");
   const { t } = useLanguage();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+
+  const settingsHash = (tab: SettingsTab) => {
+    const userPublicId = user?.public_id;
+    if (!userPublicId) return "#settings";
+
+    const pathByTab: Record<SettingsTab, string> = {
+      account: "account",
+      plans: "plans",
+      security: "security",
+      integrations: "integrations",
+      "workspace-general": "workspace/general",
+      "workspace-plans": "workspace/plans",
+      "workspace-integrations": "workspace/integrations",
+    };
+
+    return `#settings/${encodeURIComponent(userPublicId)}/${pathByTab[tab]}`;
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -52,19 +80,31 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash.startsWith("#settings/")) {
-        const fullPath = hash.replace("#settings/", "");
-        const tab = fullPath.split("/")[0];
-        if (tab === "me") setActiveTab("account");
-        else if (tab === "plan") setActiveTab("plans");
-        else if (["account", "plans", "security", "integrations"].includes(tab)) {
-          setActiveTab(tab as SettingsTab);
+        const [, userId, scope, nestedScope] = hash.split("/");
+        if (!userId || !scope) return;
+
+        if (scope === "workspace") {
+          const workspaceTab = `workspace-${nestedScope}` as SettingsTab;
+          if (
+            ["workspace-general", "workspace-plans", "workspace-integrations"].includes(
+              workspaceTab
+            )
+          ) {
+            setActiveTab(workspaceTab);
+          }
+          return;
+        }
+
+        if (scope === "me") setActiveTab("account");
+        else if (scope === "plan") setActiveTab("plans");
+        else if (["account", "plans", "security", "integrations"].includes(scope)) {
+          setActiveTab(scope as SettingsTab);
         }
       } else if (initialTab && hash === "#settings") {
-        // If just #settings, replace with the initialTab (or account)
         window.history.replaceState(
           null,
           "",
-          `${window.location.pathname}${window.location.search}#settings/${initialTab}`
+          `${window.location.pathname}${window.location.search}${settingsHash(initialTab)}`
         );
         setActiveTab(initialTab);
       }
@@ -73,7 +113,7 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [isOpen, initialTab]);
+  }, [isOpen, initialTab, user?.public_id]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -89,25 +129,52 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
         id: "account",
         icon: User,
         label: t.nav.settingsLabel || t.nav.settings || "Conta",
+        section: "account",
       },
       {
         id: "plans",
         icon: CreditCard,
         label: t.nav.plans || "Planos",
+        section: "account",
       },
       {
         id: "security",
         icon: Lock,
         label: t.nav.security || "Segurança",
+        section: "account",
       },
       {
         id: "integrations",
         icon: Zap,
         label: t.nav.integrations || "Integrações",
+        section: "account",
+      },
+      {
+        id: "workspace-general",
+        icon: Building2,
+        label: t.nav.general || "Geral",
+        section: "workspace",
+      },
+      {
+        id: "workspace-plans",
+        icon: CreditCard,
+        label: t.nav.plans || "Planos",
+        section: "workspace",
+      },
+      {
+        id: "workspace-integrations",
+        icon: Zap,
+        label: t.nav.integrations || "Integrações",
+        section: "workspace",
       },
     ],
     [t]
   );
+  const filteredNavigation = SETTINGS_NAV.filter((item) =>
+    item.label.toLocaleLowerCase().includes(searchQuery.trim().toLocaleLowerCase())
+  );
+  const accountNavigation = filteredNavigation.filter((item) => item.section === "account");
+  const workspaceNavigation = filteredNavigation.filter((item) => item.section === "workspace");
 
   if (!mounted || !isOpen) return null;
 
@@ -121,82 +188,103 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
         return <SecuritySettingsTab />;
       case "integrations":
         return <IntegrationsSettingsTab />;
+      case "workspace-general":
+        return <WorkspaceGeneralPage />;
+      case "workspace-plans":
+        return <WorkspacePlansPage />;
+      case "workspace-integrations":
+        return <WorkspaceIntegrationsPage />;
       default:
         return <AccountSettingsTab />;
     }
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-3 backdrop-blur-md sm:p-6">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 cursor-default" onClick={onClose} />
 
       {/* Modal Container */}
-      <div className="relative z-10 flex h-full max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 transition-all sm:flex-row dark:bg-[#1d1d1b] dark:ring-white/10">
+      <div className="relative z-10 flex h-full max-h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-neutral-700/70 bg-[#1d1d1b] shadow-2xl shadow-black/40 transition-all sm:flex-row">
         {/* Mobile Header (visible only on small screens) */}
-        <div className="flex items-center justify-between border-b border-gray-200 p-4 sm:hidden dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center justify-between border-b border-neutral-700 p-4 sm:hidden">
+          <h2 className="text-base font-semibold text-neutral-100">
             {t.nav.settingsLabel || "Configurações"}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="rounded-md p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Sidebar */}
-        <div className="flex w-full flex-col border-b border-gray-200 bg-gray-50/50 sm:w-64 sm:border-r sm:border-b-0 dark:border-gray-800 dark:bg-[#1d1d1b]/50">
-          <div className="hidden p-4 sm:flex sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {t.nav.settingsLabel || "Configurações"}
-            </h2>
+        <div className="flex w-full flex-col border-b border-neutral-700 bg-[#181817] sm:w-60 sm:border-r sm:border-b-0">
+          <div className="hidden border-b border-neutral-700/80 p-3 sm:block">
+            <label className="flex h-9 items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800/70 px-2.5 text-neutral-400 focus-within:border-neutral-500">
+              <Search className="h-4 w-4" />
+              <input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Procurar"
+                className="min-w-0 flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
+              />
+            </label>
           </div>
 
-          <div className="flex flex-1 flex-row overflow-x-auto p-2 sm:flex-col sm:overflow-visible">
-            <ul className="flex w-full flex-1 space-x-1 sm:flex-col sm:space-y-0.5 sm:space-x-0">
-              {SETTINGS_NAV.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-                return (
-                  <li key={item.id} className="flex-shrink-0 sm:w-full">
-                    <button
-                      onClick={() => {
-                        window.location.hash = `#settings/${item.id}`;
-                      }}
-                      className={`group flex w-full items-center rounded-md px-3 py-2 text-sm transition-all ${
-                        isActive
-                          ? "bg-amber-100/70 font-medium text-neutral-900 dark:bg-amber-500/10 dark:text-neutral-100"
-                          : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800/50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Icon
-                          className={`h-4 w-4 flex-shrink-0 ${
-                            isActive
-                              ? "text-brand-primary-500"
-                              : "text-neutral-400 group-hover:text-neutral-500 dark:group-hover:text-neutral-300"
-                          }`}
-                        />
-                        <span>{item.label}</span>
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+          <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+            {(["account", "workspace"] as const).map((section) => {
+              const items = section === "account" ? accountNavigation : workspaceNavigation;
+              if (!items.length) return null;
 
-            <div className="mt-auto hidden border-t border-gray-200 pt-4 sm:block dark:border-gray-800">
+              return (
+                <div key={section} className={section === "workspace" ? "mt-5" : ""}>
+                  <p className="mb-2 px-2 text-[11px] font-medium tracking-wide text-neutral-500">
+                    {section === "account" ? "Sua conta" : "Workspace atual"}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <li key={item.id} className="flex-shrink-0 sm:w-full">
+                          <button
+                            onClick={() => {
+                              window.location.hash = settingsHash(item.id);
+                            }}
+                            className={`group flex w-full items-center rounded-lg px-2.5 py-2 text-sm transition-all ${
+                              isActive
+                                ? "bg-neutral-700/90 font-medium text-white"
+                                : "text-neutral-300 hover:bg-white/[0.08] hover:text-white"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon
+                                className={`h-4 w-4 flex-shrink-0 ${
+                                  isActive
+                                    ? "text-brand-primary-400"
+                                    : "text-neutral-500 group-hover:text-neutral-300"
+                                }`}
+                              />
+                              <span>{item.label}</span>
+                            </div>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+
+            <div className="mt-auto hidden border-t border-neutral-700/80 p-2.5 sm:block">
               <button
                 onClick={() => {
                   onClose();
                   logout();
                 }}
-                className="group flex w-full items-center rounded-md px-3 py-2 text-sm text-red-600 transition-all hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                className="group flex w-full items-center rounded-lg px-2.5 py-2 text-sm text-red-400 transition-all hover:bg-red-500/10"
               >
                 <div className="flex items-center gap-2">
                   <LogOut className="h-4 w-4 flex-shrink-0 text-red-500/70 group-hover:text-red-600 dark:group-hover:text-red-400" />
@@ -208,11 +296,16 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Content Area */}
-        <div className="relative flex flex-1 flex-col overflow-hidden bg-white dark:bg-[#1d1d1b]">
-          <div className="hidden sm:absolute sm:top-4 sm:right-4 sm:z-10 sm:block">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-[#1d1d1b]">
+          <div className="hidden border-b border-neutral-700/80 px-7 py-4 sm:block">
+            <h2 className="text-base font-semibold text-neutral-100">
+              {SETTINGS_NAV.find((item) => item.id === activeTab)?.label}
+            </h2>
+          </div>
+          <div className="absolute top-3 right-4 z-10 hidden sm:block">
             <button
               onClick={onClose}
-              className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+              className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
             >
               <X className="h-5 w-5" />
             </button>

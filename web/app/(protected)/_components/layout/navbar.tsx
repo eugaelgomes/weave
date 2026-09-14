@@ -258,7 +258,9 @@ const Navbar = ({ onToggleSidebar, isCollapsed: _isCollapsed = false }: NavbarPr
 
                   <button
                     onClick={() => {
-                      window.location.hash = "#settings/me";
+                      window.location.hash = user.public_id
+                        ? `#settings/${encodeURIComponent(user.public_id)}/account`
+                        : "#settings";
                     }}
                     className="flex items-center gap-2 transition-opacity hover:opacity-80"
                     aria-label={t.navbar.accountSettings}

@@ -208,9 +208,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     try {
       // 1. Busca Workspaceanização
       const orgData = await fetchWorkspaceService(requestedPublicId);
-      setWorkspace(orgData);
+      const resolvedWorkspace = orgData ?? workspaceFromSession(user, requestedPublicId);
+      setWorkspace(resolvedWorkspace);
 
-      if (orgData) {
+      if (resolvedWorkspace) {
         // 2. Se tem organização, busca membros e convites em paralelo
         const [membersData, invitesData] = await Promise.all([
           fetchMembersService(),

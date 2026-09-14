@@ -1,1 +1,1 @@
-export { default } from "../general/page";
+export { default } from "../settings/general/page";

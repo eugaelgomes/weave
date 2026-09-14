@@ -12,7 +12,7 @@ export default function WorkspaceIndexPage() {
   useEffect(() => {
     if (loading || !workspacePublicId) return;
 
-    router.replace(`/workspace/${encodeURIComponent(workspacePublicId)}/general`);
+    router.replace(`/workspace/${encodeURIComponent(workspacePublicId)}/dashboard`);
   }, [loading, router, workspacePublicId]);
 
   return null;
