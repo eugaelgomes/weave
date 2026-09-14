@@ -24,7 +24,7 @@ module.exports = async (req, res, next) => {
     const hasWorkspace =
       completedSteps.includes("workspace") ||
       onboardingState.step === "STEP_2_COMPLETED" ||
-      Boolean(req.user?.workspaceId);
+      Boolean(req.user?.workspace_id);
 
     const isComplete = onboardingState.step === "COMPLETED" || (hasProfile && hasWorkspace);
 
