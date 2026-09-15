@@ -5,8 +5,8 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useWorkspace } from "@/app/_contexts/workspace-context";
 import { type WorkspaceProperties } from "@/app/_services/workspace";
-import { WorkspacePageShell } from "@/app/(protected)/workspace/_components/workspace-page-shell";
-import { PlansUsageSection } from "@/app/(protected)/workspace/_components/plans-usage-section";
+import { WorkspacePageShell } from "@/app/(protected)/settings/_components/workspace-page-shell";
+import { PlansUsageSection } from "@/app/(protected)/settings/_components/plans-usage-section";
 
 export default function WorkspacePlansPage() {
   const { t } = useLanguage();

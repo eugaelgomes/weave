@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
-import { WorkspacePageShell } from "@/app/(protected)/workspace/_components/workspace-page-shell";
+import { WorkspacePageShell } from "@/app/(protected)/settings/_components/workspace-page-shell";
 
 export default function WorkspaceEditorPage() {
   const { user } = useAuth();

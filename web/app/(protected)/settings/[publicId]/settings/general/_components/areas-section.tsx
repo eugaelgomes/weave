@@ -28,7 +28,7 @@ import {
 } from "@/app/_contexts/workspace-context";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { useLanguage } from "@/app/_contexts/language-context";
-import { WorkspacePageShell } from "@/app/(protected)/workspace/_components/workspace-page-shell";
+import { WorkspacePageShell } from "@/app/(protected)/settings/_components/workspace-page-shell";
 
 // --- Types & Data Structures ---
 

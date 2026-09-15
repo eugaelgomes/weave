@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { WorkspacePageShell } from "@/app/(protected)/workspace/_components/workspace-page-shell";
+import { WorkspacePageShell } from "@/app/(protected)/settings/_components/workspace-page-shell";
 import { routes } from "@/app/_utils/routes";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useProjects } from "@/app/_contexts/projects-context";

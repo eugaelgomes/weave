@@ -5,7 +5,7 @@ import { Building2, Trash2, RefreshCw, Plus, Activity } from "lucide-react";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { useLanguage } from "@/app/_contexts/language-context";
 import { useAuth } from "@/app/_contexts/auth-context";
-import { WorkspacePageShell } from "@/app/(protected)/workspace/_components/workspace-page-shell";
+import { WorkspacePageShell } from "@/app/(protected)/settings/_components/workspace-page-shell";
 import { WorkspaceImageEditModal } from "./_components/workspace-image-edit-modal";
 import { SettingsForm } from "./_components/settings-form";
 import { WorkspaceOverview } from "./_components/header";

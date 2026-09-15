@@ -6,7 +6,7 @@ import { useAuth } from "@/app/_contexts/auth-context";
 import { useLanguage } from "@/app/_contexts/language-context";
 import type { InviteMemberData } from "@/app/_services/workspace";
 import { Plus, Search } from "lucide-react";
-import { WorkspacePageShell } from "@/app/(protected)/workspace/_components/workspace-page-shell";
+import { WorkspacePageShell } from "@/app/(protected)/settings/_components/workspace-page-shell";
 import { MemberWorkspaceRoleBadge } from "../_components/member-workspace-role-badge";
 import { WorkspaceInviteModal } from "../_components/workspace-invite-modal";
 import { usePlanUsage } from "@/app/_contexts/plan-usage-context";

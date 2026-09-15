@@ -26,7 +26,7 @@ import {
   Filter,
   FolderKanban,
 } from "lucide-react";
-import { WorkspacePageShell } from "@/app/(protected)/workspace/_components/workspace-page-shell";
+import { WorkspacePageShell } from "@/app/(protected)/settings/_components/workspace-page-shell";
 import getStorageUrl from "@/app/_utils/get-storage-url";
 import { cn } from "@/lib/utils";
 import { MemberWorkspaceRoleBadge } from "../_components/member-workspace-role-badge";
