@@ -18,9 +18,12 @@ import {
   Sparkles,
   Keyboard,
   AlertTriangle,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { formatDate } from "@/app/_utils/format";
 import { SaveStatusIndicator, type SaveStatus } from "@/app/_utils/save-status-indicator";
+import { useTheme } from "@/app/_contexts/theme-context";
 import {
   checkUserAvailability,
   type UserUniqueField,
@@ -69,6 +72,17 @@ type UniqueFieldState = Record<UserUniqueField, FieldAvailabilityState>;
 
 const SettingsPage = () => {
   const { user, updateUser } = useAuth();
+  const { theme, setTheme } = useTheme();
+
+  const handleThemeChange = (newTheme: "light" | "dark") => {
+    setTheme(newTheme);
+    setFormData((prev) => ({ ...prev, theme_mode: newTheme.toUpperCase() }));
+    if (user) {
+      updateUser({ theme_mode: newTheme }).catch((err) =>
+        console.error("Failed to persist theme sync:", err)
+      );
+    }
+  };
 
   // Estados de UI
   const [, setIsSavingPreferences] = useState(false);
@@ -437,7 +451,7 @@ const SettingsPage = () => {
 
   return (
     <>
-      <div className="dark:border-surface-dark-border border-b border-neutral-200 px-2 py-2">
+      <div className="border-b border-neutral-200/80 px-4 py-2.5 sm:px-5 dark:border-white/10">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
             Seus dados pessoais e preferências de uso.
@@ -445,7 +459,7 @@ const SettingsPage = () => {
           <SaveStatusIndicator status={saveStatus} />
         </div>
       </div>
-      <div className="flex w-full flex-col gap-6 px-2 py-2">
+      <div className="flex w-full flex-col gap-5 p-4 sm:p-5">
         {/* 1. PERFIL E IDENTIDADE */}
         <div className="overflow-hidden">
           <div className="p-2">
@@ -764,6 +778,39 @@ const SettingsPage = () => {
                       </label>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              {/* Aparência */}
+              <div className={prefCardClass}>
+                <h4 className={prefLabelClass}>
+                  <Sun size={12} className="text-amber-500" /> Aparência
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleThemeChange("light")}
+                    className={`flex items-center justify-center gap-1.5 rounded-md border py-2 text-[11px] font-medium transition-all ${
+                      theme === "light"
+                        ? "border-amber-500 bg-amber-500/10 font-semibold text-amber-900 dark:text-amber-200"
+                        : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <Sun size={13} className={theme === "light" ? "text-amber-500" : "text-neutral-400"} />
+                    <span>Claro</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleThemeChange("dark")}
+                    className={`flex items-center justify-center gap-1.5 rounded-md border py-2 text-[11px] font-medium transition-all ${
+                      theme === "dark"
+                        ? "border-amber-500 bg-amber-500/10 font-semibold text-amber-900 dark:text-amber-200"
+                        : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <Moon size={13} className={theme === "dark" ? "text-amber-500" : "text-neutral-400"} />
+                    <span>Escuro</span>
+                  </button>
                 </div>
               </div>
 

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { User, Lock, Zap, CreditCard, X, LogOut, Search, Building2 } from "lucide-react";
+import { User, Lock, Zap, CreditCard, X, LogOut, Search, Building2, Sun, Moon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useLanguage } from "@/app/_contexts/language-context";
+import { useTheme } from "@/app/_contexts/theme-context";
 import { ApiTokensProvider } from "@/app/_contexts/api-tokens-context";
 import { BackupProvider } from "@/app/_contexts/backup-context";
 import { SlackProvider } from "@/app/_contexts/slack-context";
@@ -16,9 +17,9 @@ import AccountSettingsTab from "./account-tab";
 import PlansSettingsTab from "./plans-tab";
 import SecuritySettingsTab from "./security-tab";
 import IntegrationsSettingsTab from "./integrations-tab";
-import WorkspaceGeneralPage from "@/app/(protected)/workspace/[publicId]/settings/general/page";
-import WorkspacePlansPage from "@/app/(protected)/workspace/[publicId]/settings/plans/page";
-import WorkspaceIntegrationsPage from "@/app/(protected)/workspace/[publicId]/settings/integrations/page";
+import WorkspaceGeneralPage from "@/app/(protected)/settings/[publicId]/settings/general/page";
+import WorkspacePlansPage from "@/app/(protected)/settings/[publicId]/settings/plans/page";
+import WorkspaceIntegrationsPage from "@/app/(protected)/settings/[publicId]/settings/integrations/page";
 
 export type SettingsTab =
   | "account"
@@ -51,7 +52,18 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [searchQuery, setSearchQuery] = useState("");
   const { t } = useLanguage();
-  const { logout, user } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const { logout, user, updateUser } = useAuth();
+
+  const handleToggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    if (user) {
+      updateUser({ theme_mode: nextTheme }).catch((err) =>
+        console.error("Failed to persist theme sync:", err)
+      );
+    }
+  };
 
   const settingsHash = (tab: SettingsTab) => {
     const userPublicId = user?.public_id;
@@ -200,47 +212,59 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-3 backdrop-blur-md sm:p-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-950/40 p-3 backdrop-blur-sm sm:p-6 dark:bg-black/60">
       {/* Backdrop */}
       <div className="absolute inset-0 cursor-default" onClick={onClose} />
 
       {/* Modal Container */}
-      <div className="relative z-10 flex h-full max-h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-neutral-700/70 bg-[#1d1d1b] shadow-2xl shadow-black/40 transition-all sm:flex-row">
+      <div className="relative z-10 flex h-full max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-2xl shadow-neutral-900/10 transition-all sm:h-[620px] sm:flex-row dark:border-white/10 dark:bg-[#1d1d1b] dark:shadow-black/60 ring-1 ring-black/5 dark:ring-white/5">
         {/* Mobile Header (visible only on small screens) */}
-        <div className="flex items-center justify-between border-b border-neutral-700 p-4 sm:hidden">
-          <h2 className="text-base font-semibold text-neutral-100">
+        <div className="flex items-center justify-between border-b border-neutral-200/80 bg-white p-3.5 sm:hidden dark:border-white/10 dark:bg-[#181817]">
+          <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
             {t.nav.settingsLabel || "Configurações"}
           </h2>
-          <button
-            onClick={onClose}
-            className="rounded-md p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleToggleTheme}
+              title={theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"}
+              aria-label={theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"}
+              className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={onClose}
+              aria-label="Fechar configurações"
+              className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Sidebar */}
-        <div className="flex w-full flex-col border-b border-neutral-700 bg-[#181817] sm:w-60 sm:border-r sm:border-b-0">
-          <div className="hidden border-b border-neutral-700/80 p-3 sm:block">
-            <label className="flex h-9 items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800/70 px-2.5 text-neutral-400 focus-within:border-neutral-500">
-              <Search className="h-4 w-4" />
+        <div className="flex w-full flex-col border-b border-neutral-200/80 bg-neutral-50/70 sm:w-56 sm:border-r sm:border-b-0 dark:border-white/10 dark:bg-[#181817]">
+          <div className="hidden border-b border-neutral-200/80 p-2.5 sm:block dark:border-white/10">
+            <label className="flex h-8 items-center gap-2 rounded-lg border border-neutral-200/80 bg-white px-2.5 text-neutral-400 transition-colors focus-within:border-brand-primary-500/60 focus-within:ring-1 focus-within:ring-brand-primary-500/20 dark:border-white/10 dark:bg-neutral-900/50 dark:text-neutral-400">
+              <Search className="h-3.5 w-3.5 shrink-0" />
               <input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Procurar"
-                className="min-w-0 flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
+                className="min-w-0 flex-1 bg-transparent text-xs text-neutral-900 outline-none placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500"
               />
             </label>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+          <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {(["account", "workspace"] as const).map((section) => {
               const items = section === "account" ? accountNavigation : workspaceNavigation;
               if (!items.length) return null;
 
               return (
-                <div key={section} className={section === "workspace" ? "mt-5" : ""}>
-                  <p className="mb-2 px-2 text-[11px] font-medium tracking-wide text-neutral-500">
+                <div key={section} className={section === "workspace" ? "mt-3.5" : ""}>
+                  <p className="mb-1 px-2 text-[10px] font-semibold tracking-wider uppercase text-neutral-400 dark:text-neutral-500">
                     {section === "account" ? "Sua conta" : "Workspace atual"}
                   </p>
                   <ul className="space-y-0.5">
@@ -253,18 +277,18 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                             onClick={() => {
                               window.location.hash = settingsHash(item.id);
                             }}
-                            className={`group flex w-full items-center rounded-lg px-2.5 py-2 text-sm transition-all ${
+                            className={`group flex w-full items-center rounded-lg px-2.5 py-1.5 text-xs transition-all ${
                               isActive
-                                ? "bg-neutral-700/90 font-medium text-white"
-                                : "text-neutral-300 hover:bg-white/[0.08] hover:text-white"
+                                ? "bg-neutral-200/70 font-semibold text-neutral-900 dark:bg-white/10 dark:text-white"
+                                : "text-neutral-600 hover:bg-neutral-200/40 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-neutral-200"
                             }`}
                           >
                             <div className="flex items-center gap-2">
                               <Icon
-                                className={`h-4 w-4 flex-shrink-0 ${
+                                className={`h-3.5 w-3.5 flex-shrink-0 transition-colors ${
                                   isActive
-                                    ? "text-brand-primary-400"
-                                    : "text-neutral-500 group-hover:text-neutral-300"
+                                    ? "text-brand-primary-500 dark:text-brand-primary-400"
+                                    : "text-neutral-400 group-hover:text-neutral-600 dark:text-neutral-500 dark:group-hover:text-neutral-300"
                                 }`}
                               />
                               <span>{item.label}</span>
@@ -278,16 +302,30 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
               );
             })}
 
-            <div className="mt-auto hidden border-t border-neutral-700/80 p-2.5 sm:block">
+            <div className="mt-auto hidden border-t border-neutral-200/80 p-2 sm:block dark:border-white/10">
+              <div className="mb-1 flex items-center justify-between rounded-lg px-2 py-1 text-xs text-neutral-600 dark:text-neutral-400">
+                <span className="text-[11px] font-medium">
+                  {theme === "dark" ? "Tema escuro" : "Tema claro"}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleToggleTheme}
+                  title={theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"}
+                  aria-label={theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"}
+                  className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-200/60 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
+                >
+                  {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                </button>
+              </div>
               <button
                 onClick={() => {
                   onClose();
                   logout();
                 }}
-                className="group flex w-full items-center rounded-lg px-2.5 py-2 text-sm text-red-400 transition-all hover:bg-red-500/10"
+                className="group flex w-full items-center rounded-lg px-2 py-1.5 text-xs text-red-600 transition-all hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
               >
                 <div className="flex items-center gap-2">
-                  <LogOut className="h-4 w-4 flex-shrink-0 text-red-500/70 group-hover:text-red-600 dark:group-hover:text-red-400" />
+                  <LogOut className="h-3.5 w-3.5 flex-shrink-0 text-red-500/80 group-hover:text-red-600 dark:group-hover:text-red-400" />
                   <span>{t.navbar?.logout || "Sair"}</span>
                 </div>
               </button>
@@ -296,18 +334,17 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Content Area */}
-        <div className="relative flex flex-1 flex-col overflow-hidden bg-[#1d1d1b]">
-          <div className="hidden border-b border-neutral-700/80 px-7 py-4 sm:block">
-            <h2 className="text-base font-semibold text-neutral-100">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-white dark:bg-[#1d1d1b]">
+          <div className="hidden items-center justify-between border-b border-neutral-200/80 px-5 py-3 sm:flex dark:border-white/10">
+            <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
               {SETTINGS_NAV.find((item) => item.id === activeTab)?.label}
             </h2>
-          </div>
-          <div className="absolute top-3 right-4 z-10 hidden sm:block">
             <button
               onClick={onClose}
-              className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Fechar configurações"
+              className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-white/10 dark:hover:text-white"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
