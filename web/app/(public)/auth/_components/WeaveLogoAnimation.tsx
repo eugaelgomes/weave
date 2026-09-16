@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "@/app/_contexts/theme-context";
 
 const LOGO_LINES = [
   "  ██╗   ██╗ ███████╗  █████╗  ██╗   ██╗ ███████╗",
@@ -60,6 +61,9 @@ function buildPieces(cw: number, ch: number, charW: number): { pieces: Piece[]; 
 
 export function WeaveLogoAnimation() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { theme } = useTheme();
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -122,8 +126,14 @@ export function WeaveLogoAnimation() {
       const globalAlpha =
         phase === "fade" ? Math.max(0, 1 - elapsed / FADE_MS) : 1;
 
+      const isDark =
+        themeRef.current === "dark" ||
+        (typeof document !== "undefined" &&
+          document.documentElement.classList.contains("dark"));
+
       ctx.font = FONT;
       ctx.globalAlpha = globalAlpha;
+      ctx.fillStyle = isDark ? "#ffffff" : "rgba(30,30,32,1)";
 
       for (const p of pieces) {
         const t = Math.min(1, Math.max(0, (elapsed - p.startMs) / p.duration));
@@ -136,8 +146,6 @@ export function WeaveLogoAnimation() {
 
         // no shadow/blur — keep letters crisp
         ctx.shadowBlur = 0;
-
-        ctx.fillStyle = "rgba(30,30,32,1)";
         ctx.fillText(p.char, p.finalX, currentY + LINE_H);
       }
 
