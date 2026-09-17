@@ -217,7 +217,7 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
       <div className="absolute inset-0 cursor-default" onClick={onClose} />
 
       {/* Modal Container */}
-      <div className="relative z-10 flex h-full max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-2xl shadow-neutral-900/10 transition-all sm:h-[620px] sm:flex-row dark:border-white/10 dark:bg-[#1d1d1b] dark:shadow-black/60 ring-1 ring-black/5 dark:ring-white/5">
+      <div className="relative z-10 flex h-full max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-2xl ring-1 shadow-neutral-900/10 ring-black/5 transition-all sm:h-[620px] sm:flex-row dark:border-white/10 dark:bg-[#1d1d1b] dark:shadow-black/60 dark:ring-white/5">
         {/* Mobile Header (visible only on small screens) */}
         <div className="flex items-center justify-between border-b border-neutral-200/80 bg-white p-3.5 sm:hidden dark:border-white/10 dark:bg-[#181817]">
           <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
@@ -228,7 +228,9 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
               type="button"
               onClick={handleToggleTheme}
               title={theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"}
-              aria-label={theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"}
+              aria-label={
+                theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"
+              }
               className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -246,7 +248,7 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
         {/* Sidebar */}
         <div className="flex w-full flex-col border-b border-neutral-200/80 bg-neutral-50/70 sm:w-56 sm:border-r sm:border-b-0 dark:border-white/10 dark:bg-[#181817]">
           <div className="hidden border-b border-neutral-200/80 p-2.5 sm:block dark:border-white/10">
-            <label className="flex h-8 items-center gap-2 rounded-lg border border-neutral-200/80 bg-white px-2.5 text-neutral-400 transition-colors focus-within:border-brand-primary-500/60 focus-within:ring-1 focus-within:ring-brand-primary-500/20 dark:border-white/10 dark:bg-neutral-900/50 dark:text-neutral-400">
+            <label className="focus-within:border-brand-primary-500/60 focus-within:ring-brand-primary-500/20 flex h-8 items-center gap-2 rounded-lg border border-neutral-200/80 bg-white px-2.5 text-neutral-400 transition-colors focus-within:ring-1 dark:border-white/10 dark:bg-neutral-900/50 dark:text-neutral-400">
               <Search className="h-3.5 w-3.5 shrink-0" />
               <input
                 value={searchQuery}
@@ -264,7 +266,7 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
 
               return (
                 <div key={section} className={section === "workspace" ? "mt-3.5" : ""}>
-                  <p className="mb-1 px-2 text-[10px] font-semibold tracking-wider uppercase text-neutral-400 dark:text-neutral-500">
+                  <p className="mb-1 px-2 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
                     {section === "account" ? "Sua conta" : "Workspace atual"}
                   </p>
                   <ul className="space-y-0.5">
@@ -310,11 +312,19 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                 <button
                   type="button"
                   onClick={handleToggleTheme}
-                  title={theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"}
-                  aria-label={theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"}
+                  title={
+                    theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"
+                  }
+                  aria-label={
+                    theme === "dark" ? "Alternar para tema claro" : "Alternar para tema escuro"
+                  }
                   className="flex h-6 w-6 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-200/60 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
                 >
-                  {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                  {theme === "dark" ? (
+                    <Sun className="h-3.5 w-3.5" />
+                  ) : (
+                    <Moon className="h-3.5 w-3.5" />
+                  )}
                 </button>
               </div>
               <button
@@ -357,6 +367,8 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
 };
 
 export default function SettingsModal(props: SettingsModalProps) {
+  if (!props.isOpen) return null;
+
   return (
     <WorkspaceProvider>
       <ApiTokensProvider>

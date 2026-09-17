@@ -146,9 +146,13 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
 
 export function SettingsApiTokens() {
   const { t } = useLanguage();
-  const { user } = useAuth();
-  const { apiTokens, scopesInfo, loadingTokens, generateApiToken, revokeToken } = useApiTokens();
+  const { apiTokens, scopesInfo, loadingTokens, loadApiTokens, generateApiToken, revokeToken } =
+    useApiTokens();
   const { workspace } = useWorkspace();
+
+  React.useEffect(() => {
+    loadApiTokens();
+  }, [loadApiTokens]);
 
   // Estados de UI
   const [isCreating, setIsCreating] = useState(false);

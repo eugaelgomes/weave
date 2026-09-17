@@ -90,9 +90,7 @@ export const SlackProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   useEffect(() => {
-    if (authenticated) {
-      loadSlackStatus();
-    } else {
+    if (!authenticated) {
       setSlackStatus({
         connected: false,
         default_channel_id: null,
@@ -102,7 +100,7 @@ export const SlackProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         slack_team_name: null,
       });
     }
-  }, [authenticated, loadSlackStatus]);
+  }, [authenticated]);
 
   return (
     <SlackContext.Provider

@@ -796,7 +796,10 @@ const SettingsPage = () => {
                         : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:bg-white/5"
                     }`}
                   >
-                    <Sun size={13} className={theme === "light" ? "text-amber-500" : "text-neutral-400"} />
+                    <Sun
+                      size={13}
+                      className={theme === "light" ? "text-amber-500" : "text-neutral-400"}
+                    />
                     <span>Claro</span>
                   </button>
                   <button
@@ -808,7 +811,10 @@ const SettingsPage = () => {
                         : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:bg-white/5"
                     }`}
                   >
-                    <Moon size={13} className={theme === "dark" ? "text-amber-500" : "text-neutral-400"} />
+                    <Moon
+                      size={13}
+                      className={theme === "dark" ? "text-amber-500" : "text-neutral-400"}
+                    />
                     <span>Escuro</span>
                   </button>
                 </div>

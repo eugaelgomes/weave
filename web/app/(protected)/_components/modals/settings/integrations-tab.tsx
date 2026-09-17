@@ -15,8 +15,18 @@ export const IntegrationsSettings: React.FC = () => {
   const googleConnected = false;
   const connectGoogleCalendar = () => undefined;
   const disconnectGoogleCalendar = () => undefined;
-  const { slackStatus, updatingChannel, connectSlack, disconnectSlack, updateDefaultChannel } =
-    useSlack();
+  const {
+    slackStatus,
+    updatingChannel,
+    loadSlackStatus,
+    connectSlack,
+    disconnectSlack,
+    updateDefaultChannel,
+  } = useSlack();
+
+  React.useEffect(() => {
+    loadSlackStatus();
+  }, [loadSlackStatus]);
 
   const [channelInput, setChannelInput] = React.useState("");
 

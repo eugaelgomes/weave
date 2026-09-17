@@ -50,11 +50,9 @@ export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  // Carregar tokens automaticamente apenas se autenticado
+  // Limpar tokens ao desautenticar
   useEffect(() => {
-    if (authenticated) {
-      loadApiTokens();
-    } else {
+    if (!authenticated) {
       setApiTokens([]);
       setScopesInfo(null);
     }
