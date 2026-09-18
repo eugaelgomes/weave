@@ -6,6 +6,7 @@ export type RichEditorImageUploader = (files: File[]) => Promise<string[]>;
 const STORAGE_KEY = "richEditorUiBridge" as const;
 
 type BridgeStorage = {
+  mediaEnabled: boolean;
   uploadDocumentImages: RichEditorImageUploader | null;
 };
 
@@ -17,6 +18,7 @@ export const RichEditorUiBridge = Extension.create({
 
   addStorage() {
     return {
+      mediaEnabled: true,
       uploadDocumentImages: null as RichEditorImageUploader | null,
     };
   },
@@ -27,4 +29,11 @@ export function getRichEditorImageUploader(editor: Editor): RichEditorImageUploa
     STORAGE_KEY
   ];
   return bucket?.uploadDocumentImages ?? null;
+}
+
+export function isRichEditorMediaEnabled(editor: Editor): boolean {
+  const bucket = (editor.storage as unknown as Record<string, BridgeStorage | undefined>)[
+    STORAGE_KEY
+  ];
+  return bucket?.mediaEnabled ?? true;
 }

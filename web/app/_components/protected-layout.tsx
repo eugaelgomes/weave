@@ -111,7 +111,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                   "animate-in fade-in slide-in-from-bottom-2 flex min-h-full w-full min-w-0 flex-1 flex-col duration-500"
                 )}
               >
-                <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+                <div className="px-4 pt-2 sm:px-6 sm:pt-3">
                   <Breadcrumb />
                 </div>
                 {children}

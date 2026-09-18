@@ -21,6 +21,7 @@ const {
   submitFeedbackSchema,
   getChatHistorySchema,
   createUserAgentSchema,
+  toggleActiveSchema,
   updateAgentSchema,
 } = require("./schemas/agent-house.schema");
 const {
@@ -74,6 +75,32 @@ router.post("/chat/share/:token/fork", (req, res, next) =>
 
 router.get("/models", (req, res, next) => agentLlmsController.getAvailableModels(req, res, next));
 
+// Agent House - LLMs and custom tools must be registered before /agents/:id.
+// Otherwise Express interprets `llms` and `tools` as an agent id.
+router.post("/agents/llms", validate(createLlmSchema, "body"), (req, res, next) =>
+  agentLlmsController.createLlmConfig(req, res, next)
+);
+router.get("/agents/llms", (req, res, next) => agentLlmsController.getLlmConfigs(req, res, next));
+router.put("/agents/llms/:id", validate(updateLlmSchema, "body"), (req, res, next) =>
+  agentLlmsController.updateLlmConfig(req, res, next)
+);
+router.delete("/agents/llms/:id", (req, res, next) =>
+  agentLlmsController.deleteLlmConfig(req, res, next)
+);
+
+router.post("/agents/tools", validate(createCustomToolSchema, "body"), (req, res, next) =>
+  agentCustomToolsController.createCustomTool(req, res, next)
+);
+router.get("/agents/tools", (req, res, next) =>
+  agentCustomToolsController.getCustomTools(req, res, next)
+);
+router.put("/agents/tools/:id", validate(updateCustomToolSchema, "body"), (req, res, next) =>
+  agentCustomToolsController.updateCustomTool(req, res, next)
+);
+router.delete("/agents/tools/:id", (req, res, next) =>
+  agentCustomToolsController.deleteCustomTool(req, res, next)
+);
+
 // Agent House - Agents
 router.post("/agents", validate(createUserAgentSchema, "body"), (req, res, next) =>
   agentsController.createAgent(req, res, next)
@@ -91,34 +118,8 @@ router.post("/agents/:id/duplicate", (req, res, next) =>
   agentsController.duplicateAgent(req, res, next)
 );
 router.put("/agents/:id/share", (req, res, next) => agentsController.shareAgent(req, res, next));
-router.patch("/agents/:id/toggle", (req, res, next) =>
+router.patch("/agents/:id/toggle", validate(toggleActiveSchema, "body"), (req, res, next) =>
   agentsController.toggleActive(req, res, next)
-);
-
-// Agent House - LLMs
-router.post("/agents/llms", validate(createLlmSchema, "body"), (req, res, next) =>
-  agentLlmsController.createLlmConfig(req, res, next)
-);
-router.get("/agents/llms", (req, res, next) => agentLlmsController.getLlmConfigs(req, res, next));
-router.put("/agents/llms/:id", validate(updateLlmSchema, "body"), (req, res, next) =>
-  agentLlmsController.updateLlmConfig(req, res, next)
-);
-router.delete("/agents/llms/:id", (req, res, next) =>
-  agentLlmsController.deleteLlmConfig(req, res, next)
-);
-
-// Agent House - Custom Tools
-router.post("/agents/tools", validate(createCustomToolSchema, "body"), (req, res, next) =>
-  agentCustomToolsController.createCustomTool(req, res, next)
-);
-router.get("/agents/tools", (req, res, next) =>
-  agentCustomToolsController.getCustomTools(req, res, next)
-);
-router.put("/agents/tools/:id", validate(updateCustomToolSchema, "body"), (req, res, next) =>
-  agentCustomToolsController.updateCustomTool(req, res, next)
-);
-router.delete("/agents/tools/:id", (req, res, next) =>
-  agentCustomToolsController.deleteCustomTool(req, res, next)
 );
 
 // Agent House - Artifacts

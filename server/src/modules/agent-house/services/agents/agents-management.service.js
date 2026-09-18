@@ -1,15 +1,42 @@
 const agentsRepository = require("../../repositories/agents/agents-management.repository");
 
 class AgentsManagementService {
-  _buildPersonality({ instructions, role, tone, rules, language, tags, avatar_url }) {
+  _parseArray(value) {
+    if (Array.isArray(value)) return value;
+    if (typeof value !== "string") return [];
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  _buildPersonality({
+    instructions,
+    instructions_document,
+    role,
+    tone,
+    rules,
+    language,
+    tags,
+    avatar_url,
+    tools,
+    model_provider,
+    model_name,
+  }) {
     return {
       avatar_url: avatar_url || null,
       instructions: instructions || null,
+      instructions_document: Array.isArray(instructions_document) ? instructions_document : [],
       language: language || "pt-BR",
+      model_name: model_name || "",
+      model_provider: model_provider || "",
       role: role || null,
       rules: Array.isArray(rules) ? rules : rules ? [rules] : [],
       tags: Array.isArray(tags) ? tags : tags ? [tags] : [],
       tone: tone || "professional",
+      tools: this._parseArray(tools),
     };
   }
 
@@ -39,12 +66,16 @@ class AgentsManagementService {
     // If any personality-related fields are updated, we need to rebuild the personality
     if (
       updates.instructions !== undefined ||
+      updates.instructions_document !== undefined ||
       updates.role !== undefined ||
       updates.tone !== undefined ||
       updates.rules !== undefined ||
       updates.language !== undefined ||
       updates.tags !== undefined ||
-      updates.avatar_url !== undefined
+      updates.avatar_url !== undefined ||
+      updates.tools !== undefined ||
+      updates.model_provider !== undefined ||
+      updates.model_name !== undefined
     ) {
       const currentAgent = await agentsRepository.getAgentByIdWithAccess(agentId, userId);
       if (currentAgent) {

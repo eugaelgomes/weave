@@ -13,6 +13,7 @@ import {
   RawModelsResponseSchema,
 } from "./ai-agent.schema";
 import { notifyPlanLimitExceededSync } from "../plan-limit-sync";
+import type { CreateBlockData } from "../notes-service/notes.schema";
 
 export interface AIModel {
   id: string;
@@ -118,6 +119,7 @@ export interface Agent {
   name: string;
   description: string;
   instructions: string;
+  instructions_document?: CreateBlockData[];
   role?: string;
   tone?: string;
   language?: string;
@@ -139,6 +141,7 @@ export interface CreateAgentData {
   name: string;
   description: string;
   instructions: string;
+  instructions_document?: CreateBlockData[];
   role?: string;
   tone?: string;
   language?: string;
@@ -486,11 +489,167 @@ export interface AgentProviderResponse {
   models: RawModelItem[];
 }
 
+export interface AgentLlmConfig {
+  id: string;
+  title: string;
+  provider: string;
+  model: string;
+  temperature?: number | null;
+  max_tokens?: number | null;
+  reasoning_effort?: string | null;
+}
+
+export interface CreateAgentLlmConfigData {
+  title: string;
+  provider: string;
+  model: string;
+  apiKey: string;
+  temperature?: number;
+  maxTokens?: number;
+  reasoningEffort?: string;
+}
+
+export interface AgentCustomTool {
+  id: string;
+  name: string;
+  description?: string | null;
+  webhook_url: string;
+  method: string;
+  headers?: Record<string, unknown>;
+  payload_schema?: Record<string, unknown>;
+}
+
+export interface CreateAgentCustomToolData {
+  name: string;
+  description?: string;
+  webhookUrl: string;
+  method?: string;
+  headers?: Record<string, unknown>;
+  payloadSchema?: Record<string, unknown>;
+}
+
 export async function fetchAgentProviders(): Promise<AgentProviderResponse[]> {
   const response = await apiClient.get(API_ENDPOINTS.AGENTS_PROVIDERS);
   const raw = await handleResponse<unknown>(response);
   const data = AgentProvidersResponseSchema.parse(raw);
   return data.providers as AgentProviderResponse[];
+}
+
+export async function fetchAgentLlmConfigs(): Promise<AgentLlmConfig[]> {
+  const response = await apiClient.get(API_ENDPOINTS.AGENTS_LLMS);
+  const raw = await handleResponse<unknown>(response);
+  return z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        provider: z.string(),
+        model: z.string(),
+      })
+    )
+    .parse(raw);
+}
+
+export async function createAgentLlmConfig(
+  data: CreateAgentLlmConfigData
+): Promise<AgentLlmConfig> {
+  const response = await apiClient.post(API_ENDPOINTS.AGENTS_LLMS, data);
+  const raw = await handleResponse<unknown>(response);
+  return z
+    .object({
+      id: z.string(),
+      title: z.string(),
+      provider: z.string(),
+      model: z.string(),
+      temperature: z.number().nullable().optional(),
+      max_tokens: z.number().nullable().optional(),
+      reasoning_effort: z.string().nullable().optional(),
+    })
+    .parse(raw);
+}
+
+export async function updateAgentLlmConfig(
+  id: string,
+  data: Partial<CreateAgentLlmConfigData>
+): Promise<AgentLlmConfig> {
+  const response = await apiClient.put(`${API_ENDPOINTS.AGENTS_LLMS}/${id}`, data);
+  const raw = await handleResponse<unknown>(response);
+  return z
+    .object({
+      id: z.string(),
+      title: z.string(),
+      provider: z.string(),
+      model: z.string(),
+      temperature: z.number().nullable().optional(),
+      max_tokens: z.number().nullable().optional(),
+      reasoning_effort: z.string().nullable().optional(),
+    })
+    .parse(raw);
+}
+
+export async function deleteAgentLlmConfig(id: string): Promise<void> {
+  const response = await apiClient.delete(`${API_ENDPOINTS.AGENTS_LLMS}/${id}`);
+  await handleResponse<unknown>(response);
+}
+
+export async function fetchAgentCustomTools(): Promise<AgentCustomTool[]> {
+  const response = await apiClient.get(API_ENDPOINTS.AGENTS_TOOLS);
+  const raw = await handleResponse<unknown>(response);
+  return z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        description: z.string().nullable().optional(),
+        webhook_url: z.string(),
+        method: z.string(),
+        headers: z.record(z.string(), z.unknown()).optional(),
+        payload_schema: z.record(z.string(), z.unknown()).optional(),
+      })
+    )
+    .parse(raw);
+}
+
+export async function createAgentCustomTool(
+  data: CreateAgentCustomToolData
+): Promise<AgentCustomTool> {
+  const response = await apiClient.post(API_ENDPOINTS.AGENTS_TOOLS, data);
+  const raw = await handleResponse<unknown>(response);
+  return z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().nullable().optional(),
+      webhook_url: z.string(),
+      method: z.string(),
+      headers: z.record(z.string(), z.unknown()).optional(),
+      payload_schema: z.record(z.string(), z.unknown()).optional(),
+    })
+    .parse(raw);
+}
+
+export async function updateAgentCustomTool(
+  id: string,
+  data: Partial<CreateAgentCustomToolData>
+): Promise<AgentCustomTool> {
+  const response = await apiClient.put(`${API_ENDPOINTS.AGENTS_TOOLS}/${id}`, data);
+  const raw = await handleResponse<unknown>(response);
+  return z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().nullable().optional(),
+      webhook_url: z.string(),
+      method: z.string(),
+      headers: z.record(z.string(), z.unknown()).optional(),
+      payload_schema: z.record(z.string(), z.unknown()).optional(),
+    })
+    .parse(raw);
+}
+
+export async function deleteAgentCustomTool(id: string): Promise<void> {
+  const response = await apiClient.delete(`${API_ENDPOINTS.AGENTS_TOOLS}/${id}`);
+  await handleResponse<unknown>(response);
 }
 
 export async function listAgents(): Promise<Agent[]> {
@@ -501,43 +660,16 @@ export async function listAgents(): Promise<Agent[]> {
 }
 
 export async function createAgent(agentData: CreateAgentData): Promise<Agent> {
-  const formData = new FormData();
-  Object.entries(agentData).forEach(([key, value]) => {
-    if (key === "knowledge_files" && Array.isArray(value)) {
-      (value as File[]).forEach((file) => formData.append("knowledge_files", file));
-    } else if ((key === "tags" || key === "tools") && Array.isArray(value)) {
-      // Envia como JSON string para garantir parsing correto no backend ou array
-      // Multer nao parseia arrays de campos texto automaticamente muito bem sem config especifica
-      // Melhor enviar como JSON string num campo so se o backend suportar JSON.parse
-      formData.append(key, JSON.stringify(value));
-      // Se o backend espera tags[] teria que ser value.forEach...
-      // Mas no controller eu coloquei JSON.parse(tools) entao JSON stringfy aqui eh o correto.
-      // Para tags, o backend usa tags direto? normalizeAgentData usa tags.
-      // Vamos checar se o controller parseia tags.
-    } else if (value !== undefined && value !== null) {
-      formData.append(key, String(value));
-    }
-  });
-
-  const response = await apiClient.post(API_ENDPOINTS.AGENTS, formData);
+  const { knowledge_files: _knowledgeFiles, ...payload } = agentData;
+  const response = await apiClient.post(API_ENDPOINTS.AGENTS, payload);
   const raw = await handleResponse<unknown>(response);
   const data = AgentEnvelopeSchema.parse(raw);
   return data.agent as Agent;
 }
 
 export async function updateAgent(id: string, agentData: Partial<CreateAgentData>): Promise<Agent> {
-  const formData = new FormData();
-  Object.entries(agentData).forEach(([key, value]) => {
-    if (key === "knowledge_files" && Array.isArray(value)) {
-      (value as File[]).forEach((file) => formData.append("knowledge_files", file));
-    } else if ((key === "tags" || key === "tools") && Array.isArray(value)) {
-      formData.append(key, JSON.stringify(value));
-    } else if (value !== undefined && value !== null) {
-      formData.append(key, String(value));
-    }
-  });
-
-  const response = await apiClient.put(API_ENDPOINTS.AGENT_BY_ID(id), formData);
+  const { knowledge_files: _knowledgeFiles, ...payload } = agentData;
+  const response = await apiClient.put(API_ENDPOINTS.AGENT_BY_ID(id), payload);
   const raw = await handleResponse<unknown>(response);
   const data = AgentEnvelopeSchema.parse(raw);
   return data.agent as Agent;
@@ -567,7 +699,9 @@ export async function getAgentById(id: string): Promise<Agent> {
 }
 
 export async function toggleAgentActive(id: string, is_active: boolean): Promise<Agent> {
-  const response = await apiClient.patch(`${API_ENDPOINTS.AGENTS}/${id}/active`, { is_active });
+  const response = await apiClient.patch(`${API_ENDPOINTS.AGENTS}/${id}/toggle`, {
+    isActive: is_active,
+  });
   const raw = await handleResponse<unknown>(response);
   const data = AgentEnvelopeSchema.parse(raw);
   return data.agent as Agent;

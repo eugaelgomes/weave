@@ -1,5 +1,55 @@
 const { z } = require("zod");
 
+const promptDocumentSchema = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}, z.array(z.unknown()));
+
+const createLlmSchema = z.object({
+  apiKey: z.string().min(1, "API key is required"),
+  maxTokens: z.coerce.number().int().positive().optional(),
+  model: z.string().min(1, "Model is required"),
+  provider: z.string().min(1, "Provider is required"),
+  reasoningEffort: z.string().min(1).optional(),
+  temperature: z.coerce.number().min(0).max(2).optional(),
+  title: z.string().min(1, "Title is required"),
+});
+
+const updateLlmSchema = z.object({
+  apiKey: z.string().min(1).optional(),
+  maxTokens: z.coerce.number().int().positive().nullable().optional(),
+  model: z.string().min(1).optional(),
+  provider: z.string().min(1).optional(),
+  reasoningEffort: z.string().min(1).nullable().optional(),
+  temperature: z.coerce.number().min(0).max(2).optional(),
+  title: z.string().min(1).optional(),
+});
+
+const createCustomToolSchema = z.object({
+  description: z.string().optional(),
+  headers: z.record(z.any()).optional(),
+  method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).optional(),
+  name: z.string().regex(/^[a-zA-Z0-9_]+$/, "Use only letters, numbers and underscores"),
+  payloadSchema: z.record(z.any()).optional(),
+  webhookUrl: z.string().url("Webhook URL must be valid"),
+});
+
+const updateCustomToolSchema = z.object({
+  description: z.string().nullable().optional(),
+  headers: z.record(z.any()).optional(),
+  method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).optional(),
+  name: z
+    .string()
+    .regex(/^[a-zA-Z0-9_]+$/, "Use only letters, numbers and underscores")
+    .optional(),
+  payloadSchema: z.record(z.any()).optional(),
+  webhookUrl: z.string().url("Webhook URL must be valid").optional(),
+});
+
 const listUserAgentsSchema = z
   .object({
     team_id: z
@@ -33,6 +83,11 @@ const createUserAgentSchema = z
       .describe(
         "Specific, detailed instructions defining how the agent should behave, respond to queries, and handle tasks."
       ),
+    instructions_document: promptDocumentSchema.optional(),
+    is_active: z
+      .boolean()
+      .optional()
+      .describe("Whether the agent is active and available for use."),
     language: z
       .string()
       .optional()
@@ -112,6 +167,7 @@ const updateAgentSchema = z
       .string()
       .optional()
       .describe("The updated instructions defining how the agent should behave and handle tasks."),
+    instructions_document: promptDocumentSchema.optional(),
     is_active: z
       .boolean()
       .optional()
@@ -347,6 +403,8 @@ const getChatHistorySchema = z
 module.exports = {
   assignToTeamSchema,
   chatPayloadSchema,
+  createCustomToolSchema,
+  createLlmSchema,
   createUserAgentSchema,
   getChatHistorySchema,
   listUserAgentsSchema,
@@ -354,4 +412,6 @@ module.exports = {
   submitFeedbackSchema,
   toggleActiveSchema,
   updateAgentSchema,
+  updateCustomToolSchema,
+  updateLlmSchema,
 };

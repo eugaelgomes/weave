@@ -1,11 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import {
-  Globe,
-  Code2,
-  Image as ImageIcon,
-  Sparkles,
   Loader2,
   Trash2,
   Check,
@@ -13,22 +10,25 @@ import {
   Layers,
   Power,
   FileText,
-  AlignLeft,
   Copy,
-  Eye,
-  Edit3,
-  Bold,
-  Italic,
-  Heading1,
-  Heading2,
-  List,
-  ListOrdered,
-  Code,
-  Quote,
-  Wand2,
+  Wrench,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAgent, type Agent, type CreateAgentData } from "@/app/_contexts/agent-context";
+import {
+  fetchAgentCustomTools,
+  fetchAgentLlmConfigs,
+  type AgentCustomTool,
+  type AgentLlmConfig,
+} from "@/app/_services/ai-agent-service/agent-service";
+import { AgentPromptEditor } from "@/app/(protected)/_components/agent/agent-prompt-editor";
+import {
+  type PromptDocument,
+  isPromptDocument,
+  markdownToPromptDocument,
+  promptDocumentToMarkdown,
+} from "@/app/(protected)/_components/agent/agent-prompt-document";
 import { cn } from "@/lib/utils";
 
 interface AgentFormProps {
@@ -37,112 +37,35 @@ interface AgentFormProps {
   onSuccess?: (agent: Agent) => void;
 }
 
-const PROVIDERS = [
-  { id: "gemini", name: "Google Gemini", badge: "Gemini", color: "#38bdf8" },
-  { id: "perplexity", name: "Perplexity", badge: "Perplexity", color: "#f59e0b" },
-  { id: "openai", name: "OpenAI", badge: "OpenAI", color: "#10b981" },
-  { id: "claude", name: "Anthropic Claude", badge: "Claude", color: "#f97316" },
-];
-
-const DEFAULT_MODELS_BY_PROVIDER: Record<string, { id: string; name: string }[]> = {
-  gemini: [
-    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (Rápido e Preciso)" },
-    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (Raciocínio Complexo)" },
-    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
-  ],
-  perplexity: [
-    { id: "sonar", name: "Sonar (Com busca web em tempo real)" },
-    { id: "sonar-pro", name: "Sonar Pro" },
-    { id: "sonar-reasoning", name: "Sonar Reasoning" },
-  ],
-  openai: [
-    { id: "gpt-4o", name: "GPT-4o (Multimodal Inteligente)" },
-    { id: "gpt-4o-mini", name: "GPT-4o Mini" },
-    { id: "o3-mini", name: "o3-mini (Raciocínio Lógico)" },
-  ],
-  claude: [
-    { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet (Excelente em Código)" },
-    { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku" },
-  ],
-};
-
-const CAPABILITIES = [
-  {
-    id: "web_search",
-    label: "Busca na Web",
-    icon: Globe,
-    hint: "Acesso à internet em tempo real",
-    color: "text-sky-500",
-  },
-  {
-    id: "code_interpreter",
-    label: "Interpretador de Código",
-    icon: Code2,
-    hint: "Executa cálculos e analisa snippets",
-    color: "text-emerald-500",
-  },
-  {
-    id: "image_generation",
-    label: "Geração de Imagens",
-    icon: ImageIcon,
-    hint: "Gera imagens a partir de prompts",
-    color: "text-purple-500",
-  },
-];
-
-const ROLE_SUGGESTIONS = [
-  "Assistente Geral",
-  "Engenheiro de Software",
-  "Pesquisador & Analista",
-  "Especialista em Conteúdo",
-  "Consultor de Negócios",
-  "Arquiteto de Soluções",
-];
-
-const PROMPT_TEMPLATES: Record<string, { label: string; role: string; text: string }> = {
-  software_engineer: {
-    label: "Engenheiro de Software",
-    role: "Engenheiro de Software Sênior",
-    text: `# Persona
-Você é um Engenheiro de Software Sênior especialista em arquitetura moderna, TypeScript, APIs e boas práticas de código limpo.
-
-## Diretrizes de Resposta
-1. Sempre priorize soluções tipadas, seguras e de alta performance.
-2. Ao sugerir código, forneça explicações concisas sobre as decisões de design.
-3. Se houver trade-offs ou alternativas melhores, aponte-os com clareza.
-
-## Formato
-- Use blocos de código com a linguagem especificada.
-- Destaque alertas ou pontos de atenção com notas claras.`,
-  },
-  researcher: {
-    label: "Pesquisador & Analista",
-    role: "Pesquisador & Analista de Dados",
-    text: `# Persona
-Você é um Pesquisador e Analista especializado em sintetizar informações complexas de forma clara, objetiva e estruturada.
-
-## Diretrizes
-1. Use informações baseadas em fatos e cite fontes sempre que possível.
-2. Divida relatórios longos em tópicos executivos (Resumo, Pontos Principais, Conclusão).
-3. Seja neutro, preciso e metódico.`,
-  },
-  copywriter: {
-    label: "Redator Criativo",
-    role: "Redator & Estrategista de Conteúdo",
-    text: `# Persona
-Você é um Redator Criativo e Estrategista de Comunicação, especialista em copy envolvente, clara e persuasiva.
-
-## Diretrizes
-1. Mantenha um tom profissional, amigável e direto ao ponto.
-2. Evite jargões desnecessários ou clichês vazios.
-3. Ofereça opções de headlines e variações de tom sempre que apropriado.`,
-  },
-};
+function AgentConfigSection({
+  children,
+  defaultOpen = false,
+  icon: Icon,
+  title,
+}: {
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  title: string;
+}) {
+  return (
+    <details open={defaultOpen} className="group">
+      <summary className="flex cursor-pointer list-none items-center gap-2 py-1.5 text-xs font-medium text-neutral-600 marker:content-none hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100">
+        <ChevronRight
+          size={13}
+          className="text-neutral-400 transition-transform group-open:rotate-90"
+        />
+        <Icon size={13} className="text-neutral-400" />
+        <span>{title}</span>
+      </summary>
+      <div className="pt-1 pb-3 pl-7">{children}</div>
+    </details>
+  );
+}
 
 export default function AgentForm({ onCancel, agent, onSuccess }: AgentFormProps) {
   const [mounted, setMounted] = useState(false);
-  const { createAgent, updateAgent, deleteAgent, duplicateAgent, agentProviders, loadProviders } =
-    useAgent();
+  const { createAgent, updateAgent, deleteAgent, duplicateAgent } = useAgent();
 
   const isEditing = Boolean(agent?.id);
 
@@ -150,24 +73,56 @@ export default function AgentForm({ onCancel, agent, onSuccess }: AgentFormProps
   const [name, setName] = useState(agent?.name || "");
   const [role, setRole] = useState(agent?.role || "");
   const [description, setDescription] = useState(agent?.description || "");
-  const [instructions, setInstructions] = useState(agent?.instructions || "");
-  const [provider, setProvider] = useState(agent?.model_provider || "gemini");
-  const [modelName, setModelName] = useState(agent?.model_name || "gemini-2.5-flash");
-  const [tools, setTools] = useState<string[]>(agent?.tools || ["web_search"]);
+  const [promptDocument, setPromptDocument] = useState<PromptDocument>(() =>
+    isPromptDocument(agent?.instructions_document)
+      ? agent.instructions_document
+      : markdownToPromptDocument(agent?.instructions || "")
+  );
+  const [promptEditorVersion, setPromptEditorVersion] = useState(0);
+  const [provider, setProvider] = useState(agent?.model_provider || "");
+  const [modelName, setModelName] = useState(agent?.model_name || "");
+  const [llmConfigs, setLlmConfigs] = useState<AgentLlmConfig[]>([]);
+  const [loadingLlmConfigs, setLoadingLlmConfigs] = useState(true);
+  const [tools, setTools] = useState<string[]>(agent?.tools || []);
+  const [customTools, setCustomTools] = useState<AgentCustomTool[]>([]);
+  const [loadingCustomTools, setLoadingCustomTools] = useState(true);
   const [isActive, setIsActive] = useState(agent?.is_active ?? true);
 
   // View state
-  const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   useEffect(() => {
     setMounted(true);
-    loadProviders();
-  }, [loadProviders]);
+    let cancelled = false;
+
+    void fetchAgentLlmConfigs()
+      .then((configs) => {
+        if (!cancelled) setLlmConfigs(configs);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Não foi possível carregar os modelos configurados.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingLlmConfigs(false);
+      });
+
+    void fetchAgentCustomTools()
+      .then((availableTools) => {
+        if (!cancelled) setCustomTools(availableTools);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Não foi possível carregar as ferramentas configuradas.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingCustomTools(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [agent]);
 
   // Sync state when agent prop changes or modal opens
   useEffect(() => {
@@ -175,22 +130,26 @@ export default function AgentForm({ onCancel, agent, onSuccess }: AgentFormProps
       setName(agent.name || "");
       setRole(agent.role || "");
       setDescription(agent.description || "");
-      setInstructions(agent.instructions || "");
-      setProvider(agent.model_provider || "gemini");
-      setModelName(agent.model_name || "gemini-2.5-flash");
-      setTools(agent.tools || ["web_search"]);
+      setPromptDocument(
+        isPromptDocument(agent.instructions_document)
+          ? agent.instructions_document
+          : markdownToPromptDocument(agent.instructions || "")
+      );
+      setProvider(agent.model_provider || "");
+      setModelName(agent.model_name || "");
+      setTools(agent.tools || []);
       setIsActive(agent.is_active ?? true);
     } else {
       setName("");
-      setRole("Assistente Geral");
+      setRole("");
       setDescription("");
-      setInstructions("");
-      setProvider("gemini");
-      setModelName("gemini-2.5-flash");
-      setTools(["web_search"]);
+      setPromptDocument(markdownToPromptDocument(""));
+      setProvider("");
+      setModelName("");
+      setTools([]);
       setIsActive(true);
     }
-    setActiveTab("write");
+    setPromptEditorVersion((version) => version + 1);
     setConfirmDelete(false);
   }, [agent]);
 
@@ -205,79 +164,24 @@ export default function AgentForm({ onCancel, agent, onSuccess }: AgentFormProps
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onCancel]);
 
-  // Compute available models for the selected provider
-  const availableModels = useMemo(() => {
-    const serverProvider = agentProviders.find(
-      (p) => p.name.toLowerCase() === provider.toLowerCase()
-    );
+  const instructions = useMemo(() => promptDocumentToMarkdown(promptDocument), [promptDocument]);
 
-    if (
-      serverProvider &&
-      Array.isArray(serverProvider.models) &&
-      serverProvider.models.length > 0
-    ) {
-      return serverProvider.models
-        .filter((m) => !m.deprecated)
-        .map((m) => ({
-          id: m.version || m.id,
-          name: m.name || m.version,
-        }));
-    }
+  const selectedLlmConfig = useMemo(
+    () => llmConfigs.find((config) => config.provider === provider && config.model === modelName),
+    [llmConfigs, modelName, provider]
+  );
 
-    return DEFAULT_MODELS_BY_PROVIDER[provider] || DEFAULT_MODELS_BY_PROVIDER.gemini;
-  }, [agentProviders, provider]);
-
-  const handleProviderChange = (newProvider: string) => {
-    setProvider(newProvider);
-    const modelsForNew = DEFAULT_MODELS_BY_PROVIDER[newProvider] || [];
-    if (modelsForNew.length > 0) {
-      setModelName(modelsForNew[0].id);
-    }
+  const handleModelChange = (configId: string) => {
+    const config = llmConfigs.find((item) => item.id === configId);
+    if (!config) return;
+    setProvider(config.provider);
+    setModelName(config.model);
   };
 
   const toggleTool = (toolId: string) => {
     setTools((prev) =>
       prev.includes(toolId) ? prev.filter((id) => id !== toolId) : [...prev, toolId]
     );
-  };
-
-  // Helper to insert markdown formatting into textarea
-  const insertFormatting = (prefix: string, suffix: string = "") => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const previousText = textarea.value;
-    const selectedText = previousText.substring(start, end);
-
-    const replacement = `${prefix}${selectedText || "texto"}${suffix}`;
-    const newContent = previousText.substring(0, start) + replacement + previousText.substring(end);
-
-    setInstructions(newContent);
-
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + prefix.length + (selectedText ? selectedText.length : 5);
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 10);
-  };
-
-  const applyTemplate = (templateKey: string) => {
-    const tpl = PROMPT_TEMPLATES[templateKey];
-    if (!tpl) return;
-
-    if (instructions.trim() && !window.confirm("Substituir as instruções atuais pelo template?")) {
-      return;
-    }
-
-    setInstructions(tpl.text);
-    if (!role || role === "Assistente Geral") {
-      setRole(tpl.role);
-    }
-    if (!name) {
-      setName(tpl.label);
-    }
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -293,17 +197,23 @@ export default function AgentForm({ onCancel, agent, onSuccess }: AgentFormProps
       return;
     }
 
+    if (!provider || !modelName) {
+      toast.error("Selecione um modelo configurado.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload: CreateAgentData = {
         name: name.trim(),
-        role: role.trim() || "Assistente",
-        description: description.trim() || `Agente especializado em ${role.trim() || name.trim()}`,
+        description: description.trim(),
         instructions: instructions.trim(),
+        instructions_document: promptDocument,
         model_provider: provider,
         model_name: modelName,
         tools,
         is_active: isActive,
+        ...(role.trim() ? { role: role.trim() } : {}),
       };
 
       let resultAgent: Agent;
@@ -370,191 +280,171 @@ export default function AgentForm({ onCancel, agent, onSuccess }: AgentFormProps
           {/* ===================================================================== */}
           {/* NOTION / WEAVE TASK PROPERTIES (Metadados do Agente)                  */}
           {/* ===================================================================== */}
-          <div className="space-y-3 rounded-xl border border-neutral-100 bg-neutral-50/60 p-4 dark:border-neutral-800/80 dark:bg-neutral-900/40">
-            <div className="space-y-1.5 border-b border-neutral-200/80 pb-3 dark:border-neutral-800">
-              <label
-                htmlFor="agent-name"
-                className="text-xs font-medium text-neutral-500 dark:text-neutral-400"
-              >
-                Nome do agente
-              </label>
-              <input
-                id="agent-name"
-                type="text"
-                autoFocus={!isEditing}
-                placeholder="Nome do agente"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border-none bg-transparent p-0 text-lg font-semibold tracking-tight text-neutral-900 placeholder:text-neutral-300 focus:ring-0 focus:outline-none dark:text-neutral-50 dark:placeholder:text-neutral-700"
-              />
-            </div>
-
-            {/* Propriedade: Papel / Função */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                <Layers size={13} className="text-neutral-400" />
-                <span>Função / Papel</span>
-              </div>
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="ex: Engenheiro de Software, Assistente Jurídico..."
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="min-w-[200px] flex-1 rounded-lg border border-transparent bg-transparent px-2 py-1 text-xs font-medium text-neutral-800 transition hover:border-neutral-200 focus:border-neutral-300 focus:bg-white focus:outline-none dark:text-neutral-200 dark:hover:border-neutral-700 dark:focus:border-neutral-600 dark:focus:bg-neutral-800"
-                />
-              </div>
-            </div>
-
-            {/* Quick Role Suggestions Chips */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {ROLE_SUGGESTIONS.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRole(r)}
-                  className={cn(
-                    "rounded-md px-2 py-0.5 text-[10px] font-medium transition",
-                    role === r
-                      ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                      : "bg-neutral-200/70 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700"
-                  )}
+          <div className="space-y-3">
+            <AgentConfigSection defaultOpen icon={Layers} title="Identidade">
+              <div className="space-y-3">
+                <label
+                  htmlFor="agent-name"
+                  className="block text-xs text-neutral-500 dark:text-neutral-400"
                 >
-                  {r}
-                </button>
-              ))}
-            </div>
-
-            {/* Propriedade: Provedor & Modelo de IA */}
-            <div className="flex flex-col gap-1.5 pt-1">
-              <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                <Cpu size={13} className="text-neutral-400" />
-                <span>Modelo de IA</span>
-              </div>
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                {/* Provider Selector */}
-                <select
-                  value={provider}
-                  onChange={(e) => handleProviderChange(e.target.value)}
-                  className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-800 transition hover:border-neutral-300 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                >
-                  {PROVIDERS.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Model Selector */}
-                <select
-                  value={modelName}
-                  onChange={(e) => setModelName(e.target.value)}
-                  className="min-w-[180px] cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-800 transition hover:border-neutral-300 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                >
-                  {availableModels.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Propriedade: Ferramentas / Capacidades */}
-            <div className="flex flex-col gap-1.5 pt-1">
-              <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                <Sparkles size={13} className="text-neutral-400" />
-                <span>Ferramentas</span>
-              </div>
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                {CAPABILITIES.map((cap) => {
-                  const Icon = cap.icon;
-                  const isEnabled = tools.includes(cap.id);
-                  return (
-                    <button
-                      key={cap.id}
-                      type="button"
-                      onClick={() => toggleTool(cap.id)}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition",
-                        isEnabled
-                          ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
-                          : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600"
-                      )}
-                    >
-                      <Icon size={12} />
-                      <span>{cap.label}</span>
-                      {isEnabled && <Check size={11} className="stroke-[3]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Propriedade: Status Ativo / Inativo */}
-            <div className="flex flex-col gap-1.5 pt-1">
-              <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                <Power size={13} className="text-neutral-400" />
-                <span>Status</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsActive((prev) => !prev)}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition",
-                    isActive
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                      : "border-neutral-200 bg-neutral-100 text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "size-2 rounded-full",
-                      isActive ? "bg-emerald-500" : "bg-neutral-400"
-                    )}
+                  Nome do agente
+                  <input
+                    id="agent-name"
+                    type="text"
+                    autoFocus={!isEditing}
+                    placeholder="Nome do agente"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="mt-1 w-full border-b border-neutral-200 bg-transparent py-1 text-xs font-medium text-neutral-900 outline-none placeholder:text-neutral-300 focus:border-neutral-500 dark:border-neutral-700 dark:text-neutral-50 dark:placeholder:text-neutral-700"
                   />
-                  <span>{isActive ? "Ativo no quadro" : "Pausado / Inativo"}</span>
-                </button>
+                </label>
+                <label className="block text-xs text-neutral-500 dark:text-neutral-400">
+                  Função / papel
+                  <input
+                    type="text"
+                    placeholder="Ex.: Engenheiro de software"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="mt-1 w-full border-b border-neutral-200 bg-transparent py-1 text-xs text-neutral-800 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:text-neutral-200"
+                  />
+                </label>
+                <label className="block text-xs text-neutral-500 dark:text-neutral-400">
+                  Descrição
+                  <input
+                    type="text"
+                    placeholder="Resumo em uma frase do objetivo principal"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="mt-1 w-full border-b border-neutral-200 bg-transparent py-1 text-xs text-neutral-800 outline-none focus:border-neutral-500 dark:border-neutral-700 dark:text-neutral-200"
+                  />
+                </label>
               </div>
-            </div>
+            </AgentConfigSection>
 
-            {/* Propriedade: Descrição Curta */}
-            <div className="flex flex-col gap-1.5 pt-1">
-              <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                <AlignLeft size={13} className="text-neutral-400" />
-                <span>Descrição</span>
+            <AgentConfigSection defaultOpen icon={Cpu} title="Modelo">
+              <select
+                value={selectedLlmConfig?.id ?? ""}
+                disabled={loadingLlmConfigs || llmConfigs.length === 0}
+                onChange={(e) => handleModelChange(e.target.value)}
+                className="w-full cursor-pointer border-b border-neutral-200 bg-transparent py-1 text-xs text-neutral-800 outline-none focus:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200"
+              >
+                <option value="" disabled>
+                  {loadingLlmConfigs
+                    ? "Carregando modelos..."
+                    : llmConfigs.length === 0
+                      ? "Nenhum modelo configurado"
+                      : "Selecione um modelo"}
+                </option>
+                {llmConfigs.map((config) => (
+                  <option key={config.id} value={config.id}>
+                    {config.title} — {config.provider} / {config.model}
+                  </option>
+                ))}
+              </select>
+            </AgentConfigSection>
+
+            <AgentConfigSection icon={Wrench} title="Conectores">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs text-neutral-400">Ferramentas do agente</p>
+                <Link
+                  href="/weave-ai/tools"
+                  className="text-xs text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                >
+                  Gerenciar
+                </Link>
               </div>
-              <input
-                type="text"
-                placeholder="Resumo em uma frase do objetivo principal..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="flex-1 rounded-lg border border-transparent bg-transparent px-2 py-1 text-xs text-neutral-800 transition hover:border-neutral-200 focus:border-neutral-300 focus:bg-white focus:outline-none dark:text-neutral-200 dark:hover:border-neutral-700 dark:focus:border-neutral-600 dark:focus:bg-neutral-800"
-              />
-            </div>
+              {loadingCustomTools ? (
+                <div className="flex items-center gap-1.5 py-1 text-xs text-neutral-400">
+                  <Loader2 size={12} className="animate-spin" /> Carregando conectores...
+                </div>
+              ) : customTools.length === 0 ? (
+                <p className="text-xs text-neutral-400">Nenhum conector configurado.</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {customTools.map((tool) => {
+                    const isEnabled = tools.includes(tool.id);
+                    return (
+                      <button
+                        key={tool.id}
+                        type="button"
+                        title={tool.description || tool.webhook_url}
+                        onClick={() => toggleTool(tool.id)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-1 py-0.5 text-xs transition",
+                          isEnabled
+                            ? "text-neutral-900 dark:text-neutral-50"
+                            : "text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "size-1.5 rounded-full",
+                            isEnabled ? "bg-emerald-500" : "bg-neutral-300 dark:bg-neutral-700"
+                          )}
+                        />
+                        <span>{tool.name}</span>
+                        {isEnabled && <Check size={11} className="stroke-[3]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {tools
+                .filter((toolId) => !customTools.some((tool) => tool.id === toolId))
+                .map((toolId) => (
+                  <button
+                    key={toolId}
+                    type="button"
+                    onClick={() => toggleTool(toolId)}
+                    className="mt-1 text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400"
+                  >
+                    Remover conector não encontrado: {toolId}
+                  </button>
+                ))}
+            </AgentConfigSection>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200/80 pt-3 dark:border-neutral-800">
+            <AgentConfigSection icon={Power} title="Disponibilidade">
+              <button
+                type="button"
+                onClick={() => setIsActive((prev) => !prev)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 text-xs transition",
+                  isActive
+                    ? "text-emerald-700 dark:text-emerald-300"
+                    : "text-neutral-500 dark:text-neutral-400"
+                )}
+              >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    isActive ? "bg-emerald-500" : "bg-neutral-400"
+                  )}
+                />
+                <span>{isActive ? "Ativo no quadro" : "Pausado / Inativo"}</span>
+              </button>
+            </AgentConfigSection>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
               <div className="flex items-center gap-1">
                 {isEditing && (
                   <>
                     {confirmDelete ? (
-                      <div className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 dark:border-rose-900/40 dark:bg-rose-950/30">
-                        <span className="text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                      <div className="flex items-center gap-1.5 bg-rose-50 px-2 py-1 dark:bg-rose-950/30">
+                        <span className="text-xs font-medium text-rose-600 dark:text-rose-400">
                           Excluir?
                         </span>
                         <button
                           type="button"
                           disabled={isDeleting}
                           onClick={handleDelete}
-                          className="rounded bg-rose-600 px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-rose-700"
+                          className="rounded bg-rose-600 px-2 py-0.5 text-xs font-semibold text-white hover:bg-rose-700"
                         >
                           {isDeleting ? <Loader2 size={11} className="animate-spin" /> : "Sim"}
                         </button>
                         <button
                           type="button"
                           onClick={() => setConfirmDelete(false)}
-                          className="text-[10px] text-neutral-500 hover:text-neutral-800"
+                          className="text-xs text-neutral-500 hover:text-neutral-800"
                         >
                           Não
                         </button>
@@ -613,164 +503,23 @@ export default function AgentForm({ onCancel, agent, onSuccess }: AgentFormProps
           {/* INSTRUCTIONS / PROMPT DOCUMENT EDITOR (O Corpo da "Nota")              */}
           {/* ===================================================================== */}
           <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-2">
                 <FileText size={15} className="text-brand-primary-500" />
-                <h3 className="text-xs font-semibold tracking-wider text-neutral-600 uppercase dark:text-neutral-300">
+                <h3 className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">
                   Instruções de Sistema (Prompt)
                 </h3>
               </div>
-
-              {/* Templates Quick Pick */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] text-neutral-400">Modelos:</span>
-                {Object.entries(PROMPT_TEMPLATES).map(([key, tpl]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => applyTemplate(key)}
-                    className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-medium text-neutral-600 transition hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-neutral-500"
-                  >
-                    <Wand2 size={10} />
-                    <span>{tpl.label}</span>
-                  </button>
-                ))}
-              </div>
             </div>
 
-            {/* Formatting Toolbar & Mode Tabs */}
-            <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 dark:border-neutral-800 dark:bg-neutral-900/60">
-              {/* Formatting Tools */}
-              <div className="flex items-center gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("**", "**")}
-                  title="Negrito"
-                  className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  <Bold size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("*", "*")}
-                  title="Itálico"
-                  className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  <Italic size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("# ")}
-                  title="Título H1"
-                  className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  <Heading1 size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("## ")}
-                  title="Título H2"
-                  className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  <Heading2 size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("- ")}
-                  title="Lista com marcadores"
-                  className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  <List size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("1. ")}
-                  title="Lista numerada"
-                  className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  <ListOrdered size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("```\n", "\n```")}
-                  title="Bloco de código"
-                  className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  <Code size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("> ")}
-                  title="Citação"
-                  className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                >
-                  <Quote size={13} />
-                </button>
-              </div>
-
-              {/* Edit / Preview Tabs */}
-              <div className="flex items-center gap-1 rounded-lg bg-neutral-200/70 p-0.5 dark:bg-neutral-800">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("write")}
-                  className={cn(
-                    "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition",
-                    activeTab === "write"
-                      ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
-                      : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-                  )}
-                >
-                  <Edit3 size={11} />
-                  <span>Escrever</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("preview")}
-                  className={cn(
-                    "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition",
-                    activeTab === "preview"
-                      ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
-                      : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-                  )}
-                >
-                  <Eye size={11} />
-                  <span>Visualizar</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Editor Writing Area */}
-            {activeTab === "write" ? (
-              <div className="relative">
-                <textarea
-                  ref={textareaRef}
-                  rows={12}
-                  maxLength={4000}
-                  placeholder="Escreva como em uma nota: defina quem é o agente, suas diretrizes, regras de formatação, tom de resposta e restrições...&#10;&#10;Exemplo:&#10;# Persona&#10;Você é um assistente sênior...&#10;&#10;## Regras&#10;1. Seja claro e conciso.&#10;2. Use código sempre que apropriado."
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  className="w-full resize-y rounded-xl border border-neutral-200 bg-white p-4 font-mono text-xs leading-relaxed text-neutral-900 placeholder:text-neutral-300 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 focus:outline-none dark:border-neutral-800 dark:bg-neutral-900/90 dark:text-neutral-100 dark:placeholder:text-neutral-700 dark:focus:border-white dark:focus:ring-white"
-                />
-                <div className="mt-1 flex items-center justify-between text-[11px] text-neutral-400">
-                  <span>Dica: Use markdown para estruturar personas e regras.</span>
-                  <span className={cn(instructions.length > 3800 && "font-medium text-rose-500")}>
-                    {instructions.length} / 4000
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="min-h-[250px] rounded-xl border border-neutral-200 bg-neutral-50/50 p-5 dark:border-neutral-800 dark:bg-neutral-900/50">
-                {instructions.trim() ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none font-sans text-xs leading-relaxed whitespace-pre-wrap text-neutral-800 dark:text-neutral-200">
-                    {instructions}
-                  </div>
-                ) : (
-                  <div className="flex h-36 items-center justify-center text-xs text-neutral-400">
-                    Nenhuma instrução escrita para visualizar.
-                  </div>
-                )}
-              </div>
-            )}
+            <AgentPromptEditor
+              document={promptDocument}
+              version={promptEditorVersion}
+              onChange={setPromptDocument}
+            />
+            <p className="text-xs text-neutral-400">
+              O agente recebe este documento como Markdown estruturado.
+            </p>
           </div>
         </div>
       </div>

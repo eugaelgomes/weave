@@ -174,18 +174,36 @@ function formatAgentResponse(rawAgent) {
     rawAgent.shared_with && typeof rawAgent.shared_with === "string"
       ? safeJsonParse(rawAgent.shared_with, [])
       : rawAgent.shared_with || [];
+  const behavior = personality.behavior || {};
+  const systemInstructions = behavior.system_instructions || {};
+  const metadata = personality.metadata || {};
+  const persona = personality.persona || {};
+  const capabilities = personality.capabilities || {};
 
   return {
+    avatar_url: personality.avatar_url || metadata.avatar_url || undefined,
     created_at: rawAgent.created_at,
-    description: rawAgent.description || personality?.metadata?.description || null,
+    description: rawAgent.description || personality?.metadata?.description || "",
     id: rawAgent.id,
+    instructions: personality.instructions || systemInstructions.context || "",
+    instructions_document: Array.isArray(personality.instructions_document)
+      ? personality.instructions_document
+      : [],
     is_active: rawAgent.is_active !== false,
+    is_public: false,
     knowledge_files: knowledgeFiles,
+    language: personality.language || persona.language || "pt-BR",
+    model_name: personality.model_name || metadata.model_name || "",
+    model_provider: personality.model_provider || metadata.model_provider || "",
     name: rawAgent.name || personality?.metadata?.name || "Unnamed Agent",
     personality,
     project_id: rawAgent.project_id || null,
     project_title: rawAgent.project_title || null,
+    role: personality.role || persona.role || "",
     shared_with: sharedWith,
+    tags: personality.tags || metadata.tags || [],
+    tone: personality.tone || persona.tone || "professional",
+    tools: personality.tools || capabilities.tools || [],
     updated_at: rawAgent.updated_at,
     user_id: rawAgent.user_id,
   };

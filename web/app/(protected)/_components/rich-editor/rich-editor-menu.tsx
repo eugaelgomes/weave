@@ -7,24 +7,31 @@ import { RichEditorFormatToolbar } from "@/app/(protected)/_components/rich-edit
 
 interface RichEditorBubbleMenuProps {
   editor: Editor;
+  mediaEnabled?: boolean;
 }
 
-export function RichEditorBubbleMenu({ editor }: RichEditorBubbleMenuProps) {
+export function RichEditorBubbleMenu({ editor, mediaEnabled }: RichEditorBubbleMenuProps) {
   return (
     <BubbleMenu editor={editor} options={{ placement: "top", offset: 8 }} className="z-50">
-      <RichEditorFormatToolbar editor={editor} variant="bubble" />
+      <RichEditorFormatToolbar editor={editor} variant="bubble" mediaEnabled={mediaEnabled} />
     </BubbleMenu>
   );
 }
 
 interface RichEditorFloatingMenuProps {
   editor: Editor;
+  mediaEnabled?: boolean;
 }
 
-export function RichEditorFloatingMenu({ editor }: RichEditorFloatingMenuProps) {
+export function RichEditorFloatingMenu({ editor, mediaEnabled }: RichEditorFloatingMenuProps) {
   return (
     <FloatingMenu editor={editor} options={{ placement: "left-start", offset: 8 }} className="z-50">
-      <RichEditorFormatToolbar editor={editor} variant="floating" density="compact" />
+      <RichEditorFormatToolbar
+        editor={editor}
+        variant="floating"
+        density="compact"
+        mediaEnabled={mediaEnabled}
+      />
     </FloatingMenu>
   );
 }

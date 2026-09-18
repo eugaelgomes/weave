@@ -1,6 +1,7 @@
 const agentsService = require("../../services/agents/agents-management.service");
 const { AppError } = require("@/errors");
 const agentsRepository = require("../../repositories/agents/agents-management.repository");
+const { formatAgentResponse } = require("../../utils/normalize");
 const BaseController = require("../base.controller");
 
 class AgentsManagementController extends BaseController {
@@ -11,7 +12,7 @@ class AgentsManagementController extends BaseController {
       this._ensureWorkspacePermission(workspace, this._workspacePermissions.MANAGE_WEAVE_AI);
 
       const agent = await agentsService.createAgent(userId, req.body);
-      res.status(201).json({ data: agent, success: true });
+      res.status(201).json({ data: { agent: formatAgentResponse(agent) }, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -26,7 +27,7 @@ class AgentsManagementController extends BaseController {
       if (req.query.search) filters.search = req.query.search;
 
       const agents = await agentsService.listUserAgents(userId, filters);
-      res.json({ data: agents, success: true });
+      res.json({ data: { agents: agents.map(formatAgentResponse) }, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -40,7 +41,7 @@ class AgentsManagementController extends BaseController {
       if (!agent) {
         throw AppError.notFound("Agent not found");
       }
-      res.json({ data: agent, success: true });
+      res.json({ data: { agent: formatAgentResponse(agent) }, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -57,7 +58,7 @@ class AgentsManagementController extends BaseController {
       if (!agent) {
         throw AppError.notFound("Agent not found");
       }
-      res.json({ data: agent, success: true });
+      res.json({ data: { agent: formatAgentResponse(agent) }, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -88,7 +89,7 @@ class AgentsManagementController extends BaseController {
       if (!agent) {
         throw AppError.notFound("Agent not found");
       }
-      res.json({ data: agent, success: true });
+      res.json({ data: { agent: formatAgentResponse(agent) }, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -106,7 +107,7 @@ class AgentsManagementController extends BaseController {
       if (!agent) {
         throw AppError.notFound("Agent not found or you don't have permission");
       }
-      res.json({ data: agent, success: true });
+      res.json({ data: { agent: formatAgentResponse(agent) }, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }
@@ -124,7 +125,7 @@ class AgentsManagementController extends BaseController {
       if (!agent) {
         throw AppError.notFound("Agent not found");
       }
-      res.json({ data: agent, success: true });
+      res.json({ data: { agent: formatAgentResponse(agent) }, success: true });
     } catch (error) {
       next(fromUnknown(error));
     }

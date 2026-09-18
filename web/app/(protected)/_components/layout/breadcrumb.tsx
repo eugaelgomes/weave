@@ -65,7 +65,7 @@ const Breadcrumb = () => {
   return (
     <nav
       aria-label={t.nav.breadcrumbNav}
-      className="mb-3 flex items-center gap-2 overflow-x-auto sm:mb-4"
+      className="mb-2 flex items-center gap-2 overflow-x-auto sm:mb-3"
     >
       {/* Home Link */}
       <Link

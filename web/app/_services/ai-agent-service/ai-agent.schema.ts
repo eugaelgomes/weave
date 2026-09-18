@@ -97,6 +97,7 @@ export const AgentSchema = z
     name: z.string(),
     description: z.string(),
     instructions: z.string(),
+    instructions_document: z.array(z.unknown()).optional(),
     role: z.string().optional(),
     tone: z.string().optional(),
     language: z.string().optional(),

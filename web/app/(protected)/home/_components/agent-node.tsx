@@ -263,7 +263,7 @@ export default function AgentNode({ agent, onEdit }: AgentNodeProps) {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/weave-ai/agents/${agent.id}`);
+              router.push(`/agents/${agent.id}`);
             }}
             title="Abrir página completa do agente"
             className="flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-600 shadow-sm transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"

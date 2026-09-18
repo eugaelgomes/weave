@@ -46,6 +46,7 @@ export type RichTextEditorProps = {
   uploadImages?: (files: File[]) => Promise<string[]>;
   autosave?: boolean;
   showSaveStatus?: boolean;
+  mediaEnabled?: boolean;
   className?: string;
 };
 
@@ -78,6 +79,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       uploadImages,
       autosave = Boolean(onSave),
       showSaveStatus = Boolean(onSave),
+      mediaEnabled = true,
       className,
     },
     ref
@@ -217,7 +219,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           const data = event.clipboardData;
           if (!data) return false;
           const imageFiles = getClipboardImagesForUpload(data);
-          if (!imageFiles || imageFiles.length === 0) return false;
+          if (!mediaEnabled || !imageFiles || imageFiles.length === 0) return false;
 
           event.preventDefault();
 
@@ -259,17 +261,22 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       if (!editor || editor.isDestroyed) return;
       const bridge = (
         editor.storage as {
-          richEditorUiBridge?: { uploadDocumentImages: typeof uploadImages | null };
+          richEditorUiBridge?: {
+            mediaEnabled: boolean;
+            uploadDocumentImages: typeof uploadImages | null;
+          };
         }
       ).richEditorUiBridge;
       if (!bridge) return;
+      bridge.mediaEnabled = mediaEnabled;
       bridge.uploadDocumentImages = uploadImages ?? null;
       return () => {
         if (!editor.isDestroyed) {
+          bridge.mediaEnabled = true;
           bridge.uploadDocumentImages = null;
         }
       };
-    }, [editor, uploadImages]);
+    }, [editor, mediaEnabled, uploadImages]);
 
     useEffect(() => {
       if (!editable || !onSave) return;
@@ -351,8 +358,8 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
             : "tiptap-editor-wrapper relative"
         }
       >
-        {editable && <RichEditorBubbleMenu editor={editor} />}
-        {editable && <RichEditorFloatingMenu editor={editor} />}
+        {editable && <RichEditorBubbleMenu editor={editor} mediaEnabled={mediaEnabled} />}
+        {editable && <RichEditorFloatingMenu editor={editor} mediaEnabled={mediaEnabled} />}
         {editable && <TiptapDragHandle editor={editor} />}
 
         <EditorContent editor={editor} />

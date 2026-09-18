@@ -216,6 +216,8 @@ export const API_ENDPOINTS = {
 
   // Agents
   AGENTS: "/weave-ai/agents",
+  AGENTS_LLMS: "/weave-ai/agents/llms",
+  AGENTS_TOOLS: "/weave-ai/agents/tools",
   AGENTS_PROVIDERS: "/weave-ai/agents/providers",
   AGENT_BY_ID: (id: string) => `/weave-ai/agents/${id}`,
   AGENT_SHARE: (id: string) => `/weave-ai/agents/${id}/share`,

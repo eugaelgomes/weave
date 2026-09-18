@@ -30,7 +30,10 @@ import {
 import clsx from "clsx";
 import { toast } from "sonner";
 import { CODE_BLOCK_LANGUAGE_OPTIONS } from "@/app/(protected)/_components/rich-editor/rich-editor-code-languages";
-import { getRichEditorImageUploader } from "@/app/(protected)/_components/rich-editor/rich-editor-bridge";
+import {
+  getRichEditorImageUploader,
+  isRichEditorMediaEnabled,
+} from "@/app/(protected)/_components/rich-editor/rich-editor-bridge";
 
 const INLINE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const INLINE_IMAGE_TYPES = new Set([
@@ -51,6 +54,7 @@ export interface RichEditorFormatToolbarProps {
   slashRange?: Range | null;
   /** Tighter layout for floating menu or narrow slash popup */
   density?: "default" | "compact";
+  mediaEnabled?: boolean;
   /** Called after a toolbar action (e.g. close slash suggestion) */
   onAfterAction?: () => void;
 }
@@ -108,6 +112,7 @@ export function RichEditorFormatToolbar({
   variant,
   slashRange,
   density = "default",
+  mediaEnabled: mediaEnabledProp,
   onAfterAction,
 }: RichEditorFormatToolbarProps) {
   const [showLinkInput, setShowLinkInput] = useState(false);
@@ -117,6 +122,7 @@ export function RichEditorFormatToolbar({
   const imageFileInputRef = useRef<HTMLInputElement>(null);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const uploadDocumentImages = getRichEditorImageUploader(editor);
+  const mediaEnabled = mediaEnabledProp ?? isRichEditorMediaEnabled(editor);
 
   const compact = density === "compact" || variant === "floating";
 
@@ -522,73 +528,79 @@ export function RichEditorFormatToolbar({
         <Minus size={iconSize} />
       </MenuButton>
 
-      <input
-        ref={imageFileInputRef}
-        type="file"
-        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
-        multiple
-        className="sr-only"
-        tabIndex={-1}
-        onChange={(e) => void handleImageFilesSelected(e.target.files)}
-      />
+      {mediaEnabled && (
+        <>
+          <input
+            ref={imageFileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+            multiple
+            className="sr-only"
+            tabIndex={-1}
+            onChange={(e) => void handleImageFilesSelected(e.target.files)}
+          />
 
-      <MenuButton
-        compact={compact}
-        disabled={imageUploading || !uploadDocumentImages}
-        onClick={() => imageFileInputRef.current?.click()}
-        isActive={false}
-        title={
-          uploadDocumentImages ? "Carregar imagem do computador" : "Carregar imagem (indisponível)"
-        }
-      >
-        {imageUploading ? (
-          <Loader2 size={iconSize} className="animate-spin" />
-        ) : (
-          <Upload size={iconSize} />
-        )}
-      </MenuButton>
+          <MenuButton
+            compact={compact}
+            disabled={imageUploading || !uploadDocumentImages}
+            onClick={() => imageFileInputRef.current?.click()}
+            isActive={false}
+            title={
+              uploadDocumentImages
+                ? "Carregar imagem do computador"
+                : "Carregar imagem (indisponível)"
+            }
+          >
+            {imageUploading ? (
+              <Loader2 size={iconSize} className="animate-spin" />
+            ) : (
+              <Upload size={iconSize} />
+            )}
+          </MenuButton>
 
-      <MenuButton
-        compact={compact}
-        onClick={() => {
-          const raw =
-            typeof window !== "undefined" ? window.prompt("URL da imagem (https://…):") : null;
-          const trimmed = raw?.trim();
-          if (!trimmed) return;
-          const src = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-          insertImageUrls([src]);
-        }}
-        isActive={false}
-        title="Imagem por URL"
-      >
-        <ImageIcon size={iconSize} />
-      </MenuButton>
+          <MenuButton
+            compact={compact}
+            onClick={() => {
+              const raw =
+                typeof window !== "undefined" ? window.prompt("URL da imagem (https://…):") : null;
+              const trimmed = raw?.trim();
+              if (!trimmed) return;
+              const src = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+              insertImageUrls([src]);
+            }}
+            isActive={false}
+            title="Imagem por URL"
+          >
+            <ImageIcon size={iconSize} />
+          </MenuButton>
 
-      <input
-        ref={videoFileInputRef}
-        type="file"
-        accept="video/mp4,video/webm,video/quicktime,video/ogg"
-        multiple
-        className="sr-only"
-        tabIndex={-1}
-        onChange={(e) => void handleVideoFilesSelected(e.target.files)}
-      />
+          <input
+            ref={videoFileInputRef}
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime,video/ogg"
+            multiple
+            className="sr-only"
+            tabIndex={-1}
+            onChange={(e) => void handleVideoFilesSelected(e.target.files)}
+          />
 
-      <MenuButton
-        compact={compact}
-        disabled={videoUploading || !uploadDocumentImages}
-        onClick={() => videoFileInputRef.current?.click()}
-        isActive={false}
-        title={
-          uploadDocumentImages ? "Carregar vídeo (máx. 25 MB)" : "Carregar vídeo (indisponível)"
-        }
-      >
-        {videoUploading ? (
-          <Loader2 size={iconSize} className="animate-spin" />
-        ) : (
-          <Video size={iconSize} />
-        )}
-      </MenuButton>
+          <MenuButton
+            compact={compact}
+            disabled={videoUploading || !uploadDocumentImages}
+            onClick={() => videoFileInputRef.current?.click()}
+            isActive={false}
+            title={
+              uploadDocumentImages ? "Carregar vídeo (máx. 25 MB)" : "Carregar vídeo (indisponível)"
+            }
+          >
+            {videoUploading ? (
+              <Loader2 size={iconSize} className="animate-spin" />
+            ) : (
+              <Video size={iconSize} />
+            )}
+          </MenuButton>
+        </>
+      )}
     </div>
   );
 }
