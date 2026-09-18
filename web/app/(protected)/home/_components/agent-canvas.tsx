@@ -1,17 +1,22 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { ZoomIn, ZoomOut, RotateCcw, MousePointer, Hand, Grid } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, MousePointer, Hand, Grid, Plus, Bot } from "lucide-react";
 import { useTheme } from "@/app/_contexts/theme-context";
+import { useAgent, type Agent } from "@/app/_contexts/agent-context";
 import { cn } from "@/lib/utils";
+import AgentNode from "./agent-node";
+import { useRouter } from "next/navigation";
 
 type ToolType = "select" | "hand";
 
-export default function FigmaBoard() {
+export default function AgentCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
+  const { agents, loading, loadAgents } = useAgent();
+  const router = useRouter();
 
-  // Canvas Pan & Zoom State
+  // Canvas Pan & Zoom State (horizontal pan is locked to 0)
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [activeTool, setActiveTool] = useState<ToolType>("select");
@@ -21,7 +26,12 @@ export default function FigmaBoard() {
 
   const dragStartRef = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
 
-  // Spacebar toggle for Figma Hand Tool
+  // Load agents on mount
+  useEffect(() => {
+    loadAgents();
+  }, [loadAgents]);
+
+  // Spacebar toggle for Hand Tool
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -57,11 +67,10 @@ export default function FigmaBoard() {
 
       if (clientCenter && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        const mouseX = clientCenter.x - rect.left;
         const mouseY = clientCenter.y - rect.top;
 
         setPan((prevPan) => ({
-          x: mouseX - (mouseX - prevPan.x) * (newZoom / prevZoom),
+          x: 0,
           y: mouseY - (mouseY - prevPan.y) * (newZoom / prevZoom),
         }));
       }
@@ -75,7 +84,7 @@ export default function FigmaBoard() {
     setZoom(1);
   }, []);
 
-  // Handle Wheel (Zoom & Pan like Figma)
+  // Handle Wheel (Zoom & Vertical Pan strictly like canvas)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -88,9 +97,9 @@ export default function FigmaBoard() {
         const zoomDelta = -e.deltaY * 0.003;
         handleZoom(zoomDelta, { x: e.clientX, y: e.clientY });
       } else {
-        // Regular wheel pans canvas
+        // Regular wheel pans canvas strictly vertically
         setPan((prev) => ({
-          x: prev.x - e.deltaX,
+          x: 0,
           y: prev.y - e.deltaY,
         }));
       }
@@ -100,16 +109,20 @@ export default function FigmaBoard() {
     return () => container.removeEventListener("wheel", onWheel);
   }, [handleZoom]);
 
-  // Mouse Down
+  // Mouse Down: start vertical panning (ignore interactive targets)
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only primary or middle button
     if (e.button !== 0 && e.button !== 1) return;
+
+    const target = e.target as HTMLElement;
+    if (target.closest("button, a, input, textarea, select, [data-canvas-interactive]")) {
+      return;
+    }
 
     setIsPanning(true);
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-      panX: pan.x,
+      panX: 0,
       panY: pan.y,
     };
   };
@@ -118,11 +131,10 @@ export default function FigmaBoard() {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isPanning || !dragStartRef.current) return;
 
-    const deltaX = e.clientX - dragStartRef.current.x;
     const deltaY = e.clientY - dragStartRef.current.y;
 
     setPan({
-      x: dragStartRef.current.panX + deltaX,
+      x: 0,
       y: dragStartRef.current.panY + deltaY,
     });
   };
@@ -131,6 +143,15 @@ export default function FigmaBoard() {
   const handleMouseUp = () => {
     setIsPanning(false);
     dragStartRef.current = null;
+  };
+
+  // Open modal handlers
+  const handleCreateAgent = () => {
+    router.push("/agents/new");
+  };
+
+  const handleEditAgent = (agent: Agent) => {
+    router.push(`/agents/${agent.id}`);
   };
 
   const cursorClass = isPanning
@@ -159,13 +180,85 @@ export default function FigmaBoard() {
           ? {
               backgroundImage: `radial-gradient(circle, ${dotColor} 1.25px, transparent 1.25px)`,
               backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
-              backgroundPosition: `${pan.x}px ${pan.y}px`,
+              backgroundPosition: `0px ${pan.y}px`,
             }
           : undefined
       }
     >
       {/* ========================================================================= */}
-      {/* BOTTOM BAR (Barra Inferior Estilo Figma / FigJam)                          */}
+      {/* CANVAS TRANSFORMED LAYER (Agentes renderizados no quadro pontilhado)      */}
+      {/* ========================================================================= */}
+      <div
+        className="pointer-events-none absolute inset-0 flex justify-center"
+        style={{
+          transform: `translate3d(0px, ${pan.y}px, 0px) scale(${zoom})`,
+          transformOrigin: "50% 0px",
+        }}
+      >
+        <div className="pointer-events-auto w-full max-w-6xl px-8 py-16">
+          {/* Canvas Section Indicator */}
+          <div className="mb-8 flex flex-col items-center justify-center text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200/90 bg-white/90 px-3.5 py-1.5 shadow-sm backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/90">
+              <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
+              <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                Quadro de Agentes
+              </span>
+              <span className="text-neutral-300 dark:text-neutral-700">·</span>
+              <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                {agents.length} {agents.length === 1 ? "agente" : "agentes"}
+              </span>
+            </div>
+          </div>
+
+          {/* Loading Skeleton */}
+          {loading && agents.length === 0 && (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-64 animate-pulse rounded-2xl border border-neutral-200/60 bg-white/60 p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/50"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && agents.length === 0 && (
+            <div className="mx-auto flex max-w-md flex-col items-center rounded-3xl border border-dashed border-neutral-300 bg-white/85 p-10 text-center shadow-lg backdrop-blur-md dark:border-neutral-700 dark:bg-neutral-900/85">
+              <div className="flex size-14 items-center justify-center rounded-2xl bg-neutral-900 text-white shadow-md dark:bg-white dark:text-neutral-900">
+                <Bot size={28} />
+              </div>
+              <h3 className="mt-4 text-base font-semibold text-neutral-900 dark:text-neutral-50">
+                Nenhum agente no quadro
+              </h3>
+              <p className="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                Crie agentes inteligentes com instruções e ferramentas personalizadas para organizar
+                seu fluxo de trabalho.
+              </p>
+              <button
+                type="button"
+                onClick={handleCreateAgent}
+                className="mt-6 flex items-center gap-2 rounded-xl bg-neutral-900 px-5 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-neutral-800 active:scale-95 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
+              >
+                <Plus size={15} className="stroke-[2.5]" />
+                <span>Criar Primeiro Agente</span>
+              </button>
+            </div>
+          )}
+
+          {/* Agents Grid */}
+          {agents.length > 0 && (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {agents.map((agent) => (
+                <AgentNode key={agent.id} agent={agent} onEdit={handleEditAgent} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* BOTTOM BAR (Barra Inferior Estilo Quadro)                          */}
       {/* ========================================================================= */}
       <div className="pointer-events-none absolute bottom-4 left-1/2 z-40 -translate-x-1/2">
         <div className="pointer-events-auto flex items-center gap-1 rounded-xl border border-neutral-200/90 bg-white/90 p-1 shadow-lg shadow-black/5 backdrop-blur-md dark:border-neutral-700/80 dark:bg-neutral-900/90 dark:shadow-black/40">
@@ -227,6 +320,19 @@ export default function FigmaBoard() {
           >
             <RotateCcw size={14} />
           </button>
+
+          <div className="mx-0.5 h-4 w-px bg-neutral-200 dark:bg-neutral-700" />
+
+          {/* + Novo Agente Button (Opção 1) */}
+          <button
+            type="button"
+            onClick={handleCreateAgent}
+            title="Adicionar Novo Agente"
+            className="flex items-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-neutral-800 active:scale-95 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
+          >
+            <Plus size={14} className="stroke-[2.5]" />
+            <span>Novo Agente</span>
+          </button>
         </div>
       </div>
 
@@ -263,6 +369,7 @@ export default function FigmaBoard() {
           </button>
         </div>
       </div>
+
     </div>
   );
 }

@@ -65,12 +65,12 @@ const Breadcrumb = () => {
   return (
     <nav
       aria-label={t.nav.breadcrumbNav}
-      className="mb-3 flex items-center gap-2 overflow-x-auto rounded-md border border-neutral-800 bg-neutral-900/50 px-3 py-2 backdrop-blur-sm sm:mb-4 sm:px-4"
+      className="mb-3 flex items-center gap-2 overflow-x-auto sm:mb-4"
     >
       {/* Home Link */}
       <Link
         href={`${workspacePrefix}/home`}
-        className="group hover:text-brand-primary-500 flex items-center gap-1.5 rounded-md px-2 py-1 text-neutral-400 transition-all hover:bg-neutral-800/50"
+        className="group hover:text-brand-primary-500 dark:hover:text-brand-primary-500 flex items-center gap-1.5 text-neutral-500 transition-all dark:text-neutral-400"
         aria-label={t.nav.breadcrumbHome}
       >
         <Home className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
@@ -81,17 +81,17 @@ const Breadcrumb = () => {
       {breadcrumbs.map((crumb) => (
         <React.Fragment key={crumb.path}>
           {/* Separador > */}
-          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-neutral-600" />
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-neutral-400 dark:text-neutral-600" />
 
           {/* Item */}
           {crumb.isLast ? (
-            <span className="bg-brand-primary-500/10 text-brand-primary-500 truncate rounded-md px-2.5 py-1 text-xs font-semibold">
+            <span className="text-brand-primary-600 dark:text-brand-primary-500 truncate text-xs font-semibold">
               {crumb.label}
             </span>
           ) : (
             <Link
               href={crumb.path}
-              className="truncate rounded-md px-2.5 py-1 text-xs font-medium text-neutral-400 transition-all hover:bg-neutral-800/50 hover:text-neutral-200"
+              className="truncate text-xs font-medium text-neutral-500 transition-all hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
             >
               {crumb.label}
             </Link>

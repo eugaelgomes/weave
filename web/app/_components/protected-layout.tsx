@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 import Navbar from "@/app/(protected)/_components/layout/navbar";
 import SettingsModal from "@/app/(protected)/_components/modals/settings/settings-modal";
+import Breadcrumb from "@/app/(protected)/_components/layout/breadcrumb";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -110,6 +111,9 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                   "animate-in fade-in slide-in-from-bottom-2 flex min-h-full w-full min-w-0 flex-1 flex-col duration-500"
                 )}
               >
+                <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+                  <Breadcrumb />
+                </div>
                 {children}
               </div>
             </div>
