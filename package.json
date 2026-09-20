@@ -14,6 +14,9 @@
     "weave": "./bin/create-weave.js"
   },
   "scripts": {
+    "hooks:install": "git config core.hooksPath .githooks",
+    "prepare": "npm run hooks:install",
+    "validate:commit": "node scripts/validate-commit-message.mjs",
     "create-weave": "node ./bin/create-weave.js",
     "deploy": "./scripts/deploy.sh",
     "deploy:engine": "./scripts/deploy.sh engine",
