@@ -1,5 +1,6 @@
 const teamsRepository = require("@/modules/workspaces/repositories/teams.repository");
 const { AppError, fromUnknown } = require("@/errors");
+const { sessionStore } = require("@/middlewares/http/session");
 const WorkspacesBaseController = require("./base-controller");
 
 const SearchUsersRepository = require("@/modules/users/repositories/users.repository");
@@ -467,6 +468,7 @@ class WorkspaceTeamsController extends WorkspacesBaseController {
         normalizedRole,
         userId
       );
+      await sessionStore.destroyUserSessions(memberId);
 
       res.status(200).json({
         data: updated,

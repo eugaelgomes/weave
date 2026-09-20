@@ -1,6 +1,7 @@
 const express = require("express");
 const { authLimiter } = require("@/middlewares/security/request-limiters");
 const { validate } = require("@/middlewares/validation/validate");
+const { verifyToken } = require("@/middlewares/auth/verify-token");
 
 // Controllers
 const ProvidersController = require("./controllers/providers.controller");
@@ -10,6 +11,7 @@ const GithubController = require("./controllers/oauth/github.controller");
 const MicrosoftController = require("./controllers/oauth/microsoft.controller");
 const SamlController = require("./controllers/saml/saml.controller");
 const LogoutController = require("./controllers/logout.controller");
+const SessionsController = require("./controllers/sessions.controller");
 const PasswordController = require("./controllers/password.controller");
 
 // Schemas
@@ -116,6 +118,17 @@ router.post(
 
 // ── Session ──
 router.post("/logout", LogoutController.logout.bind(LogoutController));
+router.get("/sessions", verifyToken, SessionsController.list.bind(SessionsController));
+router.delete(
+  "/sessions/others",
+  verifyToken,
+  SessionsController.revokeOthers.bind(SessionsController)
+);
+router.delete(
+  "/sessions/:sessionId",
+  verifyToken,
+  SessionsController.revoke.bind(SessionsController)
+);
 
 // ── Password Recovery ──
 router.post(

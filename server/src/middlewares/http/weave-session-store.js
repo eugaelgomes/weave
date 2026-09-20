@@ -24,9 +24,9 @@ async function hasMetadataColumns() {
       SELECT column_name
       FROM information_schema.columns
       WHERE table_name = 'sessions'
-        AND column_name = 'user_id'
+        AND column_name IN ('user_id', 'ip_address', 'user_agent', 'api_type', 'last_active')
     `);
-    _hasMetadataColumns = rows.length > 0;
+    _hasMetadataColumns = rows.length === 5;
   } catch {
     _hasMetadataColumns = false;
   }
@@ -126,6 +126,38 @@ class WeaveSessionStore extends PgSessionStore {
 
       if (cb) cb();
     });
+  }
+
+  async listUserSessions(userId) {
+    if (!(await hasMetadataColumns())) return [];
+
+    const { rows } = await pool.query(
+      `
+        SELECT sid, expire, ip_address, user_agent, api_type, last_active
+        FROM sessions
+        WHERE user_id = $1 AND expire > NOW()
+        ORDER BY COALESCE(last_active, expire) DESC
+      `,
+      [userId]
+    );
+    return rows;
+  }
+
+  async destroyOtherUserSessions(userId, currentSessionId) {
+    if (!(await hasMetadataColumns())) return 0;
+
+    const { rowCount } = await pool.query(`DELETE FROM sessions WHERE user_id = $1 AND sid <> $2`, [
+      userId,
+      currentSessionId,
+    ]);
+    return rowCount;
+  }
+
+  async destroyUserSessions(userId) {
+    if (!(await hasMetadataColumns())) return 0;
+
+    const { rowCount } = await pool.query(`DELETE FROM sessions WHERE user_id = $1`, [userId]);
+    return rowCount;
   }
 }
 

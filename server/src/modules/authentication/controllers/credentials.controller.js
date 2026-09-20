@@ -8,6 +8,10 @@ const UserTokensRepository = require("@/modules/users/repositories/user-tokens.r
 const authLogs = require("../utils/auth-logs.util");
 const storageFileUtils = require("@/utils/storage.util");
 const { buildJwtPayload } = require("@/modules/authentication/schemas/session.schema");
+const {
+  establishAuthenticatedSession,
+} = require("@/modules/authentication/utils/session-lifecycle.util");
+const { IDLE_TIMEOUT_MS } = require("@/middlewares/http/session");
 const { mail_login_code } = require("@/services/email/templates/login-code");
 
 const presignObjectFields = storageFileUtils.presignObjectFields;
@@ -31,8 +35,7 @@ class CredentialsController extends AuthBaseController {
 
       const payload = buildJwtPayload(user, workspace, defaultArea);
 
-      req.session.user = payload;
-      req.session.userId = user.user_id;
+      await establishAuthenticatedSession(req, payload, user.user_id);
 
       authLogs.createLog(user.user_id, "auth_login", req, "success");
 
@@ -47,16 +50,9 @@ class CredentialsController extends AuthBaseController {
           })
         : null;
 
-      await new Promise((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) return reject(err);
-          return resolve();
-        });
-      });
-
       return res.status(200).json({
         auth: {
-          expires_in: 12 * 60 * 60,
+          expires_in: IDLE_TIMEOUT_MS / 1000,
           login_time: new Date(),
         },
         message,

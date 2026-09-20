@@ -1,4 +1,5 @@
 const { getCookieDomain, detectSameSitePolicy } = require("@/config/allowed-origins");
+const { SESSION_COOKIE_NAME } = require("@/middlewares/http/session");
 
 /**
  * Session termination (Stateful Session).
@@ -37,6 +38,14 @@ class LogoutController {
         clearOptions.domain = domain;
       }
 
+      // New sessions use a host-only cookie; clear the previous cookie name as
+      // well so deployments do not leave a stale authenticated cookie behind.
+      res.clearCookie(SESSION_COOKIE_NAME, {
+        httpOnly: true,
+        path: "/",
+        sameSite,
+        secure,
+      });
       res.clearCookie("auth.sid", clearOptions);
       res.clearCookie("token", clearOptions);
 

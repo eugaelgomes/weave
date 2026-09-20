@@ -16,6 +16,7 @@ import type {
   SamlSsoDiscoverResponse,
   User,
   AuthProvidersConfig,
+  AuthSession,
 } from "./auth.types";
 import {
   LoginCodeRequestSchema,
@@ -114,6 +115,24 @@ export const startSamlSsoLogin = (workspaceId: string): void => {
 export const logout = async (): Promise<void> => {
   const response = await apiClient.post(API_ENDPOINTS.LOGOUT);
   return await handleResponse<void>(response, { skipSessionInvalidationOn401: true });
+};
+
+export const getAuthSessions = async (): Promise<AuthSession[]> => {
+  const response = await apiClient.get(API_ENDPOINTS.AUTH_SESSIONS);
+  return handleResponse<AuthSession[]>(response, { invalidateSessionOn401: true });
+};
+
+export const revokeAuthSession = async (sessionId: string): Promise<void> => {
+  const response = await apiClient.delete(API_ENDPOINTS.AUTH_SESSION_BY_ID(sessionId));
+  await handleResponse<unknown>(response, { invalidateSessionOn401: true });
+};
+
+export const revokeOtherAuthSessions = async (): Promise<number> => {
+  const response = await apiClient.delete(API_ENDPOINTS.AUTH_SESSIONS_OTHERS);
+  const data = await handleResponse<{ revoked: number }>(response, {
+    invalidateSessionOn401: true,
+  });
+  return data.revoked;
 };
 
 export const getUserData = async (): Promise<User> => {

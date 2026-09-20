@@ -22,6 +22,10 @@ const workspacesMembersRepository = require("@/modules/workspaces/repositories/m
 const workspacesTeamsRepository = require("@/modules/workspaces/repositories/teams.repository");
 const credentialsRepository = require("@/modules/authentication/repositories/credentials.repository");
 const { buildJwtPayload } = require("@/modules/authentication/schemas/session.schema");
+const {
+  establishAuthenticatedSession,
+} = require("@/modules/authentication/utils/session-lifecycle.util");
+const { sessionStore } = require("@/middlewares/http/session");
 
 const {
   delete_account_notification,
@@ -351,6 +355,10 @@ class UsersController extends BaseController {
 
       const { updatedUser, emailPendingValidation, pendingEmail } =
         await UsersService.updateProfile(req.user.userId, currentUser, req.body, req.file, req);
+
+      if (req.body.currentPassword && req.body.newPassword) {
+        await sessionStore.destroyOtherUserSessions(req.user.userId, req.sessionID);
+      }
 
       const mockUserForPresign = { avatar_url: updatedUser.avatar_url };
       const protectedMock = await presignObjectFields(mockUserForPresign, ["avatar_url"], {
@@ -682,8 +690,7 @@ class UsersController extends BaseController {
 
       const payload = buildJwtPayload(user, workspace, defaultArea);
 
-      req.session.user = payload;
-      req.session.userId = user.user_id;
+      await establishAuthenticatedSession(req, payload, user.user_id);
 
       res.status(200).json({
         message: "Switched workspace successfully",

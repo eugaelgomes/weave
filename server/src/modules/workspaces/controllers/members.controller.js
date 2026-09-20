@@ -13,6 +13,7 @@ const { send_workspace_invite } = require("@/services/email/templates/invite-mem
 const { getUserEmailLocale } = require("@/services/email/i18n");
 const teamsRepository = require("../repositories/teams.repository");
 const membersRepository = require("../repositories/members.repository");
+const { sessionStore } = require("@/middlewares/http/session");
 
 class WorkspaceMembersController extends WorkspacesBaseController {
   constructor() {
@@ -63,6 +64,7 @@ class WorkspaceMembersController extends WorkspacesBaseController {
       }
 
       await this.workspacesRepository.updateMemberRole(currentWorkspace.id, memberId, roles);
+      await sessionStore.destroyUserSessions(memberId);
 
       res.status(200).json({
         data: { roles },

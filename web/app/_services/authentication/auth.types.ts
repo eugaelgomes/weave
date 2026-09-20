@@ -69,3 +69,12 @@ export interface AuthProvidersConfig {
   oauth: ("google" | "github" | "microsoft" | string)[];
   saml: boolean;
 }
+
+export interface AuthSession {
+  id: string;
+  current: boolean;
+  expires_at: string;
+  ip_address?: string | null;
+  last_active?: string | null;
+  user_agent?: string | null;
+}

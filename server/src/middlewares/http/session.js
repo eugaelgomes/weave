@@ -3,35 +3,38 @@ const { detectSameSitePolicy } = require("@/config/allowed-origins");
 const { WeaveSessionStore } = require("./weave-session-store");
 
 const isProduction = process.env.NODE_ENV === "production";
-
-// Resolve session cookie domain: COOKIE_DOMAIN → APP_DOMAIN → undefined
-const sessionCookieDomain = isProduction
-  ? process.env.COOKIE_DOMAIN || (process.env.APP_DOMAIN ? `.${process.env.APP_DOMAIN}` : undefined)
-  : undefined;
+const IDLE_TIMEOUT_MS = Number(process.env.SESSION_IDLE_TIMEOUT_MS || 30 * 60 * 1000);
+const ABSOLUTE_TIMEOUT_MS = Number(process.env.SESSION_ABSOLUTE_TIMEOUT_MS || 8 * 60 * 60 * 1000);
+const SESSION_COOKIE_NAME = isProduction ? "__Host-auth.sid" : "auth.sid";
 
 const sameSite = isProduction ? detectSameSitePolicy() : "lax";
 
 const sessionCookie = {
   httpOnly: true,
-  maxAge: 1000 * 60 * 60 * 24,
+  maxAge: IDLE_TIMEOUT_MS,
+  path: "/",
   sameSite,
   secure: isProduction ? true : false,
 };
 
-if (sessionCookieDomain) {
-  sessionCookie.domain = sessionCookieDomain;
-}
+const sessionStore = new WeaveSessionStore();
 
 const sessionConfig = {
   cookie: sessionCookie,
-  name: "auth.sid",
+  name: SESSION_COOKIE_NAME,
   resave: false,
   rolling: true,
   saveUninitialized: false,
   secret: process.env.SESSION_SECRET,
-  store: new WeaveSessionStore(),
+  store: sessionStore,
 };
 
 const sessionMiddleware = session(sessionConfig);
 
-module.exports = { sessionMiddleware };
+module.exports = {
+  ABSOLUTE_TIMEOUT_MS,
+  IDLE_TIMEOUT_MS,
+  SESSION_COOKIE_NAME,
+  sessionMiddleware,
+  sessionStore,
+};

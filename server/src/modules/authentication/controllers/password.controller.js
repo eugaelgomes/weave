@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const { fromUnknown } = require("@/errors");
 const PasswordRepository = require("@/modules/authentication/repositories/password.repository");
 const { mail_rescue_pass } = require("@/services/email/templates/rescue-password");
+const { sessionStore } = require("@/middlewares/http/session");
 
 class PasswordController {
   /**
@@ -91,6 +92,7 @@ class PasswordController {
 
       await PasswordRepository.updateUserPassword(userExists.user_id, hashedPassword);
       await PasswordRepository.deactivateToken(token);
+      await sessionStore.destroyUserSessions(userExists.user_id);
       return res.status(200).json({
         message: "Password updated successfully!",
         status: "OK",

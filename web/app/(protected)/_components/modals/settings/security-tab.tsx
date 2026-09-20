@@ -2,8 +2,8 @@
 
 import React from "react";
 import { SettingsApiTokens } from "./client-tokens-tab";
-import { ShieldCheck } from "lucide-react";
 import { SettingsPageShell } from "@/app/(protected)/_components/modals/settings/_components/settings-page-shell";
+import { SessionManagement } from "./session-management";
 
 export default function SecuritySettingsPage() {
   return (
@@ -15,6 +15,7 @@ export default function SecuritySettingsPage() {
               conforme solicitado pelo usuário.
           */}
           <SettingsApiTokens />
+          <SessionManagement />
         </div>
       </div>
     </SettingsPageShell>

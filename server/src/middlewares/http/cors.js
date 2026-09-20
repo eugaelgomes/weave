@@ -57,8 +57,7 @@ function makeCorsOptions() {
         return cb(null, true);
       }
 
-      const normalized = origin.replace(/\/+$/, "");
-      const ok = matchers.some((fn) => fn(normalized));
+      const ok = isAllowedOrigin(origin, matchers);
 
       if (ok) {
         return cb(null, true);
@@ -68,4 +67,21 @@ function makeCorsOptions() {
   };
 }
 
-module.exports = { makeCorsOptions };
+function isAllowedOrigin(origin, suppliedMatchers) {
+  if (!origin) return false;
+  const normalized = origin.replace(/\/+$/, "");
+  const isDev = process.env.NODE_ENV !== "production";
+  const matchers =
+    suppliedMatchers ||
+    WHITELIST.map(buildMatcher).concat(
+      isDev
+        ? [
+            (candidate) => /^http:\/\/localhost(:\d+)?$/.test(candidate),
+            (candidate) => /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(candidate),
+          ]
+        : []
+    );
+  return matchers.some((fn) => fn(normalized));
+}
+
+module.exports = { isAllowedOrigin, makeCorsOptions };

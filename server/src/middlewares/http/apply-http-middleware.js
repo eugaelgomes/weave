@@ -5,6 +5,8 @@ const cookieParser = require("cookie-parser");
 const { getClientIp } = require("./ip-address");
 const { sessionMiddleware } = require("./session");
 const { sessionTrackerMiddleware } = require("./session-tracker");
+const { sessionLifecycleMiddleware } = require("./session-lifecycle");
+const { csrfOriginMiddleware } = require("@/middlewares/security/csrf-origin");
 const { makeCorsOptions } = require("./cors");
 const { requestIdMiddleware } = require("@/middlewares/request-id");
 const { telemetryMiddleware } = require("./telemetry");
@@ -25,6 +27,7 @@ function configureGlobalMiddlewares(app) {
   app.use(telemetryMiddleware);
   app.use(cookieParser());
   app.use(sessionMiddleware);
+  app.use(sessionLifecycleMiddleware);
   app.use(sessionTrackerMiddleware);
   app.use(storageUrlInterceptorMiddleware);
 
@@ -63,6 +66,7 @@ function configureGlobalMiddlewares(app) {
     }
     return corsMiddleware(req, res, next);
   });
+  app.use(csrfOriginMiddleware);
 
   app.use(
     helmet({

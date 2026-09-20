@@ -149,6 +149,7 @@ export function SettingsApiTokens() {
   const { apiTokens, scopesInfo, loadingTokens, loadApiTokens, generateApiToken, revokeToken } =
     useApiTokens();
   const { workspace } = useWorkspace();
+  const { user } = useAuth();
 
   React.useEffect(() => {
     loadApiTokens();

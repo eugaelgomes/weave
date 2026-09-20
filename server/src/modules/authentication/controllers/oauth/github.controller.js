@@ -8,6 +8,7 @@ const AuthRepository = require("../../repositories/auth.repository");
 
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
+const { establishAuthenticatedSession } = require("../../utils/session-lifecycle.util");
 const { getOauthConfig } = require("../../config/oauth.config");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
@@ -192,24 +193,21 @@ class GithubOauthController extends AuthBaseController {
 
       const payload = buildJwtPayload(user, workspace, defaultTeam);
 
-      req.session.user = payload;
-      req.session.userId = user.user_id;
-
       phase = "session_persistence";
-      req.session.save((err) => {
-        if (err) {
-          console.error("GitHub OAuth session save error:", {
-            code: err.code || null,
-            constraint: err.constraint || err.meta?.target || null,
-            message: err.message,
-            phase,
-          });
-          return res.redirect(
-            `${frontendURL}/auth/?error=auth_failed&provider=github&phase=session_persistence`
-          );
-        }
-        return res.redirect(`${frontendURL}${this._getPostAuthenticationPath(user)}`);
-      });
+      try {
+        await establishAuthenticatedSession(req, payload, user.user_id);
+      } catch (err) {
+        console.error("GitHub OAuth session save error:", {
+          code: err.code || null,
+          constraint: err.constraint || err.meta?.target || null,
+          message: err.message,
+          phase,
+        });
+        return res.redirect(
+          `${frontendURL}/auth/?error=auth_failed&provider=github&phase=session_persistence`
+        );
+      }
+      return res.redirect(`${frontendURL}${this._getPostAuthenticationPath(user)}`);
     } catch (error) {
       console.error("GitHub OAuth callback error:", {
         code: error.code || null,
