@@ -43,9 +43,10 @@ function buildRegistry(user) {
 
   let filteredTools = allTools;
 
-  // Filter tools based on API token scopes natively defined by each tool
-  if (user?.isApiCall && user?.apiToken?.scopes) {
-    const userScopes = user.apiToken.scopes;
+  // API tokens and OAuth grants must both reduce the tool registry to their
+  // explicit scopes. OAuth is the only accepted public MCP credential.
+  const userScopes = user?.isMcpOAuth ? user.oauthScopes : user?.apiToken?.scopes;
+  if (Array.isArray(userScopes)) {
     filteredTools = {};
 
     for (const [toolKey, tool] of Object.entries(allTools)) {

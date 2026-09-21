@@ -88,6 +88,72 @@ model api_tokens {
   @@index([user_id, workspace_id], map: "idx_api_tokens_user_workspace")
 }
 
+model mcp_oauth_clients {
+  client_id                     String                          @id @db.VarChar(255)
+  client_id_issued_at           DateTime                        @default(now()) @db.Timestamptz(6)
+  client_metadata               Json
+  created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  authorization_codes           mcp_oauth_authorization_codes[]
+  access_tokens                 mcp_oauth_access_tokens[]
+  refresh_tokens                mcp_oauth_refresh_tokens[]
+}
+
+model mcp_oauth_authorization_codes {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code_hash      String            @unique @db.VarChar(64)
+  client_id      String            @db.VarChar(255)
+  user_id        String            @db.Uuid
+  workspace_id   String?           @db.Uuid
+  scopes         String[]
+  code_challenge String            @db.VarChar(255)
+  redirect_uri   String
+  resource       String
+  expires_at     DateTime          @db.Timestamptz(6)
+  consumed_at    DateTime?         @db.Timestamptz(6)
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+  client         mcp_oauth_clients @relation(fields: [client_id], references: [client_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_mcp_oauth_authorization_codes_client")
+  user           users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mcp_oauth_authorization_codes_user")
+  workspace      workspaces?       @relation(fields: [workspace_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_mcp_oauth_authorization_codes_workspace")
+
+  @@index([client_id, expires_at], map: "idx_mcp_oauth_authorization_codes_client")
+}
+
+model mcp_oauth_access_tokens {
+  token_id       String            @id @db.Uuid
+  client_id      String            @db.VarChar(255)
+  user_id        String            @db.Uuid
+  workspace_id   String?           @db.Uuid
+  scopes         String[]
+  resource       String
+  expires_at     DateTime          @db.Timestamptz(6)
+  revoked_at     DateTime?         @db.Timestamptz(6)
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+  client         mcp_oauth_clients @relation(fields: [client_id], references: [client_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_mcp_oauth_access_tokens_client")
+  user           users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mcp_oauth_access_tokens_user")
+  workspace      workspaces?       @relation(fields: [workspace_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_mcp_oauth_access_tokens_workspace")
+
+  @@index([user_id, expires_at], map: "idx_mcp_oauth_access_tokens_user")
+}
+
+model mcp_oauth_refresh_tokens {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token_hash     String            @unique @db.VarChar(64)
+  client_id      String            @db.VarChar(255)
+  user_id        String            @db.Uuid
+  workspace_id   String?           @db.Uuid
+  scopes         String[]
+  resource       String
+  expires_at     DateTime          @db.Timestamptz(6)
+  used_at        DateTime?         @db.Timestamptz(6)
+  revoked_at     DateTime?         @db.Timestamptz(6)
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+  client         mcp_oauth_clients @relation(fields: [client_id], references: [client_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_mcp_oauth_refresh_tokens_client")
+  user           users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_mcp_oauth_refresh_tokens_user")
+  workspace      workspaces?       @relation(fields: [workspace_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_mcp_oauth_refresh_tokens_workspace")
+
+  @@index([client_id, expires_at], map: "idx_mcp_oauth_refresh_tokens_client")
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model workspace_settings {
@@ -175,6 +241,9 @@ model workspaces {
   ai_sessions          ai_sessions[]
   api_token_usage_logs api_token_usage_logs[]
   api_tokens           api_tokens[]
+  mcp_oauth_access_tokens       mcp_oauth_access_tokens[]
+  mcp_oauth_authorization_codes mcp_oauth_authorization_codes[]
+  mcp_oauth_refresh_tokens      mcp_oauth_refresh_tokens[]
   ai_prompts           ai_prompts[]
   workflow_comments    workflow_comments[]
   teams                teams[]
@@ -349,6 +418,9 @@ model users {
   ai_user_agent                               ai_user_agent[]
   api_token_usage_logs                        api_token_usage_logs[]
   api_tokens                                  api_tokens[]
+  mcp_oauth_access_tokens                     mcp_oauth_access_tokens[]
+  mcp_oauth_authorization_codes               mcp_oauth_authorization_codes[]
+  mcp_oauth_refresh_tokens                    mcp_oauth_refresh_tokens[]
   jobs                                        jobs[]
   workflow_collaborators_removed_byTousers    workflow_collaborators[] @relation("note_collaborators_removed_byTousers")
   workflow_collaborators_user_idTousers       workflow_collaborators[] @relation("note_collaborators_user_idTousers")

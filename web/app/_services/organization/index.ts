@@ -584,10 +584,14 @@ export const restoreWorkspace = async (userId?: string): Promise<Workspace> => {
 export const fetchWorkspaceAreas = async (): Promise<WorkspaceArea[]> => {
   try {
     const response = await apiClient.get(API_ENDPOINTS.ORGANIZATIONS_AREAS);
-    const data = WorkspaceJsonSchema.parse(await handleResponse<unknown>(response));
+    const payload = await handleResponse<unknown>(response);
+    // handleResponse unwraps successful `{ success, data }` API envelopes.
+    // The areas endpoint therefore arrives here as a plain array; retain the
+    // object fallback for callers/mocks that return an unwrapped payload.
+    const areas = Array.isArray(payload) ? payload : WorkspaceJsonSchema.parse(payload).data;
 
-    if ((data.status === "OK" || data.success) && Array.isArray(data.data)) {
-      return data.data.map((raw: unknown) => transformBackendArea(raw));
+    if (Array.isArray(areas)) {
+      return areas.map((raw: unknown) => transformBackendArea(raw));
     }
 
     return [];

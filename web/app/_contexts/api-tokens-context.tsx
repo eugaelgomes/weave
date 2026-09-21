@@ -35,7 +35,7 @@ export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [scopesInfo, setScopesInfo] = useState<ApiScope[] | null>(null);
   const [loadingTokens, setLoadingTokens] = useState(false);
 
-  const loadApiTokens = async () => {
+  const loadApiTokens = React.useCallback(async () => {
     if (!authenticated) return;
 
     setLoadingTokens(true);
@@ -48,7 +48,7 @@ export const ApiTokensProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setLoadingTokens(false);
     }
-  };
+  }, [authenticated]);
 
   // Limpar tokens ao desautenticar
   useEffect(() => {

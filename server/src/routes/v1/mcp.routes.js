@@ -1,8 +1,11 @@
 const express = require("express");
 const { SSEServerTransport } = require("@modelcontextprotocol/sdk/server/sse.js");
-const { verifyToken } = require("@/middlewares/auth/verify-token");
+const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
+const { requireBearerAuth } = require("@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js");
 const { verifyInternalService } = require("@/middlewares/security/verify-internal-service");
 const { configureServerForUser } = require("@/config/mcp");
+const { getMcpOAuthConfig } = require("@/modules/authentication/config/mcp-oauth.config");
+const mcpOAuthProvider = require("@/modules/authentication/services/mcp-oauth.provider");
 const { redis: redisPublisher } = require("@theweave/shared");
 
 // Create a dedicated Redis subscriber connection for MCP events
@@ -34,7 +37,7 @@ redisSubscriber.on("message", async (channel, message) => {
   }
 });
 
-const handleSSE = async (req, res, messagesPathPrefix) => {
+const handleServiceSSE = async (req, res, messagesPathPrefix) => {
   try {
     // Create a new server instance scoped to the user context
     const server = configureServerForUser(req.user);
@@ -79,6 +82,59 @@ const handleSSE = async (req, res, messagesPathPrefix) => {
     }
   }
 };
+
+/**
+ * Bind the OAuth token context to the shape expected by the tool registry.
+ * Browser sessions and personal API tokens intentionally do not authenticate
+ * this endpoint; public MCP access is OAuth-only.
+ */
+function attachMcpOAuthUser(req, _res, next) {
+  const auth = req.auth;
+  const userId = auth?.extra?.userId;
+  if (!userId) return next(new Error("MCP OAuth access token is missing its user identity."));
+
+  req.user = {
+    isMcpOAuth: true,
+    mcpClientId: auth.clientId,
+    oauthScopes: auth.scopes,
+    userId,
+    workspace_id: auth.extra.workspaceId || null,
+    workspaceId: auth.extra.workspaceId || null,
+  };
+  return next();
+}
+
+async function handleStreamableHttp(req, res) {
+  let server;
+  let transport;
+  try {
+    // Stateless Streamable HTTP scales without pinning a client session to a
+    // process. Weave tools are already configured from the verified token on
+    // every request.
+    transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    server = configureServerForUser(req.user);
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  } catch (error) {
+    console.error("[MCP Error] Failed to handle Streamable HTTP request:", error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: { code: -32603, message: "Internal MCP server error" },
+        id: null,
+        jsonrpc: "2.0",
+      });
+    }
+  } finally {
+    // Stateless transports have no connection to preserve after a response.
+    if (server && transport) {
+      try {
+        await server.close();
+      } catch {
+        // Response delivery must not fail because cleanup failed.
+      }
+    }
+  }
+}
 
 const handleMessages = async (req, res) => {
   const sessionId = req.query.sessionId;
@@ -125,15 +181,28 @@ const handleMessages = async (req, res) => {
 
 const createMCPRouter = ({ version: _version = "v1" } = {}) => {
   const router = express.Router();
-  router.get("/sse", verifyToken, (req, res) => handleSSE(req, res, "/api/v1/mcp/messages"));
-  router.post("/messages", verifyToken, handleMessages);
+  const config = getMcpOAuthConfig();
+  const resourceMetadataUrl = new URL(
+    `/.well-known/oauth-protected-resource${config.mcpUrl.pathname}`,
+    config.issuerUrl
+  ).href;
+
+  router.all(
+    "/",
+    requireBearerAuth({
+      resourceMetadataUrl,
+      verifier: mcpOAuthProvider,
+    }),
+    attachMcpOAuthUser,
+    handleStreamableHttp
+  );
   return router;
 };
 
 const createServiceMCPRouter = () => {
   const router = express.Router();
   router.get("/sse", verifyInternalService, (req, res) =>
-    handleSSE(req, res, "/api/service/v1/mcp/messages")
+    handleServiceSSE(req, res, "/api/service/v1/mcp/messages")
   );
   router.post("/messages", verifyInternalService, handleMessages);
   return router;

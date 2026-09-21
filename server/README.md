@@ -80,6 +80,9 @@ docker compose up server --build
 | `SSL_CERTIFICATE`                                | Optional client SSL for DB                            |
 | `SESSION_SECRET`                                 | Express session secret                                |
 | `SECRET_KEY`                                     | JWT signing secret                                    |
+| `MCP_OAUTH_JWT_SECRET`                           | Required in production; signs Weave MCP OAuth tokens  |
+| `MCP_PUBLIC_URL`                                 | Public Streamable HTTP MCP URL                         |
+| `MCP_OAUTH_ISSUER`                               | Public OAuth issuer URL (HTTPS in production)          |
 | `ALLOWED_ORIGINS` / `PRODUCTION_ALLOWED_ORIGINS` | Allowed browser `Origin` values (comma-separated)     |
 | `COOKIE_DOMAIN`                                  | Cookie domain (`localhost` in dev)                    |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`      | Google OAuth                                          |
@@ -107,6 +110,7 @@ Add Redis, worker, and engine URLs as required by your deployment (`weave-api` e
 
 - **Internal browser API:** `/api/v1` — mounted from [`src/routes/internal.routes.js`](src/routes/internal.routes.js). After `Origin` checks (where applicable), requests must pass the **internal web challenge** middleware except for documented bypass paths (for example webhooks and specific SSO routes). Challenge token: `GET /api/v1/_internal/challenge`, header `X-Weave-Internal-Challenge` on subsequent calls, signed with `INTERNAL_WEB_CHALLENGE_SECRET` (verification skipped in dev if the secret is unset).
 - **Public API:** `/api/public/v1` — public router from [`src/routes/public.routes.js`](src/routes/public.routes.js).
+- **Public MCP:** `/api/v1/mcp` — OAuth 2.1-protected Streamable HTTP endpoint. Clients discover the authorization server through `/.well-known/oauth-protected-resource/api/v1/mcp` and use Authorization Code + PKCE; static API tokens are not accepted.
 
 | Prefix             | Module                                    | Auth / notes                      |
 | ------------------ | ----------------------------------------- | --------------------------------- |

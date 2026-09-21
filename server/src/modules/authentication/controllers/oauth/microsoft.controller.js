@@ -9,6 +9,10 @@ const AuthRepository = require("../../repositories/auth.repository");
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
 const { getOauthConfig } = require("../../config/oauth.config");
+const {
+  consumeMcpAuthorization,
+  rememberMcpAuthorization,
+} = require("../../utils/mcp-oauth-return.util");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
@@ -24,6 +28,7 @@ class MicrosoftOauthController extends AuthBaseController {
       return res.status(404).json({ error: "Microsoft authentication is not configured." });
     }
 
+    rememberMcpAuthorization(req, req.query.return_to);
     const tenantId = microsoft.tenant_id || "common";
     const redirectUri = microsoft.redirect_uri;
     const state = issueOauthState({ provider: "microsoft", req, res });
@@ -166,6 +171,7 @@ class MicrosoftOauthController extends AuthBaseController {
 
       req.session.user = payload;
       req.session.userId = user.user_id;
+      const postLoginRedirect = consumeMcpAuthorization(req);
 
       phase = "session_persistence";
       req.session.save((err) => {
@@ -180,7 +186,7 @@ class MicrosoftOauthController extends AuthBaseController {
             `${frontendURL}/auth/?error=auth_failed&provider=microsoft&phase=session_persistence`
           );
         }
-        return res.redirect(`${frontendURL}${this._getPostAuthenticationPath(user)}`);
+        return res.redirect(postLoginRedirect || `${frontendURL}${this._getPostAuthenticationPath(user)}`);
       });
     } catch (error) {
       console.error("Microsoft OAuth callback error:", {

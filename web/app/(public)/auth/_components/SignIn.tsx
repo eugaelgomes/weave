@@ -18,6 +18,27 @@ interface Props {
   initialLogin?: string;
   initialCode?: string;
   initialMode?: AuthMode;
+  returnTo?: string;
+}
+
+function getSafeMcpAuthorizationReturnTo(value?: string): string | null {
+  if (!value || typeof window === "undefined") return null;
+
+  try {
+    const destination = new URL(value);
+    const apiUrl = new URL(process.env.NEXT_PUBLIC_API_URL || window.location.origin);
+    if (
+      destination.origin !== apiUrl.origin ||
+      destination.pathname !== "/authorize" ||
+      !destination.searchParams.get("client_id") ||
+      !destination.searchParams.get("code_challenge")
+    ) {
+      return null;
+    }
+    return destination.href;
+  } catch {
+    return null;
+  }
 }
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -68,6 +89,7 @@ export function SignIn({
   initialLogin = "",
   initialCode = "",
   initialMode,
+  returnTo,
 }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<AuthMode>(initialMode ?? (initialCode ? "code" : "password"));
@@ -141,6 +163,11 @@ export function SignIn({
   }, [mode, initialCode, initialLogin, isLoading]);
 
   function goToPostLogin() {
+    const safeReturnTo = getSafeMcpAuthorizationReturnTo(returnTo);
+    if (safeReturnTo) {
+      window.location.assign(safeReturnTo);
+      return;
+    }
     const nextPath = consumeInvitePostLoginPath();
     router.push(nextPath || "/chat");
   }
@@ -592,7 +619,9 @@ export function SignIn({
               {showGoogle && (
                 <button
                   type="button"
-                  onClick={loginWithGoogle}
+                  onClick={() =>
+                    loginWithGoogle(getSafeMcpAuthorizationReturnTo(returnTo) || undefined)
+                  }
                   className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                 >
                   <GoogleIcon className="h-4 w-4" />
@@ -603,7 +632,9 @@ export function SignIn({
               {showGithub && (
                 <button
                   type="button"
-                  onClick={loginWithGithub}
+                  onClick={() =>
+                    loginWithGithub(getSafeMcpAuthorizationReturnTo(returnTo) || undefined)
+                  }
                   className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                 >
                   <GitHubIcon className="h-4 w-4" />
@@ -614,7 +645,9 @@ export function SignIn({
               {showMicrosoft && (
                 <button
                   type="button"
-                  onClick={loginWithMicrosoft}
+                  onClick={() =>
+                    loginWithMicrosoft(getSafeMcpAuthorizationReturnTo(returnTo) || undefined)
+                  }
                   className="border-brand-secondary-200 text-brand-secondary-700 hover:border-brand-secondary-300 hover:bg-brand-secondary-300 hover:text-brand-secondary-900 focus:ring-brand-secondary-300 dark:border-surface-dark-border-strong flex w-full items-center justify-center gap-2 rounded-md border bg-white py-1.5 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md focus:ring-2 focus:outline-none active:translate-y-0 active:scale-[0.99] dark:bg-[#252525] dark:text-neutral-200 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                 >
                   <MicrosoftIcon className="h-4 w-4" />

@@ -225,6 +225,7 @@ export default function AuthPage() {
                     ? "code"
                     : undefined
                 }
+                returnTo={searchParams.get("return_to") ?? undefined}
               />
             )}
             {currentView === "signup" && (

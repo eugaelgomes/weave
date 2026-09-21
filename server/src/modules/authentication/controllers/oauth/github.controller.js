@@ -9,6 +9,10 @@ const AuthRepository = require("../../repositories/auth.repository");
 const oauthState = require("../../utils/oauth-state.util");
 const { buildJwtPayload } = require("../../schemas/session.schema");
 const { getOauthConfig } = require("../../config/oauth.config");
+const {
+  consumeMcpAuthorization,
+  rememberMcpAuthorization,
+} = require("../../utils/mcp-oauth-return.util");
 
 const consumeAndValidateOauthState = oauthState.consumeAndValidateOauthState;
 const issueOauthState = oauthState.issueOauthState;
@@ -24,6 +28,7 @@ class GithubOauthController extends AuthBaseController {
       return res.status(404).json({ error: "GitHub authentication is not configured." });
     }
 
+    rememberMcpAuthorization(req, req.query.return_to);
     const redirectUri = github.redirect_uri;
     const state = issueOauthState({ provider: "github", req, res });
     const url = `https://github.com/login/oauth/authorize?client_id=${github.client_id}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email&state=${encodeURIComponent(state)}`;
@@ -194,6 +199,7 @@ class GithubOauthController extends AuthBaseController {
 
       req.session.user = payload;
       req.session.userId = user.user_id;
+      const postLoginRedirect = consumeMcpAuthorization(req);
 
       phase = "session_persistence";
       req.session.save((err) => {
@@ -208,7 +214,7 @@ class GithubOauthController extends AuthBaseController {
             `${frontendURL}/auth/?error=auth_failed&provider=github&phase=session_persistence`
           );
         }
-        return res.redirect(`${frontendURL}${this._getPostAuthenticationPath(user)}`);
+        return res.redirect(postLoginRedirect || `${frontendURL}${this._getPostAuthenticationPath(user)}`);
       });
     } catch (error) {
       console.error("GitHub OAuth callback error:", {

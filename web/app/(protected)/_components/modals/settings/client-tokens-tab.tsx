@@ -146,6 +146,7 @@ const PasswordConfirmModal = ({ isOpen, onClose, onConfirm }: any) => {
 
 export function SettingsApiTokens() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const { apiTokens, scopesInfo, loadingTokens, loadApiTokens, generateApiToken, revokeToken } =
     useApiTokens();
   const { workspace } = useWorkspace();
@@ -225,7 +226,7 @@ export function SettingsApiTokens() {
 
     const orgId = workspace?.id || null;
 
-    const result = await generateApiToken(newTokenName, selectedScopes, expiresAtDate);
+    const result = await generateApiToken(newTokenName, selectedScopes, expiresAtDate, orgId);
     if (result.success && result.data?.token) {
       setGeneratedToken(result.data.token);
       setIsCreating(false);

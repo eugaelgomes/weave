@@ -140,16 +140,22 @@ export const getUserData = async (): Promise<User> => {
 // Alias for compatibility
 export const getUserDataService = getUserData;
 
-export const initiateGoogleLogin = (): void => {
-  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.GOOGLE_AUTH}`;
+const buildSocialLoginUrl = (path: string, returnTo?: string): string => {
+  const url = new URL(`${API_BASE_URL}${path}`);
+  if (returnTo) url.searchParams.set("return_to", returnTo);
+  return url.href;
 };
 
-export const initiateGithubLogin = (): void => {
-  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.GITHUB_AUTH}`;
+export const initiateGoogleLogin = (returnTo?: string): void => {
+  window.location.href = buildSocialLoginUrl(API_ENDPOINTS.GOOGLE_AUTH, returnTo);
 };
 
-export const initiateMicrosoftLogin = (): void => {
-  window.location.href = `${API_BASE_URL}${API_ENDPOINTS.MICROSOFT_AUTH}`;
+export const initiateGithubLogin = (returnTo?: string): void => {
+  window.location.href = buildSocialLoginUrl(API_ENDPOINTS.GITHUB_AUTH, returnTo);
+};
+
+export const initiateMicrosoftLogin = (returnTo?: string): void => {
+  window.location.href = buildSocialLoginUrl(API_ENDPOINTS.MICROSOFT_AUTH, returnTo);
 };
 
 export const getAuthProvidersService = async (): Promise<AuthProvidersConfig> => {

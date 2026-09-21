@@ -4,6 +4,7 @@ const Sentry = require("@sentry/node");
 const { configureGlobalMiddlewares } = require("@/middlewares/http/apply-http-middleware");
 const { errorHandler } = require("@/middlewares/errors/error-handler");
 const { registerApiRoutes } = require("@/routes/weave.routes");
+const { createMcpOAuthRouter } = require("@/routes/mcp-oauth.routes");
 
 const app = express();
 
@@ -35,6 +36,10 @@ app.get("/health", (req, res) => {
  * 2. Global Middlewares (Security, Parsing, Rate Limits)
  */
 configureGlobalMiddlewares(app);
+
+// OAuth discovery endpoints must live at the application root so MCP clients
+// can find them using the RFC-defined .well-known URLs.
+app.use(createMcpOAuthRouter());
 
 app.use("/public", express.static(path.join(__dirname, "assets/public")));
 

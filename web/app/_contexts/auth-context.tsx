@@ -70,9 +70,9 @@ type AuthContextType = {
   loginWithCode: (payload: { login: string; code: string }) => Promise<LoginResult>;
   discoverSamlSso: (email: string) => Promise<SamlSsoDiscoverResponse>;
   startSamlSsoLogin: (workspaceId: string) => void;
-  loginWithGoogle: () => void;
-  loginWithGithub: () => void;
-  loginWithMicrosoft: () => void;
+  loginWithGoogle: (returnTo?: string) => void;
+  loginWithGithub: (returnTo?: string) => void;
+  loginWithMicrosoft: (returnTo?: string) => void;
   logout: () => void;
 
   // User Profile
@@ -365,16 +365,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     startSamlSsoLoginService(workspaceId);
   };
 
-  const loginWithGoogle = () => {
-    initiateGoogleLogin();
+  const loginWithGoogle = (returnTo?: string) => {
+    initiateGoogleLogin(returnTo);
   };
 
-  const loginWithGithub = () => {
-    initiateGithubLogin();
+  const loginWithGithub = (returnTo?: string) => {
+    initiateGithubLogin(returnTo);
   };
 
-  const loginWithMicrosoft = () => {
-    initiateMicrosoftLogin();
+  const loginWithMicrosoft = (returnTo?: string) => {
+    initiateMicrosoftLogin(returnTo);
   };
 
   const logout = async () => {
