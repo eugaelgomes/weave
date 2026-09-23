@@ -22,7 +22,7 @@ COPY worker/package.json ./worker/
 
 # Install dependencies (with workspaces)
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --no-audit --no-fund
+    npm ci --ignore-scripts --omit=dev --no-audit --no-fund
 
 # Copy worker source
 COPY worker ./worker

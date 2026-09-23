@@ -1,49 +1,66 @@
 # syntax=docker/dockerfile:1
 #
-# BuildKit cache mounts speed up dependency installs.
-# Pair with `weave-app/.dockerignore` to keep the build context small.
+# BuildKit cache mounts speed up repeated `npm ci` / builds.
+# Pair with `.dockerignore` at root to keep the build context small.
 
-# ===================================================================================
-# STAGE 1: Builder
-# ===================================================================================
+# ============================
+# STAGE 1: Build
+# ============================
 FROM node:24-alpine AS builder
 
+RUN apk add --no-cache libc6-compat git
+
 WORKDIR /app
 
+# Copy root configs
 COPY package*.json ./
 
+# Copy packages and web definition
+COPY packages ./packages
+COPY web/package.json ./web/
+
+# Install all dependencies (with workspaces)
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-audit --no-fund
+    npm ci --ignore-scripts --no-audit --no-fund
 
-COPY . .
+# Copy web source
+COPY web ./web
 
+# Build
+WORKDIR /app/web
 RUN npm run build
 
-# ===================================================================================
-# STAGE 2: Production (Next.js)
-# ===================================================================================
-FROM node:24-alpine AS production
+# Prune dev dependencies at root
+WORKDIR /app
+RUN npm prune --omit=dev --no-audit
+
+# ============================
+# STAGE 2: Production
+# ============================
+FROM node:24-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates curl gnupg \
+RUN apk add --no-cache ca-certificates curl gnupg git \
   && curl -fsSL --tlsv1.2 --proto '=https' --retry 3 https://cli.doppler.com/install.sh | sh \
   && apk del curl gnupg \
   && rm -rf /var/cache/apk/*
 
 ENV DOPPLER_CONFIG_DIR=/tmp/.doppler
 
-COPY package*.json ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --no-audit --no-fund \
-    && npm cache clean --force
+# Copy node_modules from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/packages ./packages
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./next.config.ts
-COPY --from=builder /app/package.json ./package.json
+# Copy the built web app
+COPY --from=builder /app/web/package*.json ./web/
+COPY --from=builder /app/web/next.config.ts ./web/
+COPY --from=builder /app/web/public ./web/public
+COPY --from=builder /app/web/.next ./web/.next
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Entrypoint
+COPY web/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 RUN addgroup --system --gid 1001 nodejs \
@@ -52,8 +69,8 @@ RUN addgroup --system --gid 1001 nodejs \
 
 USER nextjs
 
+WORKDIR /app/web
 EXPOSE 3000
-
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 

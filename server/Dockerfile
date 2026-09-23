@@ -21,7 +21,7 @@ COPY server/package.json ./server/
 
 # Install all dependencies (with workspaces)
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-audit --no-fund
+    npm ci --ignore-scripts --no-audit --no-fund
 
 # Copy API source
 COPY server ./server

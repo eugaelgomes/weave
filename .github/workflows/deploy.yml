@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Services to deploy (all, server, engine, worker)'
+        description: 'Services to deploy (all, server, engine, worker, web)'
         required: false
         default: 'all'
         type: choice
@@ -16,11 +16,7 @@ on:
           - server
           - engine
           - worker
-      build_web:
-        description: 'Build and push web (Next.js) Docker image? Leave false if hosting frontend on Vercel/Netlify/etc.'
-        required: false
-        default: false
-        type: boolean
+          - web
 
 permissions:
   contents: read
@@ -167,9 +163,11 @@ jobs:
   # this disabled and deploy the frontend independently.
   # ─────────────────────────────────────────────────────────────────────────
   build-web:
-    name: Build Web (Next.js) — optional
+    name: Build Web (Next.js)
     runs-on: ubuntu-latest
-    if: github.event.inputs.build_web == 'true'
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.services == 'all' || github.event.inputs.services == 'web'))
     steps:
       - uses: actions/checkout@v4
 

@@ -21,7 +21,7 @@ COPY llm/package.json ./llm/
 
 # Install all dependencies (with workspaces)
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-audit --no-fund
+    npm ci --ignore-scripts --no-audit --no-fund
 
 # Copy Engine source
 COPY llm ./llm
