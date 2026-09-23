@@ -8,7 +8,7 @@
 # ============================
 FROM node:24-alpine AS builder
 
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat git
 
 WORKDIR /app
 

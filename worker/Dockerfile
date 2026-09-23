@@ -6,7 +6,7 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates curl gnupg \
+RUN apk add --no-cache ca-certificates curl gnupg git \
   && curl -fsSL --tlsv1.2 --proto '=https' --retry 3 https://cli.doppler.com/install.sh | sh \
   && apk del curl gnupg \
   && rm -rf /var/cache/apk/*
