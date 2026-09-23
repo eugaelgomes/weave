@@ -5,6 +5,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    env_file: .env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -12,63 +13,127 @@ services:
     networks:
       - app-network
 
-  server:
-    image: ghcr.io/eugaelgomes/weave-api:latest
+  postgres:
+    image: ankane/pgvector:v1.0.0
     restart: always
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-your_password}
+      POSTGRES_DB: ${DATABASE_NAME:-weave_notes}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-postgres} -d ${DATABASE_NAME:-weave_notes}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Run Prisma migrations before starting the main server
+  init-db:
+    image: ghcr.io/eugaelgomes/weave-api:v1.0.0
+    env_file: .env
     environment:
       - NODE_ENV=production
+      - DATABASE_HOST_URL=postgres
+      # Disable Doppler for the migration container if we want to rely strictly on .env
+      - USE_DOPPLER=false 
+    # The entrypoint is docker-entrypoint.sh, we override CMD
+    command: ["npx", "prisma", "db", "push", "--schema=packages/shared/prisma/schema.prisma", "--accept-data-loss"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  web:
+    image: ghcr.io/eugaelgomes/weave-web:v1.0.0 
+    restart: always
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+    depends_on:
+      - server
+
+  server:
+    image: ghcr.io/eugaelgomes/weave-api:v1.0.0
+    restart: always
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_HOST_URL=postgres
+      - REDIS_URL=redis://redis:6379
+      - NODE_OPTIONS=--max-old-space-size=768
+      - USE_DOPPLER=false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      - NODE_OPTIONS=--max-old-space-size=768
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - app-network
 
   worker:
-    image: ghcr.io/eugaelgomes/weave-worker:latest
+    image: ghcr.io/eugaelgomes/weave-worker:v1.0.0
     restart: always
+    env_file: .env
     environment:
       - NODE_ENV=production
+      - DATABASE_HOST_URL=postgres
+      - REDIS_URL=redis://redis:6379
+      - NODE_OPTIONS=--max-old-space-size=384
+      - USE_DOPPLER=false
     healthcheck:
-      test: ["CMD", "ps", "aux", "|", "grep", "node"] # Adjust healthcheck based on worker
+      test: ["CMD", "ps", "aux", "|", "grep", "node"]
       interval: 30s
       timeout: 10s
       retries: 3
-      - NODE_OPTIONS=--max-old-space-size=384
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+    depends_on:
+      - server
     networks:
       - app-network
 
   engine:
-    image: ghcr.io/eugaelgomes/weave-engine:latest
+    image: ghcr.io/eugaelgomes/weave-engine:v1.0.0
     restart: always
+    env_file: .env
     environment:
       - NODE_ENV=production
+      - DATABASE_HOST_URL=postgres
+      - REDIS_URL=redis://redis:6379
+      - NODE_OPTIONS=--max-old-space-size=384
+      - USE_DOPPLER=false
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/health"] # Assuming engine has a health endpoint, otherwise use ps
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      - NODE_OPTIONS=--max-old-space-size=384
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+    depends_on:
+      - server
     networks:
       - app-network
 
@@ -79,3 +144,5 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  postgres_data:
+  redis_data:

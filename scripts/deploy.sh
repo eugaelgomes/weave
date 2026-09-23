@@ -42,35 +42,43 @@ if [ "$SERVICE" = "all" ]; then
   "$0" engine "$HOST" "$USER"
   "$0" server "$HOST" "$USER"
   "$0" worker "$HOST" "$USER"
+  "$0" web "$HOST" "$USER"
   echo "🎉 All services deployed successfully!"
   exit 0
 fi
 
 case "$SERVICE" in
   engine)
-    IMAGE_TAG="ghcr.io/eugaelgomes/weave-engine:latest"
-    DIR="weave-engine"
+    IMAGE_TAG="ghcr.io/eugaelgomes/weave-engine:v1.0.0"
+    DIR="llm"
     COMPOSE="docker-compose.prod.yml"
     COMPOSE_SERVICE="engine"
     ADDITIONAL_FILES=""
     ;;
   server|api)
     SERVICE="server"
-    IMAGE_TAG="ghcr.io/eugaelgomes/weave-api:latest"
-    DIR="weave-api"
+    IMAGE_TAG="ghcr.io/eugaelgomes/weave-api:v1.0.0"
+    DIR="server"
     COMPOSE="docker-compose.prod.yml"
     COMPOSE_SERVICE="server caddy"
     ADDITIONAL_FILES="Caddyfile"
     ;;
+  web)
+    IMAGE_TAG="ghcr.io/eugaelgomes/weave-web:v1.0.0"
+    DIR="web"
+    COMPOSE="docker-compose.prod.yml"
+    COMPOSE_SERVICE="web"
+    ADDITIONAL_FILES=""
+    ;;
   worker)
-    IMAGE_TAG="ghcr.io/eugaelgomes/weave-worker:latest"
-    DIR="weave-worker"
+    IMAGE_TAG="ghcr.io/eugaelgomes/weave-worker:v1.0.0"
+    DIR="worker"
     COMPOSE="docker-compose.prod.yml"
     COMPOSE_SERVICE="worker"
     ADDITIONAL_FILES=""
     ;;
   *)
-    echo "Unknown service: $SERVICE. Valid options: all, engine, server, worker"
+    echo "Unknown service: $SERVICE. Valid options: all, engine, server, worker, web"
     exit 1
     ;;
 esac

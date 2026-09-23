@@ -17,17 +17,17 @@ COPY package*.json ./
 
 # Copy packages and API definition
 COPY packages ./packages
-COPY weave-api/package.json ./weave-api/
+COPY server/package.json ./server/
 
 # Install all dependencies (with workspaces)
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
 # Copy API source
-COPY weave-api ./weave-api
+COPY server ./server
 
 # Build
-WORKDIR /app/weave-api
+WORKDIR /app/server
 RUN npm run build
 
 # Prune dev dependencies at root
@@ -54,14 +54,14 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/packages ./packages
 
 # Copy the built api
-COPY --from=builder /app/weave-api/package*.json ./weave-api/
-COPY --from=builder /app/weave-api/dist ./weave-api/dist
+COPY --from=builder /app/server/package*.json ./server/
+COPY --from=builder /app/server/dist ./server/dist
 
 # Entrypoint
-COPY weave-api/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY server/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-WORKDIR /app/weave-api
+WORKDIR /app/server
 EXPOSE 8080
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["npm", "start"]

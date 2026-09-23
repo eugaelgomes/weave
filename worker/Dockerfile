@@ -18,18 +18,18 @@ COPY package*.json ./
 
 # Copy packages and worker definition
 COPY packages ./packages
-COPY weave-worker/package.json ./weave-worker/
+COPY worker/package.json ./worker/
 
 # Install dependencies (with workspaces)
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev --no-audit --no-fund
 
 # Copy worker source
-COPY weave-worker ./weave-worker
+COPY worker ./worker
 
-RUN chmod +x /app/weave-worker/docker-entrypoint.sh
+RUN chmod +x /app/worker/docker-entrypoint.sh
 
-WORKDIR /app/weave-worker
+WORKDIR /app/worker
 EXPOSE 8081
-ENTRYPOINT ["/app/weave-worker/docker-entrypoint.sh"]
+ENTRYPOINT ["/app/worker/docker-entrypoint.sh"]
 CMD ["npm", "start"]

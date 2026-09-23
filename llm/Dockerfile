@@ -17,17 +17,17 @@ COPY package*.json ./
 
 # Copy packages and Engine definition
 COPY packages ./packages
-COPY weave-engine/package.json ./weave-engine/
+COPY llm/package.json ./llm/
 
 # Install all dependencies (with workspaces)
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
 # Copy Engine source
-COPY weave-engine ./weave-engine
+COPY llm ./llm
 
 # Build
-WORKDIR /app/weave-engine
+WORKDIR /app/llm
 RUN npm run build
 
 # Prune dev dependencies at root
@@ -54,14 +54,14 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/packages ./packages
 
 # Copy the built engine
-COPY --from=builder /app/weave-engine/package*.json ./weave-engine/
-COPY --from=builder /app/weave-engine/dist ./weave-engine/dist
+COPY --from=builder /app/llm/package*.json ./llm/
+COPY --from=builder /app/llm/dist ./llm/dist
 
 # Entrypoint
-COPY weave-engine/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY llm/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-WORKDIR /app/weave-engine
+WORKDIR /app/llm
 EXPOSE 8082
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["npm", "start"]
